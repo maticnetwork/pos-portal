@@ -18,7 +18,7 @@ interface IRootChainManager {
     uint256 indexed amount
   );
 
-  function changeStateSender(address newStateSender) external;
+  function setStateSender(address newStateSender) external;
 
   function mapToken(address rootToken, address childToken) external;
 
@@ -26,9 +26,9 @@ interface IRootChainManager {
 
   function depositEtherFor(address user) external payable;
 
-  function deposit(address token, uint256 amount) external;
+  function deposit(address rootToken, uint256 amount) external;
 
-  function depositFor(address user, address token, uint256 amount) external;
+  function depositFor(address user, address rootToken, uint256 amount) external;
 
   function exit(bytes calldata data) external;
 }
