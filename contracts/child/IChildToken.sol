@@ -1,8 +1,8 @@
 pragma solidity 0.6.6;
 
 
-interface ChildToken {
-  event Burn(
+interface IChildToken {
+  event Burned(
     address indexed rootToken,
     address indexed user,
     uint256 amount
