@@ -46,6 +46,6 @@
   },
   "dependencies": {
     "ganache-cli": "^6.9.1",
-    "openzeppelin-solidity": "^2.5.0"
+    "openzeppelin-solidity": "3.0.0-rc.1"
   }
 }
