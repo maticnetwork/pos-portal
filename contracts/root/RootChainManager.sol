@@ -1,10 +1,13 @@
 pragma solidity "0.6.6";
 
 import { IERC20 } from "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
+import { AccessControl } from "openzeppelin-solidity/contracts/access/AccessControl.sol";
 import { IRootChainManager } from "./IRootChainManager.sol";
 import { IStateSender } from "./IStateSender.sol";
 
-contract RootChainManager is IRootChainManager {
+contract RootChainManager is IRootChainManager, AccessControl {
+  bytes32 public constant OWNER_ROLE = keccak256("OWNER_ROLE");
+  bytes32 public constant MAPPER_ROLE = keccak256("MAPPER_ROLE");
 
   IStateSender private _stateSender;
   address private _childChainManagerAddress;
@@ -12,7 +15,41 @@ contract RootChainManager is IRootChainManager {
   mapping(address => address) private _rootToChildToken;
   mapping(address => address) private _childToRootToken;
 
-  function setStateSender(address newStateSender) override external {
+  constructor() public {
+    _setupRole(OWNER_ROLE, msg.sender);
+    _setRoleAdmin(OWNER_ROLE, msg.sender);
+    _setupRole(MAPPER_ROLE, msg.sender);
+    _setRoleAdmin(MAPPER_ROLE, msg.sender);
+  }
+
+  modifier onlyOwner() {
+    require(
+      hasRole(OWNER_ROLE, msg.sender),
+      "Insufficient permissions"
+    );
+    _;
+  }
+
+  modifier onlyMapper() {
+    require(
+      hasRole(MAPPER_ROLE, msg.sender),
+      "Insufficient permissions"
+    );
+    _;
+  }
+
+  function transferOwnerRole(address newOwner) external onlyOwner {
+    grantRole(OWNER_ROLE, newOwner);
+    grantRole(MAPPER_ROLE, newOwner);
+
+    revokeRole(OWNER_ROLE, msg.sender);
+    revokeRole(MAPPER_ROLE, msg.sender);
+
+    _setRoleAdmin(OWNER_ROLE, newOwner);
+    _setRoleAdmin(MAPPER_ROLE, newOwner);
+  }
+
+  function setStateSender(address newStateSender) override external onlyOwner {
     _stateSender = IStateSender(newStateSender);
   }
 
@@ -20,7 +57,7 @@ contract RootChainManager is IRootChainManager {
     return address(_stateSender);
   }
 
-  function setChildChainManagerAddress(address newChildChainManager) external {
+  function setChildChainManagerAddress(address newChildChainManager) external onlyOwner {
     _childChainManagerAddress = newChildChainManager;
   }
 
@@ -28,7 +65,7 @@ contract RootChainManager is IRootChainManager {
     return _childChainManagerAddress;
   }
 
-  function setWETHAddress(address newWETHAddress) external {
+  function setWETHAddress(address newWETHAddress) external onlyOwner {
     _WETHAddress = newWETHAddress;
   }
 
@@ -36,7 +73,7 @@ contract RootChainManager is IRootChainManager {
     return _WETHAddress;
   }
 
-  function mapToken(address rootToken, address childToken) override external {
+  function mapToken(address rootToken, address childToken) override external onlyMapper {
     _rootToChildToken[rootToken] = childToken;
     _childToRootToken[childToken] = rootToken;
     emit TokenMapped(rootToken, childToken);

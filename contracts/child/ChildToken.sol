@@ -1,9 +1,13 @@
 pragma solidity "0.6.6";
 
 import { ERC20 } from "openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
+import { AccessControl } from "openzeppelin-solidity/contracts/access/AccessControl.sol";
 import { IChildToken } from "./IChildToken.sol";
 
-contract ChildToken is ERC20, IChildToken {
+contract ChildToken is ERC20, IChildToken, AccessControl {
+  bytes32 public constant OWNER_ROLE = keccak256("OWNER_ROLE");
+  bytes32 public constant DEPOSITOR_ROLE = keccak256("DEPOSITOR_ROLE");
+
   address private _rootToken;
 
   constructor(
@@ -18,13 +22,45 @@ contract ChildToken is ERC20, IChildToken {
     );
     _setupDecimals(decimals);
     _rootToken = rootToken;
+
+    _setupRole(OWNER_ROLE, msg.sender);
+    _setRoleAdmin(OWNER_ROLE, msg.sender);
+    _setupRole(DEPOSITOR_ROLE, msg.sender);
+    _setRoleAdmin(DEPOSITOR_ROLE, msg.sender);
+  }
+
+  modifier onlyOwner() {
+    require(
+      hasRole(OWNER_ROLE, msg.sender),
+      "Insufficient permissions"
+    );
+    _;
+  }
+
+  modifier onlyDepositor() {
+    require(
+      hasRole(DEPOSITOR_ROLE, msg.sender),
+      "Insufficient permissions"
+    );
+    _;
+  }
+
+  function transferOwnerRole(address newOwner) external onlyOwner {
+    grantRole(OWNER_ROLE, newOwner);
+    grantRole(DEPOSITOR_ROLE, newOwner);
+
+    revokeRole(OWNER_ROLE, msg.sender);
+    revokeRole(DEPOSITOR_ROLE, msg.sender);
+
+    _setRoleAdmin(OWNER_ROLE, newOwner);
+    _setRoleAdmin(DEPOSITOR_ROLE, newOwner);
   }
 
   function rootToken() public view returns (address) {
     return _rootToken;
   }
 
-  function deposit(address user, uint256 amount) override external {
+  function deposit(address user, uint256 amount) override external onlyDepositor {
     require(
       amount > 0,
       "amount should be possitive"
