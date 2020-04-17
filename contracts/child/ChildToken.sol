@@ -11,18 +11,11 @@ contract ChildToken is ERC20, IChildToken, AccessControl {
   address private _rootToken;
 
   constructor(
-    address rootToken,
     string memory name,
     string memory symbol,
     uint8 decimals
   ) public ERC20(name, symbol) {
-    require(
-      rootToken != address(0x0),
-      "Need root token address"
-    );
     _setupDecimals(decimals);
-    _rootToken = rootToken;
-
     _setupRole(OWNER_ROLE, msg.sender);
     _setRoleAdmin(OWNER_ROLE, OWNER_ROLE);
     _setupRole(DEPOSITOR_ROLE, msg.sender);
@@ -43,6 +36,10 @@ contract ChildToken is ERC20, IChildToken, AccessControl {
       "Insufficient permissions"
     );
     _;
+  }
+
+  function setRootToken(address newRootToken) external onlyOwner {
+    _rootToken = newRootToken;
   }
 
   function rootToken() public view returns (address) {
