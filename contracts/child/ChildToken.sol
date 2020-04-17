@@ -24,9 +24,9 @@ contract ChildToken is ERC20, IChildToken, AccessControl {
     _rootToken = rootToken;
 
     _setupRole(OWNER_ROLE, msg.sender);
-    _setRoleAdmin(OWNER_ROLE, msg.sender);
+    _setRoleAdmin(OWNER_ROLE, OWNER_ROLE);
     _setupRole(DEPOSITOR_ROLE, msg.sender);
-    _setRoleAdmin(DEPOSITOR_ROLE, msg.sender);
+    _setRoleAdmin(DEPOSITOR_ROLE, OWNER_ROLE);
   }
 
   modifier onlyOwner() {
@@ -43,17 +43,6 @@ contract ChildToken is ERC20, IChildToken, AccessControl {
       "Insufficient permissions"
     );
     _;
-  }
-
-  function transferOwnerRole(address newOwner) external onlyOwner {
-    grantRole(OWNER_ROLE, newOwner);
-    grantRole(DEPOSITOR_ROLE, newOwner);
-
-    revokeRole(OWNER_ROLE, msg.sender);
-    revokeRole(DEPOSITOR_ROLE, msg.sender);
-
-    _setRoleAdmin(OWNER_ROLE, newOwner);
-    _setRoleAdmin(DEPOSITOR_ROLE, newOwner);
   }
 
   function rootToken() public view returns (address) {

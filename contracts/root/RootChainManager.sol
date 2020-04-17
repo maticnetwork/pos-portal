@@ -17,9 +17,9 @@ contract RootChainManager is IRootChainManager, AccessControl {
 
   constructor() public {
     _setupRole(OWNER_ROLE, msg.sender);
-    _setRoleAdmin(OWNER_ROLE, msg.sender);
+    _setRoleAdmin(OWNER_ROLE, OWNER_ROLE);
     _setupRole(MAPPER_ROLE, msg.sender);
-    _setRoleAdmin(MAPPER_ROLE, msg.sender);
+    _setRoleAdmin(MAPPER_ROLE, OWNER_ROLE);
   }
 
   modifier onlyOwner() {
@@ -36,17 +36,6 @@ contract RootChainManager is IRootChainManager, AccessControl {
       "Insufficient permissions"
     );
     _;
-  }
-
-  function transferOwnerRole(address newOwner) external onlyOwner {
-    grantRole(OWNER_ROLE, newOwner);
-    grantRole(MAPPER_ROLE, newOwner);
-
-    revokeRole(OWNER_ROLE, msg.sender);
-    revokeRole(MAPPER_ROLE, msg.sender);
-
-    _setRoleAdmin(OWNER_ROLE, newOwner);
-    _setRoleAdmin(MAPPER_ROLE, newOwner);
   }
 
   function setStateSender(address newStateSender) override external onlyOwner {

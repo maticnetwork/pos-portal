@@ -15,11 +15,11 @@ contract ChildChainManager is IChildChainManager, AccessControl {
 
   constructor() public {
     _setupRole(OWNER_ROLE, msg.sender);
-    _setRoleAdmin(OWNER_ROLE, msg.sender);
+    _setRoleAdmin(OWNER_ROLE, OWNER_ROLE);
     _setupRole(MAPPER_ROLE, msg.sender);
-    _setRoleAdmin(MAPPER_ROLE, msg.sender);
+    _setRoleAdmin(MAPPER_ROLE, OWNER_ROLE);
     _setupRole(STATE_SYNCER_ROLE, msg.sender);
-    _setRoleAdmin(STATE_SYNCER_ROLE, msg.sender);
+    _setRoleAdmin(STATE_SYNCER_ROLE, OWNER_ROLE);
   }
 
   modifier onlyOwner() {
@@ -44,20 +44,6 @@ contract ChildChainManager is IChildChainManager, AccessControl {
       "Insufficient permissions"
     );
     _;
-  }
-
-  function transferOwnerRole(address newOwner) external onlyOwner {
-    grantRole(OWNER_ROLE, newOwner);
-    grantRole(MAPPER_ROLE, newOwner);
-    grantRole(STATE_SYNCER_ROLE, newOwner);
-
-    revokeRole(OWNER_ROLE, msg.sender);
-    revokeRole(MAPPER_ROLE, msg.sender);
-    revokeRole(STATE_SYNCER_ROLE, msg.sender);
-
-    _setRoleAdmin(OWNER_ROLE, newOwner);
-    _setRoleAdmin(MAPPER_ROLE, newOwner);
-    _setRoleAdmin(STATE_SYNCER_ROLE, newOwner);
   }
 
   function rootToChildToken(address rootToken) public view returns (address) {
