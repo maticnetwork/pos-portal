@@ -6,7 +6,6 @@ import { IRootChainManager } from "./IRootChainManager.sol";
 import { IStateSender } from "./IStateSender.sol";
 
 contract RootChainManager is IRootChainManager, AccessControl {
-  bytes32 public constant OWNER_ROLE = keccak256("OWNER_ROLE");
   bytes32 public constant MAPPER_ROLE = keccak256("MAPPER_ROLE");
 
   IStateSender private _stateSender;
@@ -16,29 +15,19 @@ contract RootChainManager is IRootChainManager, AccessControl {
   mapping(address => address) private _childToRootToken;
 
   constructor() public {
-    _setupRole(OWNER_ROLE, msg.sender);
-    _setRoleAdmin(OWNER_ROLE, OWNER_ROLE);
+    _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     _setupRole(MAPPER_ROLE, msg.sender);
-    _setRoleAdmin(MAPPER_ROLE, OWNER_ROLE);
   }
 
-  modifier onlyOwner() {
+  modifier only(bytes32 role) {
     require(
-      hasRole(OWNER_ROLE, msg.sender),
+      hasRole(role, msg.sender),
       "Insufficient permissions"
     );
     _;
   }
 
-  modifier onlyMapper() {
-    require(
-      hasRole(MAPPER_ROLE, msg.sender),
-      "Insufficient permissions"
-    );
-    _;
-  }
-
-  function setStateSender(address newStateSender) override external onlyOwner {
+  function setStateSender(address newStateSender) override external only(DEFAULT_ADMIN_ROLE) {
     _stateSender = IStateSender(newStateSender);
   }
 
@@ -46,7 +35,7 @@ contract RootChainManager is IRootChainManager, AccessControl {
     return address(_stateSender);
   }
 
-  function setChildChainManagerAddress(address newChildChainManager) external onlyOwner {
+  function setChildChainManagerAddress(address newChildChainManager) external only(DEFAULT_ADMIN_ROLE) {
     _childChainManagerAddress = newChildChainManager;
   }
 
@@ -54,7 +43,7 @@ contract RootChainManager is IRootChainManager, AccessControl {
     return _childChainManagerAddress;
   }
 
-  function setWETHAddress(address newWETHAddress) external onlyOwner {
+  function setWETHAddress(address newWETHAddress) external only(DEFAULT_ADMIN_ROLE) {
     _WETHAddress = newWETHAddress;
   }
 
@@ -62,7 +51,7 @@ contract RootChainManager is IRootChainManager, AccessControl {
     return _WETHAddress;
   }
 
-  function mapToken(address rootToken, address childToken) override external onlyMapper {
+  function mapToken(address rootToken, address childToken) override external only(MAPPER_ROLE) {
     _rootToChildToken[rootToken] = childToken;
     _childToRootToken[childToken] = rootToken;
     emit TokenMapped(rootToken, childToken);

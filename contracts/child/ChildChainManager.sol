@@ -6,7 +6,6 @@ import { IChildChainManager } from "./IChildChainManager.sol";
 import { IChildToken } from "./IChildToken.sol";
 
 contract ChildChainManager is IChildChainManager, AccessControl {
-  bytes32 public constant OWNER_ROLE = keccak256("OWNER_ROLE");
   bytes32 public constant MAPPER_ROLE = keccak256("MAPPER_ROLE");
   bytes32 public constant STATE_SYNCER_ROLE = keccak256("STATE_SYNCER_ROLE");
 
@@ -14,33 +13,14 @@ contract ChildChainManager is IChildChainManager, AccessControl {
   mapping(address => address) private _childToRootToken;
 
   constructor() public {
-    _setupRole(OWNER_ROLE, msg.sender);
-    _setRoleAdmin(OWNER_ROLE, OWNER_ROLE);
+    _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     _setupRole(MAPPER_ROLE, msg.sender);
-    _setRoleAdmin(MAPPER_ROLE, OWNER_ROLE);
     _setupRole(STATE_SYNCER_ROLE, msg.sender);
-    _setRoleAdmin(STATE_SYNCER_ROLE, OWNER_ROLE);
   }
 
-  modifier onlyOwner() {
+  modifier only(bytes32 role) {
     require(
-      hasRole(OWNER_ROLE, msg.sender),
-      "Insufficient permissions"
-    );
-    _;
-  }
-
-  modifier onlyMapper() {
-    require(
-      hasRole(MAPPER_ROLE, msg.sender),
-      "Insufficient permissions"
-    );
-    _;
-  }
-
-  modifier onlyStateSyncer() {
-    require(
-      hasRole(STATE_SYNCER_ROLE, msg.sender),
+      hasRole(role, msg.sender),
       "Insufficient permissions"
     );
     _;
@@ -54,13 +34,13 @@ contract ChildChainManager is IChildChainManager, AccessControl {
     return _childToRootToken[childToken];
   }
 
-  function mapToken(address rootToken, address childToken) override external onlyMapper {
+  function mapToken(address rootToken, address childToken) override external only(MAPPER_ROLE) {
     _rootToChildToken[rootToken] = childToken;
     _childToRootToken[childToken] = rootToken;
     emit TokenMapped(rootToken, childToken);
   }
 
-  function onStateReceive(uint256 id, bytes calldata data) override external onlyStateSyncer {
+  function onStateReceive(uint256 id, bytes calldata data) override external only(STATE_SYNCER_ROLE) {
     (address user, address rootToken, uint256 amount) = abi.decode(data, (address, address, uint256));
     address childTokenAddress = _rootToChildToken[rootToken];
     require(
