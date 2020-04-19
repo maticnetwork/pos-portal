@@ -36,17 +36,15 @@ module.exports = {
    */
 
   networks: {
-    development: {
+    root: {
       host: 'localhost',
       port: 9545,
-      network_id: '*', // match any network
-      skipDryRun: true,
-      gas: 7000000
+      network_id: '*'
     },
-    bor: {
+    child: {
       host: 'localhost',
       port: 8545,
-      network_id: '*' // match any network
+      network_id: '*'
     }
   },
 

@@ -2,3 +2,10 @@ node_modules
 build
 
 .DS_Store
+
+test-blockchain/genesis.json
+test-blockchain/geth
+test-blockchain/history
+test-blockchain/data
+
+contractAddresses.json
