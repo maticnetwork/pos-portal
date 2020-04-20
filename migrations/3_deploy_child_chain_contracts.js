@@ -8,6 +8,6 @@ module.exports = async(deployer) => {
 
   const contractAddresses = utils.getContractAddresses()
   contractAddresses.child.ChildChainManager = ChildChainManager.address
-  contractAddresses.child.ChildToken = ChildToken.address
+  contractAddresses.child.DummyToken = ChildToken.address
   utils.writeContractAddresses(contractAddresses)
 }
