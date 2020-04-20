@@ -1,6 +1,6 @@
 import contracts from './contracts'
 
-export const getFreshRootContracts = async() => {
+export const deployFreshRootContracts = async() => {
   const [
     rootChainManager,
     dummyToken,
@@ -18,7 +18,7 @@ export const getFreshRootContracts = async() => {
   }
 }
 
-export const getFreshChildContracts = async() => {
+export const deployFreshChildContracts = async() => {
   const [
     childChainManager,
     dummyToken
@@ -33,13 +33,13 @@ export const getFreshChildContracts = async() => {
   }
 }
 
-export const getInitializedContracts = async() => {
+export const deployInitializedContracts = async() => {
   const [
     root,
     child
   ] = await Promise.all([
-    getFreshRootContracts(),
-    getFreshChildContracts()
+    deployFreshRootContracts(),
+    deployFreshChildContracts()
   ])
 
   await Promise.all([

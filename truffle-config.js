@@ -1,3 +1,6 @@
+require('babel-register')
+require('babel-polyfill')
+
 /**
  * Use this file to configure your truffle project. It's seeded with some
  * common settings for different networks and features like migrations,
@@ -39,12 +42,12 @@ module.exports = {
     root: {
       host: 'localhost',
       port: 9545,
-      network_id: '*'
+      network_id: '53227'
     },
     child: {
       host: 'localhost',
       port: 8545,
-      network_id: '*'
+      network_id: '96410'
     }
   },
 

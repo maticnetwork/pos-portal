@@ -1,4 +1,4 @@
-import { rootWeb3, childWeb3 } from './constants'
+import { rootNetworkId, childNetworkId } from './constants'
 
 const RootChainManager = artifacts.require('RootChainManager')
 const DummyStateSender = artifacts.require('DummyStateSender')
@@ -7,13 +7,13 @@ const ChildChainManager = artifacts.require('ChildChainManager')
 const ChildToken = artifacts.require('ChildToken')
 
 // contracts on root chain
-RootChainManager.web3 = rootWeb3
-DummyStateSender.web3 = rootWeb3
-DummyToken.web3 = rootWeb3
+RootChainManager.setNetwork(rootNetworkId)
+DummyStateSender.setNetwork(rootNetworkId)
+DummyToken.setNetwork(rootNetworkId)
 
 // contracts on child chain
-ChildChainManager.web3 = childWeb3
-ChildToken.web3 = childWeb3
+ChildChainManager.setNetwork(childNetworkId)
+ChildToken.setNetwork(childNetworkId)
 
 export default {
   RootChainManager,
