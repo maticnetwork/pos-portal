@@ -1,3 +1,5 @@
+import BN from 'bn.js'
+
 // export const rootRPC = 'http://localhost:8545'
 // export const childRPC = 'http://localhost:9545'
 
@@ -23,5 +25,17 @@ export const mockValues = {
     '0x32F303BB2Ca9167e9287CB0f53557D249D3D24BF',
     '0xd7728112027c0d2A67c097BcF5D71adF96C9c858',
     '0x48c856F10d5930DaE3CF338173247aB8DA94d308'
+  ],
+  amounts: [
+    new BN('200000000000000000'),
+    new BN('400000000000000000'),
+    new BN('600000000000000000'),
+    new BN('800000000000000000'),
+    new BN('1000000000000000000'),
+    new BN('1200000000000000000'),
+    new BN('1400000000000000000'),
+    new BN('1600000000000000000'),
+    new BN('1800000000000000000'),
+    new BN('2000000000000000000')
   ]
 }
