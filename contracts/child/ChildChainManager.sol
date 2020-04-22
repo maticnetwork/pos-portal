@@ -1,7 +1,7 @@
 pragma solidity "0.6.6";
 
-import { IERC20 } from "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
-import { AccessControl } from "openzeppelin-solidity/contracts/access/AccessControl.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { AccessControl } from "@openzeppelin/contracts/access/AccessControl.sol";
 import { IChildChainManager } from "./IChildChainManager.sol";
 import { IChildToken } from "./IChildToken.sol";
 

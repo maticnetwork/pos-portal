@@ -57,7 +57,7 @@
     "truffle": "^5.1.21"
   },
   "dependencies": {
-    "ganache-cli": "^6.9.1",
-    "openzeppelin-solidity": "3.0.0-rc.1"
+    "@openzeppelin/contracts": "^3.0.0",
+    "ganache-cli": "^6.9.1"
   }
 }
