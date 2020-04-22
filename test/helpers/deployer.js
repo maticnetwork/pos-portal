@@ -50,5 +50,8 @@ export const deployInitializedContracts = async() => {
     child.dummyToken.setRootToken(root.dummyToken.address)
   ])
 
+  const DEPOSITOR_ROLE = await child.dummyToken.DEPOSITOR_ROLE()
+  child.dummyToken.grantRole(DEPOSITOR_ROLE, child.childChainManager.address)
+
   return { root, child }
 }
