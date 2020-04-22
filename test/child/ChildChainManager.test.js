@@ -6,6 +6,7 @@ import BN from 'bn.js'
 import * as deployer from '../helpers/deployer'
 import { mockValues } from '../helpers/constants'
 import logDecoder from '../helpers/log-decoder.js'
+import { encodeStateSyncerData } from '../helpers/utils'
 
 // Enable and inject BN dependency
 chai
@@ -101,10 +102,3 @@ contract('ChildChainManager', async(accounts) => {
     })
   })
 })
-
-function encodeStateSyncerData(user, rootToken, amount) {
-  return '0x' +
-    user.slice(2).padStart(64, '0') +
-    rootToken.slice(2).padStart(64, '0') +
-    amount.toString(16).padStart(64, '0')
-}

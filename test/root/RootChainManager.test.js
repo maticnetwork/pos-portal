@@ -6,6 +6,7 @@ import BN from 'bn.js'
 import * as deployer from '../helpers/deployer'
 import { mockValues } from '../helpers/constants'
 import logDecoder from '../helpers/log-decoder.js'
+import { decodeStateSenderData } from '../helpers/utils'
 
 // Enable and inject BN dependency
 chai
@@ -277,10 +278,3 @@ contract('RootChainManager', async(accounts) => {
     })
   })
 })
-
-function decodeStateSenderData(data) {
-  const user = '0x' + data.slice(26, 66)
-  const rootToken = '0x' + data.slice(90, 130)
-  const amount = new BN(data.slice(131, 194), 16)
-  return { user, rootToken, amount }
-}
