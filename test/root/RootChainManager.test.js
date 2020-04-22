@@ -68,7 +68,7 @@ contract('RootChainManager', async(accounts) => {
     let oldAccountBalance
     let oldContractBalance
     let depositTx
-    let depositedLog
+    let lockedLog
     let stateSyncedlog
 
     before(async() => {
@@ -89,30 +89,30 @@ contract('RootChainManager', async(accounts) => {
       should.exist(depositTx)
     })
 
-    it('Emits Deposited log', () => {
+    it('Emits Locked log', () => {
       const logs = logDecoder.decodeLogs(depositTx.receipt.rawLogs)
-      depositedLog = logs.find(l => l.event === 'Deposited')
-      should.exist(depositedLog)
+      lockedLog = logs.find(l => l.event === 'Locked')
+      should.exist(lockedLog)
     })
 
-    describe('Correct values emitted in Deposited log', () => {
+    describe('Correct values emitted in Locked log', () => {
       it('Emitter address', () => {
-        depositedLog.address.should.equal(
+        lockedLog.address.should.equal(
           rootChainManager.address.toLowerCase()
         )
       })
 
       it('amount', () => {
-        const depositedLogAmount = new BN(depositedLog.args.amount.toString())
-        depositedLogAmount.should.be.bignumber.that.equals(depositAmount)
+        const lockedLogAmount = new BN(lockedLog.args.amount.toString())
+        lockedLogAmount.should.be.bignumber.that.equals(depositAmount)
       })
 
       it('user', () => {
-        depositedLog.args.user.should.equal(accounts[0])
+        lockedLog.args.user.should.equal(accounts[0])
       })
 
       it('rootToken', () => {
-        depositedLog.args.rootToken.should.equal(dummyToken.address)
+        lockedLog.args.rootToken.should.equal(dummyToken.address)
       })
     })
 
@@ -177,7 +177,7 @@ contract('RootChainManager', async(accounts) => {
     let oldAccountBalance
     let oldContractBalance
     let depositTx
-    let depositedLog
+    let lockedLog
     let stateSyncedlog
 
     before(async() => {
@@ -198,30 +198,30 @@ contract('RootChainManager', async(accounts) => {
       should.exist(depositTx)
     })
 
-    it('Emits Deposited log', () => {
+    it('Emits Locked log', () => {
       const logs = logDecoder.decodeLogs(depositTx.receipt.rawLogs)
-      depositedLog = logs.find(l => l.event === 'Deposited')
-      should.exist(depositedLog)
+      lockedLog = logs.find(l => l.event === 'Locked')
+      should.exist(lockedLog)
     })
 
-    describe('Correct values emitted in Deposited log', () => {
+    describe('Correct values emitted in Locked log', () => {
       it('Emitter address', () => {
-        depositedLog.address.should.equal(
+        lockedLog.address.should.equal(
           rootChainManager.address.toLowerCase()
         )
       })
 
       it('amount', () => {
-        const depositedLogAmount = new BN(depositedLog.args.amount.toString())
-        depositedLogAmount.should.be.bignumber.that.equals(depositAmount)
+        const lockedLogAmount = new BN(lockedLog.args.amount.toString())
+        lockedLogAmount.should.be.bignumber.that.equals(depositAmount)
       })
 
       it('user', () => {
-        depositedLog.args.user.should.equal(depositForAccount)
+        lockedLog.args.user.should.equal(depositForAccount)
       })
 
       it('rootToken', () => {
-        depositedLog.args.rootToken.should.equal(dummyToken.address)
+        lockedLog.args.rootToken.should.equal(dummyToken.address)
       })
     })
 

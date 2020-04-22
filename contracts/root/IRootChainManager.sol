@@ -6,7 +6,7 @@ interface IRootChainManager {
     address indexed childToken
   );
 
-  event Deposited(
+  event Locked(
     address indexed user,
     address indexed rootToken,
     uint256 indexed amount

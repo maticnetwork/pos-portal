@@ -88,7 +88,7 @@ contract RootChainManager is IRootChainManager, AccessControl {
     );
 
     _stateSender.syncState(_childChainManagerAddress, abi.encode(user, _WETHAddress, msg.value));
-    emit Deposited(user, _WETHAddress, msg.value);
+    emit Locked(user, _WETHAddress, msg.value);
   }
 
   function deposit(address rootToken, uint256 amount) override external {
@@ -119,7 +119,7 @@ contract RootChainManager is IRootChainManager, AccessControl {
 
     IERC20(rootToken).transferFrom(msg.sender, address(this), amount);
     _stateSender.syncState(_childChainManagerAddress, abi.encode(user, rootToken, amount));
-    emit Deposited(user, rootToken, amount);
+    emit Locked(user, rootToken, amount);
   }
 
   function exit(bytes calldata data) override external {
