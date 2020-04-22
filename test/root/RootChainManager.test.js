@@ -16,9 +16,8 @@ chai
 const should = chai.should()
 
 contract('RootChainManager', async(accounts) => {
-  let contracts
-
   describe('Set values', async() => {
+    let contracts
     before(async() => {
       contracts = await deployer.deployFreshRootContracts()
     })
@@ -61,101 +60,217 @@ contract('RootChainManager', async(accounts) => {
     })
   })
 
-  describe('Deposit tokens', async() => {
+  describe('deposit', async() => {
+    const depositAmount = mockValues.amounts[0]
+    let contracts
+    let dummyToken
+    let rootChainManager
+    let oldAccountBalance
+    let oldContractBalance
+    let depositTx
+    let depositedLog
+    let stateSyncedlog
+
     before(async() => {
       contracts = await deployer.deployInitializedContracts()
+      dummyToken = contracts.root.dummyToken
+      rootChainManager = contracts.root.rootChainManager
+      oldAccountBalance = await dummyToken.balanceOf(accounts[0])
+      oldContractBalance = await dummyToken.balanceOf(rootChainManager.address)
     })
 
-    it('Can deposit', async() => {
-      const dummyToken = contracts.root.dummyToken
-      const rootChainManager = contracts.root.rootChainManager
-      const oldAccountBalance = await dummyToken.balanceOf(accounts[0])
-      const oldContractBalance = await dummyToken.balanceOf(rootChainManager.address)
-      const depositAmount = mockValues.amounts[0]
-
+    it('Account has balance', () => {
       depositAmount.should.be.a.bignumber.lessThan(oldAccountBalance)
+    })
 
+    it('Can approve and deposit', async() => {
       await dummyToken.approve(rootChainManager.address, depositAmount)
-      const depositTx = await rootChainManager.deposit(dummyToken.address, depositAmount)
+      depositTx = await rootChainManager.deposit(dummyToken.address, depositAmount)
+      should.exist(depositTx)
+    })
+
+    it('Emits Deposited log', () => {
       const logs = logDecoder.decodeLogs(depositTx.receipt.rawLogs)
-      const depositedLog = logs.find(l => l.event === 'Deposited')
-      const stateSyncedlog = logs.find(l => l.event === 'StateSynced')
-
+      depositedLog = logs.find(l => l.event === 'Deposited')
       should.exist(depositedLog)
+    })
+
+    describe('Correct values emitted in Deposited log', () => {
+      it('Emitter address', () => {
+        depositedLog.address.should.equal(
+          rootChainManager.address.toLowerCase()
+        )
+      })
+
+      it('amount', () => {
+        const depositedLogAmount = new BN(depositedLog.args.amount.toString())
+        depositedLogAmount.should.be.bignumber.that.equals(depositAmount)
+      })
+
+      it('user', () => {
+        depositedLog.args.user.should.equal(accounts[0])
+      })
+
+      it('rootToken', () => {
+        depositedLog.args.rootToken.should.equal(dummyToken.address)
+      })
+    })
+
+    it('Emits StateSynced log', () => {
+      const logs = logDecoder.decodeLogs(depositTx.receipt.rawLogs)
+      stateSyncedlog = logs.find(l => l.event === 'StateSynced')
       should.exist(stateSyncedlog)
+    })
 
-      const depositedLogAmount = new BN(depositedLog.args.amount.toString())
-      depositedLogAmount.should.be.bignumber.that.equals(depositAmount)
-      depositedLog.args.user.should.equal(accounts[0])
-      depositedLog.args.rootToken.should.equal(dummyToken.address)
-      depositedLog.address.should.equal(
-        rootChainManager.address.toLowerCase()
-      )
+    describe('Correct values emitted in StateSynced log', () => {
+      let data
+      before(() => {
+        data = decodeStateSenderData(stateSyncedlog.args.data)
+      })
 
-      const data = decodeStateSenderData(stateSyncedlog.args.data)
-      data.user.should.equal(accounts[0].toLowerCase())
-      data.rootToken.should.equal(dummyToken.address.toLowerCase())
-      data.amount.should.be.a.bignumber.that.equals(depositAmount)
-      stateSyncedlog.args.contractAddress.should.equal(
-        contracts.child.childChainManager.address
-      )
-      stateSyncedlog.address.should.equal(
-        contracts.root.dummyStateSender.address.toLowerCase()
-      )
+      it('Emitter address', () => {
+        stateSyncedlog.address.should.equal(
+          contracts.root.dummyStateSender.address.toLowerCase()
+        )
+      })
 
+      it('user', () => {
+        data.user.should.equal(accounts[0].toLowerCase())
+      })
+
+      it('rootToken', () => {
+        data.rootToken.should.equal(dummyToken.address.toLowerCase())
+      })
+
+      it('amount', () => {
+        data.amount.should.be.a.bignumber.that.equals(depositAmount)
+      })
+
+      it('contractAddress', () => {
+        stateSyncedlog.args.contractAddress.should.equal(
+          contracts.child.childChainManager.address
+        )
+      })
+    })
+
+    it('Deposit amount deducted from account', async() => {
       const newAccountBalance = await dummyToken.balanceOf(accounts[0])
-      const newContractBalance = await dummyToken.balanceOf(rootChainManager.address)
       newAccountBalance.should.be.a.bignumber.that.equals(
         oldAccountBalance.sub(depositAmount)
       )
+    })
+
+    it('Deposit amount credited to contract', async() => {
+      const newContractBalance = await dummyToken.balanceOf(rootChainManager.address)
       newContractBalance.should.be.a.bignumber.that.equals(
         oldContractBalance.add(depositAmount)
       )
     })
+  })
 
-    it('Can depositFor', async() => {
-      const dummyToken = contracts.root.dummyToken
-      const rootChainManager = contracts.root.rootChainManager
-      const oldAccountBalance = await dummyToken.balanceOf(accounts[0])
-      const oldContractBalance = await dummyToken.balanceOf(rootChainManager.address)
-      const depositAmount = mockValues.amounts[0]
-      const depositForAccount = mockValues.addresses[0]
+  describe('depositFor', async() => {
+    const depositAmount = mockValues.amounts[1]
+    const depositForAccount = mockValues.addresses[0]
+    let contracts
+    let dummyToken
+    let rootChainManager
+    let oldAccountBalance
+    let oldContractBalance
+    let depositTx
+    let depositedLog
+    let stateSyncedlog
 
+    before(async() => {
+      contracts = await deployer.deployInitializedContracts()
+      dummyToken = contracts.root.dummyToken
+      rootChainManager = contracts.root.rootChainManager
+      oldAccountBalance = await dummyToken.balanceOf(accounts[0])
+      oldContractBalance = await dummyToken.balanceOf(rootChainManager.address)
+    })
+
+    it('Account has balance', () => {
       depositAmount.should.be.a.bignumber.lessThan(oldAccountBalance)
+    })
 
+    it('Can approve and deposit', async() => {
       await dummyToken.approve(rootChainManager.address, depositAmount)
-      const depositTx = await rootChainManager.depositFor(depositForAccount, dummyToken.address, depositAmount)
+      depositTx = await rootChainManager.depositFor(depositForAccount, dummyToken.address, depositAmount)
+      should.exist(depositTx)
+    })
+
+    it('Emits Deposited log', () => {
       const logs = logDecoder.decodeLogs(depositTx.receipt.rawLogs)
-      const depositedLog = logs.find(l => l.event === 'Deposited')
-      const stateSyncedlog = logs.find(l => l.event === 'StateSynced')
-
+      depositedLog = logs.find(l => l.event === 'Deposited')
       should.exist(depositedLog)
+    })
+
+    describe('Correct values emitted in Deposited log', () => {
+      it('Emitter address', () => {
+        depositedLog.address.should.equal(
+          rootChainManager.address.toLowerCase()
+        )
+      })
+
+      it('amount', () => {
+        const depositedLogAmount = new BN(depositedLog.args.amount.toString())
+        depositedLogAmount.should.be.bignumber.that.equals(depositAmount)
+      })
+
+      it('user', () => {
+        depositedLog.args.user.should.equal(depositForAccount)
+      })
+
+      it('rootToken', () => {
+        depositedLog.args.rootToken.should.equal(dummyToken.address)
+      })
+    })
+
+    it('Emits StateSynced log', () => {
+      const logs = logDecoder.decodeLogs(depositTx.receipt.rawLogs)
+      stateSyncedlog = logs.find(l => l.event === 'StateSynced')
       should.exist(stateSyncedlog)
+    })
 
-      const depositedLogAmount = new BN(depositedLog.args.amount.toString())
-      depositedLogAmount.should.be.bignumber.that.equals(depositAmount)
-      depositedLog.args.user.should.equal(depositForAccount)
-      depositedLog.args.rootToken.should.equal(dummyToken.address)
-      depositedLog.address.should.equal(
-        rootChainManager.address.toLowerCase()
-      )
+    describe('Correct values emitted in StateSynced log', () => {
+      let data
+      before(() => {
+        data = decodeStateSenderData(stateSyncedlog.args.data)
+      })
 
-      const data = decodeStateSenderData(stateSyncedlog.args.data)
-      data.user.should.equal(depositForAccount.toLowerCase())
-      data.rootToken.should.equal(dummyToken.address.toLowerCase())
-      data.amount.should.be.a.bignumber.that.equals(depositAmount)
-      stateSyncedlog.args.contractAddress.should.equal(
-        contracts.child.childChainManager.address
-      )
-      stateSyncedlog.address.should.equal(
-        contracts.root.dummyStateSender.address.toLowerCase()
-      )
+      it('Emitter address', () => {
+        stateSyncedlog.address.should.equal(
+          contracts.root.dummyStateSender.address.toLowerCase()
+        )
+      })
 
+      it('user', () => {
+        data.user.should.equal(depositForAccount.toLowerCase())
+      })
+
+      it('rootToken', () => {
+        data.rootToken.should.equal(dummyToken.address.toLowerCase())
+      })
+
+      it('amount', () => {
+        data.amount.should.be.a.bignumber.that.equals(depositAmount)
+      })
+
+      it('contractAddress', () => {
+        stateSyncedlog.args.contractAddress.should.equal(
+          contracts.child.childChainManager.address
+        )
+      })
+    })
+
+    it('Deposit amount deducted from account', async() => {
       const newAccountBalance = await dummyToken.balanceOf(accounts[0])
-      const newContractBalance = await dummyToken.balanceOf(rootChainManager.address)
       newAccountBalance.should.be.a.bignumber.that.equals(
         oldAccountBalance.sub(depositAmount)
       )
+    })
+
+    it('Deposit amount credited to contract', async() => {
+      const newContractBalance = await dummyToken.balanceOf(rootChainManager.address)
       newContractBalance.should.be.a.bignumber.that.equals(
         oldContractBalance.add(depositAmount)
       )
