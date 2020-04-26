@@ -42,6 +42,7 @@
     "babel-preset-es2015": "^6.24.1",
     "babel-preset-stage-2": "^6.24.1",
     "babel-preset-stage-3": "^6.24.1",
+    "bluebird": "^3.7.2",
     "bn.js": "^5.1.1",
     "chai": "^4.2.0",
     "chai-as-promised": "^7.1.1",
