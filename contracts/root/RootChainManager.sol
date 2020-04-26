@@ -4,11 +4,23 @@ import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { AccessControl } from "@openzeppelin/contracts/access/AccessControl.sol";
 import { IRootChainManager } from "./IRootChainManager.sol";
 import { IStateSender } from "./IStateSender.sol";
+import { ICheckpointManager } from './ICheckpointManager.sol';
+import { RLPReader } from "../lib/RLPReader.sol";
+import { MerklePatriciaProof } from "../lib/MerklePatriciaProof.sol";
+import { Merkle } from "../lib/Merkle.sol";
 
 contract RootChainManager is IRootChainManager, AccessControl {
+  using RLPReader for bytes;
+  using RLPReader for RLPReader.RLPItem;
+  using Merkle for bytes32;
+
+  // Transfer(address,address,uint256)
+  bytes32 constant TRANSFER_EVENT_SIG = 0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef;
   bytes32 public constant MAPPER_ROLE = keccak256("MAPPER_ROLE");
+  uint256 public constant MAX_LOGS = 10;
 
   IStateSender private _stateSender;
+  ICheckpointManager private _checkpointManager;
   address private _childChainManagerAddress;
   address private _WETHAddress;
   mapping(address => address) private _rootToChildToken;
@@ -33,6 +45,14 @@ contract RootChainManager is IRootChainManager, AccessControl {
 
   function stateSenderAddress() public view returns (address) {
     return address(_stateSender);
+  }
+
+  function setCheckpointManager(address newCheckpointManager) override external only(DEFAULT_ADMIN_ROLE) {
+    _checkpointManager = ICheckpointManager(newCheckpointManager);
+  }
+
+  function checkpointManagerAddress() public view returns (address) {
+    return address(_checkpointManager);
   }
 
   function setChildChainManagerAddress(address newChildChainManager) external only(DEFAULT_ADMIN_ROLE) {
@@ -74,21 +94,22 @@ contract RootChainManager is IRootChainManager, AccessControl {
   }
 
   function _depositEtherFor(address user) private {
-    require(
-      _rootToChildToken[_WETHAddress] != address(0x0),
-      "WETH not mapped"
-    );
-    require(
-      address(_stateSender) != address(0x0),
-      "stateSender not set"
-    );
-    require(
-      address(_childChainManagerAddress) != address(0x0),
-      "childChainManager not set"
-    );
+    revert("Ether deposit under construction");
+    // require(
+    //   _rootToChildToken[_WETHAddress] != address(0x0),
+    //   "WETH not mapped"
+    // );
+    // require(
+    //   address(_stateSender) != address(0x0),
+    //   "stateSender not set"
+    // );
+    // require(
+    //   address(_childChainManagerAddress) != address(0x0),
+    //   "childChainManager not set"
+    // );
 
-    _stateSender.syncState(_childChainManagerAddress, abi.encode(user, _WETHAddress, msg.value));
-    emit Locked(user, _WETHAddress, msg.value);
+    // _stateSender.syncState(_childChainManagerAddress, abi.encode(user, _WETHAddress, msg.value));
+    // emit Locked(user, _WETHAddress, msg.value);
   }
 
   function deposit(address rootToken, uint256 amount) override external {
@@ -122,7 +143,110 @@ contract RootChainManager is IRootChainManager, AccessControl {
     emit Locked(user, rootToken, amount);
   }
 
-  function exit(bytes calldata data) override external {
-  
+  /**
+   * @param inputData RLP encoded data of the reference tx containing following list of fields
+   *  0 - headerNumber Header block number of which the reference tx was a part of
+   *  1 - blockProof Proof that the block header (in the child chain) is a leaf in the submitted merkle root
+   *  2 - blockNumber Block number of which the reference tx is a part of
+   *  3 - blockTime Reference tx block time
+   *  4 - blocktxRoot Transactions root of block
+   *  5 - blockReceiptsRoot Receipts root of block
+   *  6 - receipt Receipt of the reference transaction
+   *  7 - receiptProof Merkle proof of the reference receipt
+   *  8 - branchMask Merkle proof branchMask for the receipt
+   *  9 - logIndex Log Index to read from the receipt
+   */
+  function exit(bytes calldata inputData) override external {
+    RLPReader.RLPItem[] memory inputDataRLPList = inputData.toRlpItem().toList();
+    uint256 logIndex = inputDataRLPList[9].toUint();
+    require(logIndex < MAX_LOGS, "Supporting a max of 10 logs");
+    bytes memory receipt = inputDataRLPList[6].toBytes();
+    RLPReader.RLPItem[] memory receiptRLPList = receipt.toRlpItem().toList();
+    RLPReader.RLPItem[] memory logRLPList = receiptRLPList[3].toList()[logIndex].toList();
+
+    address childToken = RLPReader.toAddress(logRLPList[0]); // log address field
+    require(
+      _childToRootToken[childToken] != address(0),
+      "Token not mapped"
+    );
+
+    RLPReader.RLPItem[] memory logTopicRLPList = logRLPList[1].toList(); // topics
+    require(
+      bytes32(logTopicRLPList[0].toUint()) == TRANSFER_EVENT_SIG, // topic0 is event sig
+      "Not a transfer event signature"
+    );
+    require(
+      msg.sender == logTopicRLPList[1].toAddress(), // from1 is from address
+      "Withdrawer and burn exit tx do not match"
+    );
+    require(
+      logTopicRLPList[2].toAddress() == address(0), // topic2 is to address
+      "Not a burn event"
+    );
+
+    // TODO: verify tx inclusion
+    // required?
+
+    require(
+      inputDataRLPList[8].toBytes().toRlpItem().toUint() &
+        0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF00000000 ==
+        0,
+      "Branch mask should be 32 bits"
+    );
+
+    uint256 headerNumber = inputDataRLPList[0].toUint();
+    require(
+      MerklePatriciaProof.verify(
+        inputDataRLPList[6].toBytes(), // receipt
+        inputDataRLPList[8].toBytes(), // branchMask
+        inputDataRLPList[7].toBytes(), // receiptProof
+        bytes32(inputDataRLPList[5].toUint()) // receiptsRoot
+      ),
+      "Invalid receipt merkle proof"
+    );
+
+    uint256 blockNumber = inputDataRLPList[2].toUint();
+    checkBlockMembershipInCheckpoint(
+      blockNumber,
+      inputDataRLPList[3].toUint(), // blockTime
+      bytes32(inputDataRLPList[4].toUint()), // txRoot
+      bytes32(inputDataRLPList[5].toUint()), // receiptRoot
+      headerNumber,
+      inputDataRLPList[1].toBytes() // blockProof
+    );
+
+    IERC20(
+      _childToRootToken[childToken]
+    ).transfer(msg.sender, logRLPList[2].toUint());
+
+    emit Exited(msg.sender, _childToRootToken[childToken], logRLPList[2].toUint());
+  }
+
+  function checkBlockMembershipInCheckpoint(
+    uint256 blockNumber,
+    uint256 blockTime,
+    bytes32 txRoot,
+    bytes32 receiptRoot,
+    uint256 headerNumber,
+    bytes memory blockProof
+  )
+    internal
+    view
+    returns (uint256 /* createdAt */)
+  {
+    (bytes32 headerRoot, uint256 startBlock, , uint256 createdAt, ) =
+      _checkpointManager.headerBlocks(headerNumber);
+
+    require(
+      keccak256(
+        abi.encodePacked(blockNumber, blockTime, txRoot, receiptRoot)
+      ).checkMembership(
+        blockNumber - startBlock,
+        headerRoot,
+        blockProof
+      ),
+      "Burn tx not part of submitted header"
+    );
+    return createdAt;
   }
 }
