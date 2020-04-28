@@ -176,11 +176,11 @@ contract RootChainManager is IRootChainManager, AccessControl {
       "Not a transfer event signature"
     );
     require(
-      msg.sender == logTopicRLPList[1].toAddress(), // from1 is from address
+      msg.sender == address(logTopicRLPList[1].toUint()), // from1 is from address
       "Withdrawer and burn exit tx do not match"
     );
     require(
-      logTopicRLPList[2].toAddress() == address(0), // topic2 is to address
+      address(logTopicRLPList[2].toUint()) == address(0), // topic2 is to address
       "Not a burn event"
     );
 
