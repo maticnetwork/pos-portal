@@ -25,6 +25,7 @@ contract RootChainManager is IRootChainManager, AccessControl {
   address private _WETHAddress;
   mapping(address => address) private _rootToChildToken;
   mapping(address => address) private _childToRootToken;
+  mapping(bytes32 => bool) private _exitedTxs;
 
   constructor() public {
     _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
@@ -83,6 +84,10 @@ contract RootChainManager is IRootChainManager, AccessControl {
 
   function childToRootToken(address childToken) public view returns (address) {
     return _childToRootToken[childToken];
+  }
+
+  function exitedTxs(bytes32 txHash) public view returns (bool) {
+    return _exitedTxs[txHash];
   }
 
   function depositEther() override external payable {
@@ -155,9 +160,17 @@ contract RootChainManager is IRootChainManager, AccessControl {
    *  7 - receiptProof Merkle proof of the reference receipt
    *  8 - branchMask Merkle proof branchMask for the receipt
    *  9 - logIndex Log Index to read from the receipt
+   *  10- hash of the reference transaction
    */
   function exit(bytes calldata inputData) override external {
     RLPReader.RLPItem[] memory inputDataRLPList = inputData.toRlpItem().toList();
+
+    require(
+      _exitedTxs[bytes32(inputDataRLPList[10].toUint())] == false,
+      "Exit already processed"
+    );
+    _exitedTxs[bytes32(inputDataRLPList[10].toUint())] = true;
+
     uint256 logIndex = inputDataRLPList[9].toUint();
     require(logIndex < MAX_LOGS, "Supporting a max of 10 logs");
     bytes memory receipt = inputDataRLPList[6].toBytes();
