@@ -1,5 +1,5 @@
 {
-  "name": "pos-bridge",
+  "name": "pos-portal",
   "version": "1.0.0",
   "description": "Contracts to facilitate transfer of assets between main chain and matic chain using security of matic POS layer.",
   "main": "index.js",
@@ -23,14 +23,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/maticnetwork/pos-bridge.git"
+    "url": "git+https://github.com/maticnetwork/pos-portal.git"
   },
   "author": "",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/maticnetwork/pos-bridge/issues"
+    "url": "https://github.com/maticnetwork/pos-portal/issues"
   },
-  "homepage": "https://github.com/maticnetwork/pos-bridge#readme",
+  "homepage": "https://github.com/maticnetwork/pos-portal#readme",
   "config": {
     "mnemonics": "clock radar mass judge dismiss just intact mind resemble fringe diary casino"
   },

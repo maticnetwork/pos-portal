@@ -1,6 +1,6 @@
-# Matic POS bridge contracts
+# Matic POS portal contracts
 
-Ethereum smart contracts that power the POS bridge for [Matic Network](https://matic.network).
+Ethereum smart contracts that power the POS portal for [Matic Network](https://matic.network).
 
 ### Install dependencies with
 
