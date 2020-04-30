@@ -1,6 +1,9 @@
 node_modules
 build
 
+# Committing artifacts so they can be accessed from other projects
+# artifacts
+
 .DS_Store
 
 test-blockchain/genesis.json
