@@ -20,6 +20,7 @@ contract WETH is ERC20 {
 
   function depositFor(address user) public payable {
     _mint(user, msg.value);
+    _approve(user, _msgSender(), msg.value);
     emit Deposit(user, msg.value);
   }
 
