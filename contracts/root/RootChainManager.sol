@@ -91,31 +91,26 @@ contract RootChainManager is IRootChainManager, AccessControl {
     return _exitedTxs[txHash];
   }
 
-  function depositEther() override external payable {
-    _depositEtherFor(msg.sender);
+  receive() external payable {
+    depositEther();
+  }
+
+  function depositEther() override public payable {
+    require(
+      address(_WETH) != address(0x0),
+      "WETH not set"
+    );
+    _WETH.depositFor.value(msg.value)(_msgSender());
+    _depositFor(_msgSender(), address(_WETH), msg.value);
   }
 
   function depositEtherFor(address user) override external payable {
-    _depositEtherFor(user);
-  }
-
-  function _depositEtherFor(address user) private {
-    revert("Ether deposit under construction");
-    // require(
-    //   _rootToChildToken[_WETHAddress] != address(0x0),
-    //   "WETH not mapped"
-    // );
-    // require(
-    //   address(_stateSender) != address(0x0),
-    //   "stateSender not set"
-    // );
-    // require(
-    //   address(_childChainManagerAddress) != address(0x0),
-    //   "childChainManager not set"
-    // );
-
-    // _stateSender.syncState(_childChainManagerAddress, abi.encode(user, _WETHAddress, msg.value));
-    // emit Locked(user, _WETHAddress, msg.value);
+    require(
+      address(_WETH) != address(0x0),
+      "WETH not set"
+    );
+    _WETH.depositFor.value(msg.value)(user);
+    _depositFor(user, address(_WETH), msg.value);
   }
 
   function deposit(address rootToken, uint256 amount) override external {
@@ -232,6 +227,10 @@ contract RootChainManager is IRootChainManager, AccessControl {
     IERC20(
       _childToRootToken[childToken]
     ).transfer(msg.sender, logRLPList[2].toUint());
+
+    if (_childToRootToken[childToken] == address(_WETH)) {
+      _WETH.withdrawFor(logRLPList[2].toUint(), _msgSender());
+    }
 
     emit Exited(msg.sender, _childToRootToken[childToken], logRLPList[2].toUint());
   }
