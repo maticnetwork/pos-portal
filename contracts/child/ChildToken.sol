@@ -9,6 +9,12 @@ contract ChildToken is ERC20, IChildToken, AccessControl {
 
   address private _rootToken;
 
+  event Burned(
+    address indexed rootToken,
+    address indexed user,
+    uint256 amount
+  );
+
   constructor(
     string memory name,
     string memory symbol,
