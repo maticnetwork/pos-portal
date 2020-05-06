@@ -5,6 +5,7 @@ import { AccessControl } from "@openzeppelin/contracts/access/AccessControl.sol"
 import { IRootChainManager } from "./IRootChainManager.sol";
 import { IStateSender } from "./IStateSender.sol";
 import { ICheckpointManager } from './ICheckpointManager.sol';
+import { WETH } from './WETH.sol';
 import { RLPReader } from "../lib/RLPReader.sol";
 import { MerklePatriciaProof } from "../lib/MerklePatriciaProof.sol";
 import { Merkle } from "../lib/Merkle.sol";
@@ -21,8 +22,8 @@ contract RootChainManager is IRootChainManager, AccessControl {
 
   IStateSender private _stateSender;
   ICheckpointManager private _checkpointManager;
+  WETH private _WETH;
   address private _childChainManagerAddress;
-  address private _WETHAddress;
   mapping(address => address) private _rootToChildToken;
   mapping(address => address) private _childToRootToken;
   mapping(bytes32 => bool) private _exitedTxs;
@@ -64,12 +65,12 @@ contract RootChainManager is IRootChainManager, AccessControl {
     return _childChainManagerAddress;
   }
 
-  function setWETHAddress(address newWETHAddress) external only(DEFAULT_ADMIN_ROLE) {
-    _WETHAddress = newWETHAddress;
+  function setWETH(address payable newWETHAddress) external only(DEFAULT_ADMIN_ROLE) {
+    _WETH = WETH(newWETHAddress);
   }
 
   function WETHAddress() public view returns (address) {
-    return _WETHAddress;
+    return address(_WETH);
   }
 
   function mapToken(address rootToken, address childToken) override external only(MAPPER_ROLE) {

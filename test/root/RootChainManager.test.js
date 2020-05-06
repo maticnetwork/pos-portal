@@ -39,7 +39,7 @@ contract('RootChainManager', async(accounts) => {
 
     it('Can set WETHAddress', async() => {
       const mockWETHAddress = mockValues.addresses[2]
-      await contracts.rootChainManager.setWETHAddress(mockWETHAddress)
+      await contracts.rootChainManager.setWETH(mockWETHAddress)
       const WETHAddress = await contracts.rootChainManager.WETHAddress()
       WETHAddress.should.equal(mockWETHAddress)
     })
