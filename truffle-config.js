@@ -21,11 +21,11 @@ require('babel-polyfill')
  *
  */
 
-// const HDWalletProvider = require('@truffle/hdwallet-provider');
-// const infuraKey = "fj4jll3k.....";
+const HDWalletProvider = require('@truffle/hdwallet-provider')
 //
 // const fs = require('fs');
 // const mnemonic = fs.readFileSync(".secret").toString().trim();
+const mnemonic = 'clock radar mass judge dismiss just intact mind resemble fringe diary casino'
 
 module.exports = {
   /**
@@ -43,11 +43,29 @@ module.exports = {
       host: 'localhost',
       port: 9545,
       network_id: '53227'
+      // provider: () =>
+      //   new HDWalletProvider(
+      //     mnemonic,
+      //     'https://ropsten.infura.io/v3/70645f042c3a409599c60f96f6dd9fbc'
+      //   ),
+      // network_id: 3,
+      // gas: 7000000,
+      // gasPrice: 10000000000, // 10 gwei
+      // skipDryRun: true
     },
     child: {
       host: 'localhost',
       port: 8545,
       network_id: '96410'
+      // provider: () =>
+      //   new HDWalletProvider(
+      //     mnemonic,
+      //     'https://testnetv3.matic.network'
+      //   ),
+      // network_id: 15001,
+      // gas: 7000000,
+      // gasPrice: 10000000000, // 10 gwei
+      // skipDryRun: true
     }
   },
 
