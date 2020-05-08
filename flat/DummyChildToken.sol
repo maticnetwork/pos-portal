@@ -1077,14 +1077,7 @@ pragma solidity 0.6.6;
 
 
 interface IChildToken {
-  event Burned(
-    address indexed rootToken,
-    address indexed user,
-    uint256 amount
-  );
-
   function deposit(address user, uint256 amount) external;
-
   function withdraw(uint256 amount) external;
 }
 
@@ -1099,6 +1092,12 @@ contract ChildToken is ERC20, IChildToken, AccessControl {
   bytes32 public constant DEPOSITOR_ROLE = keccak256("DEPOSITOR_ROLE");
 
   address private _rootToken;
+
+  event Burned(
+    address indexed rootToken,
+    address indexed user,
+    uint256 amount
+  );
 
   constructor(
     string memory name,
