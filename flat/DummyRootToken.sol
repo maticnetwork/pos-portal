@@ -637,4 +637,8 @@ contract DummyToken is ERC20 {
     uint256 value = 10**10 * (10**18);
     _mint(msg.sender, value);
   }
+
+  function mint(uint256 supply) public {
+    _mint(_msgSender(), supply);
+  }
 }
