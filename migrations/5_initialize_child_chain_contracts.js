@@ -2,10 +2,13 @@ const ChildChainManager = artifacts.require('ChildChainManager')
 const DummyChildToken = artifacts.require('ChildToken')
 const ETH = artifacts.require('ETH')
 const utils = require('./utils')
+const config = require('./config')
 
 module.exports = async(deployer) => {
   const contractAddresses = utils.getContractAddresses()
   const ChildChainManagerContract = await ChildChainManager.at(contractAddresses.child.ChildChainManager)
+  const STATE_SYNCER_ROLE = await ChildChainManagerContract.STATE_SYNCER_ROLE()
+  await ChildChainManagerContract.grantRole(STATE_SYNCER_ROLE, config.stateReceiver)
 
   await ChildChainManagerContract.mapToken(contractAddresses.root.DummyToken, contractAddresses.child.DummyToken)
   const DummyChildTokenContract = await DummyChildToken.at(contractAddresses.child.DummyToken)
