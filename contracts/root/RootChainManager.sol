@@ -18,7 +18,6 @@ contract RootChainManager is IRootChainManager, AccessControl {
   // Transfer(address,address,uint256)
   bytes32 constant TRANSFER_EVENT_SIG = 0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef;
   bytes32 public constant MAPPER_ROLE = keccak256("MAPPER_ROLE");
-  uint256 public constant MAX_LOGS = 10;
 
   IStateSender private _stateSender;
   ICheckpointManager private _checkpointManager;
@@ -168,7 +167,6 @@ contract RootChainManager is IRootChainManager, AccessControl {
     _exitedTxs[bytes32(inputDataRLPList[10].toUint())] = true;
 
     uint256 logIndex = inputDataRLPList[9].toUint();
-    require(logIndex < MAX_LOGS, "Supporting a max of 10 logs");
     bytes memory receipt = inputDataRLPList[6].toBytes();
     RLPReader.RLPItem[] memory receiptRLPList = receipt.toRlpItem().toList();
     RLPReader.RLPItem[] memory logRLPList = receiptRLPList[3].toList()[logIndex].toList();
