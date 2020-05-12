@@ -25,7 +25,7 @@ contract RootChainManager is IRootChainManager, AccessControl {
   address private _childChainManagerAddress;
   mapping(address => address) private _rootToChildToken;
   mapping(address => address) private _childToRootToken;
-  mapping(bytes32 => bool) private _exitedTxs;
+  mapping(bytes32 => bool) private _processedExits;
 
   constructor() public {
     _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
@@ -86,8 +86,8 @@ contract RootChainManager is IRootChainManager, AccessControl {
     return _childToRootToken[childToken];
   }
 
-  function exitedTxs(bytes32 txHash) public view returns (bool) {
-    return _exitedTxs[txHash];
+  function processedExits(bytes32 exitHash) public view returns (bool) {
+    return _processedExits[exitHash];
   }
 
   receive() external payable {
@@ -155,16 +155,27 @@ contract RootChainManager is IRootChainManager, AccessControl {
    *  7 - receiptProof Merkle proof of the reference receipt
    *  8 - branchMask Merkle proof branchMask for the receipt
    *  9 - logIndex Log Index to read from the receipt
-   *  10- hash of the reference transaction
    */
   function exit(bytes calldata inputData) override external {
     RLPReader.RLPItem[] memory inputDataRLPList = inputData.toRlpItem().toList();
 
     require(
-      _exitedTxs[bytes32(inputDataRLPList[10].toUint())] == false,
+      _processedExits[
+        keccak256(abi.encodePacked(
+          inputDataRLPList[2].toBytes(), // blockNumber
+          inputDataRLPList[6].toBytes(), // receipt
+          inputDataRLPList[9].toBytes() // logIndex
+        ))
+      ] == false,
       "Exit already processed"
     );
-    _exitedTxs[bytes32(inputDataRLPList[10].toUint())] = true;
+    _processedExits[
+      keccak256(abi.encodePacked(
+        inputDataRLPList[2].toBytes(), // blockNumber
+        inputDataRLPList[6].toBytes(), // receipt
+        inputDataRLPList[9].toBytes() // logIndex
+      ))
+    ] = true;
 
     uint256 logIndex = inputDataRLPList[9].toUint();
     bytes memory receipt = inputDataRLPList[6].toBytes();
