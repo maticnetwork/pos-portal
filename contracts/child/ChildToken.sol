@@ -21,13 +21,13 @@ contract ChildToken is ERC20, IChildToken, AccessControl {
     uint8 decimals
   ) public ERC20(name, symbol) {
     _setupDecimals(decimals);
-    _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
-    _setupRole(DEPOSITOR_ROLE, msg.sender);
+    _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
+    _setupRole(DEPOSITOR_ROLE, _msgSender());
   }
 
   modifier only(bytes32 role) {
     require(
-      hasRole(role, msg.sender),
+      hasRole(role, _msgSender()),
       "Insufficient permissions"
     );
     _;
@@ -59,11 +59,11 @@ contract ChildToken is ERC20, IChildToken, AccessControl {
       "withdraw amount should be positie"
     );
     require(
-      amount <= balanceOf(msg.sender),
+      amount <= balanceOf(_msgSender()),
       "withdraw amount cannot be more than balance"
     );
 
-    _burn(msg.sender, amount);
-    emit Burned(_rootToken, msg.sender, amount);
+    _burn(_msgSender(), amount);
+    emit Burned(_rootToken, _msgSender(), amount);
   }
 }

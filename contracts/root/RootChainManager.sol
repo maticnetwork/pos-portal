@@ -28,13 +28,13 @@ contract RootChainManager is IRootChainManager, AccessControl {
   mapping(bytes32 => bool) private _processedExits;
 
   constructor() public {
-    _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
-    _setupRole(MAPPER_ROLE, msg.sender);
+    _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
+    _setupRole(MAPPER_ROLE, _msgSender());
   }
 
   modifier only(bytes32 role) {
     require(
-      hasRole(role, msg.sender),
+      hasRole(role, _msgSender()),
       "Insufficient permissions"
     );
     _;
@@ -113,7 +113,7 @@ contract RootChainManager is IRootChainManager, AccessControl {
   }
 
   function deposit(address rootToken, uint256 amount) override external {
-    _depositFor(msg.sender, rootToken, amount);
+    _depositFor(_msgSender(), rootToken, amount);
   }
 
   function depositFor(address user, address rootToken, uint256 amount) override external {
@@ -126,7 +126,7 @@ contract RootChainManager is IRootChainManager, AccessControl {
       "Token not mapped"
     );
     require(
-      IERC20(rootToken).allowance(msg.sender, address(this)) >= amount,
+      IERC20(rootToken).allowance(_msgSender(), address(this)) >= amount,
       "Token transfer not approved"
     );
     require(
@@ -138,7 +138,7 @@ contract RootChainManager is IRootChainManager, AccessControl {
       "childChainManager not set"
     );
 
-    IERC20(rootToken).transferFrom(msg.sender, address(this), amount);
+    IERC20(rootToken).transferFrom(_msgSender(), address(this), amount);
     _stateSender.syncState(_childChainManagerAddress, abi.encode(user, rootToken, amount));
     emit Locked(user, rootToken, amount);
   }
@@ -194,7 +194,7 @@ contract RootChainManager is IRootChainManager, AccessControl {
       "Not a transfer event signature"
     );
     require(
-      msg.sender == address(logTopicRLPList[1].toUint()), // from1 is from address
+      _msgSender() == address(logTopicRLPList[1].toUint()), // from1 is from address
       "Withdrawer and burn exit tx do not match"
     );
     require(
@@ -223,9 +223,8 @@ contract RootChainManager is IRootChainManager, AccessControl {
       "Invalid receipt merkle proof"
     );
 
-    uint256 blockNumber = inputDataRLPList[2].toUint();
     checkBlockMembershipInCheckpoint(
-      blockNumber,
+      inputDataRLPList[2].toUint(), // blockNumber
       inputDataRLPList[3].toUint(), // blockTime
       bytes32(inputDataRLPList[4].toUint()), // txRoot
       bytes32(inputDataRLPList[5].toUint()), // receiptRoot
@@ -235,13 +234,13 @@ contract RootChainManager is IRootChainManager, AccessControl {
 
     IERC20(
       _childToRootToken[childToken]
-    ).transfer(msg.sender, logRLPList[2].toUint());
+    ).transfer(_msgSender(), logRLPList[2].toUint());
 
     if (_childToRootToken[childToken] == address(_WETH)) {
       _WETH.withdrawFor(logRLPList[2].toUint(), _msgSender());
     }
 
-    emit Exited(msg.sender, _childToRootToken[childToken], logRLPList[2].toUint());
+    emit Exited(_msgSender(), _childToRootToken[childToken], logRLPList[2].toUint());
   }
 
   function checkBlockMembershipInCheckpoint(
