@@ -659,14 +659,14 @@ contract ChildChainManager is IChildChainManager, AccessControl {
   mapping(address => address) private _childToRootToken;
 
   constructor() public {
-    _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
-    _setupRole(MAPPER_ROLE, msg.sender);
-    _setupRole(STATE_SYNCER_ROLE, msg.sender);
+    _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
+    _setupRole(MAPPER_ROLE, _msgSender());
+    _setupRole(STATE_SYNCER_ROLE, _msgSender());
   }
 
   modifier only(bytes32 role) {
     require(
-      hasRole(role, msg.sender),
+      hasRole(role, _msgSender()),
       "Insufficient permissions"
     );
     _;

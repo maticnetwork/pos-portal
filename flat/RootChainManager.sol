@@ -1146,13 +1146,13 @@ contract WETH is ERC20, AccessControl {
   bytes32 public constant ROOT_CHAIN_MANAGER_ROLE = keccak256("ROOT_CHAIN_MANAGER_ROLE");
 
   constructor() public ERC20("Wrapped Ether", "WETH") {
-    _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
-    _setupRole(ROOT_CHAIN_MANAGER_ROLE, msg.sender);
+    _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
+    _setupRole(ROOT_CHAIN_MANAGER_ROLE, _msgSender());
   }
 
   modifier only(bytes32 role) {
     require(
-      hasRole(role, msg.sender),
+      hasRole(role, _msgSender()),
       "Insufficient permissions"
     );
     _;
@@ -1718,7 +1718,6 @@ contract RootChainManager is IRootChainManager, AccessControl {
   // Transfer(address,address,uint256)
   bytes32 constant TRANSFER_EVENT_SIG = 0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef;
   bytes32 public constant MAPPER_ROLE = keccak256("MAPPER_ROLE");
-  uint256 public constant MAX_LOGS = 10;
 
   IStateSender private _stateSender;
   ICheckpointManager private _checkpointManager;
@@ -1726,16 +1725,16 @@ contract RootChainManager is IRootChainManager, AccessControl {
   address private _childChainManagerAddress;
   mapping(address => address) private _rootToChildToken;
   mapping(address => address) private _childToRootToken;
-  mapping(bytes32 => bool) private _exitedTxs;
+  mapping(bytes32 => bool) private _processedExits;
 
   constructor() public {
-    _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
-    _setupRole(MAPPER_ROLE, msg.sender);
+    _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
+    _setupRole(MAPPER_ROLE, _msgSender());
   }
 
   modifier only(bytes32 role) {
     require(
-      hasRole(role, msg.sender),
+      hasRole(role, _msgSender()),
       "Insufficient permissions"
     );
     _;
@@ -1787,8 +1786,8 @@ contract RootChainManager is IRootChainManager, AccessControl {
     return _childToRootToken[childToken];
   }
 
-  function exitedTxs(bytes32 txHash) public view returns (bool) {
-    return _exitedTxs[txHash];
+  function processedExits(bytes32 exitHash) public view returns (bool) {
+    return _processedExits[exitHash];
   }
 
   receive() external payable {
@@ -1814,7 +1813,7 @@ contract RootChainManager is IRootChainManager, AccessControl {
   }
 
   function deposit(address rootToken, uint256 amount) override external {
-    _depositFor(msg.sender, rootToken, amount);
+    _depositFor(_msgSender(), rootToken, amount);
   }
 
   function depositFor(address user, address rootToken, uint256 amount) override external {
@@ -1827,7 +1826,7 @@ contract RootChainManager is IRootChainManager, AccessControl {
       "Token not mapped"
     );
     require(
-      IERC20(rootToken).allowance(msg.sender, address(this)) >= amount,
+      IERC20(rootToken).allowance(_msgSender(), address(this)) >= amount,
       "Token transfer not approved"
     );
     require(
@@ -1839,7 +1838,7 @@ contract RootChainManager is IRootChainManager, AccessControl {
       "childChainManager not set"
     );
 
-    IERC20(rootToken).transferFrom(msg.sender, address(this), amount);
+    IERC20(rootToken).transferFrom(_msgSender(), address(this), amount);
     _stateSender.syncState(_childChainManagerAddress, abi.encode(user, rootToken, amount));
     emit Locked(user, rootToken, amount);
   }
@@ -1856,19 +1855,29 @@ contract RootChainManager is IRootChainManager, AccessControl {
    *  7 - receiptProof Merkle proof of the reference receipt
    *  8 - branchMask Merkle proof branchMask for the receipt
    *  9 - logIndex Log Index to read from the receipt
-   *  10- hash of the reference transaction
    */
   function exit(bytes calldata inputData) override external {
     RLPReader.RLPItem[] memory inputDataRLPList = inputData.toRlpItem().toList();
 
     require(
-      _exitedTxs[bytes32(inputDataRLPList[10].toUint())] == false,
+      _processedExits[
+        keccak256(abi.encodePacked(
+          inputDataRLPList[2].toBytes(), // blockNumber
+          inputDataRLPList[6].toBytes(), // receipt
+          inputDataRLPList[9].toBytes() // logIndex
+        ))
+      ] == false,
       "Exit already processed"
     );
-    _exitedTxs[bytes32(inputDataRLPList[10].toUint())] = true;
+    _processedExits[
+      keccak256(abi.encodePacked(
+        inputDataRLPList[2].toBytes(), // blockNumber
+        inputDataRLPList[6].toBytes(), // receipt
+        inputDataRLPList[9].toBytes() // logIndex
+      ))
+    ] = true;
 
     uint256 logIndex = inputDataRLPList[9].toUint();
-    require(logIndex < MAX_LOGS, "Supporting a max of 10 logs");
     bytes memory receipt = inputDataRLPList[6].toBytes();
     RLPReader.RLPItem[] memory receiptRLPList = receipt.toRlpItem().toList();
     RLPReader.RLPItem[] memory logRLPList = receiptRLPList[3].toList()[logIndex].toList();
@@ -1885,7 +1894,7 @@ contract RootChainManager is IRootChainManager, AccessControl {
       "Not a transfer event signature"
     );
     require(
-      msg.sender == address(logTopicRLPList[1].toUint()), // from1 is from address
+      _msgSender() == address(logTopicRLPList[1].toUint()), // from1 is from address
       "Withdrawer and burn exit tx do not match"
     );
     require(
@@ -1914,9 +1923,8 @@ contract RootChainManager is IRootChainManager, AccessControl {
       "Invalid receipt merkle proof"
     );
 
-    uint256 blockNumber = inputDataRLPList[2].toUint();
     checkBlockMembershipInCheckpoint(
-      blockNumber,
+      inputDataRLPList[2].toUint(), // blockNumber
       inputDataRLPList[3].toUint(), // blockTime
       bytes32(inputDataRLPList[4].toUint()), // txRoot
       bytes32(inputDataRLPList[5].toUint()), // receiptRoot
@@ -1926,13 +1934,13 @@ contract RootChainManager is IRootChainManager, AccessControl {
 
     IERC20(
       _childToRootToken[childToken]
-    ).transfer(msg.sender, logRLPList[2].toUint());
+    ).transfer(_msgSender(), logRLPList[2].toUint());
 
     if (_childToRootToken[childToken] == address(_WETH)) {
       _WETH.withdrawFor(logRLPList[2].toUint(), _msgSender());
     }
 
-    emit Exited(msg.sender, _childToRootToken[childToken], logRLPList[2].toUint());
+    emit Exited(_msgSender(), _childToRootToken[childToken], logRLPList[2].toUint());
   }
 
   function checkBlockMembershipInCheckpoint(

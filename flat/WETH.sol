@@ -1084,13 +1084,13 @@ contract WETH is ERC20, AccessControl {
   bytes32 public constant ROOT_CHAIN_MANAGER_ROLE = keccak256("ROOT_CHAIN_MANAGER_ROLE");
 
   constructor() public ERC20("Wrapped Ether", "WETH") {
-    _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
-    _setupRole(ROOT_CHAIN_MANAGER_ROLE, msg.sender);
+    _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
+    _setupRole(ROOT_CHAIN_MANAGER_ROLE, _msgSender());
   }
 
   modifier only(bytes32 role) {
     require(
-      hasRole(role, msg.sender),
+      hasRole(role, _msgSender()),
       "Insufficient permissions"
     );
     _;

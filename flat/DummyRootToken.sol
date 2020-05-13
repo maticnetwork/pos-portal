@@ -635,7 +635,7 @@ pragma solidity "0.6.6";
 contract DummyToken is ERC20 {
   constructor() public ERC20("Dummy Parent Token", "DUMMY") {
     uint256 value = 10**10 * (10**18);
-    _mint(msg.sender, value);
+    _mint(_msgSender(), value);
   }
 
   function mint(uint256 supply) public {
