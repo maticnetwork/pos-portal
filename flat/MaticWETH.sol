@@ -1285,6 +1285,6 @@ contract ChildToken is ERC20, IChildToken, AccessControl, EIP712MetaTransaction 
 pragma solidity "0.6.6";
 
 
-contract MaitcWETH is ChildToken {
+contract MaticWETH is ChildToken {
   constructor() public ChildToken("Wrapped Ether", "WETH", 18) {}
 }
