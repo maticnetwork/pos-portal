@@ -1,7 +1,7 @@
 pragma solidity >=0.4.21 <0.7.0;
 
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import { EIP712MetaTransaction } from "../common/EIP712.sol";
+import { EIP712MetaTransaction } from "../common/EIP712MetaTransaction.sol";
 
 contract RootNADummy is ERC20, EIP712MetaTransaction {
   constructor()

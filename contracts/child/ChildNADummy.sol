@@ -1,7 +1,7 @@
 pragma solidity >=0.4.21 <0.7.0;
 
 import { ChildToken } from "./ChildToken.sol";
-import { EIP712MetaTransaction } from "../common/EIP712.sol";
+import { EIP712MetaTransaction } from "../common/EIP712MetaTransaction.sol";
 
 contract ChildNADummy is ChildToken, EIP712MetaTransaction {
   constructor()
