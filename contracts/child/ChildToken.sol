@@ -3,8 +3,9 @@ pragma solidity "0.6.6";
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { AccessControl } from "@openzeppelin/contracts/access/AccessControl.sol";
 import { IChildToken } from "./IChildToken.sol";
+import { EIP712MetaTransaction } from "../common/EIP712MetaTransaction.sol";
 
-contract ChildToken is ERC20, IChildToken, AccessControl {
+contract ChildToken is ERC20, IChildToken, AccessControl, EIP712MetaTransaction {
   bytes32 public constant DEPOSITOR_ROLE = keccak256("DEPOSITOR_ROLE");
 
   address private _rootToken;
@@ -19,7 +20,11 @@ contract ChildToken is ERC20, IChildToken, AccessControl {
     string memory name,
     string memory symbol,
     uint8 decimals
-  ) public ERC20(name, symbol) {
+  ) 
+    public
+    ERC20(name, symbol)
+    EIP712MetaTransaction(name, "1")
+  {
     _setupDecimals(decimals);
     _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
     _setupRole(DEPOSITOR_ROLE, _msgSender());
