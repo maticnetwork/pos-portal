@@ -3,7 +3,7 @@ pragma solidity >=0.4.21 <0.7.0;
 import { SafeMath } from "@openzeppelin/contracts/math/SafeMath.sol";
 import { EIP712Base } from "./EIP712Base.sol";
 
-contract EIP712MetaTransaction is EIP712Base {
+contract NetworkAgnostic is EIP712Base {
   using SafeMath for uint256;
   bytes32 private constant META_TRANSACTION_TYPEHASH = keccak256(bytes("MetaTransaction(uint256 nonce,address from,bytes functionSignature)"));
   event MetaTransactionExecuted(address userAddress, address payable relayerAddress, bytes functionSignature);
@@ -20,7 +20,7 @@ contract EIP712MetaTransaction is EIP712Base {
     bytes functionSignature;
   }
 
-  constructor(string memory name, string memory version) public EIP712Base(name, version) {}
+  constructor(string memory name, string memory version, uint256 chainId) public EIP712Base(name, version, chainId) {}
 
   function executeMetaTransaction(address userAddress,
     bytes memory functionSignature, bytes32 sigR, bytes32 sigS, uint8 sigV) public payable returns(bytes memory) {
@@ -55,7 +55,8 @@ contract EIP712MetaTransaction is EIP712Base {
     return signer == ecrecover(toTypedMessageHash(hashMetaTransaction(metaTx)), sigV, sigR, sigS);
   }
 
-  function msgSender() internal view returns(address sender) {
+    function _msgSender() internal virtual view returns (address payable) {
+    address payable sender;
     if(msg.sender == address(this)) {
       bytes memory array = msg.data;
       uint256 index = msg.data.length;

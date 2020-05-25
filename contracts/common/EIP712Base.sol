@@ -11,19 +11,19 @@ contract EIP712Base {
   bytes32 internal constant EIP712_DOMAIN_TYPEHASH = keccak256(bytes("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"));
   bytes32 internal domainSeperator;
 
-  constructor(string memory name, string memory version) public {
+  constructor(string memory _name, string memory _version, uint256 _chainId) public {
     domainSeperator = keccak256(abi.encode(
       EIP712_DOMAIN_TYPEHASH,
-      keccak256(bytes(name)),
-      keccak256(bytes(version)),
-      getChainID(),
+      keccak256(bytes(_name)),
+      keccak256(bytes(_version)),
+      getChainID(_chainId),
       address(this)
     ));
   }
 
-  function getChainID() internal pure returns (uint256 id) {
+  function getChainID(uint256 _chainId) internal pure returns (uint256 id) {
     assembly {
-      id := 3
+      id := _chainId
     }
   }
 
