@@ -46,7 +46,7 @@ contract ChildToken is ERC20, IChildToken, AccessControl, NetworkAgnostic {
     return _rootToken;
   }
   
-  function _msgSender() internal view override(Context, AccessControl, NetworkAgnostic) returns (address payable) {
+  function _msgSender() internal view override(Context, NetworkAgnostic) returns (address payable) {
     return NetworkAgnostic._msgSender();
   }
 

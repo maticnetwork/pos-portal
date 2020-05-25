@@ -13,7 +13,7 @@ contract DummyToken is ERC20, NetworkAgnostic {
     _mint(_msgSender(), value);
   }
 
-  function getChainId() public returns (uint id) {
+  function getChainId() public pure returns (uint id) {
     assembly {
       id := chainid()
     }

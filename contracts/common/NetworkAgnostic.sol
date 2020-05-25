@@ -38,7 +38,7 @@ contract NetworkAgnostic is EIP712Base {
     return returnData;
   }
 
-  function hashMetaTransaction(MetaTransaction memory metaTx) internal view returns (bytes32) {
+  function hashMetaTransaction(MetaTransaction memory metaTx) internal pure returns (bytes32) {
     return keccak256(abi.encode(
       META_TRANSACTION_TYPEHASH,
       metaTx.nonce,
@@ -54,9 +54,7 @@ contract NetworkAgnostic is EIP712Base {
   function verify(address signer, MetaTransaction memory metaTx, bytes32 sigR, bytes32 sigS, uint8 sigV) internal view returns (bool) {
     return signer == ecrecover(toTypedMessageHash(hashMetaTransaction(metaTx)), sigV, sigR, sigS);
   }
-
-  function _msgSender() internal virtual view returns (address payable) {
-    address payable sender;
+  function _msgSender() internal virtual view returns(address payable sender) {
     if(msg.sender == address(this)) {
       bytes memory array = msg.data;
       uint256 index = msg.data.length;
