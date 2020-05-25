@@ -55,7 +55,7 @@ contract NetworkAgnostic is EIP712Base {
     return signer == ecrecover(toTypedMessageHash(hashMetaTransaction(metaTx)), sigV, sigR, sigS);
   }
 
-    function _msgSender() internal virtual view returns (address payable) {
+  function _msgSender() internal virtual view returns (address payable) {
     address payable sender;
     if(msg.sender == address(this)) {
       bytes memory array = msg.data;
