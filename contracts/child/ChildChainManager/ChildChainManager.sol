@@ -3,7 +3,7 @@ pragma solidity "0.6.6";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { AccessControl } from "@openzeppelin/contracts/access/AccessControl.sol";
 import { IChildChainManager } from "./IChildChainManager.sol";
-import { IChildToken } from "./IChildToken.sol";
+import { IChildToken } from "../ChildToken/IChildToken.sol";
 
 contract ChildChainManager is IChildChainManager, AccessControl {
   bytes32 public constant MAPPER_ROLE = keccak256("MAPPER_ROLE");

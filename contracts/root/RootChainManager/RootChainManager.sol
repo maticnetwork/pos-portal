@@ -3,12 +3,12 @@ pragma solidity "0.6.6";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { AccessControl } from "@openzeppelin/contracts/access/AccessControl.sol";
 import { IRootChainManager } from "./IRootChainManager.sol";
-import { IStateSender } from "./IStateSender.sol";
-import { ICheckpointManager } from './ICheckpointManager.sol';
-import { WETH } from './WETH.sol';
-import { RLPReader } from "../lib/RLPReader.sol";
-import { MerklePatriciaProof } from "../lib/MerklePatriciaProof.sol";
-import { Merkle } from "../lib/Merkle.sol";
+import { IStateSender } from "../StateSender/IStateSender.sol";
+import { ICheckpointManager } from '../ICheckpointManager.sol';
+import { WETH } from '../RootToken/WETH.sol';
+import { RLPReader } from "../../lib/RLPReader.sol";
+import { MerklePatriciaProof } from "../../lib/MerklePatriciaProof.sol";
+import { Merkle } from "../../lib/Merkle.sol";
 
 contract RootChainManager is IRootChainManager, AccessControl {
   using RLPReader for bytes;

@@ -1,7 +1,7 @@
 pragma solidity "0.6.6";
 
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import { NetworkAgnostic } from "../common/NetworkAgnostic.sol";
+import { NetworkAgnostic } from "../../common/NetworkAgnostic.sol";
 
 contract DummyToken is ERC20, NetworkAgnostic {
   constructor(string memory name, string memory symbol) 
