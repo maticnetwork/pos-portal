@@ -20,6 +20,8 @@ interface IRootChainManager {
 
   function setStateSender(address newStateSender) external;
 
+  function setCheckpointManager(address newCheckpointManager) external;
+
   function mapToken(address rootToken, address childToken) external;
 
   function depositEther() external payable;

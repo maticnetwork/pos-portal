@@ -3,25 +3,36 @@ pragma solidity "0.6.6";
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { AccessControl } from "@openzeppelin/contracts/access/AccessControl.sol";
 import { IChildToken } from "./IChildToken.sol";
+import { NetworkAgnostic } from "../common/NetworkAgnostic.sol";
 
-contract ChildToken is ERC20, IChildToken, AccessControl {
+contract ChildToken is ERC20, IChildToken, AccessControl, NetworkAgnostic {
   bytes32 public constant DEPOSITOR_ROLE = keccak256("DEPOSITOR_ROLE");
 
   address private _rootToken;
+
+  event Burned(
+    address indexed rootToken,
+    address indexed user,
+    uint256 amount
+  );
 
   constructor(
     string memory name,
     string memory symbol,
     uint8 decimals
-  ) public ERC20(name, symbol) {
+  ) 
+    public
+    ERC20(name, symbol)
+    NetworkAgnostic(name, "1", 3)
+  {
     _setupDecimals(decimals);
-    _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
-    _setupRole(DEPOSITOR_ROLE, msg.sender);
+    _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
+    _setupRole(DEPOSITOR_ROLE, _msgSender());
   }
 
   modifier only(bytes32 role) {
     require(
-      hasRole(role, msg.sender),
+      hasRole(role, _msgSender()),
       "Insufficient permissions"
     );
     _;
@@ -33,6 +44,10 @@ contract ChildToken is ERC20, IChildToken, AccessControl {
 
   function rootToken() public view returns (address) {
     return _rootToken;
+  }
+  
+  function _msgSender() internal view override(Context, NetworkAgnostic) returns (address payable) {
+    return NetworkAgnostic._msgSender();
   }
 
   function deposit(address user, uint256 amount) override external only(DEPOSITOR_ROLE) {
@@ -53,11 +68,11 @@ contract ChildToken is ERC20, IChildToken, AccessControl {
       "withdraw amount should be positie"
     );
     require(
-      amount <= balanceOf(msg.sender),
+      amount <= balanceOf(_msgSender()),
       "withdraw amount cannot be more than balance"
     );
 
-    _burn(msg.sender, amount);
-    emit Burned(_rootToken, msg.sender, amount);
+    _burn(_msgSender(), amount);
+    emit Burned(_rootToken, _msgSender(), amount);
   }
 }
