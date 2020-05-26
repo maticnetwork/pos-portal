@@ -23,7 +23,7 @@ contract ChildToken is ERC20, IChildToken, AccessControl, NetworkAgnostic {
   ) 
     public
     ERC20(name, symbol)
-    NetworkAgnostic(name, "1", 15001)
+    NetworkAgnostic(name, "1", 3)
   {
     _setupDecimals(decimals);
     _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
