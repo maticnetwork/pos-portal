@@ -642,19 +642,19 @@ contract EIP712Base {
   bytes32 internal constant EIP712_DOMAIN_TYPEHASH = keccak256(bytes("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"));
   bytes32 internal domainSeperator;
 
-  constructor(string memory name, string memory version) public {
+  constructor(string memory name, string memory version, uint256 _chainId) public {
     domainSeperator = keccak256(abi.encode(
       EIP712_DOMAIN_TYPEHASH,
       keccak256(bytes(name)),
       keccak256(bytes(version)),
-      getChainID(),
+      getChainID(_chainId),
       address(this)
     ));
   }
 
-  function getChainID() internal pure returns (uint256 id) {
+  function getChainID(uint256 _chainId) internal pure returns (uint256 id) {
     assembly {
-      id := 3
+      id := _chainId
     }
   }
 
@@ -674,13 +674,13 @@ contract EIP712Base {
   }
 }
 
-// File: contracts/common/EIP712MetaTransaction.sol
+// File: contracts/common/NetworkAgnostic.sol
 
 pragma solidity >=0.4.21 <0.7.0;
 
 
 
-contract EIP712MetaTransaction is EIP712Base {
+contract NetworkAgnostic is EIP712Base {
   using SafeMath for uint256;
   bytes32 private constant META_TRANSACTION_TYPEHASH = keccak256(bytes("MetaTransaction(uint256 nonce,address from,bytes functionSignature)"));
   event MetaTransactionExecuted(address userAddress, address payable relayerAddress, bytes functionSignature);
@@ -697,7 +697,7 @@ contract EIP712MetaTransaction is EIP712Base {
     bytes functionSignature;
   }
 
-  constructor(string memory name, string memory version) public EIP712Base(name, version) {}
+  constructor(string memory name, string memory version, uint256 chainId) public EIP712Base(name, version, chainId) {}
 
   function executeMetaTransaction(address userAddress,
     bytes memory functionSignature, bytes32 sigR, bytes32 sigS, uint8 sigV) public payable returns(bytes memory) {
@@ -715,7 +715,7 @@ contract EIP712MetaTransaction is EIP712Base {
     return returnData;
   }
 
-  function hashMetaTransaction(MetaTransaction memory metaTx) internal view returns (bytes32) {
+  function hashMetaTransaction(MetaTransaction memory metaTx) internal pure returns (bytes32) {
     return keccak256(abi.encode(
       META_TRANSACTION_TYPEHASH,
       metaTx.nonce,
@@ -731,8 +731,7 @@ contract EIP712MetaTransaction is EIP712Base {
   function verify(address signer, MetaTransaction memory metaTx, bytes32 sigR, bytes32 sigS, uint8 sigV) internal view returns (bool) {
     return signer == ecrecover(toTypedMessageHash(hashMetaTransaction(metaTx)), sigV, sigR, sigS);
   }
-
-  function msgSender() internal view returns(address sender) {
+  function _msgSender() internal virtual view returns(address payable sender) {
     if(msg.sender == address(this)) {
       bytes memory array = msg.data;
       uint256 index = msg.data.length;
@@ -756,14 +755,24 @@ pragma solidity "0.6.6";
 
 
 
-contract DummyToken is ERC20, EIP712MetaTransaction {
-  constructor() 
-    ERC20("Dummy Parent Token", "DUMMY")
-    EIP712MetaTransaction("Dummy Parent Token", "1")
+contract DummyToken is ERC20, NetworkAgnostic {
+  constructor(string memory name, string memory symbol) 
+    ERC20(name, symbol)
+    NetworkAgnostic(name, "1", getChainId())
     public 
   {
     uint256 value = 10**10 * (10**18);
     _mint(_msgSender(), value);
+  }
+
+  function getChainId() public pure returns (uint id) {
+    assembly {
+      id := chainid()
+    }
+  }
+
+  function _msgSender() internal view override(Context, NetworkAgnostic) returns (address payable) {
+    return NetworkAgnostic._msgSender();
   }
 
   function mint(uint256 supply) public {
