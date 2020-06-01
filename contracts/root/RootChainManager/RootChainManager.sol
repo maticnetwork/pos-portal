@@ -1,8 +1,10 @@
 pragma solidity "0.6.6";
 
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { AccessControl } from "@openzeppelin/contracts/access/AccessControl.sol";
+
 import { IRootChainManager } from "./IRootChainManager.sol";
+import { RootChainManagerStorage } from "./RootChainManagerStorage.sol";
+
 import { IStateSender } from "../StateSender/IStateSender.sol";
 import { ICheckpointManager } from '../ICheckpointManager.sol';
 import { WETH } from '../RootToken/WETH.sol';
@@ -10,49 +12,38 @@ import { RLPReader } from "../../lib/RLPReader.sol";
 import { MerklePatriciaProof } from "../../lib/MerklePatriciaProof.sol";
 import { Merkle } from "../../lib/Merkle.sol";
 
-contract RootChainManager is IRootChainManager, AccessControl {
+contract RootChainManager is IRootChainManager, RootChainManagerStorage {
   using RLPReader for bytes;
   using RLPReader for RLPReader.RLPItem;
   using Merkle for bytes32;
 
   // Transfer(address,address,uint256)
   bytes32 constant TRANSFER_EVENT_SIG = 0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef;
-  bytes32 public constant MAPPER_ROLE = keccak256("MAPPER_ROLE");
 
   IStateSender private _stateSender;
   ICheckpointManager private _checkpointManager;
-  WETH private _WETH;
   address private _childChainManagerAddress;
-  mapping(address => address) private _rootToChildToken;
-  mapping(address => address) private _childToRootToken;
-  mapping(bytes32 => bool) private _processedExits;
+  WETH private _WETH;
 
-  constructor() public {
-    _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
-    _setupRole(MAPPER_ROLE, _msgSender());
+  constructor() public RootChainManagerStorage() {}
+
+  receive() external payable {
+    depositEther();
   }
 
-  modifier only(bytes32 role) {
-    require(
-      hasRole(role, _msgSender()),
-      "Insufficient permissions"
-    );
-    _;
-  }
-
-  function setStateSender(address newStateSender) override external only(DEFAULT_ADMIN_ROLE) {
+  function setStateSender(address newStateSender) external only(DEFAULT_ADMIN_ROLE) {
     _stateSender = IStateSender(newStateSender);
   }
 
-  function stateSenderAddress() public view returns (address) {
+  function stateSenderAddress() external view returns (address) {
     return address(_stateSender);
   }
 
-  function setCheckpointManager(address newCheckpointManager) override external only(DEFAULT_ADMIN_ROLE) {
+  function setCheckpointManager(address newCheckpointManager) external only(DEFAULT_ADMIN_ROLE) {
     _checkpointManager = ICheckpointManager(newCheckpointManager);
   }
 
-  function checkpointManagerAddress() public view returns (address) {
+  function checkpointManagerAddress() external view returns (address) {
     return address(_checkpointManager);
   }
 
@@ -60,7 +51,7 @@ contract RootChainManager is IRootChainManager, AccessControl {
     _childChainManagerAddress = newChildChainManager;
   }
 
-  function childChainManagerAddress() public view returns (address) {
+  function childChainManagerAddress() external view returns (address) {
     return _childChainManagerAddress;
   }
 
@@ -68,30 +59,26 @@ contract RootChainManager is IRootChainManager, AccessControl {
     _WETH = WETH(newWETHAddress);
   }
 
-  function WETHAddress() public view returns (address) {
+  function WETHAddress() external view returns (address) {
     return address(_WETH);
   }
 
-  function mapToken(address rootToken, address childToken) override external only(MAPPER_ROLE) {
+  function mapToken(address rootToken, address childToken) external override only(MAPPER_ROLE) {
     _rootToChildToken[rootToken] = childToken;
     _childToRootToken[childToken] = rootToken;
     emit TokenMapped(rootToken, childToken);
   }
 
-  function rootToChildToken(address rootToken) public view returns (address) {
+  function rootToChildToken(address rootToken) public view override returns (address) {
     return _rootToChildToken[rootToken];
   }
 
-  function childToRootToken(address childToken) public view returns (address) {
+  function childToRootToken(address childToken) public view override returns (address) {
     return _childToRootToken[childToken];
   }
 
-  function processedExits(bytes32 exitHash) public view returns (bool) {
+  function processedExits(bytes32 exitHash) public view override returns (bool) {
     return _processedExits[exitHash];
-  }
-
-  receive() external payable {
-    depositEther();
   }
 
   function depositEther() override public payable {
