@@ -14,6 +14,8 @@ interface IChildChainManager {
   );
 
   function mapToken(address rootToken, address childToken) external;
+  function rootToChildToken(address rootToken) external view returns (address);
+  function childToRootToken(address childToken) external view returns (address);
 
   function onStateReceive(uint256 id, bytes calldata data) external;
 }
