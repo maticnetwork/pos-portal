@@ -5,9 +5,7 @@ import { ChildChainManagerStorage } from "./ChildChainManagerStorage.sol";
 import { IChildChainManager } from "./IChildChainManager.sol";
 import { IChildToken } from "../ChildToken/IChildToken.sol";
 
-contract ChildChainManager is IChildChainManager, ChildChainManagerStorage {
-  constructor() public ChildChainManagerStorage() {}
-
+contract ChildChainManager is ChildChainManagerStorage, IChildChainManager {
   function rootToChildToken(address rootToken) public view override returns (address) {
     return _rootToChildToken[rootToken];
   }

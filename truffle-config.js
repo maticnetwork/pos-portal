@@ -43,6 +43,7 @@ module.exports = {
       // host: 'localhost',
       // port: 9545,
       // network_id: '53227'
+
       provider: () =>
         new HDWalletProvider(
           mnemonic,
@@ -57,6 +58,7 @@ module.exports = {
       // host: 'localhost',
       // port: 8545,
       // network_id: '96410'
+
       provider: () =>
         new HDWalletProvider(
           mnemonic,

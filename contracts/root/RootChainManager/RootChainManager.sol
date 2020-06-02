@@ -12,7 +12,7 @@ import { RLPReader } from "../../lib/RLPReader.sol";
 import { MerklePatriciaProof } from "../../lib/MerklePatriciaProof.sol";
 import { Merkle } from "../../lib/Merkle.sol";
 
-contract RootChainManager is IRootChainManager, RootChainManagerStorage {
+contract RootChainManager is RootChainManagerStorage, IRootChainManager {
   using RLPReader for bytes;
   using RLPReader for RLPReader.RLPItem;
   using Merkle for bytes32;
@@ -24,8 +24,6 @@ contract RootChainManager is IRootChainManager, RootChainManagerStorage {
   ICheckpointManager private _checkpointManager;
   address private _childChainManagerAddress;
   WETH private _WETH;
-
-  constructor() public RootChainManagerStorage() {}
 
   receive() external payable {
     depositEther();
