@@ -84,7 +84,7 @@ contract RootChainManager is IRootChainManager, RootChainManagerStorage {
   function depositEther() override public payable {
     require(
       address(_WETH) != address(0x0),
-      "WETH not set"
+      "RootChainManager: WETH_NOT_SET"
     );
     _WETH.depositFor.value(msg.value)(_msgSender());
     _depositFor(_msgSender(), address(_WETH), msg.value);
@@ -93,7 +93,7 @@ contract RootChainManager is IRootChainManager, RootChainManagerStorage {
   function depositEtherFor(address user) override external payable {
     require(
       address(_WETH) != address(0x0),
-      "WETH not set"
+      "RootChainManager: WETH_NOT_SET"
     );
     _WETH.depositFor.value(msg.value)(user);
     _depositFor(user, address(_WETH), msg.value);
@@ -110,19 +110,19 @@ contract RootChainManager is IRootChainManager, RootChainManagerStorage {
   function _depositFor(address user, address rootToken, uint256 amount) private {
     require(
       _rootToChildToken[rootToken] != address(0x0),
-      "Token not mapped"
+      "RootChainManager: TOKEN_NOT_MAPPED"
     );
     require(
       IERC20(rootToken).allowance(_msgSender(), address(this)) >= amount,
-      "Token transfer not approved"
+      "RootChainManager: TRANSFER_NOT_APPROVED"
     );
     require(
       address(_stateSender) != address(0x0),
-      "stateSender not set"
+      "RootChainManager: STATESENDER_NOT_SET"
     );
     require(
       address(_childChainManagerAddress) != address(0x0),
-      "childChainManager not set"
+      "RootChainManager: CHILDCHAINMANAGER_NOT_SET"
     );
 
     IERC20(rootToken).transferFrom(_msgSender(), address(this), amount);
@@ -154,7 +154,7 @@ contract RootChainManager is IRootChainManager, RootChainManagerStorage {
           inputDataRLPList[9].toBytes() // logIndex
         ))
       ] == false,
-      "Exit already processed"
+      "RootChainManager: EXIT_ALREADY_PROCESSED"
     );
     _processedExits[
       keccak256(abi.encodePacked(
@@ -172,21 +172,21 @@ contract RootChainManager is IRootChainManager, RootChainManagerStorage {
     address childToken = RLPReader.toAddress(logRLPList[0]); // log address field
     require(
       _childToRootToken[childToken] != address(0),
-      "Token not mapped"
+      "RootChainManager: TOKEN_NOT_MAPPED"
     );
 
     RLPReader.RLPItem[] memory logTopicRLPList = logRLPList[1].toList(); // topics
     require(
       bytes32(logTopicRLPList[0].toUint()) == TRANSFER_EVENT_SIG, // topic0 is event sig
-      "Not a transfer event signature"
+      "RootChainManager: INVALID_SIGNATURE"
     );
     require(
       _msgSender() == address(logTopicRLPList[1].toUint()), // from1 is from address
-      "Withdrawer and burn exit tx do not match"
+      "RootChainManager: INVALID_SENDER"
     );
     require(
       address(logTopicRLPList[2].toUint()) == address(0), // topic2 is to address
-      "Not a burn event"
+      "RootChainManager: INVALID_RECEIVER"
     );
 
     // TODO: verify tx inclusion
@@ -196,7 +196,7 @@ contract RootChainManager is IRootChainManager, RootChainManagerStorage {
       inputDataRLPList[8].toBytes().toRlpItem().toUint() &
         0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF00000000 ==
         0,
-      "Branch mask should be 32 bits"
+      "RootChainManager: INVALID_BRANCH_MASK"
     );
 
     uint256 headerNumber = inputDataRLPList[0].toUint();
@@ -207,7 +207,7 @@ contract RootChainManager is IRootChainManager, RootChainManagerStorage {
         inputDataRLPList[7].toBytes(), // receiptProof
         bytes32(inputDataRLPList[5].toUint()) // receiptsRoot
       ),
-      "Invalid receipt merkle proof"
+      "RootChainManager: INVALID_PROOF"
     );
 
     checkBlockMembershipInCheckpoint(
@@ -253,7 +253,7 @@ contract RootChainManager is IRootChainManager, RootChainManagerStorage {
         headerRoot,
         blockProof
       ),
-      "Burn tx not part of submitted header"
+      "RootChainManager: INVALID_HEADER"
     );
     return createdAt;
   }

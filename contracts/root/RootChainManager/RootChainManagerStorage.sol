@@ -17,7 +17,7 @@ contract RootChainManagerStorage is AccessControl {
     modifier only(bytes32 role) {
         require(
             hasRole(role, _msgSender()),
-            "Insufficient permissions"
+            "RootChainManager: INSUFFICIENT_PERMISSIONS"
         );
         _;
     }

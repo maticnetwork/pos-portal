@@ -9,7 +9,7 @@ contract Proxy is IERCProxy {
   address internal proxyTo;
 
   constructor(address _proxyTo) public {
-    updateImplementation(_proxyTo);
+    _updateImplementation(_proxyTo);
   }
 
   receive() external payable {
@@ -55,7 +55,7 @@ contract Proxy is IERCProxy {
     return proxyTo;
   }
 
-  function updateImplementation(address _newProxyTo) public virtual {
+  function _updateImplementation(address _newProxyTo) internal virtual {
     require(_newProxyTo != address(0x0), "INVALID_PROXY_ADDRESS");
     require(isContract(_newProxyTo), "DESTINATION_ADDRESS_IS_NOT_A_CONTRACT");
     emit ProxyUpdated(_newProxyTo, proxyTo);
