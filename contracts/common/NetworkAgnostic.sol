@@ -54,19 +54,6 @@ contract NetworkAgnostic is EIP712Base {
   function verify(address signer, MetaTransaction memory metaTx, bytes32 sigR, bytes32 sigS, uint8 sigV) internal view returns (bool) {
     return signer == ecrecover(toTypedMessageHash(hashMetaTransaction(metaTx)), sigV, sigR, sigS);
   }
-  function _msgSender() internal virtual view returns(address payable sender) {
-    if(msg.sender == address(this)) {
-      bytes memory array = msg.data;
-      uint256 index = msg.data.length;
-      assembly {
-        // Load the 32 bytes word from memory with the address on the lower 20 bytes, and mask those.
-        sender := and(mload(add(array, index)), 0xffffffffffffffffffffffffffffffffffffffff)
-      }
-    } else {
-      sender = msg.sender;
-    }
-    return sender;
-  }
 
   // To recieve ether in contract
   receive() external payable {}

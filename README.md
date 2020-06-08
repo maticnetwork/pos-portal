@@ -10,5 +10,10 @@ npm install
 
 ### Compile
 ```
-npm run truffle:compile
+npm run build
+```
+
+### Deploy
+```
+npm run migrate
 ```

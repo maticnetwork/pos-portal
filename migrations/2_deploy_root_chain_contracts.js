@@ -36,7 +36,7 @@ module.exports = async(deployer) => {
   console.log('deploying contracts...')
   await deployer.deploy(RootChainManager)
   await deployer.deploy(DummyStateSender)
-  await deployer.deploy(DummyToken)
+  await deployer.deploy(DummyToken, 'Dummy Root Token', 'DUMMY')
   await deployer.deploy(WETH)
 
   const contractAddresses = utils.getContractAddresses()

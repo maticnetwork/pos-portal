@@ -18,11 +18,11 @@ interface IRootChainManager {
     uint256 indexed amount
   );
 
-  function setStateSender(address newStateSender) external;
-
-  function setCheckpointManager(address newCheckpointManager) external;
-
   function mapToken(address rootToken, address childToken) external;
+  function rootToChildToken(address rootToken) external view returns (address);
+  function childToRootToken(address childToken) external view returns (address);
+
+  function processedExits(bytes32 exitHash) external view returns (bool);
 
   function depositEther() external payable;
 

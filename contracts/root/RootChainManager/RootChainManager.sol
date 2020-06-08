@@ -1,58 +1,47 @@
 pragma solidity "0.6.6";
 
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { AccessControl } from "@openzeppelin/contracts/access/AccessControl.sol";
-import { IRootChainManager } from "./IRootChainManager.sol";
-import { IStateSender } from "./IStateSender.sol";
-import { ICheckpointManager } from './ICheckpointManager.sol';
-import { WETH } from './WETH.sol';
-import { RLPReader } from "../lib/RLPReader.sol";
-import { MerklePatriciaProof } from "../lib/MerklePatriciaProof.sol";
-import { Merkle } from "../lib/Merkle.sol";
 
-contract RootChainManager is IRootChainManager, AccessControl {
+import { IRootChainManager } from "./IRootChainManager.sol";
+import { RootChainManagerStorage } from "./RootChainManagerStorage.sol";
+
+import { IStateSender } from "../StateSender/IStateSender.sol";
+import { ICheckpointManager } from '../ICheckpointManager.sol';
+import { WETH } from '../RootToken/WETH.sol';
+import { RLPReader } from "../../lib/RLPReader.sol";
+import { MerklePatriciaProof } from "../../lib/MerklePatriciaProof.sol";
+import { Merkle } from "../../lib/Merkle.sol";
+
+contract RootChainManager is RootChainManagerStorage, IRootChainManager {
   using RLPReader for bytes;
   using RLPReader for RLPReader.RLPItem;
   using Merkle for bytes32;
 
   // Transfer(address,address,uint256)
   bytes32 constant TRANSFER_EVENT_SIG = 0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef;
-  bytes32 public constant MAPPER_ROLE = keccak256("MAPPER_ROLE");
 
   IStateSender private _stateSender;
   ICheckpointManager private _checkpointManager;
-  WETH private _WETH;
   address private _childChainManagerAddress;
-  mapping(address => address) private _rootToChildToken;
-  mapping(address => address) private _childToRootToken;
-  mapping(bytes32 => bool) private _processedExits;
+  WETH private _WETH;
 
-  constructor() public {
-    _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
-    _setupRole(MAPPER_ROLE, _msgSender());
+  receive() external payable {
+    depositEther();
   }
 
-  modifier only(bytes32 role) {
-    require(
-      hasRole(role, _msgSender()),
-      "Insufficient permissions"
-    );
-    _;
-  }
-
-  function setStateSender(address newStateSender) override external only(DEFAULT_ADMIN_ROLE) {
+  function setStateSender(address newStateSender) external only(DEFAULT_ADMIN_ROLE) {
     _stateSender = IStateSender(newStateSender);
   }
 
-  function stateSenderAddress() public view returns (address) {
+  function stateSenderAddress() external view returns (address) {
     return address(_stateSender);
   }
 
-  function setCheckpointManager(address newCheckpointManager) override external only(DEFAULT_ADMIN_ROLE) {
+  function setCheckpointManager(address newCheckpointManager) external only(DEFAULT_ADMIN_ROLE) {
     _checkpointManager = ICheckpointManager(newCheckpointManager);
   }
 
-  function checkpointManagerAddress() public view returns (address) {
+  function checkpointManagerAddress() external view returns (address) {
     return address(_checkpointManager);
   }
 
@@ -60,7 +49,7 @@ contract RootChainManager is IRootChainManager, AccessControl {
     _childChainManagerAddress = newChildChainManager;
   }
 
-  function childChainManagerAddress() public view returns (address) {
+  function childChainManagerAddress() external view returns (address) {
     return _childChainManagerAddress;
   }
 
@@ -68,36 +57,32 @@ contract RootChainManager is IRootChainManager, AccessControl {
     _WETH = WETH(newWETHAddress);
   }
 
-  function WETHAddress() public view returns (address) {
+  function WETHAddress() external view returns (address) {
     return address(_WETH);
   }
 
-  function mapToken(address rootToken, address childToken) override external only(MAPPER_ROLE) {
+  function mapToken(address rootToken, address childToken) external override only(MAPPER_ROLE) {
     _rootToChildToken[rootToken] = childToken;
     _childToRootToken[childToken] = rootToken;
     emit TokenMapped(rootToken, childToken);
   }
 
-  function rootToChildToken(address rootToken) public view returns (address) {
+  function rootToChildToken(address rootToken) public view override returns (address) {
     return _rootToChildToken[rootToken];
   }
 
-  function childToRootToken(address childToken) public view returns (address) {
+  function childToRootToken(address childToken) public view override returns (address) {
     return _childToRootToken[childToken];
   }
 
-  function processedExits(bytes32 exitHash) public view returns (bool) {
+  function processedExits(bytes32 exitHash) public view override returns (bool) {
     return _processedExits[exitHash];
-  }
-
-  receive() external payable {
-    depositEther();
   }
 
   function depositEther() override public payable {
     require(
       address(_WETH) != address(0x0),
-      "WETH not set"
+      "RootChainManager: WETH_NOT_SET"
     );
     _WETH.depositFor.value(msg.value)(_msgSender());
     _depositFor(_msgSender(), address(_WETH), msg.value);
@@ -106,7 +91,7 @@ contract RootChainManager is IRootChainManager, AccessControl {
   function depositEtherFor(address user) override external payable {
     require(
       address(_WETH) != address(0x0),
-      "WETH not set"
+      "RootChainManager: WETH_NOT_SET"
     );
     _WETH.depositFor.value(msg.value)(user);
     _depositFor(user, address(_WETH), msg.value);
@@ -123,19 +108,19 @@ contract RootChainManager is IRootChainManager, AccessControl {
   function _depositFor(address user, address rootToken, uint256 amount) private {
     require(
       _rootToChildToken[rootToken] != address(0x0),
-      "Token not mapped"
+      "RootChainManager: TOKEN_NOT_MAPPED"
     );
     require(
       IERC20(rootToken).allowance(_msgSender(), address(this)) >= amount,
-      "Token transfer not approved"
+      "RootChainManager: TRANSFER_NOT_APPROVED"
     );
     require(
       address(_stateSender) != address(0x0),
-      "stateSender not set"
+      "RootChainManager: STATESENDER_NOT_SET"
     );
     require(
       address(_childChainManagerAddress) != address(0x0),
-      "childChainManager not set"
+      "RootChainManager: CHILDCHAINMANAGER_NOT_SET"
     );
 
     IERC20(rootToken).transferFrom(_msgSender(), address(this), amount);
@@ -167,7 +152,7 @@ contract RootChainManager is IRootChainManager, AccessControl {
           inputDataRLPList[9].toBytes() // logIndex
         ))
       ] == false,
-      "Exit already processed"
+      "RootChainManager: EXIT_ALREADY_PROCESSED"
     );
     _processedExits[
       keccak256(abi.encodePacked(
@@ -185,21 +170,21 @@ contract RootChainManager is IRootChainManager, AccessControl {
     address childToken = RLPReader.toAddress(logRLPList[0]); // log address field
     require(
       _childToRootToken[childToken] != address(0),
-      "Token not mapped"
+      "RootChainManager: TOKEN_NOT_MAPPED"
     );
 
     RLPReader.RLPItem[] memory logTopicRLPList = logRLPList[1].toList(); // topics
     require(
       bytes32(logTopicRLPList[0].toUint()) == TRANSFER_EVENT_SIG, // topic0 is event sig
-      "Not a transfer event signature"
+      "RootChainManager: INVALID_SIGNATURE"
     );
     require(
       _msgSender() == address(logTopicRLPList[1].toUint()), // from1 is from address
-      "Withdrawer and burn exit tx do not match"
+      "RootChainManager: INVALID_SENDER"
     );
     require(
       address(logTopicRLPList[2].toUint()) == address(0), // topic2 is to address
-      "Not a burn event"
+      "RootChainManager: INVALID_RECEIVER"
     );
 
     // TODO: verify tx inclusion
@@ -209,7 +194,7 @@ contract RootChainManager is IRootChainManager, AccessControl {
       inputDataRLPList[8].toBytes().toRlpItem().toUint() &
         0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF00000000 ==
         0,
-      "Branch mask should be 32 bits"
+      "RootChainManager: INVALID_BRANCH_MASK"
     );
 
     uint256 headerNumber = inputDataRLPList[0].toUint();
@@ -220,7 +205,7 @@ contract RootChainManager is IRootChainManager, AccessControl {
         inputDataRLPList[7].toBytes(), // receiptProof
         bytes32(inputDataRLPList[5].toUint()) // receiptsRoot
       ),
-      "Invalid receipt merkle proof"
+      "RootChainManager: INVALID_PROOF"
     );
 
     checkBlockMembershipInCheckpoint(
@@ -266,7 +251,7 @@ contract RootChainManager is IRootChainManager, AccessControl {
         headerRoot,
         blockProof
       ),
-      "Burn tx not part of submitted header"
+      "RootChainManager: INVALID_HEADER"
     );
     return createdAt;
   }

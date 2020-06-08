@@ -1,36 +1,16 @@
 pragma solidity "0.6.6";
 
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { AccessControl } from "@openzeppelin/contracts/access/AccessControl.sol";
+import { ChildChainManagerStorage } from "./ChildChainManagerStorage.sol";
 import { IChildChainManager } from "./IChildChainManager.sol";
-import { IChildToken } from "./IChildToken.sol";
+import { IChildToken } from "../ChildToken/IChildToken.sol";
 
-contract ChildChainManager is IChildChainManager, AccessControl {
-  bytes32 public constant MAPPER_ROLE = keccak256("MAPPER_ROLE");
-  bytes32 public constant STATE_SYNCER_ROLE = keccak256("STATE_SYNCER_ROLE");
-
-  mapping(address => address) private _rootToChildToken;
-  mapping(address => address) private _childToRootToken;
-
-  constructor() public {
-    _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
-    _setupRole(MAPPER_ROLE, _msgSender());
-    _setupRole(STATE_SYNCER_ROLE, _msgSender());
-  }
-
-  modifier only(bytes32 role) {
-    require(
-      hasRole(role, _msgSender()),
-      "Insufficient permissions"
-    );
-    _;
-  }
-
-  function rootToChildToken(address rootToken) public view returns (address) {
+contract ChildChainManager is ChildChainManagerStorage, IChildChainManager {
+  function rootToChildToken(address rootToken) public view override returns (address) {
     return _rootToChildToken[rootToken];
   }
 
-  function childToRootToken(address childToken) public view returns (address) {
+  function childToRootToken(address childToken) public view override returns (address) {
     return _childToRootToken[childToken];
   }
 
@@ -45,7 +25,7 @@ contract ChildChainManager is IChildChainManager, AccessControl {
     address childTokenAddress = _rootToChildToken[rootToken];
     require(
       childTokenAddress != address(0x0),
-      "Token not mapped"
+      "ChildChainManager: TOKEN_NOT_MAPPED"
     );
     IChildToken childTokenContract = IChildToken(childTokenAddress);
     childTokenContract.deposit(user, amount);
