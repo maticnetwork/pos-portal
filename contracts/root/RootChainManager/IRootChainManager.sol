@@ -1,36 +1,62 @@
 pragma solidity "0.6.6";
 
+
 interface IRootChainManager {
-  event TokenMapped(
-    address indexed rootToken,
-    address indexed childToken
-  );
+    event TokenMapped(
+        address indexed rootToken,
+        address indexed childToken,
+        bytes32 indexed tokenType
+    );
 
-  event Locked(
-    address indexed user,
-    address indexed rootToken,
-    uint256 indexed amount
-  );
+    event PredicateRegistered(bytes32 tokenType, address predicateAddress);
 
-  event Exited(
-    address indexed user,
-    address indexed rootToken,
-    uint256 indexed amount
-  );
+    // event Locked(
+    //   address indexed user,
+    //   address indexed rootToken,
+    //   uint256 indexed amount
+    // );
 
-  function mapToken(address rootToken, address childToken) external;
-  function rootToChildToken(address rootToken) external view returns (address);
-  function childToRootToken(address childToken) external view returns (address);
+    // event Exited(
+    //   address indexed user,
+    //   address indexed rootToken,
+    //   uint256 indexed amount
+    // );
 
-  function processedExits(bytes32 exitHash) external view returns (bool);
+    function registerPredicate(bytes32 tokenType, address predicateAddress)
+        external;
 
-  function depositEther() external payable;
+    function typeToPredicate(bytes32 tokenType) external view returns (address);
 
-  function depositEtherFor(address user) external payable;
+    function mapToken(
+        address rootToken,
+        address childToken,
+        bytes32 tokenType
+    ) external;
 
-  function deposit(address rootToken, uint256 amount) external;
+    function rootToChildToken(address rootToken)
+        external
+        view
+        returns (address);
 
-  function depositFor(address user, address rootToken, uint256 amount) external;
+    function childToRootToken(address childToken)
+        external
+        view
+        returns (address);
 
-  function exit(bytes calldata data) external;
+    function tokenToType(address rootToken) external view returns (bytes32);
+
+    // function depositEther() external payable;
+    // function deposit(address rootToken, uint256 amount) external;
+
+    function depositEtherFor(address user, uint256 amount) external payable;
+
+    function depositFor(
+        address user,
+        address rootToken,
+        bytes calldata depositData
+    ) external;
+
+    function exit(bytes calldata data) external;
+
+    function processedExits(bytes32 exitHash) external view returns (bool);
 }
