@@ -6,6 +6,9 @@ import { IChildChainManager } from "./IChildChainManager.sol";
 import { IChildToken } from "../ChildToken/IChildToken.sol";
 
 contract ChildChainManager is ChildChainManagerStorage, IChildChainManager {
+  bytes32 private constant DEPOSIT = keccak256("DEPOSIT");
+  bytes32 private constant MAP_TOKEN = keccak256("MAP_TOKEN");
+
   function rootToChildToken(address rootToken) public view override returns (address) {
     return _rootToChildToken[rootToken];
   }
@@ -21,14 +24,21 @@ contract ChildChainManager is ChildChainManagerStorage, IChildChainManager {
   }
 
   function onStateReceive(uint256 id, bytes calldata data) override external only(STATE_SYNCER_ROLE) {
-    (address user, address rootToken, uint256 amount) = abi.decode(data, (address, address, uint256));
+    (bytes32 syncType, bytes memory syncData) = abi.decode(data, (bytes32, bytes));
+
+    if (syncType == DEPOSIT) {
+      _syncDeposit(syncData);
+    }
+  }
+
+  function _syncDeposit(bytes memory syncData) private {
+    (address user, address rootToken, bytes memory depositData) = abi.decode(syncData, (address, address, bytes));
     address childTokenAddress = _rootToChildToken[rootToken];
     require(
       childTokenAddress != address(0x0),
       "ChildChainManager: TOKEN_NOT_MAPPED"
     );
     IChildToken childTokenContract = IChildToken(childTokenAddress);
-    childTokenContract.deposit(user, amount);
-    emit Deposited(user, childTokenAddress, amount);
+    childTokenContract.deposit(user, depositData);
   }
 }

@@ -60,10 +60,11 @@ contract ChildToken is ERC20, IChildToken, AccessControl, NetworkAgnostic {
     return sender;
   }
 
-  function deposit(address user, uint256 amount) override external only(DEPOSITOR_ROLE) {
+  function deposit(address user, bytes calldata depositData) override external only(DEPOSITOR_ROLE) {
+    uint256 amount = abi.decode(depositData, (uint256));
     require(
       amount > 0,
-      "amount should be possitive"
+      "amount should be positive"
     );
     require(
       user != address(0x0),
