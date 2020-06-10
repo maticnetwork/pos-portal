@@ -7,6 +7,7 @@ const RLPReader = artifacts.require('RLPReader')
 const RootChainManager = artifacts.require('RootChainManager')
 const DummyStateSender = artifacts.require('DummyStateSender')
 const DummyToken = artifacts.require('DummyToken')
+const ERC20Predicate = artifacts.require('ERC20Predicate')
 const WETH = artifacts.require('WETH')
 
 const utils = require('./utils')
@@ -22,7 +23,7 @@ const libDeps = [
   },
   {
     lib: RLPReader,
-    contracts: [RootChainManager]
+    contracts: [RootChainManager, ERC20Predicate]
   }
 ]
 
@@ -37,12 +38,14 @@ module.exports = async(deployer) => {
   await deployer.deploy(RootChainManager)
   await deployer.deploy(DummyStateSender)
   await deployer.deploy(DummyToken, 'Dummy Root Token', 'DUMMY')
-  await deployer.deploy(WETH)
+  await deployer.deploy(ERC20Predicate)
+  // await deployer.deploy(WETH)
 
   const contractAddresses = utils.getContractAddresses()
   contractAddresses.root.RootChainManager = RootChainManager.address
   contractAddresses.root.DummyStateSender = DummyStateSender.address
   contractAddresses.root.DummyToken = DummyToken.address
-  contractAddresses.root.WETH = WETH.address
+  contractAddresses.root.ERC20Predicate = ERC20Predicate.address
+  // contractAddresses.root.WETH = WETH.address
   utils.writeContractAddresses(contractAddresses)
 }
