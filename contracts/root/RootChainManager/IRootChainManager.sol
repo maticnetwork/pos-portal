@@ -56,7 +56,7 @@ interface IRootChainManager {
         bytes calldata depositData
     ) external;
 
-    function exit(bytes calldata data) external;
+    function exit(bytes calldata inputData) external;
 
     function processedExits(bytes32 exitHash) external view returns (bool);
 }

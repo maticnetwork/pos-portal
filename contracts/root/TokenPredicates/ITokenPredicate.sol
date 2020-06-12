@@ -1,5 +1,7 @@
 pragma solidity ^0.6.6;
 
+import {RLPReader} from "../../lib/RLPReader.sol";
+
 
 interface ITokenPredicate {
     function lockTokens(
@@ -9,7 +11,7 @@ interface ITokenPredicate {
         bytes calldata depositData
     ) external;
 
-    function validateExitLog(bytes calldata burnLogRLP) external pure;
+    function validateExitLog(address msgSender, bytes calldata logRLPList) external pure;
 
-    function exitTokens(bytes calldata burnLogRLP) external;
+    function exitTokens(address msgSender, address rootToken, bytes calldata logRLPList) external;
 }

@@ -1,21 +1,21 @@
 pragma solidity ^0.6.6;
 
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import {RLPReader} from "../../lib/RLPReader.sol";
 import {ITokenPredicate} from "./ITokenPredicate.sol";
 
 
-contract ERC20Predicate is ITokenPredicate {
+contract ERC721Predicate is ITokenPredicate {
     using RLPReader for bytes;
     using RLPReader for RLPReader.RLPItem;
-    bytes32 public constant TOKEN_TYPE = keccak256("ERC20");
+    bytes32 public constant TOKEN_TYPE = keccak256("ERC721");
     bytes32 public constant TRANSFER_EVENT_SIG = 0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef;
 
-    event LockedERC20(
+    event LockedERC721(
         address indexed from,
         address indexed user,
         address indexed rootToken,
-        uint256 amount
+        uint256 tokenId
     );
 
     function lockTokens(
@@ -24,9 +24,9 @@ contract ERC20Predicate is ITokenPredicate {
         address rootToken,
         bytes calldata depositData
     ) external override {
-        uint256 amount = abi.decode(depositData, (uint256));
-        IERC20(rootToken).transferFrom(depositor, address(this), amount);
-        emit LockedERC20(depositor, depositReceiver, rootToken, amount);
+        uint256 tokenId = abi.decode(depositData, (uint256));
+        IERC721(rootToken).transferFrom(depositor, address(this), tokenId);
+        emit LockedERC721(depositor, depositReceiver, rootToken, tokenId);
     }
 
     function validateExitLog(address msgSender, bytes calldata log) external override pure {
@@ -48,7 +48,8 @@ contract ERC20Predicate is ITokenPredicate {
 
     function exitTokens(address msgSender, address rootToken, bytes memory log) public override {
         RLPReader.RLPItem[] memory logRLPList = log.toRlpItem().toList();
-        IERC20(rootToken).transfer(
+        IERC721(rootToken).transferFrom(
+            address(this),
             msgSender,
             logRLPList[2].toUint() // log data field
         );
