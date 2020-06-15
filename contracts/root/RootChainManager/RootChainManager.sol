@@ -16,6 +16,7 @@ contract RootChainManager is RootChainManagerStorage, IRootChainManager {
     using RLPReader for RLPReader.RLPItem;
     using Merkle for bytes32;
 
+    // maybe DEPOSIT and MAP_TOKEN can be reduced to bytes4
     bytes32 private constant DEPOSIT = keccak256("DEPOSIT");
     bytes32 private constant MAP_TOKEN = keccak256("MAP_TOKEN");
     IStateSender private _stateSender;

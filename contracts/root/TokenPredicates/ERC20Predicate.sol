@@ -17,6 +17,7 @@ contract ERC20Predicate is ITokenPredicate {
         uint256 amount
     );
 
+    // TODO: add access control
     function lockTokens(
         address depositor,
         address depositReceiver,

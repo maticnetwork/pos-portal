@@ -17,6 +17,7 @@ contract ERC721Predicate is ITokenPredicate {
         uint256 tokenId
     );
 
+    // TODO: add access control
     function lockTokens(
         address depositor,
         address depositReceiver,
