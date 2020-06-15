@@ -35,6 +35,7 @@
     "mnemonics": "clock radar mass judge dismiss just intact mind resemble fringe diary casino"
   },
   "devDependencies": {
+    "@openzeppelin/contracts": "^3.1.0-rc.0",
     "babel-cli": "^6.26.0",
     "babel-eslint": "^10.1.0",
     "babel-polyfill": "^6.26.0",
@@ -58,7 +59,6 @@
     "truffle": "^5.1.21"
   },
   "dependencies": {
-    "@openzeppelin/contracts": "^3.0.0",
     "@truffle/hdwallet-provider": "^1.0.35",
     "ganache-cli": "^6.9.1"
   }
