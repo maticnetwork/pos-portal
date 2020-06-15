@@ -15,16 +15,16 @@ module.exports = async(deployer) => {
 
   const RootChainManagerInstance = await RootChainManager.at(contractAddresses.root.RootChainManagerProxy)
   const ERC20PredicateInstance = await ERC20Predicate.at(contractAddresses.root.ERC20Predicate)
-  // const WETHContract = await WETH.at(contractAddresses.root.WETH)
+  // const WETHInstance = await WETH.at(contractAddresses.root.WETH)
 
   console.log('Setting StateSender')
   await RootChainManagerInstance.setStateSender(contractAddresses.root.DummyStateSender)
 
   console.log('Setting ChildChainManager')
-  await RootChainManagerInstance.setChildChainManagerAddress(contractAddresses.child.ChildChainManager)
+  await RootChainManagerInstance.setChildChainManagerAddress(contractAddresses.child.ChildChainManagerProxy)
 
   // console.log('Setting WETH')
-  // await RootChainManagerContract.setWETH(contractAddresses.root.WETH)
+  // await RootChainManagerInstance.setWETH(contractAddresses.root.WETH)
 
   console.log('Setting CheckpointManager')
   await RootChainManagerInstance.setCheckpointManager(config.plasmaRootChain)
@@ -37,9 +37,9 @@ module.exports = async(deployer) => {
   await RootChainManagerInstance.mapToken(contractAddresses.root.DummyToken, contractAddresses.child.DummyToken, ERC20)
 
   // console.log('Mapping WETH')
-  // await RootChainManagerContract.mapToken(contractAddresses.root.WETH, contractAddresses.child.MaticWETH)
+  // await RootChainManagerInstance.mapToken(contractAddresses.root.WETH, contractAddresses.child.MaticWETH)
 
   // console.log('Granting ROOT_CHAIN_MANAGER_ROLE on WETH')
-  // const ROOT_CHAIN_MANAGER_ROLE = await WETHContract.ROOT_CHAIN_MANAGER_ROLE()
-  // await WETHContract.grantRole(ROOT_CHAIN_MANAGER_ROLE, contractAddresses.root.RootChainManager)
+  // const ROOT_CHAIN_MANAGER_ROLE = await WETHInstance.ROOT_CHAIN_MANAGER_ROLE()
+  // await WETHInstance.grantRole(ROOT_CHAIN_MANAGER_ROLE, contractAddresses.root.RootChainManagerProxy)
 }
