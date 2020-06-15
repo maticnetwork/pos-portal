@@ -10,8 +10,6 @@ import {IChildToken} from "./IChildToken.sol";
 contract ChildERC20 is ERC1155, IChildToken, AccessControl {
     bytes32 public constant DEPOSITOR_ROLE = keccak256("DEPOSITOR_ROLE");
 
-    address private _rootToken;
-
     constructor(string memory uri) public ERC1155(uri) {
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
         _setupRole(DEPOSITOR_ROLE, _msgSender());
@@ -23,17 +21,6 @@ contract ChildERC20 is ERC1155, IChildToken, AccessControl {
             "ChildERC1155: INSUFFICIENT_PERMISSIONS"
         );
         _;
-    }
-
-    function setRootToken(address newRootToken)
-        external
-        only(DEFAULT_ADMIN_ROLE)
-    {
-        _rootToken = newRootToken;
-    }
-
-    function rootToken() public view returns (address) {
-        return _rootToken;
     }
 
     function _msgSender()

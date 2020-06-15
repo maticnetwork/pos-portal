@@ -8,14 +8,6 @@ import {NetworkAgnostic} from "../../common/NetworkAgnostic.sol";
 contract ChildERC20 is ERC721, IChildToken, AccessControl, NetworkAgnostic {
     bytes32 public constant DEPOSITOR_ROLE = keccak256("DEPOSITOR_ROLE");
 
-    address private _rootToken;
-
-    event Burned(
-        address indexed rootToken,
-        address indexed user,
-        uint256 tokenId
-    );
-
     constructor(
         string memory name,
         string memory symbol
@@ -27,17 +19,6 @@ contract ChildERC20 is ERC721, IChildToken, AccessControl, NetworkAgnostic {
     modifier only(bytes32 role) {
         require(hasRole(role, _msgSender()), "ChildERC721: INSUFFICIENT_PERMISSIONS");
         _;
-    }
-
-    function setRootToken(address newRootToken)
-        external
-        only(DEFAULT_ADMIN_ROLE)
-    {
-        _rootToken = newRootToken;
-    }
-
-    function rootToken() public view returns (address) {
-        return _rootToken;
     }
 
     function _msgSender()
@@ -76,6 +57,5 @@ contract ChildERC20 is ERC721, IChildToken, AccessControl, NetworkAgnostic {
     function withdraw(uint256 tokenId) external {
         require(_msgSender() == ownerOf(tokenId), "ChildERC721: INVALID_TOKEN_OWNER");
         _burn(tokenId);
-        emit Burned(_rootToken, _msgSender(), tokenId);
     }
 }
