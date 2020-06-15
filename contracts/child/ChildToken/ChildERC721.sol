@@ -1,11 +1,11 @@
 pragma solidity "0.6.6";
 
-import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import {ERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 import {IChildToken} from "./IChildToken.sol";
 import {NetworkAgnostic} from "../../common/NetworkAgnostic.sol";
 
-contract ChildToken is ERC20, IChildToken, AccessControl, NetworkAgnostic {
+contract ChildERC20 is ERC721, IChildToken, AccessControl, NetworkAgnostic {
     bytes32 public constant DEPOSITOR_ROLE = keccak256("DEPOSITOR_ROLE");
 
     address private _rootToken;
@@ -13,21 +13,19 @@ contract ChildToken is ERC20, IChildToken, AccessControl, NetworkAgnostic {
     event Burned(
         address indexed rootToken,
         address indexed user,
-        uint256 amount
+        uint256 tokenId
     );
 
     constructor(
         string memory name,
-        string memory symbol,
-        uint8 decimals
-    ) public ERC20(name, symbol) NetworkAgnostic(name, "1", 3) {
-        _setupDecimals(decimals);
+        string memory symbol
+    ) public ERC721(name, symbol) NetworkAgnostic(name, "1", 3) {
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
         _setupRole(DEPOSITOR_ROLE, _msgSender());
     }
 
     modifier only(bytes32 role) {
-        require(hasRole(role, _msgSender()), "Insufficient permissions");
+        require(hasRole(role, _msgSender()), "ChildERC721: INSUFFICIENT_PERMISSIONS");
         _;
     }
 
@@ -69,20 +67,15 @@ contract ChildToken is ERC20, IChildToken, AccessControl, NetworkAgnostic {
         override
         only(DEPOSITOR_ROLE)
     {
-        uint256 amount = abi.decode(depositData, (uint256));
-        require(amount > 0, "amount should be positive");
-        require(user != address(0x0), "Cannot deposit for zero address");
-        _mint(user, amount);
+        uint256 tokenId = abi.decode(depositData, (uint256));
+        require(ownerOf(tokenId) == address(0), "ChildERC721: TOKEN_EXISTS");
+        require(user != address(0x0), "ChildERC721: INVALID_DEPOSIT_USER");
+        _mint(user, tokenId);
     }
 
-    function withdraw(uint256 amount) external override {
-        require(amount > 0, "withdraw amount should be positie");
-        require(
-            amount <= balanceOf(_msgSender()),
-            "withdraw amount cannot be more than balance"
-        );
-
-        _burn(_msgSender(), amount);
-        emit Burned(_rootToken, _msgSender(), amount);
+    function withdraw(uint256 tokenId) external {
+        require(_msgSender() == ownerOf(tokenId), "ChildERC721: INVALID_TOKEN_OWNER");
+        _burn(tokenId);
+        emit Burned(_rootToken, _msgSender(), tokenId);
     }
 }
