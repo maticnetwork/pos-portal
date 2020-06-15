@@ -44,12 +44,22 @@ module.exports = {
       // port: 9545,
       // network_id: '53227'
 
+      // provider: () =>
+      //   new HDWalletProvider(
+      //     mnemonic,
+      //     'https://ropsten.infura.io/v3/70645f042c3a409599c60f96f6dd9fbc'
+      //   ),
+      // network_id: 3,
+      // gas: 7000000,
+      // gasPrice: 10000000000, // 10 gwei
+      // skipDryRun: true
+
       provider: () =>
         new HDWalletProvider(
           mnemonic,
-          'https://ropsten.infura.io/v3/70645f042c3a409599c60f96f6dd9fbc'
+          'https://goerli.infura.io/v3/70645f042c3a409599c60f96f6dd9fbc'
         ),
-      network_id: 3,
+      network_id: 5,
       gas: 7000000,
       gasPrice: 10000000000, // 10 gwei
       skipDryRun: true
@@ -59,12 +69,22 @@ module.exports = {
       // port: 8545,
       // network_id: '96410'
 
+      // provider: () =>
+      //   new HDWalletProvider(
+      //     mnemonic,
+      //     'https://testnetv3.matic.network'
+      //   ),
+      // network_id: 15001,
+      // gas: 7000000,
+      // gasPrice: 10000000000, // 10 gwei
+      // skipDryRun: true
+
       provider: () =>
         new HDWalletProvider(
           mnemonic,
-          'https://testnetv3.matic.network'
+          'https://rpc-mumbai.matic.today'
         ),
-      network_id: 15001,
+      network_id: 80001,
       gas: 7000000,
       gasPrice: 10000000000, // 10 gwei
       skipDryRun: true
