@@ -12,28 +12,28 @@ module.exports = async(deployer) => {
   contractAddresses.root.RootChainManagerProxy = RootChainManagerProxy.address
   utils.writeContractAddresses(contractAddresses)
 
-  const RootChainManagerContract = await RootChainManager.at(contractAddresses.root.RootChainManagerProxy)
-  const WETHContract = await WETH.at(contractAddresses.root.WETH)
+  const RootChainManagerInstance = await RootChainManager.at(contractAddresses.root.RootChainManagerProxy)
+  const WETHInstance = await WETH.at(contractAddresses.root.WETH)
 
   console.log('Setting StateSender')
-  await RootChainManagerContract.setStateSender(contractAddresses.root.DummyStateSender)
+  await RootChainManagerInstance.setStateSender(contractAddresses.root.DummyStateSender)
 
   console.log('Setting ChildChainManager')
-  await RootChainManagerContract.setChildChainManagerAddress(contractAddresses.child.ChildChainManager)
+  await RootChainManagerInstance.setChildChainManagerAddress(contractAddresses.child.ChildChainManagerProxy)
 
   console.log('Setting WETH')
-  await RootChainManagerContract.setWETH(contractAddresses.root.WETH)
+  await RootChainManagerInstance.setWETH(contractAddresses.root.WETH)
 
   console.log('Setting CheckpointManager')
-  await RootChainManagerContract.setCheckpointManager(config.plasmaRootChain)
+  await RootChainManagerInstance.setCheckpointManager(config.plasmaRootChain)
 
   console.log('Mapping DummyToken')
-  await RootChainManagerContract.mapToken(contractAddresses.root.DummyToken, contractAddresses.child.DummyToken)
+  await RootChainManagerInstance.mapToken(contractAddresses.root.DummyToken, contractAddresses.child.DummyToken)
 
   console.log('Mapping WETH')
-  await RootChainManagerContract.mapToken(contractAddresses.root.WETH, contractAddresses.child.MaticWETH)
+  await RootChainManagerInstance.mapToken(contractAddresses.root.WETH, contractAddresses.child.MaticWETH)
 
   console.log('Granting ROOT_CHAIN_MANAGER_ROLE on WETH')
-  const ROOT_CHAIN_MANAGER_ROLE = await WETHContract.ROOT_CHAIN_MANAGER_ROLE()
-  await WETHContract.grantRole(ROOT_CHAIN_MANAGER_ROLE, contractAddresses.root.RootChainManager)
+  const ROOT_CHAIN_MANAGER_ROLE = await WETHInstance.ROOT_CHAIN_MANAGER_ROLE()
+  await WETHInstance.grantRole(ROOT_CHAIN_MANAGER_ROLE, contractAddresses.root.RootChainManagerProxy)
 }
