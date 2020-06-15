@@ -4,7 +4,6 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {RLPReader} from "../../lib/RLPReader.sol";
 import {ITokenPredicate} from "./ITokenPredicate.sol";
 
-
 contract ERC20Predicate is ITokenPredicate {
     using RLPReader for bytes;
     using RLPReader for RLPReader.RLPItem;
@@ -29,7 +28,11 @@ contract ERC20Predicate is ITokenPredicate {
         emit LockedERC20(depositor, depositReceiver, rootToken, amount);
     }
 
-    function validateExitLog(address msgSender, bytes calldata log) external override pure {
+    function validateExitLog(address msgSender, bytes calldata log)
+        external
+        override
+        pure
+    {
         RLPReader.RLPItem[] memory logRLPList = log.toRlpItem().toList();
         RLPReader.RLPItem[] memory logTopicRLPList = logRLPList[1].toList(); // topics
         require(
@@ -46,7 +49,11 @@ contract ERC20Predicate is ITokenPredicate {
         );
     }
 
-    function exitTokens(address msgSender, address rootToken, bytes memory log) public override {
+    function exitTokens(
+        address msgSender,
+        address rootToken,
+        bytes memory log
+    ) public override {
         RLPReader.RLPItem[] memory logRLPList = log.toRlpItem().toList();
         IERC20(rootToken).transfer(
             msgSender,

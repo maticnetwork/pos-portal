@@ -11,7 +11,6 @@ import {MerklePatriciaProof} from "../../lib/MerklePatriciaProof.sol";
 import {Merkle} from "../../lib/Merkle.sol";
 import {ITokenPredicate} from "../TokenPredicates/ITokenPredicate.sol";
 
-
 contract RootChainManager is RootChainManagerStorage, IRootChainManager {
     using RLPReader for bytes;
     using RLPReader for RLPReader.RLPItem;
@@ -230,14 +229,16 @@ contract RootChainManager is RootChainManagerStorage, IRootChainManager {
             .toRlpItem()
             .toList();
         RLPReader.RLPItem memory logRLP = receiptRLPList[3]
-            .toList()[inputDataRLPList[9].toUint() /* logIndex */];
+            .toList()[inputDataRLPList[9].toUint()]; /* logIndex */
 
         address childToken = RLPReader.toAddress(logRLP.toList()[0]); // log emitter address field
         require(
             _childToRootToken[childToken] != address(0),
             "RootChainManager: TOKEN_NOT_MAPPED"
         );
-        address predicateAddress = _typeToPredicate[_tokenToType[_childToRootToken[childToken]]];
+
+            address predicateAddress
+         = _typeToPredicate[_tokenToType[_childToRootToken[childToken]]];
         ITokenPredicate(predicateAddress).validateExitLog(
             _msgSender(),
             logRLP.toBytes()

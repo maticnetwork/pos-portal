@@ -1,8 +1,7 @@
 pragma solidity ^0.6.6;
 
-import { AccessControl } from "@openzeppelin/contracts/access/AccessControl.sol";
-import { ProxyStorage } from "../../common/Proxy/ProxyStorage.sol";
-
+import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
+import {ProxyStorage} from "../../common/Proxy/ProxyStorage.sol";
 
 contract RootChainManagerStorage is ProxyStorage, AccessControl {
     bytes32 public constant MAPPER_ROLE = keccak256("MAPPER_ROLE");
