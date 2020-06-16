@@ -18,7 +18,7 @@ contract RootChainManager is RootChainManagerStorage, IRootChainManager {
     // maybe DEPOSIT and MAP_TOKEN can be reduced to bytes4
     bytes32 public constant DEPOSIT = keccak256("DEPOSIT");
     bytes32 public constant MAP_TOKEN = keccak256("MAP_TOKEN");
-    address public constant ETHER = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+    address public constant ETHER_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
     IStateSender private _stateSender;
     ICheckpointManager private _checkpointManager;
@@ -141,8 +141,8 @@ contract RootChainManager is RootChainManagerStorage, IRootChainManager {
         payable
     {
         bytes memory depositData = abi.encode(msg.value);
-        _depositFor(user, ETHER, depositData);
-        address payable etherPredicate = address(uint160(_typeToPredicate[_tokenToType[ETHER]]));
+        _depositFor(user, ETHER_ADDRESS, depositData);
+        address payable etherPredicate = address(uint160(_typeToPredicate[_tokenToType[ETHER_ADDRESS]]));
         etherPredicate.transfer(msg.value);
     }
 

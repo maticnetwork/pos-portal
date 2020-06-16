@@ -7,7 +7,7 @@ import {IChildToken} from "./IChildToken.sol";
 // import {NetworkAgnostic} from "../../common/NetworkAgnostic.sol";
 
 // TODO: network agnostic
-contract ChildERC20 is ERC1155, IChildToken, AccessControl {
+contract ChildERC1155 is ERC1155, IChildToken, AccessControl {
     bytes32 public constant DEPOSITOR_ROLE = keccak256("DEPOSITOR_ROLE");
 
     constructor(string memory uri) public ERC1155(uri) {
