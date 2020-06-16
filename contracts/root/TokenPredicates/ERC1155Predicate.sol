@@ -2,12 +2,15 @@ pragma solidity ^0.6.6;
 
 import {IERC1155} from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import {ERC1155Receiver} from "@openzeppelin/contracts/token/ERC1155/ERC1155Receiver.sol";
+import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 import {RLPReader} from "../../lib/RLPReader.sol";
 import {ITokenPredicate} from "./ITokenPredicate.sol";
 
-contract ERC1155Predicate is ITokenPredicate, ERC1155Receiver {
+contract ERC1155Predicate is ITokenPredicate, ERC1155Receiver, AccessControl {
     using RLPReader for bytes;
     using RLPReader for RLPReader.RLPItem;
+
+    bytes32 public constant MANAGER_ROLE = keccak256("MANAGER_ROLE");
     bytes32 public constant TOKEN_TYPE = keccak256("ERC1155");
 
     // keccak256("TransferSingle(address,address,address,uint256,uint256)")
@@ -27,6 +30,16 @@ contract ERC1155Predicate is ITokenPredicate, ERC1155Receiver {
         uint256[] ids,
         uint256[] amounts
     );
+
+    modifier only(bytes32 role) {
+        require(hasRole(role, _msgSender()), "ERC1155Predicate: INSUFFICIENT_PERMISSIONS");
+        _;
+    }
+
+    constructor() public {
+        _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
+        _setupRole(MANAGER_ROLE, _msgSender());
+    }
 
     function onERC1155Received(
         address,
@@ -48,13 +61,16 @@ contract ERC1155Predicate is ITokenPredicate, ERC1155Receiver {
         return ERC1155_BATCH_RECEIVE_SELECTOR;
     }
 
-    // TODO: add access control
     function lockTokens(
         address depositor,
         address depositReceiver,
         address rootToken,
         bytes calldata depositData
-    ) external override {
+    )
+        external
+        override
+        only(MANAGER_ROLE)
+    {
         // forcing batch deposit since supporting both single and batch deposit introduces too much complexity
         (
             uint256[] memory ids,
@@ -104,7 +120,11 @@ contract ERC1155Predicate is ITokenPredicate, ERC1155Receiver {
         address withdrawer,
         address rootToken,
         bytes memory log
-    ) public override {
+    )
+        public
+        override
+        only(MANAGER_ROLE)
+    {
         RLPReader.RLPItem[] memory logRLPList = log.toRlpItem().toList();
         RLPReader.RLPItem[] memory logTopicRLPList = logRLPList[1].toList(); // topics
         bytes memory logData = logRLPList[2].toBytes();

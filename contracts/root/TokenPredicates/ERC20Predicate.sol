@@ -1,12 +1,15 @@
 pragma solidity ^0.6.6;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 import {RLPReader} from "../../lib/RLPReader.sol";
 import {ITokenPredicate} from "./ITokenPredicate.sol";
 
-contract ERC20Predicate is ITokenPredicate {
+contract ERC20Predicate is ITokenPredicate, AccessControl {
     using RLPReader for bytes;
     using RLPReader for RLPReader.RLPItem;
+
+    bytes32 public constant MANAGER_ROLE = keccak256("MANAGER_ROLE");
     bytes32 public constant TOKEN_TYPE = keccak256("ERC20");
     bytes32 public constant TRANSFER_EVENT_SIG = 0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef;
 
@@ -17,13 +20,26 @@ contract ERC20Predicate is ITokenPredicate {
         uint256 amount
     );
 
-    // TODO: add access control
+    modifier only(bytes32 role) {
+        require(hasRole(role, _msgSender()), "ERC20Predicate: INSUFFICIENT_PERMISSIONS");
+        _;
+    }
+
+    constructor() public {
+        _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
+        _setupRole(MANAGER_ROLE, _msgSender());
+    }
+
     function lockTokens(
         address depositor,
         address depositReceiver,
         address rootToken,
         bytes calldata depositData
-    ) external override {
+    )
+        external
+        override
+        only(MANAGER_ROLE)
+    {
         uint256 amount = abi.decode(depositData, (uint256));
         IERC20(rootToken).transferFrom(depositor, address(this), amount);
         emit LockedERC20(depositor, depositReceiver, rootToken, amount);
@@ -54,7 +70,11 @@ contract ERC20Predicate is ITokenPredicate {
         address withdrawer,
         address rootToken,
         bytes memory log
-    ) public override {
+    )
+        public
+        override
+        only(MANAGER_ROLE)
+    {
         RLPReader.RLPItem[] memory logRLPList = log.toRlpItem().toList();
         IERC20(rootToken).transfer(
             withdrawer,
