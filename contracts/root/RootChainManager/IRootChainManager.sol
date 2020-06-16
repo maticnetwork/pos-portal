@@ -47,7 +47,7 @@ interface IRootChainManager {
     // function depositEther() external payable;
     // function deposit(address rootToken, uint256 amount) external;
 
-    function depositEtherFor(address user, uint256 amount) external payable;
+    function depositEtherFor(address user) external payable;
 
     function depositFor(
         address user,

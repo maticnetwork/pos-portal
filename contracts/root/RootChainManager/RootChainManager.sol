@@ -17,8 +17,10 @@ contract RootChainManager is RootChainManagerStorage, IRootChainManager {
     using Merkle for bytes32;
 
     // maybe DEPOSIT and MAP_TOKEN can be reduced to bytes4
-    bytes32 private constant DEPOSIT = keccak256("DEPOSIT");
-    bytes32 private constant MAP_TOKEN = keccak256("MAP_TOKEN");
+    bytes32 public constant DEPOSIT = keccak256("DEPOSIT");
+    bytes32 public constant MAP_TOKEN = keccak256("MAP_TOKEN");
+    address public constant ETHER = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+
     IStateSender private _stateSender;
     ICheckpointManager private _checkpointManager;
     address private _childChainManagerAddress;
@@ -134,17 +136,30 @@ contract RootChainManager is RootChainManagerStorage, IRootChainManager {
         return _tokenToType[rootToken];
     }
 
-    function depositEtherFor(address user, uint256 amount)
+    function depositEtherFor(address user)
         external
         override
         payable
-    {}
+    {
+        bytes memory depositData = abi.encode(msg.value);
+        _depositFor(user, ETHER, depositData);
+        address payable etherPredicate = address(uint160(_typeToPredicate[_tokenToType[ETHER]]));
+        etherPredicate.transfer(msg.value);
+    }
 
     function depositFor(
         address user,
         address rootToken,
         bytes calldata depositData
     ) external override {
+        _depositFor(user, rootToken, depositData);
+    }
+
+    function _depositFor(
+        address user,
+        address rootToken,
+        bytes memory depositData
+    ) private {
         require(
             address(_stateSender) != address(0x0),
             "RootChainManager: STATESENDER_NOT_SET"
@@ -206,23 +221,18 @@ contract RootChainManager is RootChainManagerStorage, IRootChainManager {
 
         // checking if exit has already been processed
         // unique exit is identified using hash of (blockNumber, receipt, logIndex)
-        require(
-            _processedExits[keccak256(
-                abi.encodePacked(
-                    inputDataRLPList[2].toBytes(), // blockNumber
-                    inputDataRLPList[6].toBytes(), // receipt
-                    inputDataRLPList[9].toBytes() // logIndex
-                )
-            )] == false,
-            "RootChainManager: EXIT_ALREADY_PROCESSED"
-        );
-        _processedExits[keccak256(
+        bytes32 exitHash = keccak256(
             abi.encodePacked(
                 inputDataRLPList[2].toBytes(), // blockNumber
                 inputDataRLPList[6].toBytes(), // receipt
                 inputDataRLPList[9].toBytes() // logIndex
             )
-        )] = true;
+        );
+        require(
+            _processedExits[exitHash] == false,
+            "RootChainManager: EXIT_ALREADY_PROCESSED"
+        );
+        _processedExits[exitHash] = true;
 
         // verifying child withdraw log
         RLPReader.RLPItem[] memory receiptRLPList = inputDataRLPList[6]
