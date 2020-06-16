@@ -5,7 +5,6 @@ import {RootChainManagerStorage} from "./RootChainManagerStorage.sol";
 
 import {IStateSender} from "../StateSender/IStateSender.sol";
 import {ICheckpointManager} from "../ICheckpointManager.sol";
-import {WETH} from "../RootToken/WETH.sol";
 import {RLPReader} from "../../lib/RLPReader.sol";
 import {MerklePatriciaProof} from "../../lib/MerklePatriciaProof.sol";
 import {Merkle} from "../../lib/Merkle.sol";
