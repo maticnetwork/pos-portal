@@ -238,26 +238,15 @@ contract RootChainManager is RootChainManagerStorage, IRootChainManager {
             "RootChainManager: TOKEN_NOT_MAPPED"
         );
 
-            address predicateAddress
-         = _typeToPredicate[_tokenToType[_childToRootToken[childToken]]];
+        address predicateAddress = _typeToPredicate[
+            _tokenToType[
+                _childToRootToken[childToken]
+            ]
+        ];
         ITokenPredicate(predicateAddress).validateExitLog(
             _msgSender(),
             logRLP.toBytes()
         );
-
-        // RLPReader.RLPItem[] memory logTopicRLPList = logRLPList[1].toList(); // log topics
-        // require(
-        //     bytes32(logTopicRLPList[0].toUint()) == TRANSFER_EVENT_SIG, // topic0 is event sig
-        //     "RootChainManager: INVALID_SIGNATURE"
-        // );
-        // require(
-        //     _msgSender() == address(logTopicRLPList[1].toUint()), // topic1 is from address
-        //     "RootChainManager: INVALID_SENDER"
-        // );
-        // require(
-        //     address(logTopicRLPList[2].toUint()) == address(0), // topic2 is to address
-        //     "RootChainManager: INVALID_RECEIVER"
-        // );
 
         require(
             inputDataRLPList[8].toBytes().toRlpItem().toUint() &
@@ -292,22 +281,6 @@ contract RootChainManager is RootChainManagerStorage, IRootChainManager {
             _childToRootToken[childToken],
             logRLP.toBytes()
         );
-
-        // transfer tokens
-        // IERC20(_childToRootToken[childToken]).transfer(
-        //     _msgSender(),
-        //     logRLPList[2].toUint() // log data
-        // );
-
-        // if (_childToRootToken[childToken] == address(_WETH)) {
-        //     _WETH.withdrawFor(logRLPList[2].toUint(), _msgSender());
-        // }
-
-        // emit Exited(
-        //     _msgSender(),
-        //     _childToRootToken[childToken],
-        //     logRLPList[2].toUint()
-        // );
     }
 
     function checkBlockMembershipInCheckpoint(
