@@ -14,6 +14,10 @@ contract Proxy is ProxyStorage, IERCProxy {
         delegatedFwd(proxyTo, msg.data);
     }
 
+    receive() external payable {
+        delegatedFwd(proxyTo, msg.data);
+    }
+
     function delegatedFwd(address _dst, bytes memory _calldata) internal {
         // solium-disable-next-line security/no-inline-assembly
         assembly {
