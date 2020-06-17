@@ -6,7 +6,7 @@ import BN from 'bn.js'
 import * as deployer from '../helpers/deployer'
 import { mockValues } from '../helpers/constants'
 import logDecoder from '../helpers/log-decoder.js'
-import { decodeStateSenderData } from '../helpers/utils'
+const abi = require('ethers/utils/abi-coder').defaultAbiCoder
 
 // Enable and inject BN dependency
 chai
@@ -94,10 +94,10 @@ contract('RootChainManager', async(accounts) => {
 
     before(async() => {
       contracts = await deployer.deployInitializedContracts()
-      dummyToken = contracts.root.dummyToken
+      dummyERC20 = contracts.root.dummyERC20
       rootChainManager = contracts.root.rootChainManager
-      oldAccountBalance = await dummyToken.balanceOf(accounts[0])
-      oldContractBalance = await dummyToken.balanceOf(rootChainManager.address)
+      oldAccountBalance = await dummyERC20.balanceOf(accounts[0])
+      oldContractBalance = await dummyERC20.balanceOf(contracts.root.erc20Predicate.address)
     })
 
     it('Account has balance', () => {
@@ -105,21 +105,22 @@ contract('RootChainManager', async(accounts) => {
     })
 
     it('Can approve and deposit', async() => {
-      await dummyToken.approve(rootChainManager.address, depositAmount)
-      depositTx = await rootChainManager.depositFor(depositForAccount, dummyToken.address, depositAmount)
+      await dummyERC20.approve(contracts.root.erc20Predicate.address, depositAmount)
+      const depositData = abi.encode(['uint256'], [depositAmount.toString()])
+      depositTx = await rootChainManager.depositFor(depositForAccount, dummyERC20.address, depositData)
       should.exist(depositTx)
     })
 
-    it('Emits Locked log', () => {
+    it('Emits LockedERC20 log', () => {
       const logs = logDecoder.decodeLogs(depositTx.receipt.rawLogs)
-      lockedLog = logs.find(l => l.event === 'Locked')
+      lockedLog = logs.find(l => l.event === 'LockedERC20')
       should.exist(lockedLog)
     })
 
     describe('Correct values emitted in Locked log', () => {
       it('Emitter address', () => {
         lockedLog.address.should.equal(
-          rootChainManager.address.toLowerCase()
+          contracts.root.erc20Predicate.address.toLowerCase()
         )
       })
 
@@ -129,11 +130,11 @@ contract('RootChainManager', async(accounts) => {
       })
 
       it('user', () => {
-        lockedLog.args.user.should.equal(depositForAccount)
+        lockedLog.args.depositReceiver.should.equal(depositForAccount)
       })
 
       it('rootToken', () => {
-        lockedLog.args.rootToken.should.equal(dummyToken.address)
+        lockedLog.args.rootToken.should.equal(dummyERC20.address)
       })
     })
 
@@ -144,9 +145,13 @@ contract('RootChainManager', async(accounts) => {
     })
 
     describe('Correct values emitted in StateSynced log', () => {
-      let data
+      let depositReceiver, rootToken, depositData
       before(() => {
-        data = decodeStateSenderData(stateSyncedlog.args.data)
+        const [, syncData] = abi.decode(['bytes32', 'bytes'], stateSyncedlog.args.data)
+        const data = abi.decode(['address', 'address', 'bytes'], syncData)
+        depositReceiver = data[0]
+        rootToken = data[1]
+        depositData = data[2]
       })
 
       it('Emitter address', () => {
@@ -156,15 +161,17 @@ contract('RootChainManager', async(accounts) => {
       })
 
       it('user', () => {
-        data.user.should.equal(depositForAccount.toLowerCase())
+        depositReceiver.should.equal(depositForAccount)
       })
 
       it('rootToken', () => {
-        data.rootToken.should.equal(dummyToken.address.toLowerCase())
+        rootToken.should.equal(dummyERC20.address)
       })
 
       it('amount', () => {
-        data.amount.should.be.a.bignumber.that.equals(depositAmount)
+        const [amount] = abi.decode(['uint256'], depositData)
+        const amountBN = new BN(amount.toString())
+        amountBN.should.be.a.bignumber.that.equals(depositAmount)
       })
 
       it('contractAddress', () => {
@@ -175,14 +182,14 @@ contract('RootChainManager', async(accounts) => {
     })
 
     it('Deposit amount deducted from account', async() => {
-      const newAccountBalance = await dummyToken.balanceOf(accounts[0])
+      const newAccountBalance = await dummyERC20.balanceOf(accounts[0])
       newAccountBalance.should.be.a.bignumber.that.equals(
         oldAccountBalance.sub(depositAmount)
       )
     })
 
     it('Deposit amount credited to contract', async() => {
-      const newContractBalance = await dummyToken.balanceOf(rootChainManager.address)
+      const newContractBalance = await dummyERC20.balanceOf(contracts.root.erc20Predicate.address)
       newContractBalance.should.be.a.bignumber.that.equals(
         oldContractBalance.add(depositAmount)
       )
