@@ -2,7 +2,7 @@ import contracts from './contracts'
 
 export const deployFreshRootContracts = async() => {
   const [
-    rootChainManager,
+    rootChainManagerLogic,
     dummyStateSender,
     erc20Predicate,
     erc721Predicate,
@@ -23,10 +23,11 @@ export const deployFreshRootContracts = async() => {
     contracts.DummyERC1155.new('Dummy ERC1155')
   ])
 
-  const rootChainManagerProxy = await contracts.RootChainManagerProxy.new(rootChainManager.address)
+  const rootChainManagerProxy = await contracts.RootChainManagerProxy.new(rootChainManagerLogic.address)
+  const rootChainManager = await contracts.RootChainManager.at(rootChainManagerProxy.address)
 
   return {
-    rootChainManager: rootChainManagerProxy,
+    rootChainManager,
     dummyStateSender,
     erc20Predicate,
     erc721Predicate,
@@ -40,7 +41,7 @@ export const deployFreshRootContracts = async() => {
 
 export const deployFreshChildContracts = async() => {
   const [
-    childChainManager,
+    childChainManagerLogic,
     dummyERC20,
     dummyERC721,
     dummyERC1155,
@@ -53,10 +54,11 @@ export const deployFreshChildContracts = async() => {
     contracts.MaticWETH.new()
   ])
 
-  const childChainManagerProxy = await contracts.ChildChainManagerProxy.new(childChainManager.address)
+  const childChainManagerProxy = await contracts.ChildChainManagerProxy.new(childChainManagerLogic.address)
+  const childChainManager = await contracts.ChildChainManager.at(childChainManagerProxy.address)
 
   return {
-    childChainManager: childChainManagerProxy,
+    childChainManager,
     dummyERC20,
     dummyERC721,
     dummyERC1155,
@@ -73,16 +75,8 @@ export const deployInitializedContracts = async() => {
     deployFreshChildContracts()
   ])
 
-  await Promise.all([
-    root.rootChainManager.setStateSender(root.dummyStateSender.address),
-    root.rootChainManager.setChildChainManagerAddress(child.childChainManager.address),
-    // TODO: set checkpoint manager
-    // root.rootChainManager.mapToken(root.dummyToken.address, child.dummyToken.address),
-    // child.childChainManager.mapToken(root.dummyToken.address, child.dummyToken.address)
-  ])
-
-  // const DEPOSITOR_ROLE = await child.dummyToken.DEPOSITOR_ROLE()
-  // child.dummyToken.grantRole(DEPOSITOR_ROLE, child.childChainManager.address)
+  await root.rootChainManager.setStateSender(root.dummyStateSender.address)
+  await root.rootChainManager.setChildChainManagerAddress(child.childChainManager.address)
 
   const MANAGER_ROLE = await root.erc20Predicate.MANAGER_ROLE()
   const DEPOSITOR_ROLE = await child.dummyERC20.DEPOSITOR_ROLE()
