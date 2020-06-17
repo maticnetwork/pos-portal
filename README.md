@@ -1,6 +1,6 @@
-# Matic POS portal contracts
+# Matic PoS (Proof-of-Stake) portal contracts
 
-Ethereum smart contracts that powers the POS portal for [Matic Network](https://matic.network).
+Ethereum smart contracts that powers the PoS portal for [Matic Network](https://matic.network).
 
 ### Setup
 
