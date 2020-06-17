@@ -10,8 +10,8 @@ import BN from 'bn.js'
 //   new web3.providers.HttpProvider(childRPC)
 // )
 
-export const rootNetworkId = '53227'
-export const childNetworkId = '96410'
+export const rootRPC = 'http://localhost:9545'
+export const childRPC = 'http://localhost:8545'
 
 export const mockValues = {
   addresses: [
