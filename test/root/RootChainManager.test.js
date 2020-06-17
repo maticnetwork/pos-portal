@@ -37,35 +37,54 @@ contract('RootChainManager', async(accounts) => {
       childChainManagerAddress.should.equal(mockChildChainManagerAddress)
     })
 
-    it('Can set WETHAddress', async() => {
-      const mockWETHAddress = mockValues.addresses[2]
-      await contracts.rootChainManager.setWETH(mockWETHAddress)
-      const WETHAddress = await contracts.rootChainManager.WETHAddress()
-      WETHAddress.should.equal(mockWETHAddress)
+    it('Can register predicate', async() => {
+      const mockType = mockValues.bytes32[2]
+      const mockPredicate = mockValues.addresses[4]
+      await contracts.rootChainManager.registerPredicate(mockType, mockPredicate)
+      const predicate = await contracts.rootChainManager.typeToPredicate(mockType)
+      predicate.should.equal(mockPredicate)
     })
 
     it('Can set rootToChildToken map', async() => {
+      await contracts.rootChainManager.setStateSender(contracts.dummyStateSender.address)
+
+      const mockChildChainManagerAddress = mockValues.addresses[1]
+      await contracts.rootChainManager.setChildChainManagerAddress(mockChildChainManagerAddress)
+
+      const mockType = mockValues.bytes32[3]
+      const mockPredicate = mockValues.addresses[4]
+      await contracts.rootChainManager.registerPredicate(mockType, mockPredicate)
+
       const mockParent = mockValues.addresses[3]
       const mockChild = mockValues.addresses[4]
-      await contracts.rootChainManager.mapToken(mockParent, mockChild)
+      await contracts.rootChainManager.mapToken(mockParent, mockChild, mockType)
       const childTokenAddress = await contracts.rootChainManager.rootToChildToken(mockParent)
       childTokenAddress.should.equal(mockChild)
     })
 
     it('Can set childToRootToken map', async() => {
+      await contracts.rootChainManager.setStateSender(contracts.dummyStateSender.address)
+
+      const mockChildChainManagerAddress = mockValues.addresses[1]
+      await contracts.rootChainManager.setChildChainManagerAddress(mockChildChainManagerAddress)
+
+      const mockType = mockValues.bytes32[1]
+      const mockPredicate = mockValues.addresses[4]
+      await contracts.rootChainManager.registerPredicate(mockType, mockPredicate)
+
       const mockParent = mockValues.addresses[5]
       const mockChild = mockValues.addresses[6]
-      await contracts.rootChainManager.mapToken(mockParent, mockChild)
+      await contracts.rootChainManager.mapToken(mockParent, mockChild, mockType)
       const parentTokenAddress = await contracts.rootChainManager.childToRootToken(mockChild)
       parentTokenAddress.should.equal(mockParent)
     })
   })
 
-  describe('depositFor', async() => {
+  describe('deposit ERC20', async() => {
     const depositAmount = mockValues.amounts[1]
     const depositForAccount = mockValues.addresses[0]
     let contracts
-    let dummyToken
+    let dummyERC20
     let rootChainManager
     let oldAccountBalance
     let oldContractBalance
