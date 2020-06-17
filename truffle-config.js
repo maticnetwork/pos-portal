@@ -26,7 +26,7 @@ const HDWalletProvider = require('@truffle/hdwallet-provider')
 // const fs = require('fs');
 // const mnemonic = fs.readFileSync(".secret").toString().trim();
 
-const MNEMONIC = 'clock radar mass judge dismiss just intact mind resemble fringe diary casino'
+const MNEMONIC = process.env.MNEMONIC || 'clock radar mass judge dismiss just intact mind resemble fringe diary casino'
 const API_KEY = process.env.API_KEY
 const ETHERSCAN_API_KEY = process.env.ETHERSCAN_API_KEY
 
