@@ -10,12 +10,6 @@ contract ChildChainManagerStorage is ProxyStorage, AccessControl {
     mapping(address => address) internal _rootToChildToken;
     mapping(address => address) internal _childToRootToken;
 
-    constructor() public {
-        _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
-        _setupRole(MAPPER_ROLE, _msgSender());
-        _setupRole(STATE_SYNCER_ROLE, _msgSender());
-    }
-
     modifier only(bytes32 role) {
         require(
             hasRole(role, _msgSender()),

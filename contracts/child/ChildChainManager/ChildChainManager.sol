@@ -4,10 +4,18 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {ChildChainManagerStorage} from "./ChildChainManagerStorage.sol";
 import {IChildChainManager} from "./IChildChainManager.sol";
 import {IChildToken} from "../ChildToken/IChildToken.sol";
+import {Initializable} from "../../common/Initializable.sol";
+import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 
-contract ChildChainManager is ChildChainManagerStorage, IChildChainManager {
+contract ChildChainManager is ChildChainManagerStorage, IChildChainManager, Initializable, AccessControl {
     bytes32 private constant DEPOSIT = keccak256("DEPOSIT");
     bytes32 private constant MAP_TOKEN = keccak256("MAP_TOKEN");
+
+    function initialize() external initializer {
+        _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
+        _setupRole(MAPPER_ROLE, _msgSender());
+        _setupRole(STATE_SYNCER_ROLE, _msgSender());
+    }
 
     function rootToChildToken(address rootToken)
         public

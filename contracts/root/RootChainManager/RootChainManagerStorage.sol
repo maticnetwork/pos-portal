@@ -14,12 +14,6 @@ contract RootChainManagerStorage is ProxyStorage, AccessControl {
     mapping(address => bytes32) internal _tokenToType;
     mapping(bytes32 => bool) internal _processedExits;
 
-    constructor() public {
-        _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
-        _setupRole(MAPPER_ROLE, _msgSender());
-        _setupRole(REGISTERER_ROLE, _msgSender());
-    }
-
     modifier only(bytes32 role) {
         require(
             hasRole(role, _msgSender()),

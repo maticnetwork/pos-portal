@@ -9,8 +9,10 @@ import {RLPReader} from "../../lib/RLPReader.sol";
 import {MerklePatriciaProof} from "../../lib/MerklePatriciaProof.sol";
 import {Merkle} from "../../lib/Merkle.sol";
 import {ITokenPredicate} from "../TokenPredicates/ITokenPredicate.sol";
+import {Initializable} from "../../common/Initializable.sol";
+import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 
-contract RootChainManager is RootChainManagerStorage, IRootChainManager {
+contract RootChainManager is RootChainManagerStorage, IRootChainManager, Initializable, AccessControl {
     using RLPReader for bytes;
     using RLPReader for RLPReader.RLPItem;
     using Merkle for bytes32;
@@ -25,6 +27,12 @@ contract RootChainManager is RootChainManagerStorage, IRootChainManager {
     address private _childChainManagerAddress;
 
     // TODO: add fallback function
+
+    function initialize() external initializer {
+        _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
+        _setupRole(MAPPER_ROLE, _msgSender());
+        _setupRole(REGISTERER_ROLE, _msgSender());
+    }
 
     function setStateSender(address newStateSender)
         external

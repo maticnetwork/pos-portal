@@ -1,19 +1,10 @@
 pragma solidity ^0.6.6;
 
-import {RootChainManagerStorage} from "./RootChainManagerStorage.sol";
-import {Proxy} from "../../common/Proxy/Proxy.sol";
+import {UpgradableProxy} from "../../common/Proxy/UpgradableProxy.sol";
 
-contract RootChainManagerProxy is Proxy, RootChainManagerStorage {
+contract RootChainManagerProxy is UpgradableProxy {
     constructor(address _proxyTo)
         public
-        RootChainManagerStorage()
-        Proxy(_proxyTo)
+        UpgradableProxy(_proxyTo)
     {}
-
-    function updateImplementation(address _newProxyTo)
-        external
-        only(DEFAULT_ADMIN_ROLE)
-    {
-        _updateImplementation(_newProxyTo);
-    }
 }

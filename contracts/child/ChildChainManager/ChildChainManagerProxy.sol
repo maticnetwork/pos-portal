@@ -1,20 +1,10 @@
 pragma solidity ^0.6.6;
 
-import {ChildChainManagerStorage} from "./ChildChainManagerStorage.sol";
-import {Proxy} from "../../common/Proxy/Proxy.sol";
+import {UpgradableProxy} from "../../common/Proxy/UpgradableProxy.sol";
 
-
-contract ChildChainManagerProxy is Proxy, ChildChainManagerStorage {
+contract ChildChainManagerProxy is UpgradableProxy {
     constructor(address _proxyTo)
         public
-        ChildChainManagerStorage()
-        Proxy(_proxyTo)
+        UpgradableProxy(_proxyTo)
     {}
-
-    function updateImplementation(address _newProxyTo)
-        external
-        only(DEFAULT_ADMIN_ROLE)
-    {
-        _updateImplementation(_newProxyTo);
-    }
 }
