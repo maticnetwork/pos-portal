@@ -1,23 +1,25 @@
 pragma solidity "0.6.6";
 
-import {ERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import {ERC1155} from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 import {IChildToken} from "./IChildToken.sol";
-import {NetworkAgnostic} from "../../common/NetworkAgnostic.sol";
 
-contract ChildERC721 is ERC721, IChildToken, AccessControl, NetworkAgnostic {
+// import {NetworkAgnostic} from "../../common/NetworkAgnostic.sol";
+
+// TODO: network agnostic
+contract ChildERC1155 is ERC1155, IChildToken, AccessControl {
     bytes32 public constant DEPOSITOR_ROLE = keccak256("DEPOSITOR_ROLE");
 
-    constructor(
-        string memory name,
-        string memory symbol
-    ) public ERC721(name, symbol) NetworkAgnostic(name, "1", 3) {
+    constructor(string memory uri) public ERC1155(uri) {
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
         _setupRole(DEPOSITOR_ROLE, _msgSender());
     }
 
     modifier only(bytes32 role) {
-        require(hasRole(role, _msgSender()), "ChildERC721: INSUFFICIENT_PERMISSIONS");
+        require(
+            hasRole(role, _msgSender()),
+            "ChildERC1155: INSUFFICIENT_PERMISSIONS"
+        );
         _;
     }
 
@@ -48,14 +50,22 @@ contract ChildERC721 is ERC721, IChildToken, AccessControl, NetworkAgnostic {
         override
         only(DEPOSITOR_ROLE)
     {
-        uint256 tokenId = abi.decode(depositData, (uint256));
-        require(ownerOf(tokenId) == address(0), "ChildERC721: TOKEN_EXISTS");
-        require(user != address(0x0), "ChildERC721: INVALID_DEPOSIT_USER");
-        _mint(user, tokenId);
+        (
+            uint256[] memory ids,
+            uint256[] memory amounts,
+            bytes memory data
+        ) = abi.decode(depositData, (uint256[], uint256[], bytes));
+        require(user != address(0x0), "ChildERC1155: INVALID_DEPOSIT_USER");
+        _mintBatch(user, ids, amounts, data);
     }
 
-    function withdraw(uint256 tokenId) external {
-        require(_msgSender() == ownerOf(tokenId), "ChildERC721: INVALID_TOKEN_OWNER");
-        _burn(tokenId);
+    function withdrawSingle(uint256 id, uint256 amount) external {
+        _burn(_msgSender(), id, amount);
+    }
+
+    function withdrawBatch(uint256[] calldata ids, uint256[] calldata amounts)
+        external
+    {
+        _burnBatch(_msgSender(), ids, amounts);
     }
 }

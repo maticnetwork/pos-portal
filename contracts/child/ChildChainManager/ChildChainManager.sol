@@ -37,7 +37,7 @@ contract ChildChainManager is ChildChainManagerStorage, IChildChainManager {
         emit TokenMapped(rootToken, childToken);
     }
 
-    function onStateReceive(uint256 id, bytes calldata data)
+    function onStateReceive(uint256, bytes calldata data)
         external
         override
         only(STATE_SYNCER_ROLE)
@@ -49,6 +49,8 @@ contract ChildChainManager is ChildChainManagerStorage, IChildChainManager {
 
         if (syncType == DEPOSIT) {
             _syncDeposit(syncData);
+        } else if (syncType == MAP_TOKEN) {
+            // TODO
         }
     }
 

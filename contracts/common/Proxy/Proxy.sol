@@ -11,8 +11,10 @@ contract Proxy is ProxyStorage, IERCProxy {
     }
 
     fallback() external payable {
-        // require(currentContract != 0, "If app code has not been set yet, do not call");
-        // Todo: filter out some calls or handle in the end fallback
+        delegatedFwd(proxyTo, msg.data);
+    }
+
+    receive() external payable {
         delegatedFwd(proxyTo, msg.data);
     }
 

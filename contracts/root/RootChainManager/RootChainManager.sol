@@ -5,7 +5,6 @@ import {RootChainManagerStorage} from "./RootChainManagerStorage.sol";
 
 import {IStateSender} from "../StateSender/IStateSender.sol";
 import {ICheckpointManager} from "../ICheckpointManager.sol";
-import {WETH} from "../RootToken/WETH.sol";
 import {RLPReader} from "../../lib/RLPReader.sol";
 import {MerklePatriciaProof} from "../../lib/MerklePatriciaProof.sol";
 import {Merkle} from "../../lib/Merkle.sol";
@@ -16,8 +15,11 @@ contract RootChainManager is RootChainManagerStorage, IRootChainManager {
     using RLPReader for RLPReader.RLPItem;
     using Merkle for bytes32;
 
-    bytes32 private constant DEPOSIT = keccak256("DEPOSIT");
-    bytes32 private constant MAP_TOKEN = keccak256("MAP_TOKEN");
+    // maybe DEPOSIT and MAP_TOKEN can be reduced to bytes4
+    bytes32 public constant DEPOSIT = keccak256("DEPOSIT");
+    bytes32 public constant MAP_TOKEN = keccak256("MAP_TOKEN");
+    address public constant ETHER_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+
     IStateSender private _stateSender;
     ICheckpointManager private _checkpointManager;
     address private _childChainManagerAddress;
@@ -133,17 +135,30 @@ contract RootChainManager is RootChainManagerStorage, IRootChainManager {
         return _tokenToType[rootToken];
     }
 
-    function depositEtherFor(address user, uint256 amount)
+    function depositEtherFor(address user)
         external
         override
         payable
-    {}
+    {
+        bytes memory depositData = abi.encode(msg.value);
+        _depositFor(user, ETHER_ADDRESS, depositData);
+        address payable etherPredicate = address(uint160(_typeToPredicate[_tokenToType[ETHER_ADDRESS]]));
+        etherPredicate.transfer(msg.value);
+    }
 
     function depositFor(
         address user,
         address rootToken,
         bytes calldata depositData
     ) external override {
+        _depositFor(user, rootToken, depositData);
+    }
+
+    function _depositFor(
+        address user,
+        address rootToken,
+        bytes memory depositData
+    ) private {
         require(
             address(_stateSender) != address(0x0),
             "RootChainManager: STATESENDER_NOT_SET"
@@ -205,23 +220,18 @@ contract RootChainManager is RootChainManagerStorage, IRootChainManager {
 
         // checking if exit has already been processed
         // unique exit is identified using hash of (blockNumber, receipt, logIndex)
-        require(
-            _processedExits[keccak256(
-                abi.encodePacked(
-                    inputDataRLPList[2].toBytes(), // blockNumber
-                    inputDataRLPList[6].toBytes(), // receipt
-                    inputDataRLPList[9].toBytes() // logIndex
-                )
-            )] == false,
-            "RootChainManager: EXIT_ALREADY_PROCESSED"
-        );
-        _processedExits[keccak256(
+        bytes32 exitHash = keccak256(
             abi.encodePacked(
                 inputDataRLPList[2].toBytes(), // blockNumber
                 inputDataRLPList[6].toBytes(), // receipt
                 inputDataRLPList[9].toBytes() // logIndex
             )
-        )] = true;
+        );
+        require(
+            _processedExits[exitHash] == false,
+            "RootChainManager: EXIT_ALREADY_PROCESSED"
+        );
+        _processedExits[exitHash] = true;
 
         // verifying child withdraw log
         RLPReader.RLPItem[] memory receiptRLPList = inputDataRLPList[6]
@@ -237,26 +247,15 @@ contract RootChainManager is RootChainManagerStorage, IRootChainManager {
             "RootChainManager: TOKEN_NOT_MAPPED"
         );
 
-            address predicateAddress
-         = _typeToPredicate[_tokenToType[_childToRootToken[childToken]]];
+        address predicateAddress = _typeToPredicate[
+            _tokenToType[
+                _childToRootToken[childToken]
+            ]
+        ];
         ITokenPredicate(predicateAddress).validateExitLog(
             _msgSender(),
             logRLP.toBytes()
         );
-
-        // RLPReader.RLPItem[] memory logTopicRLPList = logRLPList[1].toList(); // log topics
-        // require(
-        //     bytes32(logTopicRLPList[0].toUint()) == TRANSFER_EVENT_SIG, // topic0 is event sig
-        //     "RootChainManager: INVALID_SIGNATURE"
-        // );
-        // require(
-        //     _msgSender() == address(logTopicRLPList[1].toUint()), // topic1 is from address
-        //     "RootChainManager: INVALID_SENDER"
-        // );
-        // require(
-        //     address(logTopicRLPList[2].toUint()) == address(0), // topic2 is to address
-        //     "RootChainManager: INVALID_RECEIVER"
-        // );
 
         require(
             inputDataRLPList[8].toBytes().toRlpItem().toUint() &
@@ -291,22 +290,6 @@ contract RootChainManager is RootChainManagerStorage, IRootChainManager {
             _childToRootToken[childToken],
             logRLP.toBytes()
         );
-
-        // transfer tokens
-        // IERC20(_childToRootToken[childToken]).transfer(
-        //     _msgSender(),
-        //     logRLPList[2].toUint() // log data
-        // );
-
-        // if (_childToRootToken[childToken] == address(_WETH)) {
-        //     _WETH.withdrawFor(logRLPList[2].toUint(), _msgSender());
-        // }
-
-        // emit Exited(
-        //     _msgSender(),
-        //     _childToRootToken[childToken],
-        //     logRLPList[2].toUint()
-        // );
     }
 
     function checkBlockMembershipInCheckpoint(
