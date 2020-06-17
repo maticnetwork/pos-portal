@@ -49,7 +49,16 @@ module.exports = {
       skipDryRun: true,
       gas: 7000000
     },
-    bor: {
+    root: {
+      provider: () =>
+        new HDWalletProvider(
+          MNEMONIC,
+          'http://localhost:9545'
+        ),
+      network_id: '*', // match any network
+      gasPrice: '0'
+    },
+    child: {
       provider: () =>
         new HDWalletProvider(
           MNEMONIC,
@@ -69,7 +78,7 @@ module.exports = {
       gasPrice: 10000000000, // 10 gwei
       skipDryRun: true
     },
-    mumbaiBor: {
+    mumbaiChild: {
       provider: () =>
         new HDWalletProvider(
           MNEMONIC,
