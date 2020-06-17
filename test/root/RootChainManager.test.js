@@ -129,7 +129,7 @@ contract('RootChainManager', async(accounts) => {
         lockedLogAmount.should.be.bignumber.that.equals(depositAmount)
       })
 
-      it('user', () => {
+      it('depositReceiver', () => {
         lockedLog.args.depositReceiver.should.equal(depositForAccount)
       })
 
@@ -160,7 +160,7 @@ contract('RootChainManager', async(accounts) => {
         )
       })
 
-      it('user', () => {
+      it('depositReceiver', () => {
         depositReceiver.should.equal(depositForAccount)
       })
 
@@ -193,6 +193,110 @@ contract('RootChainManager', async(accounts) => {
       newContractBalance.should.be.a.bignumber.that.equals(
         oldContractBalance.add(depositAmount)
       )
+    })
+  })
+
+  describe('deposit ERC721', async() => {
+    const depositTokenId = mockValues.numbers[4]
+    const depositForAccount = mockValues.addresses[0]
+    let contracts
+    let dummyERC721
+    let rootChainManager
+    let depositTx
+    let lockedLog
+    let stateSyncedlog
+
+    before(async() => {
+      contracts = await deployer.deployInitializedContracts()
+      dummyERC721 = contracts.root.dummyERC721
+      rootChainManager = contracts.root.rootChainManager
+      await dummyERC721.mint(depositTokenId)
+    })
+
+    it('Account has token', async() => {
+      const owner = await dummyERC721.ownerOf(depositTokenId)
+      owner.should.equal(accounts[0])
+    })
+
+    it('Can approve and deposit', async() => {
+      await dummyERC721.approve(contracts.root.erc721Predicate.address, depositTokenId)
+      const depositData = abi.encode(['uint256'], [depositTokenId.toString()])
+      depositTx = await rootChainManager.depositFor(depositForAccount, dummyERC721.address, depositData)
+      should.exist(depositTx)
+    })
+
+    it('Emits LockedERC721 log', () => {
+      const logs = logDecoder.decodeLogs(depositTx.receipt.rawLogs)
+      lockedLog = logs.find(l => l.event === 'LockedERC721')
+      should.exist(lockedLog)
+    })
+
+    describe('Correct values emitted in Locked log', () => {
+      it('Emitter address', () => {
+        lockedLog.address.should.equal(
+          contracts.root.erc721Predicate.address.toLowerCase()
+        )
+      })
+
+      it('tokenId', () => {
+        const lockedLogTokenId = lockedLog.args.tokenId.toNumber()
+        lockedLogTokenId.should.equal(depositTokenId)
+      })
+
+      it('depositReceiver', () => {
+        lockedLog.args.depositReceiver.should.equal(depositForAccount)
+      })
+
+      it('rootToken', () => {
+        lockedLog.args.rootToken.should.equal(dummyERC721.address)
+      })
+    })
+
+    it('Emits StateSynced log', () => {
+      const logs = logDecoder.decodeLogs(depositTx.receipt.rawLogs)
+      stateSyncedlog = logs.find(l => l.event === 'StateSynced')
+      should.exist(stateSyncedlog)
+    })
+
+    describe('Correct values emitted in StateSynced log', () => {
+      let depositReceiver, rootToken, depositData
+      before(() => {
+        const [, syncData] = abi.decode(['bytes32', 'bytes'], stateSyncedlog.args.data)
+        const data = abi.decode(['address', 'address', 'bytes'], syncData)
+        depositReceiver = data[0]
+        rootToken = data[1]
+        depositData = data[2]
+      })
+
+      it('Emitter address', () => {
+        stateSyncedlog.address.should.equal(
+          contracts.root.dummyStateSender.address.toLowerCase()
+        )
+      })
+
+      it('depositReceiver', () => {
+        depositReceiver.should.equal(depositForAccount)
+      })
+
+      it('rootToken', () => {
+        rootToken.should.equal(dummyERC721.address)
+      })
+
+      it('tokenId', () => {
+        const [tokenId] = abi.decode(['uint256'], depositData)
+        tokenId.toNumber().should.equal(depositTokenId)
+      })
+
+      it('contractAddress', () => {
+        stateSyncedlog.args.contractAddress.should.equal(
+          contracts.child.childChainManager.address
+        )
+      })
+    })
+
+    it('Token transferred', async() => {
+      const owner = await dummyERC721.ownerOf(depositTokenId)
+      owner.should.equal(contracts.root.erc721Predicate.address)
     })
   })
 })
