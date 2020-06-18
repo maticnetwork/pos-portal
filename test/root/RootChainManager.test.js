@@ -80,7 +80,7 @@ contract('RootChainManager', async(accounts) => {
     })
   })
 
-  describe('deposit ERC20', async() => {
+  describe('Deposit ERC20', async() => {
     const depositAmount = mockValues.amounts[1]
     const depositForAccount = mockValues.addresses[0]
     let contracts
@@ -100,51 +100,51 @@ contract('RootChainManager', async(accounts) => {
       oldContractBalance = await dummyERC20.balanceOf(contracts.root.erc20Predicate.address)
     })
 
-    it('Account has balance', () => {
+    it('Depositor should have proper balance', () => {
       depositAmount.should.be.a.bignumber.lessThan(oldAccountBalance)
     })
 
-    it('Can approve and deposit', async() => {
+    it('Depositor should be able to approve and deposit', async() => {
       await dummyERC20.approve(contracts.root.erc20Predicate.address, depositAmount)
       const depositData = abi.encode(['uint256'], [depositAmount.toString()])
       depositTx = await rootChainManager.depositFor(depositForAccount, dummyERC20.address, depositData)
       should.exist(depositTx)
     })
 
-    it('Emits LockedERC20 log', () => {
+    it('Should emit LockedERC20 log', () => {
       const logs = logDecoder.decodeLogs(depositTx.receipt.rawLogs)
       lockedLog = logs.find(l => l.event === 'LockedERC20')
       should.exist(lockedLog)
     })
 
-    describe('Correct values emitted in Locked log', () => {
-      it('Emitter address', () => {
+    describe('Correct values should be emitted in LockedERC20 log', () => {
+      it('Event should be emitted by correct contract', () => {
         lockedLog.address.should.equal(
           contracts.root.erc20Predicate.address.toLowerCase()
         )
       })
 
-      it('amount', () => {
+      it('Should emit correct amount', () => {
         const lockedLogAmount = new BN(lockedLog.args.amount.toString())
         lockedLogAmount.should.be.bignumber.that.equals(depositAmount)
       })
 
-      it('depositReceiver', () => {
+      it('Should emit correct deposit receiver', () => {
         lockedLog.args.depositReceiver.should.equal(depositForAccount)
       })
 
-      it('rootToken', () => {
+      it('Should emit correct root token', () => {
         lockedLog.args.rootToken.should.equal(dummyERC20.address)
       })
     })
 
-    it('Emits StateSynced log', () => {
+    it('Should emit StateSynced log', () => {
       const logs = logDecoder.decodeLogs(depositTx.receipt.rawLogs)
       stateSyncedlog = logs.find(l => l.event === 'StateSynced')
       should.exist(stateSyncedlog)
     })
 
-    describe('Correct values emitted in StateSynced log', () => {
+    describe('Correct values should be emitted in StateSynced log', () => {
       let depositReceiver, rootToken, depositData
       before(() => {
         const [, syncData] = abi.decode(['bytes32', 'bytes'], stateSyncedlog.args.data)
@@ -154,41 +154,41 @@ contract('RootChainManager', async(accounts) => {
         depositData = data[2]
       })
 
-      it('Emitter address', () => {
+      it('Event should be emitted by correct contract', () => {
         stateSyncedlog.address.should.equal(
           contracts.root.dummyStateSender.address.toLowerCase()
         )
       })
 
-      it('depositReceiver', () => {
+      it('Should emit correct deposit receiver', () => {
         depositReceiver.should.equal(depositForAccount)
       })
 
-      it('rootToken', () => {
+      it('Should emit correct root token', () => {
         rootToken.should.equal(dummyERC20.address)
       })
 
-      it('amount', () => {
+      it('Should emit correct amount', () => {
         const [amount] = abi.decode(['uint256'], depositData)
         const amountBN = new BN(amount.toString())
         amountBN.should.be.a.bignumber.that.equals(depositAmount)
       })
 
-      it('contractAddress', () => {
+      it('Should emit correct contract address', () => {
         stateSyncedlog.args.contractAddress.should.equal(
           contracts.child.childChainManager.address
         )
       })
     })
 
-    it('Deposit amount deducted from account', async() => {
+    it('Deposit amount should be deducted from depositor account', async() => {
       const newAccountBalance = await dummyERC20.balanceOf(accounts[0])
       newAccountBalance.should.be.a.bignumber.that.equals(
         oldAccountBalance.sub(depositAmount)
       )
     })
 
-    it('Deposit amount credited to contract', async() => {
+    it('Deposit amount should be credited to correct contract', async() => {
       const newContractBalance = await dummyERC20.balanceOf(contracts.root.erc20Predicate.address)
       newContractBalance.should.be.a.bignumber.that.equals(
         oldContractBalance.add(depositAmount)
@@ -196,7 +196,7 @@ contract('RootChainManager', async(accounts) => {
     })
   })
 
-  describe('deposit ERC721', async() => {
+  describe('Deposit ERC721', async() => {
     const depositTokenId = mockValues.numbers[4]
     const depositForAccount = mockValues.addresses[0]
     let contracts
@@ -213,52 +213,52 @@ contract('RootChainManager', async(accounts) => {
       await dummyERC721.mint(depositTokenId)
     })
 
-    it('Account has token', async() => {
+    it('Depositor should have token', async() => {
       const owner = await dummyERC721.ownerOf(depositTokenId)
       owner.should.equal(accounts[0])
     })
 
-    it('Can approve and deposit', async() => {
+    it('Depositor should be able to approve and deposit', async() => {
       await dummyERC721.approve(contracts.root.erc721Predicate.address, depositTokenId)
       const depositData = abi.encode(['uint256'], [depositTokenId.toString()])
       depositTx = await rootChainManager.depositFor(depositForAccount, dummyERC721.address, depositData)
       should.exist(depositTx)
     })
 
-    it('Emits LockedERC721 log', () => {
+    it('Should emit LockedERC721 log', () => {
       const logs = logDecoder.decodeLogs(depositTx.receipt.rawLogs)
       lockedLog = logs.find(l => l.event === 'LockedERC721')
       should.exist(lockedLog)
     })
 
-    describe('Correct values emitted in Locked log', () => {
-      it('Emitter address', () => {
+    describe('Correct values should be emitted in LockedERC721 log', () => {
+      it('Event should be emitted by correct contract', () => {
         lockedLog.address.should.equal(
           contracts.root.erc721Predicate.address.toLowerCase()
         )
       })
 
-      it('tokenId', () => {
+      it('Should emit proper token id', () => {
         const lockedLogTokenId = lockedLog.args.tokenId.toNumber()
         lockedLogTokenId.should.equal(depositTokenId)
       })
 
-      it('depositReceiver', () => {
+      it('Should emit proper deposit receiver', () => {
         lockedLog.args.depositReceiver.should.equal(depositForAccount)
       })
 
-      it('rootToken', () => {
+      it('Should emit proper root token', () => {
         lockedLog.args.rootToken.should.equal(dummyERC721.address)
       })
     })
 
-    it('Emits StateSynced log', () => {
+    it('Should Emit StateSynced log', () => {
       const logs = logDecoder.decodeLogs(depositTx.receipt.rawLogs)
       stateSyncedlog = logs.find(l => l.event === 'StateSynced')
       should.exist(stateSyncedlog)
     })
 
-    describe('Correct values emitted in StateSynced log', () => {
+    describe('Correct values should be emitted in StateSynced log', () => {
       let depositReceiver, rootToken, depositData
       before(() => {
         const [, syncData] = abi.decode(['bytes32', 'bytes'], stateSyncedlog.args.data)
@@ -268,33 +268,33 @@ contract('RootChainManager', async(accounts) => {
         depositData = data[2]
       })
 
-      it('Emitter address', () => {
+      it('Event should be emitted by correct contract', () => {
         stateSyncedlog.address.should.equal(
           contracts.root.dummyStateSender.address.toLowerCase()
         )
       })
 
-      it('depositReceiver', () => {
+      it('Should emit proper deposit receiver', () => {
         depositReceiver.should.equal(depositForAccount)
       })
 
-      it('rootToken', () => {
+      it('Should emit proper root token', () => {
         rootToken.should.equal(dummyERC721.address)
       })
 
-      it('tokenId', () => {
+      it('Should eit proper token id', () => {
         const [tokenId] = abi.decode(['uint256'], depositData)
         tokenId.toNumber().should.equal(depositTokenId)
       })
 
-      it('contractAddress', () => {
+      it('Should emit proper contract address', () => {
         stateSyncedlog.args.contractAddress.should.equal(
           contracts.child.childChainManager.address
         )
       })
     })
 
-    it('Token transferred', async() => {
+    it('Token should be transfered to correct contract', async() => {
       const owner = await dummyERC721.ownerOf(depositTokenId)
       owner.should.equal(contracts.root.erc721Predicate.address)
     })

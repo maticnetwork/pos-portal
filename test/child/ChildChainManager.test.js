@@ -70,7 +70,7 @@ contract('ChildChainManager', async(accounts) => {
       should.exist(stateReceiveTx)
     })
 
-    it('Deposit amount credited to account', async() => {
+    it('Deposit amount should be credited to deposit receiver', async() => {
       const newAccountBalance = await dummyChildERC20.balanceOf(depositReceiver)
       newAccountBalance.should.be.a.bignumber.that.equals(
         oldAccountBalance.add(depositAmount)
