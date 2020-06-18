@@ -299,4 +299,167 @@ contract('RootChainManager', async(accounts) => {
       owner.should.equal(contracts.root.erc721Predicate.address)
     })
   })
+
+  describe('Deposit Single ERC1155', async() => {
+    const depositTokenId = mockValues.numbers[4]
+    const depositAmount = mockValues.amounts[1]
+    const depositForAccount = mockValues.addresses[0]
+    let contracts
+    let dummyERC1155
+    let erc1155Predicate
+    let rootChainManager
+    let depositTx
+    let lockedLog
+    let stateSyncedlog
+    let oldAccountBalance
+    let oldContractBalance
+
+    before(async() => {
+      contracts = await deployer.deployInitializedContracts()
+      dummyERC1155 = contracts.root.dummyERC1155
+      erc1155Predicate = contracts.root.erc1155Predicate
+      rootChainManager = contracts.root.rootChainManager
+
+      const mintAmount = depositAmount.add(mockValues.amounts[2])
+      await dummyERC1155.mint(accounts[0], depositTokenId, mintAmount)
+
+      oldAccountBalance = await dummyERC1155.balanceOf(accounts[0], depositTokenId)
+      oldContractBalance = await dummyERC1155.balanceOf(erc1155Predicate.address, depositTokenId)
+    })
+
+    it('Depositor should have enough balance', async() => {
+      depositAmount.should.be.a.bignumber.lessThan(oldAccountBalance)
+    })
+
+    it('Depositor should be able to approve and deposit', async() => {
+      await dummyERC1155.setApprovalForAll(erc1155Predicate.address, true)
+      const depositData = abi.encode(
+        [
+          'uint256[]',
+          'uint256[]',
+          'bytes'
+        ],
+        [
+          [depositTokenId.toString()],
+          [depositAmount.toString()],
+          ['0x0']
+        ]
+      )
+      depositTx = await rootChainManager.depositFor(depositForAccount, dummyERC1155.address, depositData)
+      should.exist(depositTx)
+    })
+
+    it('Should emit LockedBatchERC1155 log', () => {
+      const logs = logDecoder.decodeLogs(depositTx.receipt.rawLogs)
+      lockedLog = logs.find(l => l.event === 'LockedBatchERC1155')
+      should.exist(lockedLog)
+    })
+
+    describe('Correct values should be emitted in LockedBatchERC1155 log', () => {
+      it('Event should be emitted by correct contract', () => {
+        lockedLog.address.should.equal(
+          contracts.root.erc1155Predicate.address.toLowerCase()
+        )
+      })
+
+      it('Should emit proper depositor', () => {
+        lockedLog.args.depositor.should.equal(accounts[0])
+      })
+
+      it('Should emit proper deposit receiver', () => {
+        lockedLog.args.depositReceiver.should.equal(depositForAccount)
+      })
+
+      it('Should emit proper root token', () => {
+        lockedLog.args.rootToken.should.equal(dummyERC1155.address)
+      })
+
+      it('Should emit proper token id', () => {
+        const id = lockedLog.args.ids[0].toNumber()
+        id.should.equal(depositTokenId)
+      })
+
+      it('Should emit proper amount', () => {
+        const amounts = lockedLog.args.amounts
+        const amount = new BN(amounts[0].toString())
+        amount.should.be.a.bignumber.that.equals(depositAmount)
+      })
+    })
+
+    it('Should Emit StateSynced log', () => {
+      const logs = logDecoder.decodeLogs(depositTx.receipt.rawLogs)
+      stateSyncedlog = logs.find(l => l.event === 'StateSynced')
+      should.exist(stateSyncedlog)
+    })
+
+    describe('Correct values should be emitted in StateSynced log', () => {
+      let depositReceiver, rootToken, depositData
+      before(() => {
+        const [, syncData] = abi.decode(['bytes32', 'bytes'], stateSyncedlog.args.data)
+        const data = abi.decode(['address', 'address', 'bytes'], syncData)
+        depositReceiver = data[0]
+        rootToken = data[1]
+        depositData = data[2]
+      })
+
+      it('Event should be emitted by correct contract', () => {
+        stateSyncedlog.address.should.equal(
+          contracts.root.dummyStateSender.address.toLowerCase()
+        )
+      })
+
+      it('Should emit proper deposit receiver', () => {
+        depositReceiver.should.equal(depositForAccount)
+      })
+
+      it('Should emit proper root token', () => {
+        rootToken.should.equal(dummyERC1155.address)
+      })
+
+      it('Should emit proper token id', () => {
+        const [ids] = abi.decode(
+          [
+            'uint256[]',
+            'uint256[]',
+            'bytes'
+          ],
+          depositData
+        )
+        ids[0].toNumber().should.equal(depositTokenId)
+      })
+
+      it('Should emit proper amount', () => {
+        const [, amounts] = abi.decode(
+          [
+            'uint256[]',
+            'uint256[]',
+            'bytes'
+          ],
+          depositData
+        )
+        const amount = new BN(amounts[0].toString())
+        amount.should.be.a.bignumber.that.equals(depositAmount)
+      })
+
+      it('Should emit proper contract address', () => {
+        stateSyncedlog.args.contractAddress.should.equal(
+          contracts.child.childChainManager.address
+        )
+      })
+    })
+
+    it('Deposit amount should be deducted from depositor account', async() => {
+      const newAccountBalance = await dummyERC1155.balanceOf(accounts[0], depositTokenId)
+      newAccountBalance.should.be.a.bignumber.that.equals(
+        oldAccountBalance.sub(depositAmount)
+      )
+    })
+
+    it('Deposit amount should be credited to correct contract', async() => {
+      const newContractBalance = await dummyERC1155.balanceOf(erc1155Predicate.address, depositTokenId)
+      newContractBalance.should.be.a.bignumber.that.equals(
+        oldContractBalance.add(depositAmount)
+      )
+    })
+  })
 })
