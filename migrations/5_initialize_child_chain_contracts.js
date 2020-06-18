@@ -6,7 +6,9 @@ const MaticWETH = artifacts.require('MaticWETH')
 const utils = require('./utils')
 const config = require('./config')
 
-module.exports = async(deployer) => {
+module.exports = async(deployer, network) => {
+  if (network === 'test') return
+
   const contractAddresses = utils.getContractAddresses()
 
   const ChildChainManagerInstance = await ChildChainManager.at(contractAddresses.child.ChildChainManagerProxy)

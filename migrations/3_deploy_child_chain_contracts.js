@@ -6,7 +6,9 @@ const ChildERC1155 = artifacts.require('ChildERC1155')
 const MaticWETH = artifacts.require('MaticWETH')
 const utils = require('./utils')
 
-module.exports = async(deployer) => {
+module.exports = async(deployer, network) => {
+  if (network === 'test') return
+
   await deployer.deploy(ChildChainManager)
   await deployer.deploy(ChildChainManagerProxy, ChildChainManager.address)
   await deployer.deploy(ChildERC20, 'Dummy ERC20', 'DERC20', 18)

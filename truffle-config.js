@@ -49,6 +49,13 @@ module.exports = {
       skipDryRun: true,
       gas: 7000000
     },
+    test: {
+      host: 'localhost',
+      port: 9545,
+      network_id: '*', // match any network
+      skipDryRun: true,
+      gas: 7000000
+    },
     root: {
       host: 'localhost',
       port: 9545,
