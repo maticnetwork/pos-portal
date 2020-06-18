@@ -14,6 +14,7 @@ export const rootRPC = 'http://localhost:9545'
 export const childRPC = 'http://localhost:8545'
 
 export const mockValues = {
+  zeroAddress: '0x0000000000000000000000000000000000000000',
   addresses: [
     '0x40De196d3c406242A4157290FE2641433C3abC73',
     '0xEDC5f296a70096EB49f55681237437cbd249217A',
