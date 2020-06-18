@@ -7,6 +7,7 @@ import * as deployer from '../helpers/deployer'
 import { mockValues } from '../helpers/constants'
 import logDecoder from '../helpers/log-decoder.js'
 import { encodeStateSyncerData } from '../helpers/utils'
+const abi = require('ethers/utils/abi-coder').defaultAbiCoder
 
 // Enable and inject BN dependency
 chai
@@ -42,60 +43,35 @@ contract('ChildChainManager', async(accounts) => {
 
   describe('Deposit tokens on receiving state', async() => {
     const depositAmount = mockValues.amounts[0]
-    const depositForUser = mockValues.addresses[4]
+    const depositReceiver = mockValues.addresses[4]
     const syncId = mockValues.numbers[0]
     let contracts
-    let dummyChildToken
-    let dummyRootToken
+    let dummyChildERC20
+    let dummyRootERC20
     let childChainManager
     let oldAccountBalance
     let byteData
     let stateReceiveTx
-    let depositedLog
 
     before(async() => {
       contracts = await deployer.deployInitializedContracts()
-      dummyChildToken = contracts.child.dummyToken
-      dummyRootToken = contracts.root.dummyToken
+      dummyChildERC20 = contracts.child.dummyERC20
+      dummyRootERC20 = contracts.root.dummyERC20
       childChainManager = contracts.child.childChainManager
-      oldAccountBalance = await dummyChildToken.balanceOf(depositForUser)
-      byteData = encodeStateSyncerData(depositForUser, dummyRootToken.address, depositAmount)
+      oldAccountBalance = await dummyChildERC20.balanceOf(depositReceiver)
     })
 
-    it('Can receive state', async() => {
+    it('Can receive deposit sync', async() => {
+      const depositData = abi.encode(['uint256'], [depositAmount.toString()])
+      const syncData = abi.encode(['address', 'address', 'bytes'], [depositReceiver, dummyRootERC20.address, depositData])
+      const syncType = await contracts.child.childChainManager.DEPOSIT()
+      byteData = abi.encode(['bytes32', 'bytes'], [syncType, syncData])
       stateReceiveTx = await childChainManager.onStateReceive(syncId, byteData, { from: accounts[0] })
       should.exist(stateReceiveTx)
     })
 
-    it('Emits Deposited event', () => {
-      const logs = logDecoder.decodeLogs(stateReceiveTx.receipt.rawLogs)
-      depositedLog = logs.find(l => l.event === 'Deposited')
-      should.exist(depositedLog)
-    })
-
-    describe('Correct values emitted in Deposited log', () => {
-      it('Emitter address', () => {
-        depositedLog.address.should.equal(
-          childChainManager.address.toLowerCase()
-        )
-      })
-
-      it('user', () => {
-        depositedLog.args.user.should.equal(depositForUser)
-      })
-
-      it('childToken', () => {
-        depositedLog.args.childToken.should.equal(dummyChildToken.address)
-      })
-
-      it('amount', () => {
-        const depositedLogAmount = new BN(depositedLog.args.amount.toString())
-        depositedLogAmount.should.be.bignumber.that.equals(depositAmount)
-      })
-    })
-
-    it('Deposit amount credited to account', async() => {
-      const newAccountBalance = await dummyChildToken.balanceOf(depositForUser)
+    it('Deposit amount should be credited to deposit receiver', async() => {
+      const newAccountBalance = await dummyChildERC20.balanceOf(depositReceiver)
       newAccountBalance.should.be.a.bignumber.that.equals(
         oldAccountBalance.add(depositAmount)
       )

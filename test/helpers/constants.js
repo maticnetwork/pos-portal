@@ -10,8 +10,8 @@ import BN from 'bn.js'
 //   new web3.providers.HttpProvider(childRPC)
 // )
 
-export const rootNetworkId = '53227'
-export const childNetworkId = '96410'
+export const rootRPC = 'http://localhost:9545'
+export const childRPC = 'http://localhost:8545'
 
 export const mockValues = {
   addresses: [
@@ -25,6 +25,12 @@ export const mockValues = {
     '0x32F303BB2Ca9167e9287CB0f53557D249D3D24BF',
     '0xd7728112027c0d2A67c097BcF5D71adF96C9c858',
     '0x48c856F10d5930DaE3CF338173247aB8DA94d308'
+  ],
+  bytes32: [
+    '0x9bb1e484529be7ac2ab09fe9863eebe554b06bb3153c52d7e43bc0487cfc771a',
+    '0xe000fcd82f21f4ec092f882c35aa0b9dcca5bb571af45e432c89a226b408fa4a',
+    '0x32742d619e0bda662bd775d9d0375521c634b8dead3049a509978f1640519a76',
+    '0xdac07c018b24dfc09012597ee0350a27090f33a68328157be35c255d325a8ebc'
   ],
   amounts: [
     new BN('100000000000000000'),

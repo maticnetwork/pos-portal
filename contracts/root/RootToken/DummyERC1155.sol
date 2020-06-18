@@ -2,20 +2,15 @@ pragma solidity "0.6.6";
 
 import {ERC1155} from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import {NetworkAgnostic} from "../../common/NetworkAgnostic.sol";
+import {ChainConstants} from "../../ChainConstants.sol";
 
-contract DummyERC1155 is ERC1155, NetworkAgnostic {
+contract DummyERC1155 is ERC1155, NetworkAgnostic, ChainConstants {
     constructor(string memory uri)
         public
         ERC1155(uri)
         // TODO: get name from uri
-        NetworkAgnostic(uri, "1", getChainId())
+        NetworkAgnostic(uri, "1", ROOT_CHAIN_ID)
     {}
-
-    function getChainId() public pure returns (uint256 id) {
-        assembly {
-            id := chainid()
-        }
-    }
 
     function _msgSender()
         internal
