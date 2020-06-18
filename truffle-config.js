@@ -50,21 +50,19 @@ module.exports = {
       gas: 7000000
     },
     root: {
-      provider: () =>
-        new HDWalletProvider(
-          MNEMONIC,
-          'http://localhost:9545'
-        ),
+      host: 'localhost',
+      port: 9545,
       network_id: '*', // match any network
+      skipDryRun: true,
+      gas: 7000000,
       gasPrice: '0'
     },
     child: {
-      provider: () =>
-        new HDWalletProvider(
-          MNEMONIC,
-          'http://localhost:8545'
-        ),
+      host: 'localhost',
+      port: 8545,
       network_id: '*', // match any network
+      skipDryRun: true,
+      gas: 7000000,
       gasPrice: '0'
     },
     mumbaiRoot: {

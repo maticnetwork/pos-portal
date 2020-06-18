@@ -14,7 +14,7 @@
     "migrate:4": "truffle migrate --network root --f 4 --to 4",
     "migrate:5": "truffle migrate --network child --f 5 --to 5",
     "migrate": "npm run migrate:2 && npm run migrate:3 && npm run migrate:4 && npm run migrate:5",
-    "test": "truffle test",
+    "test": "truffle test --network root --bail",
     "lint": "npm run lint:sol && npm run lint:js",
     "lint:js": "eslint test/**/*.js",
     "lint:sol:fix": "solium -d contracts/ --fix",

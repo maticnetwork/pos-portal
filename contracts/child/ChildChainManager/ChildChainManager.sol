@@ -6,8 +6,8 @@ import {IChildChainManager} from "./IChildChainManager.sol";
 import {IChildToken} from "../ChildToken/IChildToken.sol";
 
 contract ChildChainManager is ChildChainManagerStorage, IChildChainManager {
-    bytes32 private constant DEPOSIT = keccak256("DEPOSIT");
-    bytes32 private constant MAP_TOKEN = keccak256("MAP_TOKEN");
+    bytes32 public constant DEPOSIT = keccak256("DEPOSIT");
+    bytes32 public constant MAP_TOKEN = keccak256("MAP_TOKEN");
 
     function rootToChildToken(address rootToken)
         public
