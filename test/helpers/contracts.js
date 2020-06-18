@@ -17,25 +17,32 @@ const ChildERC721 = artifacts.require('ChildERC721')
 const ChildERC1155 = artifacts.require('ChildERC1155')
 const MaticWETH = artifacts.require('MaticWETH')
 
+const web3Root = new web3.constructor(
+  new web3.providers.HttpProvider(rootRPC)
+)
+const web3Child = new web3.constructor(
+  new web3.providers.HttpProvider(childRPC)
+)
+
 // contracts on root chain
-RootChainManager.web3.currentProvider.host = rootRPC
-RootChainManagerProxy.web3.currentProvider.host = rootRPC
-DummyStateSender.web3.currentProvider.host = rootRPC
-ERC20Predicate.web3.currentProvider.host = rootRPC
-ERC721Predicate.web3.currentProvider.host = rootRPC
-ERC1155Predicate.web3.currentProvider.host = rootRPC
-EtherPredicate.web3.currentProvider.host = rootRPC
-DummyERC20.web3.currentProvider.host = rootRPC
-DummyERC721.web3.currentProvider.host = rootRPC
-DummyERC1155.web3.currentProvider.host = rootRPC
+RootChainManager.web3 = web3Root
+RootChainManagerProxy.web3 = web3Root
+DummyStateSender.web3 = web3Root
+ERC20Predicate.web3 = web3Root
+ERC721Predicate.web3 = web3Root
+ERC1155Predicate.web3 = web3Root
+EtherPredicate.web3 = web3Root
+DummyERC20.web3 = web3Root
+DummyERC721.web3 = web3Root
+DummyERC1155.web3 = web3Root
 
 // contracts on child chain
-ChildChainManager.web3.currentProvider.host = childRPC
-ChildChainManagerProxy.web3.currentProvider.host = childRPC
-ChildERC20.web3.currentProvider.host = childRPC
-ChildERC721.web3.currentProvider.host = childRPC
-ChildERC1155.web3.currentProvider.host = childRPC
-MaticWETH.web3.currentProvider.host = childRPC
+ChildChainManager.web3 = web3Child
+ChildChainManagerProxy.web3 = web3Child
+ChildERC20.web3 = web3Child
+ChildERC721.web3 = web3Child
+ChildERC1155.web3 = web3Child
+MaticWETH.web3 = web3Child
 
 export default {
   RootChainManager,
