@@ -12,7 +12,7 @@ contract ChildERC1155 is ERC1155, IChildToken, AccessControl, Initializable {
     bytes32 public constant DEPOSITOR_ROLE = keccak256("DEPOSITOR_ROLE");
 
     function initialize() external initializer {
-       _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
+        _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
         _setupRole(DEPOSITOR_ROLE, _msgSender());
     }
 
