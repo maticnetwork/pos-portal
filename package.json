@@ -19,7 +19,8 @@
     "lint:js": "eslint test/**/*.js",
     "lint:sol:fix": "solium -d contracts/ --fix",
     "lint:sol": "solium -d contracts/",
-    "debug": "truffle debug"
+    "debug": "truffle debug",
+    "test:ci": "scripts/run-test.sh"
   },
   "repository": {
     "type": "git",
