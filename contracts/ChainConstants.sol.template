@@ -1,0 +1,9 @@
+pragma solidity >=0.4.21 <0.7.0;
+
+contract ChainConstants {
+    uint256 constant public ROOT_CHAIN_ID = {{ rootChainId }};
+    bytes constant public ROOT_CHAIN_ID_BYTES = hex"{{ rootChainIdHex }}";
+
+    uint256 constant public CHILD_CHAIN_ID = {{ childChainId }};
+    bytes constant public CHILD_CHAIN_ID_BYTES = hex"{{ childChainIdHex }}";
+}

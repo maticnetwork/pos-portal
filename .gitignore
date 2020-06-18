@@ -1,5 +1,6 @@
 node_modules
 build
+.DS_Store
 
 # Committing artifacts so they can be accessed from other projects
 # artifacts
@@ -7,8 +8,7 @@ build
 # Committing flattened contracts so they can be loaded in remix easily
 # flat
 
-
-.DS_Store
+contracts/ChainConstants.sol
 
 test-blockchain/genesis.json
 test-blockchain/geth
