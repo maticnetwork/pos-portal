@@ -14,9 +14,10 @@ contract DummyERC20 is ERC20, NetworkAgnostic {
     }
 
     function getChainId() public pure returns (uint256 id) {
-        assembly {
-            id := chainid()
-        }
+        // assembly {
+        //     id := chainid()
+        // }
+        id = 5;
     }
 
     function _msgSender()

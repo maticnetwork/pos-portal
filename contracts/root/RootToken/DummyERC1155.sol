@@ -12,9 +12,10 @@ contract DummyERC1155 is ERC1155, NetworkAgnostic {
     {}
 
     function getChainId() public pure returns (uint256 id) {
-        assembly {
-            id := chainid()
-        }
+        // assembly {
+        //     id := chainid()
+        // }
+        id = 5;
     }
 
     function _msgSender()
