@@ -6,7 +6,6 @@ import BN from 'bn.js'
 import * as deployer from '../helpers/deployer'
 import { mockValues } from '../helpers/constants'
 import logDecoder from '../helpers/log-decoder.js'
-import { encodeStateSyncerData } from '../helpers/utils'
 const abi = require('ethers/utils/abi-coder').defaultAbiCoder
 
 // Enable and inject BN dependency
@@ -41,37 +40,65 @@ contract('ChildChainManager', async(accounts) => {
     })
   })
 
-  describe('Deposit tokens on receiving state', async() => {
+  describe('Deposit ERC20 on receiving state', async() => {
     const depositAmount = mockValues.amounts[0]
     const depositReceiver = mockValues.addresses[4]
     const syncId = mockValues.numbers[0]
     let contracts
-    let dummyChildERC20
-    let dummyRootERC20
-    let childChainManager
     let oldAccountBalance
-    let byteData
     let stateReceiveTx
+    let transferLog
 
     before(async() => {
       contracts = await deployer.deployInitializedContracts()
-      dummyChildERC20 = contracts.child.dummyERC20
-      dummyRootERC20 = contracts.root.dummyERC20
-      childChainManager = contracts.child.childChainManager
-      oldAccountBalance = await dummyChildERC20.balanceOf(depositReceiver)
+      oldAccountBalance = await contracts.child.dummyERC20.balanceOf(depositReceiver)
     })
 
-    it('Can receive deposit sync', async() => {
+    it('Can receive ERC20 deposit sync', async() => {
       const depositData = abi.encode(['uint256'], [depositAmount.toString()])
-      const syncData = abi.encode(['address', 'address', 'bytes'], [depositReceiver, dummyRootERC20.address, depositData])
+      const syncData = abi.encode(
+        ['address', 'address', 'bytes'],
+        [depositReceiver, contracts.root.dummyERC20.address, depositData]
+      )
       const syncType = await contracts.child.childChainManager.DEPOSIT()
-      byteData = abi.encode(['bytes32', 'bytes'], [syncType, syncData])
-      stateReceiveTx = await childChainManager.onStateReceive(syncId, byteData, { from: accounts[0] })
+      const syncBytes = abi.encode(
+        ['bytes32', 'bytes'],
+        [syncType, syncData]
+      )
+      stateReceiveTx = await contracts.child.childChainManager
+        .onStateReceive(syncId, syncBytes, { from: accounts[0] })
       should.exist(stateReceiveTx)
     })
 
+    it('Should emit Transfer log', () => {
+      const logs = logDecoder.decodeLogs(stateReceiveTx.receipt.rawLogs)
+      transferLog = logs.find(l => l.event === 'Transfer')
+      should.exist(transferLog)
+    })
+
+    describe('Correct values should be emitted in Transfer log', () => {
+      it('Event should be emitted by correct contract', () => {
+        transferLog.address.should.equal(
+          contracts.child.dummyERC20.address.toLowerCase()
+        )
+      })
+
+      it('Should emit proper From', () => {
+        transferLog.args.from.should.equal(mockValues.zeroAddress)
+      })
+
+      it('Should emit proper To', () => {
+        transferLog.args.to.should.equal(depositReceiver)
+      })
+
+      it('Should emit correct amount', () => {
+        const transferLogAmount = new BN(transferLog.args.value.toString())
+        transferLogAmount.should.be.bignumber.that.equals(depositAmount)
+      })
+    })
+
     it('Deposit amount should be credited to deposit receiver', async() => {
-      const newAccountBalance = await dummyChildERC20.balanceOf(depositReceiver)
+      const newAccountBalance = await contracts.child.dummyERC20.balanceOf(depositReceiver)
       newAccountBalance.should.be.a.bignumber.that.equals(
         oldAccountBalance.add(depositAmount)
       )
