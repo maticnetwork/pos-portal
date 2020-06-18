@@ -1,4 +1,5 @@
 import { rootRPC, childRPC } from './constants'
+import Web3 from 'web3'
 
 const RootChainManager = artifacts.require('RootChainManager')
 const RootChainManagerProxy = artifacts.require('RootChainManagerProxy')
@@ -17,32 +18,32 @@ const ChildERC721 = artifacts.require('ChildERC721')
 const ChildERC1155 = artifacts.require('ChildERC1155')
 const MaticWETH = artifacts.require('MaticWETH')
 
-const web3Root = new web3.constructor(
-  new web3.providers.HttpProvider(rootRPC)
-)
-const web3Child = new web3.constructor(
-  new web3.providers.HttpProvider(childRPC)
-)
+const rootProvider = new Web3.providers.HttpProvider(rootRPC)
+const childProvider = new Web3.providers.HttpProvider(childRPC)
 
-// contracts on root chain
-RootChainManager.web3 = web3Root
-RootChainManagerProxy.web3 = web3Root
-DummyStateSender.web3 = web3Root
-ERC20Predicate.web3 = web3Root
-ERC721Predicate.web3 = web3Root
-ERC1155Predicate.web3 = web3Root
-EtherPredicate.web3 = web3Root
-DummyERC20.web3 = web3Root
-DummyERC721.web3 = web3Root
-DummyERC1155.web3 = web3Root
+const rootWeb3 = new Web3(rootProvider)
+const childWeb3 = new Web3(childProvider)
 
-// contracts on child chain
-ChildChainManager.web3 = web3Child
-ChildChainManagerProxy.web3 = web3Child
-ChildERC20.web3 = web3Child
-ChildERC721.web3 = web3Child
-ChildERC1155.web3 = web3Child
-MaticWETH.web3 = web3Child
+// TODO: use different network for root and child contracts
+// // contracts on root chain
+// RootChainManager.web3 = rootWeb3
+// RootChainManagerProxy.web3 = rootWeb3
+// DummyStateSender.web3 = rootWeb3
+// ERC20Predicate.web3 = rootWeb3
+// ERC721Predicate.web3 = rootWeb3
+// ERC1155Predicate.web3 = rootWeb3
+// EtherPredicate.web3 = rootWeb3
+// DummyERC20.web3 = rootWeb3
+// DummyERC721.web3 = rootWeb3
+// DummyERC1155.web3 = rootWeb3
+
+// // contracts on child chain
+// ChildChainManager.web3 = childWeb3
+// ChildChainManagerProxy.web3 = childWeb3
+// ChildERC20.web3 = childWeb3
+// ChildERC721.web3 = childWeb3
+// ChildERC1155.web3 = childWeb3
+// MaticWETH.web3 = childWeb3
 
 export default {
   RootChainManager,
