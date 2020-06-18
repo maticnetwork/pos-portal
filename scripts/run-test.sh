@@ -39,6 +39,9 @@ start_blockchain
 # process templates
 npm run template:process
 
+# migrate contracts
+npm run migrate "$@"
+
 if [ "$SOLIDITY_COVERAGE" = true ]; then
   npm run truffle:coverage "$@"
 else

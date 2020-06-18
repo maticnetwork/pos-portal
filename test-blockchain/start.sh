@@ -4,7 +4,7 @@ BOR=bor
 DIR=$PWD
 
 mkdir $DIR/data
-$BOR --datadir $DIR/data init $DIR/genesis.json > $DIR/data/setup-node.log
+$BOR --datadir $DIR/data init $DIR/genesis.json
 cp -rf $DIR/keystore $DIR/data/
 
 $BOR --datadir $DIR/data \
@@ -16,10 +16,9 @@ $BOR --datadir $DIR/data \
   --ipcpath $DIR/bor.ipc \
   --rpcapi 'personal,db,eth,net,web3,txpool,miner,admin,bor' \
   --syncmode 'full' \
-  --networkid '' \
+  --networkid '15001' \
   --gasprice '0' \
   --unlock '0x96C42C56fdb78294F96B0cFa33c92bed7D75F96a,0x9fb29aac15b9a4b7f17c3385939b007540f4d791' \
   --password $DIR/password.txt \
   --allow-insecure-unlock \
-  --mine > $DIR/data/node.log &
-tail -f $DIR/data/node.log
+  --mine
