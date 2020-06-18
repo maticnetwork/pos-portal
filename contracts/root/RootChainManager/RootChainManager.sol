@@ -43,10 +43,10 @@ contract RootChainManager is IRootChainManager, Initializable, AccessControl {
 
     // TODO: add fallback function
 
-    function initialize() external initializer {
-        _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
-        _setupRole(MAPPER_ROLE, _msgSender());
-        _setupRole(REGISTERER_ROLE, _msgSender());
+    function initialize(address _owner) external initializer {
+        _setupRole(DEFAULT_ADMIN_ROLE, _owner);
+        _setupRole(MAPPER_ROLE, _owner);
+        _setupRole(REGISTERER_ROLE, _owner);
     }
 
     function setStateSender(address newStateSender)

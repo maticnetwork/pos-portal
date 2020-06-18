@@ -50,26 +50,4 @@ contract Proxy is ProxyStorage, IERCProxy {
     function implementation() external virtual override view returns (address) {
         return proxyTo;
     }
-
-    // function _updateImplementation(address _newProxyTo) internal virtual {
-    //     require(_newProxyTo != address(0x0), "INVALID_PROXY_ADDRESS");
-    //     require(
-    //         isContract(_newProxyTo),
-    //         "DESTINATION_ADDRESS_IS_NOT_A_CONTRACT"
-    //     );
-    //     emit ProxyUpdated(_newProxyTo, proxyTo);
-    //     proxyTo = _newProxyTo;
-    // }
-
-    // function isContract(address _target) internal view returns (bool) {
-    //     if (_target == address(0)) {
-    //         return false;
-    //     }
-
-    //     uint256 size;
-    //     assembly {
-    //         size := extcodesize(_target)
-    //     }
-    //     return size > 0;
-    // }
 }

@@ -9,15 +9,13 @@ import {Initializable} from "../../common/Initializable.sol";
 contract ChildERC721 is ERC721, IChildToken, AccessControl, NetworkAgnostic, Initializable {
     bytes32 public constant DEPOSITOR_ROLE = keccak256("DEPOSITOR_ROLE");
 
-    function initialize() external initializer {
-        _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
-        _setupRole(DEPOSITOR_ROLE, _msgSender());
-    }
-
     constructor(
         string memory name,
         string memory symbol
-    ) public ERC721(name, symbol) NetworkAgnostic(name, "1", 3) {}
+    ) public ERC721(name, symbol) NetworkAgnostic(name, "1", 3) {
+        _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
+        _setupRole(DEPOSITOR_ROLE, _msgSender());
+    }
 
     modifier only(bytes32 role) {
         require(hasRole(role, _msgSender()), "ChildERC721: INSUFFICIENT_PERMISSIONS");

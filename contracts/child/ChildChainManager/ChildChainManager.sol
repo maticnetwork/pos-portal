@@ -23,10 +23,10 @@ contract ChildChainManager is IChildChainManager, Initializable, AccessControl {
         _;
     }
 
-    function initialize() external initializer {
-        _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
-        _setupRole(MAPPER_ROLE, _msgSender());
-        _setupRole(STATE_SYNCER_ROLE, _msgSender());
+    function initialize(address _owner) external initializer {
+        _setupRole(DEFAULT_ADMIN_ROLE, _owner);
+        _setupRole(MAPPER_ROLE, _owner);
+        _setupRole(STATE_SYNCER_ROLE, _owner);
     }
 
     function rootToChildToken(address rootToken)

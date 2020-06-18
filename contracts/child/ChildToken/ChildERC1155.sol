@@ -11,12 +11,10 @@ import {Initializable} from "../../common/Initializable.sol";
 contract ChildERC1155 is ERC1155, IChildToken, AccessControl, Initializable {
     bytes32 public constant DEPOSITOR_ROLE = keccak256("DEPOSITOR_ROLE");
 
-    function initialize() external initializer {
+    constructor(string memory uri) public ERC1155(uri) {
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
         _setupRole(DEPOSITOR_ROLE, _msgSender());
     }
-
-    constructor(string memory uri) public ERC1155(uri) {}
 
     modifier only(bytes32 role) {
         require(

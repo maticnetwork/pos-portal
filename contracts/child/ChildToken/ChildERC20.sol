@@ -11,10 +11,9 @@ contract ChildERC20 is ERC20, IChildToken, AccessControl, NetworkAgnostic, Initi
 
     constructor(
         string memory name,
-        string memory symbol
-    ) public ERC20(name, symbol) NetworkAgnostic(name, "1", 3) {}
-
-    function initialize(uint8 _decimals) external initializer {
+        string memory symbol,
+        uint8 _decimals
+    ) public ERC20(name, symbol) NetworkAgnostic(name, "1", 3) {
         _setupDecimals(_decimals);
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
         _setupRole(DEPOSITOR_ROLE, _msgSender());

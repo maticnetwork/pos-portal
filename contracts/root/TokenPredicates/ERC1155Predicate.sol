@@ -39,9 +39,9 @@ contract ERC1155Predicate is ITokenPredicate, ERC1155Receiver, AccessControl, In
 
     constructor() public {}
 
-    function initialize() external initializer {
-        _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
-        _setupRole(MANAGER_ROLE, _msgSender());
+    function initialize(address _owner) external initializer {
+        _setupRole(DEFAULT_ADMIN_ROLE, _owner);
+        _setupRole(MANAGER_ROLE, _owner);
     }
 
     function onERC1155Received(

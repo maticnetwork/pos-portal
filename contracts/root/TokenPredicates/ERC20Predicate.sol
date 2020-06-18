@@ -28,9 +28,9 @@ contract ERC20Predicate is ITokenPredicate, AccessControl, Initializable {
 
     constructor() public {}
 
-    function initialize() external initializer {
-        _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
-        _setupRole(MANAGER_ROLE, _msgSender());
+    function initialize(address _owner) external initializer {
+        _setupRole(DEFAULT_ADMIN_ROLE, _owner);
+        _setupRole(MANAGER_ROLE, _owner);
     }
 
     function lockTokens(
