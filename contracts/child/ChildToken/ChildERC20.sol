@@ -4,16 +4,18 @@ import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 import {IChildToken} from "./IChildToken.sol";
 import {NetworkAgnostic} from "../../common/NetworkAgnostic.sol";
+import {Initializable} from "../../common/Initializable.sol";
 
-contract ChildERC20 is ERC20, IChildToken, AccessControl, NetworkAgnostic {
+contract ChildERC20 is ERC20, IChildToken, AccessControl, NetworkAgnostic, Initializable {
     bytes32 public constant DEPOSITOR_ROLE = keccak256("DEPOSITOR_ROLE");
 
     constructor(
         string memory name,
-        string memory symbol,
-        uint8 decimals
-    ) public ERC20(name, symbol) NetworkAgnostic(name, "1", 3) {
-        _setupDecimals(decimals);
+        string memory symbol
+    ) public ERC20(name, symbol) NetworkAgnostic(name, "1", 3) {}
+
+    function initialize(uint8 _decimals) external initializer {
+        _setupDecimals(_decimals);
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
         _setupRole(DEPOSITOR_ROLE, _msgSender());
     }

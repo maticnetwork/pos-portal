@@ -14,13 +14,13 @@ contract UpgradableProxy is Proxy {
         setImplementation(_proxyTo);
     }
 
-    fallback() external payable {
+    fallback() external override payable {
         // require(currentContract != 0, "If app code has not been set yet, do not call");
         // Todo: filter out some calls or handle in the end fallback
         delegatedFwd(loadImplementation(), msg.data);
     }
 
-    receive() external payable {
+    receive() external override payable {
         delegatedFwd(proxyTo, msg.data);
     }
 
@@ -42,7 +42,7 @@ contract UpgradableProxy is Proxy {
         return _owner;
     }
 
-    function implementation() external view returns (address) {
+    function implementation() external override view returns (address) {
         return loadImplementation();
     }
 
@@ -80,7 +80,7 @@ contract UpgradableProxy is Proxy {
     function updateAndCall(address _newProxyTo, bytes memory data) payable public onlyProxyOwner {
         updateImplementation(_newProxyTo);
 
-        (bool success, bytes memory returnData) = address(this).call.value(msg.value)(data);
+        (bool success, bytes memory returnData) = address(this).call{value: msg.value}(data);
         require(success, string(returnData));
     }
 

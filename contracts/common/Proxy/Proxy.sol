@@ -6,15 +6,11 @@ contract Proxy is ProxyStorage, IERCProxy {
     event ProxyUpdated(address indexed _new, address indexed _old);
     event OwnerUpdate(address _prevOwner, address _newOwner);
 
-    constructor(address _proxyTo) public {
-        _updateImplementation(_proxyTo);
-    }
-
-    fallback() external payable {
+    fallback() external virtual payable {
         delegatedFwd(proxyTo, msg.data);
     }
 
-    receive() external payable {
+    receive() external virtual payable {
         delegatedFwd(proxyTo, msg.data);
     }
 
@@ -46,12 +42,12 @@ contract Proxy is ProxyStorage, IERCProxy {
         }
     }
 
-    function proxyType() external override pure returns (uint256 proxyTypeId) {
+    function proxyType() external virtual override pure returns (uint256 proxyTypeId) {
         // Upgradeable proxy
         proxyTypeId = 2;
     }
 
-    function implementation() external override view returns (address) {
+    function implementation() external virtual override view returns (address) {
         return proxyTo;
     }
 
@@ -65,15 +61,15 @@ contract Proxy is ProxyStorage, IERCProxy {
     //     proxyTo = _newProxyTo;
     // }
 
-    function isContract(address _target) internal view returns (bool) {
-        if (_target == address(0)) {
-            return false;
-        }
+    // function isContract(address _target) internal view returns (bool) {
+    //     if (_target == address(0)) {
+    //         return false;
+    //     }
 
-        uint256 size;
-        assembly {
-            size := extcodesize(_target)
-        }
-        return size > 0;
-    }
+    //     uint256 size;
+    //     assembly {
+    //         size := extcodesize(_target)
+    //     }
+    //     return size > 0;
+    // }
 }

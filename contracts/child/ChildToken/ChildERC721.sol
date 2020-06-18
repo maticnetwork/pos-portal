@@ -4,17 +4,20 @@ import {ERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 import {IChildToken} from "./IChildToken.sol";
 import {NetworkAgnostic} from "../../common/NetworkAgnostic.sol";
+import {Initializable} from "../../common/Initializable.sol";
 
-contract ChildERC721 is ERC721, IChildToken, AccessControl, NetworkAgnostic {
+contract ChildERC721 is ERC721, IChildToken, AccessControl, NetworkAgnostic, Initializable {
     bytes32 public constant DEPOSITOR_ROLE = keccak256("DEPOSITOR_ROLE");
+
+    function initialize() external initializer {
+        _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
+        _setupRole(DEPOSITOR_ROLE, _msgSender());
+    }
 
     constructor(
         string memory name,
         string memory symbol
-    ) public ERC721(name, symbol) NetworkAgnostic(name, "1", 3) {
-        _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
-        _setupRole(DEPOSITOR_ROLE, _msgSender());
-    }
+    ) public ERC721(name, symbol) NetworkAgnostic(name, "1", 3) {}
 
     modifier only(bytes32 role) {
         require(hasRole(role, _msgSender()), "ChildERC721: INSUFFICIENT_PERMISSIONS");
