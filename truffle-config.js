@@ -118,7 +118,7 @@ module.exports = {
         //   enabled: false,
         //   runs: 200
         // }
-        // evmVersion: 'constantinople'
+        evmVersion: 'constantinople'
       }
     }
   },
