@@ -36,6 +36,9 @@ start_testrpc
 echo "Starting our own bor instance"
 start_blockchain
 
+# process templates
+npm run template:process
+
 if [ "$SOLIDITY_COVERAGE" = true ]; then
   npm run truffle:coverage "$@"
 else

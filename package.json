@@ -1,10 +1,11 @@
 {
   "name": "pos-portal",
   "version": "1.0.0",
-  "description": "Contracts to facilitate transfer of assets between main chain and matic chain using security of matic POS layer.",
+  "description": "Contracts to facilitate transfer of assets between main chain and matic chain using security of matic POS layer",
   "main": "index.js",
   "scripts": {
     "testrpc": "ganache-cli --hardfork istanbul --mnemonic 'clock radar mass judge dismiss just intact mind resemble fringe diary casino' --gasLimit 8000000 --gasPrice 0 --port 9545 --networkId 53227",
+    "template:process": "node scripts/process-templates.js",
     "bor": "cd test-blockchain && bash run-docker.sh",
     "bor:clean": "cd test-blockchain && bash stop-docker.sh",
     "truffle": "truffle",
@@ -37,6 +38,7 @@
   },
   "devDependencies": {
     "@openzeppelin/contracts": "^3.1.0-rc.0",
+    "@truffle/hdwallet-provider": "^1.0.35",
     "babel-cli": "^6.26.0",
     "babel-eslint": "^10.1.0",
     "babel-polyfill": "^6.26.0",
@@ -55,13 +57,14 @@
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-promise": "^4.2.1",
     "eslint-plugin-standard": "^4.0.1",
+    "eth-gas-reporter": "^0.2.17",
     "ethers": "^4.0.46",
+    "glob": "^7.1.6",
+    "nunjucks": "^3.2.1",
     "solium": "^1.2.5",
     "truffle": "^5.1.21"
   },
   "dependencies": {
-    "@truffle/hdwallet-provider": "^1.0.35",
-    "eth-gas-reporter": "^0.2.17",
     "ganache-cli": "^6.9.1"
   }
 }
