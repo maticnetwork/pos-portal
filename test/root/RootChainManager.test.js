@@ -124,6 +124,10 @@ contract('RootChainManager', async(accounts) => {
         )
       })
 
+      it('Should emit proper depositor', () => {
+        lockedLog.args.depositor.should.equal(accounts[0])
+      })
+
       it('Should emit correct amount', () => {
         const lockedLogAmount = new BN(lockedLog.args.amount.toString())
         lockedLogAmount.should.be.bignumber.that.equals(depositAmount)
@@ -236,6 +240,10 @@ contract('RootChainManager', async(accounts) => {
         lockedLog.address.should.equal(
           contracts.root.erc721Predicate.address.toLowerCase()
         )
+      })
+
+      it('Should emit proper depositor', () => {
+        lockedLog.args.depositor.should.equal(accounts[0])
       })
 
       it('Should emit proper token id', () => {
