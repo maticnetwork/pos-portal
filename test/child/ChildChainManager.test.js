@@ -6,7 +6,7 @@ import { defaultAbiCoder as abi } from 'ethers/utils/abi-coder'
 import { expectRevert } from '@openzeppelin/test-helpers'
 
 import * as deployer from '../helpers/deployer'
-import { mockValues } from '../helpers/constants'
+import { mockValues, etherAddress } from '../helpers/constants'
 import logDecoder from '../helpers/log-decoder.js'
 import { constructERC1155DepositData } from '../helpers/utils'
 
@@ -101,6 +101,71 @@ contract('ChildChainManager', async(accounts) => {
 
     it('Deposit amount should be credited to deposit receiver', async() => {
       const newAccountBalance = await contracts.child.dummyERC20.balanceOf(depositReceiver)
+      newAccountBalance.should.be.a.bignumber.that.equals(
+        oldAccountBalance.add(depositAmount)
+      )
+    })
+  })
+
+  describe('Deposit MaticWETH on receiving state', async() => {
+    const depositAmount = mockValues.amounts[0]
+    const depositReceiver = mockValues.addresses[4]
+    const syncId = mockValues.numbers[0]
+    let contracts
+    let oldAccountBalance
+    let stateReceiveTx
+    let transferLog
+
+    before(async() => {
+      contracts = await deployer.deployInitializedContracts()
+      oldAccountBalance = await contracts.child.maticWETH.balanceOf(depositReceiver)
+    })
+
+    it('Can receive MaticWETH deposit sync', async() => {
+      const depositData = abi.encode(['uint256'], [depositAmount.toString()])
+      const syncData = abi.encode(
+        ['address', 'address', 'bytes'],
+        [depositReceiver, etherAddress, depositData]
+      )
+      const syncType = await contracts.child.childChainManager.DEPOSIT()
+      const syncBytes = abi.encode(
+        ['bytes32', 'bytes'],
+        [syncType, syncData]
+      )
+      stateReceiveTx = await contracts.child.childChainManager
+        .onStateReceive(syncId, syncBytes, { from: accounts[0] })
+      should.exist(stateReceiveTx)
+    })
+
+    it('Should emit Transfer log', () => {
+      const logs = logDecoder.decodeLogs(stateReceiveTx.receipt.rawLogs)
+      transferLog = logs.find(l => l.event === 'Transfer')
+      should.exist(transferLog)
+    })
+
+    describe('Correct values should be emitted in Transfer log', () => {
+      it('Event should be emitted by correct contract', () => {
+        transferLog.address.should.equal(
+          contracts.child.maticWETH.address.toLowerCase()
+        )
+      })
+
+      it('Should emit proper From', () => {
+        transferLog.args.from.should.equal(mockValues.zeroAddress)
+      })
+
+      it('Should emit proper To', () => {
+        transferLog.args.to.should.equal(depositReceiver)
+      })
+
+      it('Should emit correct amount', () => {
+        const transferLogAmount = new BN(transferLog.args.value.toString())
+        transferLogAmount.should.be.bignumber.that.equals(depositAmount)
+      })
+    })
+
+    it('Deposit amount should be credited to deposit receiver', async() => {
+      const newAccountBalance = await contracts.child.maticWETH.balanceOf(depositReceiver)
       newAccountBalance.should.be.a.bignumber.that.equals(
         oldAccountBalance.add(depositAmount)
       )

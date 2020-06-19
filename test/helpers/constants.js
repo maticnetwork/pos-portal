@@ -13,6 +13,8 @@ import BN from 'bn.js'
 export const rootRPC = 'http://localhost:9545'
 export const childRPC = 'http://localhost:8545'
 
+export const etherAddress = '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE'
+
 export const mockValues = {
   zeroAddress: '0x0000000000000000000000000000000000000000',
   addresses: [
