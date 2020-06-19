@@ -20,7 +20,7 @@ contract('RootChainManager', async(accounts) => {
   describe('Set values', async() => {
     let contracts
     before(async() => {
-      contracts = await deployer.deployFreshRootContracts()
+      contracts = await deployer.deployFreshRootContracts(accounts)
     })
 
     it('Can set stateSenderAddress', async() => {
@@ -93,7 +93,7 @@ contract('RootChainManager', async(accounts) => {
     let stateSyncedlog
 
     before(async() => {
-      contracts = await deployer.deployInitializedContracts()
+      contracts = await deployer.deployInitializedContracts(accounts)
       dummyERC20 = contracts.root.dummyERC20
       rootChainManager = contracts.root.rootChainManager
       oldAccountBalance = await dummyERC20.balanceOf(accounts[0])
@@ -207,7 +207,7 @@ contract('RootChainManager', async(accounts) => {
     let stateSyncedlog
 
     before(async() => {
-      contracts = await deployer.deployInitializedContracts()
+      contracts = await deployer.deployInitializedContracts(accounts)
       dummyERC721 = contracts.root.dummyERC721
       rootChainManager = contracts.root.rootChainManager
       await dummyERC721.mint(depositTokenId)

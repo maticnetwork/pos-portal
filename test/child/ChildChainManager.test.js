@@ -21,10 +21,11 @@ contract('ChildChainManager', async(accounts) => {
   describe('Map tokens', async() => {
     let contracts
     before(async() => {
-      contracts = await deployer.deployFreshChildContracts()
+      contracts = await deployer.deployFreshChildContracts(accounts)
     })
 
     it('Can set rootToChildToken map', async() => {
+      // 0x9fB29AAc15b9A4B7F17c3385939b007540f4d791
       const mockParent = mockValues.addresses[0]
       const mockChild = mockValues.addresses[1]
       await contracts.childChainManager.mapToken(mockParent, mockChild)
@@ -54,7 +55,7 @@ contract('ChildChainManager', async(accounts) => {
     let stateReceiveTx
 
     before(async() => {
-      contracts = await deployer.deployInitializedContracts()
+      contracts = await deployer.deployInitializedContracts(accounts)
       dummyChildERC20 = contracts.child.dummyERC20
       dummyRootERC20 = contracts.root.dummyERC20
       childChainManager = contracts.child.childChainManager

@@ -7,8 +7,8 @@ import {Initializable} from "../../common/Initializable.sol";
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 
 contract ChildChainManager is IChildChainManager, Initializable, AccessControl {
-    bytes32 private constant DEPOSIT = keccak256("DEPOSIT");
-    bytes32 private constant MAP_TOKEN = keccak256("MAP_TOKEN");
+    bytes32 public constant DEPOSIT = keccak256("DEPOSIT");
+    bytes32 public constant MAP_TOKEN = keccak256("MAP_TOKEN");
     bytes32 public constant MAPPER_ROLE = keccak256("MAPPER_ROLE");
     bytes32 public constant STATE_SYNCER_ROLE = keccak256("STATE_SYNCER_ROLE");
 

@@ -1,13 +1,13 @@
 import contracts from './contracts'
 
-export const deployFreshRootContracts = async() => {
+export const deployFreshRootContracts = async(accounts) => {
   const [
     rootChainManagerLogic,
     dummyStateSender,
-    erc20Predicate,
-    erc721Predicate,
-    erc1155Predicate,
-    etherPredicate,
+    erc20PredicateLogic,
+    erc721PredicateLogic,
+    erc1155PredicateLogic,
+    etherPredicateLogic,
     dummyERC20,
     dummyERC721,
     dummyERC1155
@@ -23,8 +23,25 @@ export const deployFreshRootContracts = async() => {
     contracts.DummyERC1155.new('Dummy ERC1155')
   ])
 
-  const rootChainManagerProxy = await contracts.RootChainManagerProxy.new(rootChainManagerLogic.address)
+  const rootChainManagerProxy = await contracts.RootChainManagerProxy.new('0x0000000000000000000000000000000000000000')
+  rootChainManagerProxy.updateAndCall(rootChainManagerLogic.address, rootChainManagerLogic.contract.methods.initialize(accounts[0]).encodeABI())
   const rootChainManager = await contracts.RootChainManager.at(rootChainManagerProxy.address)
+
+  const erc20PredicateProxy = await contracts.ERC20PredicateProxy.new('0x0000000000000000000000000000000000000000')
+  erc20PredicateProxy.updateAndCall(erc20PredicateLogic.address, erc20PredicateLogic.contract.methods.initialize(accounts[0]).encodeABI())
+  const erc20Predicate = await contracts.ERC20Predicate.at(erc20PredicateProxy.address)
+
+  const erc721PredicateProxy = await contracts.ERC721PredicateProxy.new('0x0000000000000000000000000000000000000000')
+  erc721PredicateProxy.updateAndCall(erc721PredicateLogic.address, erc721PredicateLogic.contract.methods.initialize(accounts[0]).encodeABI())
+  const erc721Predicate = await contracts.ERC721Predicate.at(erc721PredicateProxy.address)
+
+  const erc1155PredicateProxy = await contracts.ERC1155PredicateProxy.new('0x0000000000000000000000000000000000000000')
+  erc1155PredicateProxy.updateAndCall(erc1155PredicateLogic.address, erc1155PredicateLogic.contract.methods.initialize(accounts[0]).encodeABI())
+  const erc1155Predicate = await contracts.ERC1155Predicate.at(erc1155PredicateProxy.address)
+
+  const etherPredicateProxy = await contracts.EtherPredicateProxy.new('0x0000000000000000000000000000000000000000')
+  etherPredicateProxy.updateAndCall(etherPredicateLogic.address, etherPredicateLogic.contract.methods.initialize(accounts[0]).encodeABI())
+  const etherPredicate = await contracts.EtherPredicate.at(etherPredicateProxy.address)
 
   return {
     rootChainManager,
@@ -39,7 +56,7 @@ export const deployFreshRootContracts = async() => {
   }
 }
 
-export const deployFreshChildContracts = async() => {
+export const deployFreshChildContracts = async(accounts) => {
   const [
     childChainManagerLogic,
     dummyERC20,
@@ -54,7 +71,8 @@ export const deployFreshChildContracts = async() => {
     contracts.MaticWETH.new()
   ])
 
-  const childChainManagerProxy = await contracts.ChildChainManagerProxy.new(childChainManagerLogic.address)
+  const childChainManagerProxy = await contracts.ChildChainManagerProxy.new('0x0000000000000000000000000000000000000000')
+  childChainManagerProxy.updateAndCall(childChainManagerLogic.address, childChainManagerLogic.contract.methods.initialize(accounts[0]).encodeABI())
   const childChainManager = await contracts.ChildChainManager.at(childChainManagerProxy.address)
 
   return {
@@ -66,13 +84,13 @@ export const deployFreshChildContracts = async() => {
   }
 }
 
-export const deployInitializedContracts = async() => {
+export const deployInitializedContracts = async(accounts) => {
   const [
     root,
     child
   ] = await Promise.all([
-    deployFreshRootContracts(),
-    deployFreshChildContracts()
+    deployFreshRootContracts(accounts),
+    deployFreshChildContracts(accounts)
   ])
 
   await root.rootChainManager.setStateSender(root.dummyStateSender.address)
