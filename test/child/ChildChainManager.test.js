@@ -246,4 +246,124 @@ contract('ChildChainManager', async(accounts) => {
       )
     })
   })
+
+  describe('Deposit batch ERC1155 on receiving state', async() => {
+    const depositTokenIdA = mockValues.numbers[9]
+    const depositTokenIdB = mockValues.numbers[3]
+    const depositTokenIdC = mockValues.numbers[4]
+    const depositAmountA = mockValues.amounts[2]
+    const depositAmountB = mockValues.amounts[6]
+    const depositAmountC = mockValues.amounts[7]
+    const depositReceiver = mockValues.addresses[3]
+    const syncId = mockValues.numbers[9]
+    let contracts
+    let stateReceiveTx
+    let transferLog
+    let oldAccountBalanceA
+    let oldAccountBalanceB
+    let oldAccountBalanceC
+
+    before(async() => {
+      contracts = await deployer.deployInitializedContracts()
+      oldAccountBalanceA = await contracts.child.dummyERC1155.balanceOf(accounts[0], depositTokenIdA)
+      oldAccountBalanceB = await contracts.child.dummyERC1155.balanceOf(accounts[0], depositTokenIdB)
+      oldAccountBalanceC = await contracts.child.dummyERC1155.balanceOf(accounts[0], depositTokenIdC)
+    })
+
+    it('Can receive ERC1155 deposit sync', async() => {
+      const depositData = constructERC1155DepositData(
+        [depositTokenIdA, depositTokenIdB, depositTokenIdC],
+        [depositAmountA, depositAmountB, depositAmountC]
+      )
+      const syncData = abi.encode(
+        ['address', 'address', 'bytes'],
+        [depositReceiver, contracts.root.dummyERC1155.address, depositData]
+      )
+      const syncType = await contracts.child.childChainManager.DEPOSIT()
+      const syncBytes = abi.encode(
+        ['bytes32', 'bytes'],
+        [syncType, syncData]
+      )
+      stateReceiveTx = await contracts.child.childChainManager
+        .onStateReceive(syncId, syncBytes, { from: accounts[0] })
+      should.exist(stateReceiveTx)
+    })
+
+    it('Should emit Transfer log', () => {
+      const logs = logDecoder.decodeLogs(stateReceiveTx.receipt.rawLogs)
+      transferLog = logs.find(l => l.event === 'TransferBatch')
+      should.exist(transferLog)
+    })
+
+    describe('Correct values should be emitted in TransferBatch log', () => {
+      it('Event should be emitted by correct contract', () => {
+        transferLog.address.should.equal(
+          contracts.child.dummyERC1155.address.toLowerCase()
+        )
+      })
+
+      it('Should emit proper operator', () => {
+        transferLog.args.operator.should.equal(contracts.child.childChainManager.address)
+      })
+
+      it('Should emit proper from', () => {
+        transferLog.args.from.should.equal(mockValues.zeroAddress)
+      })
+
+      it('Should emit proper to', () => {
+        transferLog.args.to.should.equal(depositReceiver)
+      })
+
+      it('Should emit correct tokenId for A', () => {
+        const transferLogTokenId = transferLog.args.ids[0]
+        transferLogTokenId.toNumber().should.equal(depositTokenIdA)
+      })
+
+      it('Should emit correct tokenId for B', () => {
+        const transferLogTokenId = transferLog.args.ids[1]
+        transferLogTokenId.toNumber().should.equal(depositTokenIdB)
+      })
+
+      it('Should emit correct tokenId for C', () => {
+        const transferLogTokenId = transferLog.args.ids[2]
+        transferLogTokenId.toNumber().should.equal(depositTokenIdC)
+      })
+
+      it('Should emit correct amount for A', () => {
+        const transferLogAmount = new BN(transferLog.args.values[0].toString())
+        transferLogAmount.should.be.bignumber.that.equals(depositAmountA)
+      })
+
+      it('Should emit correct amount for B', () => {
+        const transferLogAmount = new BN(transferLog.args.values[1].toString())
+        transferLogAmount.should.be.bignumber.that.equals(depositAmountB)
+      })
+
+      it('Should emit correct amount for C', () => {
+        const transferLogAmount = new BN(transferLog.args.values[2].toString())
+        transferLogAmount.should.be.bignumber.that.equals(depositAmountC)
+      })
+    })
+
+    it('Deposit tokens should be credited to deposit receiver for A', async() => {
+      const newAccountBalance = await contracts.child.dummyERC1155.balanceOf(depositReceiver, depositTokenIdA)
+      newAccountBalance.should.be.a.bignumber.that.equals(
+        oldAccountBalanceA.add(depositAmountA)
+      )
+    })
+
+    it('Deposit tokens should be credited to deposit receiver for B', async() => {
+      const newAccountBalance = await contracts.child.dummyERC1155.balanceOf(depositReceiver, depositTokenIdB)
+      newAccountBalance.should.be.a.bignumber.that.equals(
+        oldAccountBalanceB.add(depositAmountB)
+      )
+    })
+
+    it('Deposit tokens should be credited to deposit receiver for C', async() => {
+      const newAccountBalance = await contracts.child.dummyERC1155.balanceOf(depositReceiver, depositTokenIdC)
+      newAccountBalance.should.be.a.bignumber.that.equals(
+        oldAccountBalanceC.add(depositAmountC)
+      )
+    })
+  })
 })
