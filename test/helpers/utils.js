@@ -1,4 +1,5 @@
 import BN from 'bn.js'
+import { defaultAbiCoder as abi } from 'ethers/utils/abi-coder'
 
 export const encodeStateSyncerData = (user, rootToken, amount) => {
   return '0x' +
@@ -12,4 +13,19 @@ export const decodeStateSenderData = (data) => {
   const rootToken = '0x' + data.slice(90, 130)
   const amount = new BN(data.slice(131, 194), 16)
   return { user, rootToken, amount }
+}
+
+export const constructERC1155DepositData = (ids, amounts) => {
+  return abi.encode(
+    [
+      'uint256[]',
+      'uint256[]',
+      'bytes'
+    ],
+    [
+      ids.map(i => i.toString()),
+      amounts.map(a => a.toString()),
+      ['0x0']
+    ]
+  )
 }

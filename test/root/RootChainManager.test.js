@@ -2,11 +2,11 @@ import chai from 'chai'
 import chaiAsPromised from 'chai-as-promised'
 import chaiBN from 'chai-bn'
 import BN from 'bn.js'
+import { defaultAbiCoder as abi } from 'ethers/utils/abi-coder'
 
 import * as deployer from '../helpers/deployer'
 import { mockValues } from '../helpers/constants'
 import logDecoder from '../helpers/log-decoder.js'
-const abi = require('ethers/utils/abi-coder').defaultAbiCoder
 
 // Enable and inject BN dependency
 chai
