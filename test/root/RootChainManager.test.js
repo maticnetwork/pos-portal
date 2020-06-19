@@ -5,7 +5,7 @@ import BN from 'bn.js'
 import { defaultAbiCoder as abi } from 'ethers/utils/abi-coder'
 
 import * as deployer from '../helpers/deployer'
-import { mockValues } from '../helpers/constants'
+import { mockValues, etherAddress } from '../helpers/constants'
 import logDecoder from '../helpers/log-decoder.js'
 
 // Enable and inject BN dependency
@@ -194,6 +194,124 @@ contract('RootChainManager', async(accounts) => {
 
     it('Deposit amount should be credited to correct contract', async() => {
       const newContractBalance = await dummyERC20.balanceOf(contracts.root.erc20Predicate.address)
+      newContractBalance.should.be.a.bignumber.that.equals(
+        oldContractBalance.add(depositAmount)
+      )
+    })
+  })
+
+  describe('Deposit Ether', async() => {
+    const depositAmount = mockValues.amounts[1]
+    const depositForAccount = mockValues.addresses[0]
+    const gasPrice = new BN('30000000000')
+    let contracts
+    let rootChainManager
+    let oldAccountBalance
+    let oldContractBalance
+    let depositTx
+    let lockedLog
+    let stateSyncedlog
+
+    before(async() => {
+      contracts = await deployer.deployInitializedContracts()
+      rootChainManager = contracts.root.rootChainManager
+      oldAccountBalance = new BN(await web3.eth.getBalance(accounts[0]))
+      oldContractBalance = new BN(await web3.eth.getBalance(contracts.root.etherPredicate.address))
+    })
+
+    it('Depositor should have proper balance', () => {
+      depositAmount.should.be.a.bignumber.lessThan(oldAccountBalance)
+    })
+
+    it('Depositor should be able to deposit', async() => {
+      depositTx = await rootChainManager.depositEtherFor(depositForAccount, {
+        value: depositAmount,
+        gasPrice
+      })
+      should.exist(depositTx)
+    })
+
+    it('Should emit LockedEther log', () => {
+      const logs = logDecoder.decodeLogs(depositTx.receipt.rawLogs)
+      lockedLog = logs.find(l => l.event === 'LockedEther')
+      should.exist(lockedLog)
+    })
+
+    describe('Correct values should be emitted in LockedEther log', () => {
+      it('Event should be emitted by correct contract', () => {
+        lockedLog.address.should.equal(
+          contracts.root.etherPredicate.address.toLowerCase()
+        )
+      })
+
+      it('Should emit proper depositor', () => {
+        lockedLog.args.depositor.should.equal(accounts[0])
+      })
+
+      it('Should emit correct amount', () => {
+        const lockedLogAmount = new BN(lockedLog.args.amount.toString())
+        lockedLogAmount.should.be.bignumber.that.equals(depositAmount)
+      })
+
+      it('Should emit correct deposit receiver', () => {
+        lockedLog.args.depositReceiver.should.equal(depositForAccount)
+      })
+    })
+
+    it('Should emit StateSynced log', () => {
+      const logs = logDecoder.decodeLogs(depositTx.receipt.rawLogs)
+      stateSyncedlog = logs.find(l => l.event === 'StateSynced')
+      should.exist(stateSyncedlog)
+    })
+
+    describe('Correct values should be emitted in StateSynced log', () => {
+      let depositReceiver, rootToken, depositData
+      before(() => {
+        const [, syncData] = abi.decode(['bytes32', 'bytes'], stateSyncedlog.args.data)
+        const data = abi.decode(['address', 'address', 'bytes'], syncData)
+        depositReceiver = data[0]
+        rootToken = data[1]
+        depositData = data[2]
+      })
+
+      it('Event should be emitted by correct contract', () => {
+        stateSyncedlog.address.should.equal(
+          contracts.root.dummyStateSender.address.toLowerCase()
+        )
+      })
+
+      it('Should emit correct deposit receiver', () => {
+        depositReceiver.should.equal(depositForAccount)
+      })
+
+      it('Should emit correct root token', () => {
+        rootToken.should.equal(etherAddress)
+      })
+
+      it('Should emit correct amount', () => {
+        const [amount] = abi.decode(['uint256'], depositData)
+        const amountBN = new BN(amount.toString())
+        amountBN.should.be.a.bignumber.that.equals(depositAmount)
+      })
+
+      it('Should emit correct contract address', () => {
+        stateSyncedlog.args.contractAddress.should.equal(
+          contracts.child.childChainManager.address
+        )
+      })
+    })
+
+    it('Deposit amount should be deducted from depositor account', async() => {
+      const newAccountBalance = new BN(await web3.eth.getBalance(accounts[0]))
+      const gasUsed = new BN(depositTx.receipt.gasUsed)
+      const gasCost = gasPrice.mul(gasUsed)
+      newAccountBalance.should.be.a.bignumber.that.equals(
+        oldAccountBalance.sub(depositAmount).sub(gasCost)
+      )
+    })
+
+    it('Deposit amount should be credited to correct contract', async() => {
+      const newContractBalance = new BN(await web3.eth.getBalance(contracts.root.etherPredicate.address))
       newContractBalance.should.be.a.bignumber.that.equals(
         oldContractBalance.add(depositAmount)
       )
