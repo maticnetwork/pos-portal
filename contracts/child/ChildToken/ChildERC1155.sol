@@ -3,12 +3,11 @@ pragma solidity "0.6.6";
 import {ERC1155} from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 import {IChildToken} from "./IChildToken.sol";
-import {Initializable} from "../../common/Initializable.sol";
 
 // import {NetworkAgnostic} from "../../common/NetworkAgnostic.sol";
 
 // TODO: network agnostic
-contract ChildERC1155 is ERC1155, IChildToken, AccessControl, Initializable {
+contract ChildERC1155 is ERC1155, IChildToken, AccessControl {
     bytes32 public constant DEPOSITOR_ROLE = keccak256("DEPOSITOR_ROLE");
 
     constructor(string memory uri) public ERC1155(uri) {

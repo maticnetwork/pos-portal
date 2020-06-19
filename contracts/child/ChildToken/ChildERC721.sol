@@ -4,9 +4,8 @@ import {ERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 import {IChildToken} from "./IChildToken.sol";
 import {NetworkAgnostic} from "../../common/NetworkAgnostic.sol";
-import {Initializable} from "../../common/Initializable.sol";
 
-contract ChildERC721 is ERC721, IChildToken, AccessControl, NetworkAgnostic, Initializable {
+contract ChildERC721 is ERC721, IChildToken, AccessControl, NetworkAgnostic {
     bytes32 public constant DEPOSITOR_ROLE = keccak256("DEPOSITOR_ROLE");
 
     constructor(
