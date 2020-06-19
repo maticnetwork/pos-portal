@@ -41,6 +41,7 @@ contract ERC20Predicate is ITokenPredicate, AccessControl {
         only(MANAGER_ROLE)
     {
         uint256 amount = abi.decode(depositData, (uint256));
+        // 1. best practice for transfer/transferFrom is using this: https://github.com/OpenZeppelin/openzeppelin-contracts/blob/82769e54c32aa03c15185daf24222ab72db8863d/contracts/token/ERC20/SafeERC20.sol#L22
         IERC20(rootToken).transferFrom(depositor, address(this), amount);
         emit LockedERC20(depositor, depositReceiver, rootToken, amount);
     }

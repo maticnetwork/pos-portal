@@ -62,12 +62,15 @@ contract RootChainManager is RootChainManagerStorage, IRootChainManager {
     function registerPredicate(bytes32 tokenType, address predicateAddress)
         external
         override
+        // Too many roles become difficult to manage + gas prices on mainnet are super high.
+        // I'd suggest just having 1-2.
         only(REGISTERER_ROLE)
     {
         _typeToPredicate[tokenType] = predicateAddress;
         emit PredicateRegistered(tokenType, predicateAddress);
     }
 
+    // why write getters for everything? These variables can be made public and directly read.
     function typeToPredicate(bytes32 tokenType)
         external
         override
@@ -86,6 +89,7 @@ contract RootChainManager is RootChainManagerStorage, IRootChainManager {
             _typeToPredicate[tokenType] != address(0x0),
             "RootChainManager: TOKEN_TYPE_NOT_SUPPORTED"
         );
+        // Avoid having these initializations. See comment below
         require(
             address(_stateSender) != address(0x0),
             "RootChainManager: STATESENDER_NOT_SET"
@@ -142,6 +146,7 @@ contract RootChainManager is RootChainManagerStorage, IRootChainManager {
     {
         bytes memory depositData = abi.encode(msg.value);
         _depositFor(user, ETHER_ADDRESS, depositData);
+        // in solidity 0.6 you can simply do payable(_typeToPredicate[_tokenToType[ETHER_ADDRESS]]).transfer(msg.value);
         address payable etherPredicate = address(uint160(_typeToPredicate[_tokenToType[ETHER_ADDRESS]]));
         etherPredicate.transfer(msg.value);
     }
@@ -159,6 +164,8 @@ contract RootChainManager is RootChainManagerStorage, IRootChainManager {
         address rootToken,
         bytes memory depositData
     ) private {
+        // These assertions for contract initialization during normal flows are a gas/bytecode size burden.
++       // We should make sure that these fields are set on initialization and then assume they are set in other flows
         require(
             address(_stateSender) != address(0x0),
             "RootChainManager: STATESENDER_NOT_SET"
@@ -252,6 +259,10 @@ contract RootChainManager is RootChainManagerStorage, IRootChainManager {
                 _childToRootToken[childToken]
             ]
         ];
+
+        // imo, just call predicate.processExit and let predicate do that rest.
+        // I have been talking to peeps and high gas txs have actually become barriers to adoptoin for some Dapps.
+        // Morever, I'd still suggest starting the deposit/withdraw from the predicate directly
         ITokenPredicate(predicateAddress).validateExitLog(
             _msgSender(),
             logRLP.toBytes()

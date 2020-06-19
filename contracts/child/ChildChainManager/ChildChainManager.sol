@@ -50,6 +50,7 @@ contract ChildChainManager is ChildChainManagerStorage, IChildChainManager {
         if (syncType == DEPOSIT) {
             _syncDeposit(syncData);
         } else if (syncType == MAP_TOKEN) {
+            // Remember to assign MAPPER_ROLE to system address to make this work.
             // TODO
         }
     }
