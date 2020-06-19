@@ -184,7 +184,7 @@ contract('ChildChainManager', async(accounts) => {
 
     before(async() => {
       contracts = await deployer.deployInitializedContracts()
-      oldAccountBalance = await contracts.child.dummyERC1155.balanceOf(accounts[0], depositTokenId)
+      oldAccountBalance = await contracts.child.dummyERC1155.balanceOf(depositReceiver, depositTokenId)
     })
 
     it('Can receive ERC1155 deposit sync', async() => {
@@ -265,9 +265,9 @@ contract('ChildChainManager', async(accounts) => {
 
     before(async() => {
       contracts = await deployer.deployInitializedContracts()
-      oldAccountBalanceA = await contracts.child.dummyERC1155.balanceOf(accounts[0], depositTokenIdA)
-      oldAccountBalanceB = await contracts.child.dummyERC1155.balanceOf(accounts[0], depositTokenIdB)
-      oldAccountBalanceC = await contracts.child.dummyERC1155.balanceOf(accounts[0], depositTokenIdC)
+      oldAccountBalanceA = await contracts.child.dummyERC1155.balanceOf(depositReceiver, depositTokenIdA)
+      oldAccountBalanceB = await contracts.child.dummyERC1155.balanceOf(depositReceiver, depositTokenIdB)
+      oldAccountBalanceC = await contracts.child.dummyERC1155.balanceOf(depositReceiver, depositTokenIdC)
     })
 
     it('Can receive ERC1155 deposit sync', async() => {
