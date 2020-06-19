@@ -268,7 +268,7 @@ contract('ChildChainManager', async(accounts) => {
       should.exist(stateReceiveTx)
     })
 
-    it('Should emit Transfer log', () => {
+    it('Should emit TransferBatch log', () => {
       const logs = logDecoder.decodeLogs(stateReceiveTx.receipt.rawLogs)
       transferLog = logs.find(l => l.event === 'TransferBatch')
       should.exist(transferLog)
