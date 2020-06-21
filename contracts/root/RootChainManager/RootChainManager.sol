@@ -94,15 +94,6 @@ contract RootChainManager is IRootChainManager, Initializable, AccessControl {
             typeToPredicate[tokenType] != address(0x0),
             "RootChainManager: TOKEN_TYPE_NOT_SUPPORTED"
         );
-        // Avoid having these initializations. See comment below
-        require(
-            address(_stateSender) != address(0x0),
-            "RootChainManager: STATESENDER_NOT_SET"
-        );
-        require(
-            address(childChainManagerAddress) != address(0x0),
-            "RootChainManager: CHILDCHAINMANAGER_NOT_SET"
-        );
 
         rootToChildToken[rootToken] = childToken;
         childToRootToken[childToken] = rootToken;
@@ -142,16 +133,6 @@ contract RootChainManager is IRootChainManager, Initializable, AccessControl {
         address rootToken,
         bytes memory depositData
     ) private {
-        // These assertions for contract initialization during normal flows are a gas/bytecode size burden.
-+       // We should make sure that these fields are set on initialization and then assume they are set in other flows
-        require(
-            address(_stateSender) != address(0x0),
-            "RootChainManager: STATESENDER_NOT_SET"
-        );
-        require(
-            address(childChainManagerAddress) != address(0x0),
-            "RootChainManager: CHILDCHAINMANAGER_NOT_SET"
-        );
         require(
             rootToChildToken[rootToken] != address(0x0) &&
                tokenToType[rootToken] != 0,
