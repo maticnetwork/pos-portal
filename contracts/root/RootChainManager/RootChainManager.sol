@@ -20,7 +20,6 @@ contract RootChainManager is IRootChainManager, Initializable, AccessControl {
     bytes32 public constant MAP_TOKEN = keccak256("MAP_TOKEN");
     address public constant ETHER_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
     bytes32 public constant MAPPER_ROLE = keccak256("MAPPER_ROLE");
-    bytes32 public constant REGISTERER_ROLE = keccak256("REGISTERER_ROLE");
 
     // maybe typeToPredicate can be reduced to bytes4
     mapping(bytes32 => address) internal _typeToPredicate;
@@ -46,7 +45,6 @@ contract RootChainManager is IRootChainManager, Initializable, AccessControl {
     function initialize(address _owner) external initializer {
         _setupRole(DEFAULT_ADMIN_ROLE, _owner);
         _setupRole(MAPPER_ROLE, _owner);
-        _setupRole(REGISTERER_ROLE, _owner);
     }
 
     function setStateSender(address newStateSender)
@@ -85,9 +83,7 @@ contract RootChainManager is IRootChainManager, Initializable, AccessControl {
     function registerPredicate(bytes32 tokenType, address predicateAddress)
         external
         override
-        // Too many roles become difficult to manage + gas prices on mainnet are super high.
-        // I'd suggest just having 1-2.
-        only(REGISTERER_ROLE)
+        only(MAPPER_ROLE)
     {
         _typeToPredicate[tokenType] = predicateAddress;
         emit PredicateRegistered(tokenType, predicateAddress);
