@@ -108,16 +108,10 @@ contract RootChainManager is IRootChainManager, Initializable, AccessControl {
         );
     }
 
-    function depositEtherFor(address user)
-        external
-        override
-        payable
-    {
+    function depositEtherFor(address user) external override payable {
         bytes memory depositData = abi.encode(msg.value);
         _depositFor(user, ETHER_ADDRESS, depositData);
-        // in solidity 0.6 you can simply do payable(typeToPredicate[tokenToType[ETHER_ADDRESS]]).transfer(msg.value);
-        address payable etherPredicate = address(uint160(typeToPredicate[tokenToType[ETHER_ADDRESS]]));
-        etherPredicate.transfer(msg.value);
+        payable(typeToPredicate[tokenToType[ETHER_ADDRESS]]).transfer(msg.value);
     }
 
     function depositFor(

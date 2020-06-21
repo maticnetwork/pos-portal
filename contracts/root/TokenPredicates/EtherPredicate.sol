@@ -78,8 +78,7 @@ contract EtherPredicate is ITokenPredicate, AccessControl, Initializable {
         override
         only(MANAGER_ROLE)
     {
-        address payable _withdrawer = address(uint160(withdrawer));
         RLPReader.RLPItem[] memory logRLPList = log.toRlpItem().toList();
-        _withdrawer.transfer(logRLPList[2].toUint());
+        payable(withdrawer).transfer(logRLPList[2].toUint());
     }
 }
