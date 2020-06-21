@@ -204,14 +204,6 @@ contract RootChainManager is IRootChainManager, Initializable, AccessControl {
             ]
         ];
 
-        // imo, just call predicate.processExit and let predicate do that rest.
-        // I have been talking to peeps and high gas txs have actually become barriers to adoptoin for some Dapps.
-        // Morever, I'd still suggest starting the deposit/withdraw from the predicate directly
-        ITokenPredicate(predicateAddress).validateExitLog(
-            _msgSender(),
-            logRLP.toBytes()
-        );
-
         require(
             inputDataRLPList[8].toBytes().toRlpItem().toUint() &
                 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF00000000 ==

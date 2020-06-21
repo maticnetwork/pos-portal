@@ -96,29 +96,6 @@ contract ERC1155Predicate is ITokenPredicate, ERC1155Receiver, AccessControl, In
         );
     }
 
-    function validateExitLog(address withdrawer, bytes calldata log)
-        external
-        override
-        pure
-    {
-        RLPReader.RLPItem[] memory logRLPList = log.toRlpItem().toList();
-        RLPReader.RLPItem[] memory logTopicRLPList = logRLPList[1].toList(); // topics
-        require(
-            withdrawer == address(logTopicRLPList[1].toUint()), // topic1 is from address
-            "ERC1155Predicate: INVALID_SENDER"
-        );
-        require(
-            address(logTopicRLPList[2].toUint()) == address(0), // topic2 is to address
-            "ERC1155Predicate: INVALID_RECEIVER"
-        );
-        require(
-            bytes32(logTopicRLPList[0].toUint()) == TRANSFER_SINGLE_EVENT_SIG ||
-                bytes32(logTopicRLPList[0].toUint()) ==
-                TRANSFER_BATCH_EVENT_SIG, // topic0 is event sig
-            "ERC1155Predicate: INVALID_SIGNATURE"
-        );
-    }
-
     function exitTokens(
         address withdrawer,
         address rootToken,
@@ -131,6 +108,15 @@ contract ERC1155Predicate is ITokenPredicate, ERC1155Receiver, AccessControl, In
         RLPReader.RLPItem[] memory logRLPList = log.toRlpItem().toList();
         RLPReader.RLPItem[] memory logTopicRLPList = logRLPList[1].toList(); // topics
         bytes memory logData = logRLPList[2].toBytes();
+
+        require(
+            withdrawer == address(logTopicRLPList[1].toUint()), // topic1 is from address
+            "ERC1155Predicate: INVALID_SENDER"
+        );
+        require(
+            address(logTopicRLPList[2].toUint()) == address(0), // topic2 is to address
+            "ERC1155Predicate: INVALID_RECEIVER"
+        );
 
         if (bytes32(logTopicRLPList[0].toUint()) == TRANSFER_SINGLE_EVENT_SIG) {
             (, , , uint256 id, uint256 amount) = abi.decode(

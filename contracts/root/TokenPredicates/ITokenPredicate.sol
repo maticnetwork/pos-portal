@@ -10,10 +10,6 @@ interface ITokenPredicate {
         bytes calldata depositData
     ) external;
 
-    function validateExitLog(address withdrawer, bytes calldata logRLPList)
-        external
-        pure;
-
     function exitTokens(
         address withdrawer,
         address rootToken,

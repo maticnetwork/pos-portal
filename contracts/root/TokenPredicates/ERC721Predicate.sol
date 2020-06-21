@@ -48,13 +48,18 @@ contract ERC721Predicate is ITokenPredicate, AccessControl, Initializable {
         emit LockedERC721(depositor, depositReceiver, rootToken, tokenId);
     }
 
-    function validateExitLog(address withdrawer, bytes calldata log)
-        external
+    function exitTokens(
+        address withdrawer,
+        address rootToken,
+        bytes memory log
+    )
+        public
         override
-        pure
+        only(MANAGER_ROLE)
     {
         RLPReader.RLPItem[] memory logRLPList = log.toRlpItem().toList();
         RLPReader.RLPItem[] memory logTopicRLPList = logRLPList[1].toList(); // topics
+
         require(
             bytes32(logTopicRLPList[0].toUint()) == TRANSFER_EVENT_SIG, // topic0 is event sig
             "ERC721Predicate: INVALID_SIGNATURE"
@@ -67,18 +72,7 @@ contract ERC721Predicate is ITokenPredicate, AccessControl, Initializable {
             address(logTopicRLPList[2].toUint()) == address(0), // topic2 is to address
             "ERC721Predicate: INVALID_RECEIVER"
         );
-    }
 
-    function exitTokens(
-        address withdrawer,
-        address rootToken,
-        bytes memory log
-    )
-        public
-        override
-        only(MANAGER_ROLE)
-    {
-        RLPReader.RLPItem[] memory logRLPList = log.toRlpItem().toList();
         IERC721(rootToken).transferFrom(
             address(this),
             withdrawer,
