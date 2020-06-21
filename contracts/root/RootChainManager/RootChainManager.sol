@@ -22,15 +22,15 @@ contract RootChainManager is IRootChainManager, Initializable, AccessControl {
     bytes32 public constant MAPPER_ROLE = keccak256("MAPPER_ROLE");
 
     // maybe typeToPredicate can be reduced to bytes4
-    mapping(bytes32 => address) internal _typeToPredicate;
-    mapping(address => address) internal _rootToChildToken;
-    mapping(address => address) internal _childToRootToken;
-    mapping(address => bytes32) internal _tokenToType;
-    mapping(bytes32 => bool) internal _processedExits;
+    mapping(bytes32 => address) public typeToPredicate;
+    mapping(address => address) public rootToChildToken;
+    mapping(address => address) public childToRootToken;
+    mapping(address => bytes32) public tokenToType;
+    mapping(bytes32 => bool) public processedExits;
 
     IStateSender private _stateSender;
     ICheckpointManager private _checkpointManager;
-    address private _childChainManagerAddress;
+    address public childChainManagerAddress;
 
     modifier only(bytes32 role) {
         require(
@@ -73,11 +73,7 @@ contract RootChainManager is IRootChainManager, Initializable, AccessControl {
         external
         only(DEFAULT_ADMIN_ROLE)
     {
-        _childChainManagerAddress = newChildChainManager;
-    }
-
-    function childChainManagerAddress() external view returns (address) {
-        return _childChainManagerAddress;
+        childChainManagerAddress = newChildChainManager;
     }
 
     function registerPredicate(bytes32 tokenType, address predicateAddress)
@@ -85,18 +81,8 @@ contract RootChainManager is IRootChainManager, Initializable, AccessControl {
         override
         only(MAPPER_ROLE)
     {
-        _typeToPredicate[tokenType] = predicateAddress;
+        typeToPredicate[tokenType] = predicateAddress;
         emit PredicateRegistered(tokenType, predicateAddress);
-    }
-
-    // why write getters for everything? These variables can be made public and directly read.
-    function typeToPredicate(bytes32 tokenType)
-        external
-        override
-        view
-        returns (address)
-    {
-        return _typeToPredicate[tokenType];
     }
 
     function mapToken(
@@ -105,7 +91,7 @@ contract RootChainManager is IRootChainManager, Initializable, AccessControl {
         bytes32 tokenType
     ) external override only(MAPPER_ROLE) {
         require(
-            _typeToPredicate[tokenType] != address(0x0),
+            typeToPredicate[tokenType] != address(0x0),
             "RootChainManager: TOKEN_TYPE_NOT_SUPPORTED"
         );
         // Avoid having these initializations. See comment below
@@ -114,48 +100,21 @@ contract RootChainManager is IRootChainManager, Initializable, AccessControl {
             "RootChainManager: STATESENDER_NOT_SET"
         );
         require(
-            address(_childChainManagerAddress) != address(0x0),
+            address(childChainManagerAddress) != address(0x0),
             "RootChainManager: CHILDCHAINMANAGER_NOT_SET"
         );
 
-        _rootToChildToken[rootToken] = childToken;
-        _childToRootToken[childToken] = rootToken;
-        _tokenToType[rootToken] = tokenType;
+        rootToChildToken[rootToken] = childToken;
+        childToRootToken[childToken] = rootToken;
+        tokenToType[rootToken] = tokenType;
 
         emit TokenMapped(rootToken, childToken, tokenType);
 
         bytes memory syncData = abi.encode(rootToken, childToken, tokenType);
         _stateSender.syncState(
-            _childChainManagerAddress,
+            childChainManagerAddress,
             abi.encode(MAP_TOKEN, syncData)
         );
-    }
-
-    function rootToChildToken(address rootToken)
-        external
-        override
-        view
-        returns (address)
-    {
-        return _rootToChildToken[rootToken];
-    }
-
-    function childToRootToken(address childToken)
-        external
-        override
-        view
-        returns (address)
-    {
-        return _childToRootToken[childToken];
-    }
-
-    function tokenToType(address rootToken)
-        external
-        override
-        view
-        returns (bytes32)
-    {
-        return _tokenToType[rootToken];
     }
 
     function depositEtherFor(address user)
@@ -165,8 +124,8 @@ contract RootChainManager is IRootChainManager, Initializable, AccessControl {
     {
         bytes memory depositData = abi.encode(msg.value);
         _depositFor(user, ETHER_ADDRESS, depositData);
-        // in solidity 0.6 you can simply do payable(_typeToPredicate[_tokenToType[ETHER_ADDRESS]]).transfer(msg.value);
-        address payable etherPredicate = address(uint160(_typeToPredicate[_tokenToType[ETHER_ADDRESS]]));
+        // in solidity 0.6 you can simply do payable(typeToPredicate[tokenToType[ETHER_ADDRESS]]).transfer(msg.value);
+        address payable etherPredicate = address(uint160(typeToPredicate[tokenToType[ETHER_ADDRESS]]));
         etherPredicate.transfer(msg.value);
     }
 
@@ -190,15 +149,15 @@ contract RootChainManager is IRootChainManager, Initializable, AccessControl {
             "RootChainManager: STATESENDER_NOT_SET"
         );
         require(
-            address(_childChainManagerAddress) != address(0x0),
+            address(childChainManagerAddress) != address(0x0),
             "RootChainManager: CHILDCHAINMANAGER_NOT_SET"
         );
         require(
-            _rootToChildToken[rootToken] != address(0x0) &&
-                _tokenToType[rootToken] != 0,
+            rootToChildToken[rootToken] != address(0x0) &&
+               tokenToType[rootToken] != 0,
             "RootChainManager: TOKEN_NOT_MAPPED"
         );
-        address predicateAddress = _typeToPredicate[_tokenToType[rootToken]];
+        address predicateAddress = typeToPredicate[tokenToType[rootToken]];
         require(
             predicateAddress != address(0),
             "RootChainManager: INVALID_TOKEN_TYPE"
@@ -212,18 +171,9 @@ contract RootChainManager is IRootChainManager, Initializable, AccessControl {
         );
         bytes memory syncData = abi.encode(user, rootToken, depositData);
         _stateSender.syncState(
-            _childChainManagerAddress,
+            childChainManagerAddress,
             abi.encode(DEPOSIT, syncData)
         );
-    }
-
-    function processedExits(bytes32 exitHash)
-        external
-        override
-        view
-        returns (bool)
-    {
-        return _processedExits[exitHash];
     }
 
     /**
@@ -254,10 +204,10 @@ contract RootChainManager is IRootChainManager, Initializable, AccessControl {
             )
         );
         require(
-            _processedExits[exitHash] == false,
+            processedExits[exitHash] == false,
             "RootChainManager: EXIT_ALREADY_PROCESSED"
         );
-        _processedExits[exitHash] = true;
+        processedExits[exitHash] = true;
 
         // verifying child withdraw log
         RLPReader.RLPItem[] memory receiptRLPList = inputDataRLPList[6]
@@ -269,13 +219,13 @@ contract RootChainManager is IRootChainManager, Initializable, AccessControl {
 
         address childToken = RLPReader.toAddress(logRLP.toList()[0]); // log emitter address field
         require(
-            _childToRootToken[childToken] != address(0),
+            childToRootToken[childToken] != address(0),
             "RootChainManager: TOKEN_NOT_MAPPED"
         );
 
-        address predicateAddress = _typeToPredicate[
-            _tokenToType[
-                _childToRootToken[childToken]
+        address predicateAddress = typeToPredicate[
+            tokenToType[
+                childToRootToken[childToken]
             ]
         ];
 
@@ -306,7 +256,7 @@ contract RootChainManager is IRootChainManager, Initializable, AccessControl {
         );
 
         // verify checkpoint inclusion
-        checkBlockMembershipInCheckpoint(
+        _checkBlockMembershipInCheckpoint(
             inputDataRLPList[2].toUint(), // blockNumber
             inputDataRLPList[3].toUint(), // blockTime
             bytes32(inputDataRLPList[4].toUint()), // txRoot
@@ -317,19 +267,19 @@ contract RootChainManager is IRootChainManager, Initializable, AccessControl {
 
         ITokenPredicate(predicateAddress).exitTokens(
             _msgSender(),
-            _childToRootToken[childToken],
+            childToRootToken[childToken],
             logRLP.toBytes()
         );
     }
 
-    function checkBlockMembershipInCheckpoint(
+    function _checkBlockMembershipInCheckpoint(
         uint256 blockNumber,
         uint256 blockTime,
         bytes32 txRoot,
         bytes32 receiptRoot,
         uint256 headerNumber,
         bytes memory blockProof
-    ) internal view returns (uint256) {
+    ) private view returns (uint256) {
         (
             bytes32 headerRoot,
             uint256 startBlock,
