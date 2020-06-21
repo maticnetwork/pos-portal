@@ -5,8 +5,9 @@ import {ERC1155Receiver} from "@openzeppelin/contracts/token/ERC1155/ERC1155Rece
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 import {RLPReader} from "../../lib/RLPReader.sol";
 import {ITokenPredicate} from "./ITokenPredicate.sol";
+import {Initializable} from "../../common/Initializable.sol";
 
-contract ERC1155Predicate is ITokenPredicate, ERC1155Receiver, AccessControl {
+contract ERC1155Predicate is ITokenPredicate, ERC1155Receiver, AccessControl, Initializable {
     using RLPReader for bytes;
     using RLPReader for RLPReader.RLPItem;
 
@@ -36,9 +37,11 @@ contract ERC1155Predicate is ITokenPredicate, ERC1155Receiver, AccessControl {
         _;
     }
 
-    constructor() public {
-        _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
-        _setupRole(MANAGER_ROLE, _msgSender());
+    constructor() public {}
+
+    function initialize(address _owner) external initializer {
+        _setupRole(DEFAULT_ADMIN_ROLE, _owner);
+        _setupRole(MANAGER_ROLE, _owner);
     }
 
     function onERC1155Received(

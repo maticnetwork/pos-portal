@@ -11,10 +11,10 @@ module.exports = async(deployer) => {
   const contractAddresses = utils.getContractAddresses()
 
   const RootChainManagerInstance = await RootChainManager.at(contractAddresses.root.RootChainManagerProxy)
-  const ERC20PredicateInstance = await ERC20Predicate.at(contractAddresses.root.ERC20Predicate)
-  const ERC721PredicateInstance = await ERC721Predicate.at(contractAddresses.root.ERC721Predicate)
-  const ERC1155PredicateInstance = await ERC1155Predicate.at(contractAddresses.root.ERC1155Predicate)
-  const EtherPredicateInstance = await EtherPredicate.at(contractAddresses.root.EtherPredicate)
+  const ERC20PredicateInstance = await ERC20Predicate.at(contractAddresses.root.ERC20PredicateProxy)
+  const ERC721PredicateInstance = await ERC721Predicate.at(contractAddresses.root.ERC721PredicateProxy)
+  const ERC1155PredicateInstance = await ERC1155Predicate.at(contractAddresses.root.ERC1155PredicateProxy)
+  const EtherPredicateInstance = await EtherPredicate.at(contractAddresses.root.EtherPredicateProxy)
 
   console.log('Setting StateSender')
   await RootChainManagerInstance.setStateSender(contractAddresses.root.DummyStateSender)

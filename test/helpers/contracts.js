@@ -5,9 +5,13 @@ const RootChainManager = artifacts.require('RootChainManager')
 const RootChainManagerProxy = artifacts.require('RootChainManagerProxy')
 const DummyStateSender = artifacts.require('DummyStateSender')
 const ERC20Predicate = artifacts.require('ERC20Predicate')
+const ERC20PredicateProxy = artifacts.require('ERC20PredicateProxy')
 const ERC721Predicate = artifacts.require('ERC721Predicate')
+const ERC721PredicateProxy = artifacts.require('ERC721PredicateProxy')
 const ERC1155Predicate = artifacts.require('ERC1155Predicate')
+const ERC1155PredicateProxy = artifacts.require('ERC1155PredicateProxy')
 const EtherPredicate = artifacts.require('EtherPredicate')
+const EtherPredicateProxy = artifacts.require('EtherPredicateProxy')
 const DummyERC20 = artifacts.require('DummyERC20')
 const DummyERC721 = artifacts.require('DummyERC721')
 const DummyERC1155 = artifacts.require('DummyERC1155')
@@ -50,9 +54,13 @@ export default {
   RootChainManagerProxy,
   DummyStateSender,
   ERC20Predicate,
+  ERC20PredicateProxy,
   ERC721Predicate,
+  ERC721PredicateProxy,
   ERC1155Predicate,
+  ERC1155PredicateProxy,
   EtherPredicate,
+  EtherPredicateProxy,
   DummyERC20,
   DummyERC721,
   DummyERC1155,

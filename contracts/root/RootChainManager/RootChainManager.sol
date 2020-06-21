@@ -1,16 +1,16 @@
 pragma solidity ^0.6.6;
 
 import {IRootChainManager} from "./IRootChainManager.sol";
-import {RootChainManagerStorage} from "./RootChainManagerStorage.sol";
-
 import {IStateSender} from "../StateSender/IStateSender.sol";
 import {ICheckpointManager} from "../ICheckpointManager.sol";
 import {RLPReader} from "../../lib/RLPReader.sol";
 import {MerklePatriciaProof} from "../../lib/MerklePatriciaProof.sol";
 import {Merkle} from "../../lib/Merkle.sol";
 import {ITokenPredicate} from "../TokenPredicates/ITokenPredicate.sol";
+import {Initializable} from "../../common/Initializable.sol";
+import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 
-contract RootChainManager is RootChainManagerStorage, IRootChainManager {
+contract RootChainManager is IRootChainManager, Initializable, AccessControl {
     using RLPReader for bytes;
     using RLPReader for RLPReader.RLPItem;
     using Merkle for bytes32;
@@ -19,12 +19,35 @@ contract RootChainManager is RootChainManagerStorage, IRootChainManager {
     bytes32 public constant DEPOSIT = keccak256("DEPOSIT");
     bytes32 public constant MAP_TOKEN = keccak256("MAP_TOKEN");
     address public constant ETHER_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+    bytes32 public constant MAPPER_ROLE = keccak256("MAPPER_ROLE");
+    bytes32 public constant REGISTERER_ROLE = keccak256("REGISTERER_ROLE");
+
+    // maybe typeToPredicate can be reduced to bytes4
+    mapping(bytes32 => address) internal _typeToPredicate;
+    mapping(address => address) internal _rootToChildToken;
+    mapping(address => address) internal _childToRootToken;
+    mapping(address => bytes32) internal _tokenToType;
+    mapping(bytes32 => bool) internal _processedExits;
 
     IStateSender private _stateSender;
     ICheckpointManager private _checkpointManager;
     address private _childChainManagerAddress;
 
+    modifier only(bytes32 role) {
+        require(
+            hasRole(role, _msgSender()),
+            "RootChainManager: INSUFFICIENT_PERMISSIONS"
+        );
+        _;
+    }
+
     // TODO: add fallback function
+
+    function initialize(address _owner) external initializer {
+        _setupRole(DEFAULT_ADMIN_ROLE, _owner);
+        _setupRole(MAPPER_ROLE, _owner);
+        _setupRole(REGISTERER_ROLE, _owner);
+    }
 
     function setStateSender(address newStateSender)
         external

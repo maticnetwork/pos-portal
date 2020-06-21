@@ -1,13 +1,33 @@
-pragma solidity "0.6.6";
+pragma solidity ^0.6.6;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {ChildChainManagerStorage} from "./ChildChainManagerStorage.sol";
 import {IChildChainManager} from "./IChildChainManager.sol";
 import {IChildToken} from "../ChildToken/IChildToken.sol";
+import {Initializable} from "../../common/Initializable.sol";
+import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 
-contract ChildChainManager is ChildChainManagerStorage, IChildChainManager {
+contract ChildChainManager is IChildChainManager, Initializable, AccessControl {
     bytes32 public constant DEPOSIT = keccak256("DEPOSIT");
     bytes32 public constant MAP_TOKEN = keccak256("MAP_TOKEN");
+    bytes32 public constant MAPPER_ROLE = keccak256("MAPPER_ROLE");
+    bytes32 public constant STATE_SYNCER_ROLE = keccak256("STATE_SYNCER_ROLE");
+
+    mapping(address => address) internal _rootToChildToken;
+    mapping(address => address) internal _childToRootToken;
+
+    modifier only(bytes32 role) {
+        require(
+            hasRole(role, _msgSender()),
+            "ChildChainManager: INSUFFICIENT_PERMISSIONS"
+        );
+        _;
+    }
+
+    function initialize(address _owner) external initializer {
+        _setupRole(DEFAULT_ADMIN_ROLE, _owner);
+        _setupRole(MAPPER_ROLE, _owner);
+        _setupRole(STATE_SYNCER_ROLE, _owner);
+    }
 
     function rootToChildToken(address rootToken)
         public
