@@ -1,4 +1,5 @@
 import contracts from './contracts'
+import { etherAddress } from './constants'
 
 export const deployFreshRootContracts = async() => {
   const [
@@ -105,9 +106,9 @@ export const deployInitializedContracts = async() => {
   const EtherType = await root.etherPredicate.TOKEN_TYPE()
   await root.etherPredicate.grantRole(MANAGER_ROLE, root.rootChainManager.address)
   await root.rootChainManager.registerPredicate(EtherType, root.etherPredicate.address)
-  await root.rootChainManager.mapToken('0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE', child.maticWETH.address, EtherType)
+  await root.rootChainManager.mapToken(etherAddress, child.maticWETH.address, EtherType)
   await child.maticWETH.grantRole(DEPOSITOR_ROLE, child.childChainManager.address)
-  await child.childChainManager.mapToken('0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE', child.maticWETH.address)
+  await child.childChainManager.mapToken(etherAddress, child.maticWETH.address)
 
   return { root, child }
 }

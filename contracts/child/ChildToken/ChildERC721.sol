@@ -49,8 +49,6 @@ contract ChildERC721 is ERC721, IChildToken, AccessControl, NetworkAgnostic {
         only(DEPOSITOR_ROLE)
     {
         uint256 tokenId = abi.decode(depositData, (uint256));
-        require(ownerOf(tokenId) == address(0), "ChildERC721: TOKEN_EXISTS");
-        require(user != address(0x0), "ChildERC721: INVALID_DEPOSIT_USER");
         _mint(user, tokenId);
     }
 
