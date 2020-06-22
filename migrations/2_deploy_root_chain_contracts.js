@@ -37,15 +37,12 @@ const libDeps = [
   }
 ]
 
-module.exports = async(deployer, network) => {
-
+module.exports = async(deployer) => {
   console.log('linking libs...')
   await bluebird.map(libDeps, async e => {
     await deployer.deploy(e.lib)
     deployer.link(e.lib, e.contracts)
   })
-
-  if (network === 'test') return
 
   console.log('deploying contracts...')
   await deployer.deploy(RootChainManager)
