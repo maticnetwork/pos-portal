@@ -3,8 +3,6 @@ import {IERCProxy} from "./IERCProxy.sol";
 import {ProxyStorage} from "./ProxyStorage.sol";
 
 contract Proxy is ProxyStorage, IERCProxy {
-    event ProxyUpdated(address indexed _new, address indexed _old);
-    event OwnerUpdate(address _prevOwner, address _newOwner);
 
     fallback() external virtual payable {
         delegatedFwd(proxyTo, msg.data);
