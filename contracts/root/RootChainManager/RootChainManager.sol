@@ -40,7 +40,11 @@ contract RootChainManager is IRootChainManager, Initializable, AccessControl {
         _;
     }
 
-    // TODO: add fallback function
+    receive() external payable {
+        bytes memory depositData = abi.encode(msg.value);
+        _depositFor(_msgSender(), ETHER_ADDRESS, depositData);
+        payable(typeToPredicate[tokenToType[ETHER_ADDRESS]]).transfer(msg.value);
+    }
 
     function initialize(address _owner) external initializer {
         _setupRole(DEFAULT_ADMIN_ROLE, _owner);
