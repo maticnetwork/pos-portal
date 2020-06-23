@@ -26,7 +26,7 @@ contract('ChildERC20', (accounts) => {
     let transferLog
 
     before(async() => {
-      contracts = await deployer.deployFreshChildContracts()
+      contracts = await deployer.deployFreshChildContracts(accounts)
       oldAccountBalance = await contracts.dummyERC20.balanceOf(depositReceiver)
     })
 
@@ -80,7 +80,7 @@ contract('ChildERC20', (accounts) => {
     let transferLog
 
     before(async() => {
-      contracts = await deployer.deployFreshChildContracts()
+      contracts = await deployer.deployFreshChildContracts(accounts)
       const depositData = abi.encode(['uint256'], [depositAmount.toString()])
       await contracts.dummyERC20.deposit(user, depositData)
       oldAccountBalance = await contracts.dummyERC20.balanceOf(user)

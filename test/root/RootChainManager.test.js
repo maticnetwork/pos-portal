@@ -213,7 +213,7 @@ contract('RootChainManager', async(accounts) => {
     let stateSyncedlog
 
     before(async() => {
-      contracts = await deployer.deployInitializedContracts()
+      contracts = await deployer.deployInitializedContracts(accounts)
       rootChainManager = contracts.root.rootChainManager
       oldAccountBalance = new BN(await web3.eth.getBalance(accounts[0]))
       oldContractBalance = new BN(await web3.eth.getBalance(contracts.root.etherPredicate.address))
@@ -441,7 +441,7 @@ contract('RootChainManager', async(accounts) => {
     let oldContractBalance
 
     before(async() => {
-      contracts = await deployer.deployInitializedContracts()
+      contracts = await deployer.deployInitializedContracts(accounts)
       dummyERC1155 = contracts.root.dummyERC1155
       erc1155Predicate = contracts.root.erc1155Predicate
       rootChainManager = contracts.root.rootChainManager
@@ -612,7 +612,7 @@ contract('RootChainManager', async(accounts) => {
     let oldContractBalanceC
 
     before(async() => {
-      contracts = await deployer.deployInitializedContracts()
+      contracts = await deployer.deployInitializedContracts(accounts)
       dummyERC1155 = contracts.root.dummyERC1155
       erc1155Predicate = contracts.root.erc1155Predicate
       rootChainManager = contracts.root.rootChainManager

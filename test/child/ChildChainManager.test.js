@@ -53,7 +53,7 @@ contract('ChildChainManager', async(accounts) => {
     let transferLog
 
     before(async() => {
-      contracts = await deployer.deployInitializedContracts()
+      contracts = await deployer.deployInitializedContracts(accounts)
       oldAccountBalance = await contracts.child.dummyERC20.balanceOf(depositReceiver)
     })
 
@@ -118,7 +118,7 @@ contract('ChildChainManager', async(accounts) => {
     let transferLog
 
     before(async() => {
-      contracts = await deployer.deployInitializedContracts()
+      contracts = await deployer.deployInitializedContracts(accounts)
       oldAccountBalance = await contracts.child.maticWETH.balanceOf(depositReceiver)
     })
 
@@ -182,7 +182,7 @@ contract('ChildChainManager', async(accounts) => {
     let transferLog
 
     before(async() => {
-      contracts = await deployer.deployInitializedContracts()
+      contracts = await deployer.deployInitializedContracts(accounts)
     })
 
     it('Token should not exist before deposit', async() => {
@@ -249,7 +249,7 @@ contract('ChildChainManager', async(accounts) => {
     let oldAccountBalance
 
     before(async() => {
-      contracts = await deployer.deployInitializedContracts()
+      contracts = await deployer.deployInitializedContracts(accounts)
       oldAccountBalance = await contracts.child.dummyERC1155.balanceOf(depositReceiver, depositTokenId)
     })
 
@@ -330,7 +330,7 @@ contract('ChildChainManager', async(accounts) => {
     let oldAccountBalanceC
 
     before(async() => {
-      contracts = await deployer.deployInitializedContracts()
+      contracts = await deployer.deployInitializedContracts(accounts)
       oldAccountBalanceA = await contracts.child.dummyERC1155.balanceOf(depositReceiver, depositTokenIdA)
       oldAccountBalanceB = await contracts.child.dummyERC1155.balanceOf(depositReceiver, depositTokenIdB)
       oldAccountBalanceC = await contracts.child.dummyERC1155.balanceOf(depositReceiver, depositTokenIdC)
