@@ -52,9 +52,7 @@ contract ChildChainManager is IChildChainManager, Initializable, AccessControl {
         override
         only(MAPPER_ROLE)
     {
-        _rootToChildToken[rootToken] = childToken;
-        _childToRootToken[childToken] = rootToken;
-        emit TokenMapped(rootToken, childToken);
+        _mapToken(rootToken, childToken);
     }
 
     function onStateReceive(uint256, bytes calldata data)
@@ -70,8 +68,11 @@ contract ChildChainManager is IChildChainManager, Initializable, AccessControl {
         if (syncType == DEPOSIT) {
             _syncDeposit(syncData);
         } else if (syncType == MAP_TOKEN) {
-            // Remember to assign MAPPER_ROLE to system address to make this work.
-            // TODO
+            (address rootToken, address childToken, ) = abi.decode(
+                syncData,
+                (address, address, bytes32)
+            );
+            _mapToken(rootToken, childToken);
         }
     }
 
@@ -85,5 +86,11 @@ contract ChildChainManager is IChildChainManager, Initializable, AccessControl {
         );
         IChildToken childTokenContract = IChildToken(childTokenAddress);
         childTokenContract.deposit(user, depositData);
+    }
+
+    function _mapToken(address rootToken, address childToken) private {
+        _rootToChildToken[rootToken] = childToken;
+        _childToRootToken[childToken] = rootToken;
+        emit TokenMapped(rootToken, childToken);
     }
 }

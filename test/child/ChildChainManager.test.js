@@ -19,27 +19,58 @@ chai
 const should = chai.should()
 
 contract('ChildChainManager', async(accounts) => {
-  describe('Map tokens', async() => {
+  describe('Map tokens by directly calling function', async() => {
+    const mockRootToken = mockValues.addresses[9]
+    const mockChildToken = mockValues.addresses[6]
     let contracts
     before(async() => {
       contracts = await deployer.deployFreshChildContracts(accounts)
     })
 
-    it('Can set rootToChildToken map', async() => {
-      // 0x9fB29AAc15b9A4B7F17c3385939b007540f4d791
-      const mockParent = mockValues.addresses[0]
-      const mockChild = mockValues.addresses[1]
-      await contracts.childChainManager.mapToken(mockParent, mockChild)
-      const childTokenAddress = await contracts.childChainManager.rootToChildToken(mockParent)
-      childTokenAddress.should.equal(mockChild)
+    it('Can receive map token tx', async() => {
+      const mapTx = await contracts.childChainManager.mapToken(mockRootToken, mockChildToken)
+      should.exist(mapTx)
     })
 
-    it('Can set childToRootToken map', async() => {
-      const mockParent = mockValues.addresses[2]
-      const mockChild = mockValues.addresses[3]
-      await contracts.childChainManager.mapToken(mockParent, mockChild)
-      const parentTokenAddress = await contracts.childChainManager.childToRootToken(mockChild)
-      parentTokenAddress.should.equal(mockParent)
+    it('Should set rootToChildToken map', async() => {
+      const childToken = await contracts.childChainManager.rootToChildToken(mockRootToken)
+      childToken.should.equal(mockChildToken)
+    })
+
+    it('Should set childToRootToken map', async() => {
+      const rootToken = await contracts.childChainManager.childToRootToken(mockChildToken)
+      rootToken.should.equal(mockRootToken)
+    })
+  })
+
+  describe('Map tokens on receiving state', async() => {
+    const syncId = mockValues.numbers[8]
+    const mockTokenType = mockValues.bytes32[3]
+    const mockRootToken = mockValues.addresses[0]
+    const mockChildToken = mockValues.addresses[1]
+    const syncData = abi.encode(['address', 'address', 'bytes32'], [mockRootToken, mockChildToken, mockTokenType])
+    let contracts
+    let syncState
+    before(async() => {
+      contracts = await deployer.deployFreshChildContracts(accounts)
+      const parentContracts = await deployer.deployFreshRootContracts(accounts)
+      const syncType = await parentContracts.rootChainManager.MAP_TOKEN()
+      syncState = abi.encode(['bytes32', 'bytes'], [syncType, syncData])
+    })
+
+    it('Can receive map token sync', async() => {
+      const stateReceiveTx = await contracts.childChainManager.onStateReceive(syncId, syncState)
+      should.exist(stateReceiveTx)
+    })
+
+    it('Should set rootToChildToken map', async() => {
+      const childToken = await contracts.childChainManager.rootToChildToken(mockRootToken)
+      childToken.should.equal(mockChildToken)
+    })
+
+    it('Should set childToRootToken map', async() => {
+      const rootToken = await contracts.childChainManager.childToRootToken(mockChildToken)
+      rootToken.should.equal(mockRootToken)
     })
   })
 
@@ -49,6 +80,7 @@ contract('ChildChainManager', async(accounts) => {
     const syncId = mockValues.numbers[0]
     let contracts
     let oldAccountBalance
+    let syncState
     let stateReceiveTx
     let transferLog
 
@@ -64,12 +96,9 @@ contract('ChildChainManager', async(accounts) => {
         [depositReceiver, contracts.root.dummyERC20.address, depositData]
       )
       const syncType = await contracts.child.childChainManager.DEPOSIT()
-      const syncBytes = abi.encode(
-        ['bytes32', 'bytes'],
-        [syncType, syncData]
-      )
+      syncState = abi.encode(['bytes32', 'bytes'], [syncType, syncData])
       stateReceiveTx = await contracts.child.childChainManager
-        .onStateReceive(syncId, syncBytes, { from: accounts[0] })
+        .onStateReceive(syncId, syncState, { from: accounts[0] })
       should.exist(stateReceiveTx)
     })
 
