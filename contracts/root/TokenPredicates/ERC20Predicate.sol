@@ -4,8 +4,9 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 import {RLPReader} from "../../lib/RLPReader.sol";
 import {ITokenPredicate} from "./ITokenPredicate.sol";
+import {Initializable} from "../../common/Initializable.sol";
 
-contract ERC20Predicate is ITokenPredicate, AccessControl {
+contract ERC20Predicate is ITokenPredicate, AccessControl, Initializable {
     using RLPReader for bytes;
     using RLPReader for RLPReader.RLPItem;
 
@@ -25,9 +26,11 @@ contract ERC20Predicate is ITokenPredicate, AccessControl {
         _;
     }
 
-    constructor() public {
-        _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
-        _setupRole(MANAGER_ROLE, _msgSender());
+    constructor() public {}
+
+    function initialize(address _owner) external initializer {
+        _setupRole(DEFAULT_ADMIN_ROLE, _owner);
+        _setupRole(MANAGER_ROLE, _owner);
     }
 
     function lockTokens(

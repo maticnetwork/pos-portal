@@ -28,7 +28,7 @@ contract('ChildERC1155', (accounts) => {
     let transferLog
 
     before(async() => {
-      contracts = await deployer.deployFreshChildContracts()
+      contracts = await deployer.deployFreshChildContracts(accounts)
       oldAccountBalance = await contracts.dummyERC1155.balanceOf(user, tokenId)
     })
 
@@ -92,7 +92,7 @@ contract('ChildERC1155', (accounts) => {
     let transferSingleLog
 
     before(async() => {
-      contracts = await deployer.deployFreshChildContracts()
+      contracts = await deployer.deployFreshChildContracts(accounts)
       const depositData = constructERC1155DepositData([tokenId], [depositAmount])
       await contracts.dummyERC1155.deposit(user, depositData)
       oldAccountBalance = await contracts.dummyERC1155.balanceOf(user, tokenId)
@@ -167,7 +167,7 @@ contract('ChildERC1155', (accounts) => {
     let transferLog
 
     before(async() => {
-      contracts = await deployer.deployFreshChildContracts()
+      contracts = await deployer.deployFreshChildContracts(accounts)
       oldAccountBalanceA = await contracts.dummyERC1155.balanceOf(user, tokenIdA)
       oldAccountBalanceB = await contracts.dummyERC1155.balanceOf(user, tokenIdB)
       oldAccountBalanceC = await contracts.dummyERC1155.balanceOf(user, tokenIdC)
@@ -275,7 +275,7 @@ contract('ChildERC1155', (accounts) => {
     let transferBatchLog
 
     before(async() => {
-      contracts = await deployer.deployFreshChildContracts()
+      contracts = await deployer.deployFreshChildContracts(accounts)
       const depositData = constructERC1155DepositData(
         [tokenIdA, tokenIdB, tokenIdC],
         [depositAmountA, depositAmountB, depositAmountC]

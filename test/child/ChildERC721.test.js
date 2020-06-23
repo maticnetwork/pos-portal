@@ -26,7 +26,7 @@ contract('ChildERC721', (accounts) => {
     let transferLog
 
     before(async() => {
-      contracts = await deployer.deployFreshChildContracts()
+      contracts = await deployer.deployFreshChildContracts(accounts)
     })
 
     it('Token should not exist before deposit', async() => {
@@ -79,7 +79,7 @@ contract('ChildERC721', (accounts) => {
     let transferLog
 
     before(async() => {
-      contracts = await deployer.deployFreshChildContracts()
+      contracts = await deployer.deployFreshChildContracts(accounts)
       const depositData = abi.encode(['uint256'], [tokenId])
       await contracts.dummyERC721.deposit(user, depositData)
     })

@@ -22,10 +22,11 @@ contract('ChildChainManager', async(accounts) => {
   describe('Map tokens', async() => {
     let contracts
     before(async() => {
-      contracts = await deployer.deployFreshChildContracts()
+      contracts = await deployer.deployFreshChildContracts(accounts)
     })
 
     it('Can set rootToChildToken map', async() => {
+      // 0x9fB29AAc15b9A4B7F17c3385939b007540f4d791
       const mockParent = mockValues.addresses[0]
       const mockChild = mockValues.addresses[1]
       await contracts.childChainManager.mapToken(mockParent, mockChild)
@@ -52,7 +53,7 @@ contract('ChildChainManager', async(accounts) => {
     let transferLog
 
     before(async() => {
-      contracts = await deployer.deployInitializedContracts()
+      contracts = await deployer.deployInitializedContracts(accounts)
       oldAccountBalance = await contracts.child.dummyERC20.balanceOf(depositReceiver)
     })
 
@@ -117,7 +118,7 @@ contract('ChildChainManager', async(accounts) => {
     let transferLog
 
     before(async() => {
-      contracts = await deployer.deployInitializedContracts()
+      contracts = await deployer.deployInitializedContracts(accounts)
       oldAccountBalance = await contracts.child.maticWETH.balanceOf(depositReceiver)
     })
 
@@ -181,7 +182,7 @@ contract('ChildChainManager', async(accounts) => {
     let transferLog
 
     before(async() => {
-      contracts = await deployer.deployInitializedContracts()
+      contracts = await deployer.deployInitializedContracts(accounts)
     })
 
     it('Token should not exist before deposit', async() => {
@@ -248,7 +249,7 @@ contract('ChildChainManager', async(accounts) => {
     let oldAccountBalance
 
     before(async() => {
-      contracts = await deployer.deployInitializedContracts()
+      contracts = await deployer.deployInitializedContracts(accounts)
       oldAccountBalance = await contracts.child.dummyERC1155.balanceOf(depositReceiver, depositTokenId)
     })
 
@@ -329,7 +330,7 @@ contract('ChildChainManager', async(accounts) => {
     let oldAccountBalanceC
 
     before(async() => {
-      contracts = await deployer.deployInitializedContracts()
+      contracts = await deployer.deployInitializedContracts(accounts)
       oldAccountBalanceA = await contracts.child.dummyERC1155.balanceOf(depositReceiver, depositTokenIdA)
       oldAccountBalanceB = await contracts.child.dummyERC1155.balanceOf(depositReceiver, depositTokenIdB)
       oldAccountBalanceC = await contracts.child.dummyERC1155.balanceOf(depositReceiver, depositTokenIdC)

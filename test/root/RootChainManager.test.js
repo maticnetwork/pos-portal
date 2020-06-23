@@ -20,7 +20,7 @@ contract('RootChainManager', async(accounts) => {
   describe('Set values', async() => {
     let contracts
     before(async() => {
-      contracts = await deployer.deployFreshRootContracts()
+      contracts = await deployer.deployFreshRootContracts(accounts)
     })
 
     it('Can set stateSenderAddress', async() => {
@@ -93,7 +93,7 @@ contract('RootChainManager', async(accounts) => {
     let stateSyncedlog
 
     before(async() => {
-      contracts = await deployer.deployInitializedContracts()
+      contracts = await deployer.deployInitializedContracts(accounts)
       dummyERC20 = contracts.root.dummyERC20
       rootChainManager = contracts.root.rootChainManager
       oldAccountBalance = await dummyERC20.balanceOf(accounts[0])
@@ -213,7 +213,7 @@ contract('RootChainManager', async(accounts) => {
     let stateSyncedlog
 
     before(async() => {
-      contracts = await deployer.deployInitializedContracts()
+      contracts = await deployer.deployInitializedContracts(accounts)
       rootChainManager = contracts.root.rootChainManager
       oldAccountBalance = new BN(await web3.eth.getBalance(accounts[0]))
       oldContractBalance = new BN(await web3.eth.getBalance(contracts.root.etherPredicate.address))
@@ -329,7 +329,7 @@ contract('RootChainManager', async(accounts) => {
     let stateSyncedlog
 
     before(async() => {
-      contracts = await deployer.deployInitializedContracts()
+      contracts = await deployer.deployInitializedContracts(accounts)
       dummyERC721 = contracts.root.dummyERC721
       rootChainManager = contracts.root.rootChainManager
       await dummyERC721.mint(depositTokenId)
@@ -441,7 +441,7 @@ contract('RootChainManager', async(accounts) => {
     let oldContractBalance
 
     before(async() => {
-      contracts = await deployer.deployInitializedContracts()
+      contracts = await deployer.deployInitializedContracts(accounts)
       dummyERC1155 = contracts.root.dummyERC1155
       erc1155Predicate = contracts.root.erc1155Predicate
       rootChainManager = contracts.root.rootChainManager
@@ -612,7 +612,7 @@ contract('RootChainManager', async(accounts) => {
     let oldContractBalanceC
 
     before(async() => {
-      contracts = await deployer.deployInitializedContracts()
+      contracts = await deployer.deployInitializedContracts(accounts)
       dummyERC1155 = contracts.root.dummyERC1155
       erc1155Predicate = contracts.root.erc1155Predicate
       rootChainManager = contracts.root.rootChainManager
