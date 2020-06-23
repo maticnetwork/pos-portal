@@ -12,8 +12,8 @@ contract ChildChainManager is IChildChainManager, Initializable, AccessControl {
     bytes32 public constant MAPPER_ROLE = keccak256("MAPPER_ROLE");
     bytes32 public constant STATE_SYNCER_ROLE = keccak256("STATE_SYNCER_ROLE");
 
-    mapping(address => address) internal _rootToChildToken;
-    mapping(address => address) internal _childToRootToken;
+    mapping(address => address) public rootToChildToken;
+    mapping(address => address) public childToRootToken;
 
     modifier only(bytes32 role) {
         require(
@@ -27,24 +27,6 @@ contract ChildChainManager is IChildChainManager, Initializable, AccessControl {
         _setupRole(DEFAULT_ADMIN_ROLE, _owner);
         _setupRole(MAPPER_ROLE, _owner);
         _setupRole(STATE_SYNCER_ROLE, _owner);
-    }
-
-    function rootToChildToken(address rootToken)
-        public
-        override
-        view
-        returns (address)
-    {
-        return _rootToChildToken[rootToken];
-    }
-
-    function childToRootToken(address childToken)
-        public
-        override
-        view
-        returns (address)
-    {
-        return _childToRootToken[childToken];
     }
 
     function mapToken(address rootToken, address childToken)
@@ -79,7 +61,7 @@ contract ChildChainManager is IChildChainManager, Initializable, AccessControl {
     function _syncDeposit(bytes memory syncData) private {
         (address user, address rootToken, bytes memory depositData) = abi
             .decode(syncData, (address, address, bytes));
-        address childTokenAddress = _rootToChildToken[rootToken];
+        address childTokenAddress = rootToChildToken[rootToken];
         require(
             childTokenAddress != address(0x0),
             "ChildChainManager: TOKEN_NOT_MAPPED"
@@ -89,8 +71,8 @@ contract ChildChainManager is IChildChainManager, Initializable, AccessControl {
     }
 
     function _mapToken(address rootToken, address childToken) private {
-        _rootToChildToken[rootToken] = childToken;
-        _childToRootToken[childToken] = rootToken;
+        rootToChildToken[rootToken] = childToken;
+        childToRootToken[childToken] = rootToken;
         emit TokenMapped(rootToken, childToken);
     }
 }
