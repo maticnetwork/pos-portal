@@ -40,7 +40,6 @@
     "@openzeppelin/contracts": "^3.1.0-rc.0",
     "@openzeppelin/test-helpers": "^0.5.5",
     "@truffle/hdwallet-provider": "^1.0.35",
-    "@openzeppelin/test-helpers": "^0.5.5",
     "bip39": "^2.5.0",
     "ethereumjs-wallet": "0.6.2",
     "babel-cli": "^6.26.0",
