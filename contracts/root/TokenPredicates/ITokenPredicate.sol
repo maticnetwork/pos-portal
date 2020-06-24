@@ -2,7 +2,7 @@ pragma solidity ^0.6.6;
 
 import {RLPReader} from "../../lib/RLPReader.sol";
 
-/// @title Token predicate interface for all pos portal prdicates
+/// @title Token predicate interface for all pos portal predicates
 /// @notice Abstract interface that defines methods for custom predicates
 interface ITokenPredicate {
 
