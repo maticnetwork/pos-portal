@@ -41,9 +41,7 @@ contract RootChainManager is IRootChainManager, Initializable, AccessControl {
     }
 
     receive() external payable {
-        bytes memory depositData = abi.encode(msg.value);
-        _depositFor(_msgSender(), ETHER_ADDRESS, depositData);
-        payable(typeToPredicate[tokenToType[ETHER_ADDRESS]]).transfer(msg.value);
+        _depositEtherFor(_msgSender());
     }
 
     function initialize(address _owner) external initializer {
@@ -113,9 +111,7 @@ contract RootChainManager is IRootChainManager, Initializable, AccessControl {
     }
 
     function depositEtherFor(address user) external override payable {
-        bytes memory depositData = abi.encode(msg.value);
-        _depositFor(user, ETHER_ADDRESS, depositData);
-        payable(typeToPredicate[tokenToType[ETHER_ADDRESS]]).transfer(msg.value);
+        _depositEtherFor(user);
     }
 
     function depositFor(
@@ -124,6 +120,18 @@ contract RootChainManager is IRootChainManager, Initializable, AccessControl {
         bytes calldata depositData
     ) external override {
         _depositFor(user, rootToken, depositData);
+    }
+
+    function _depositEtherFor(address user) private {
+        bytes memory depositData = abi.encode(msg.value);
+        _depositFor(user, ETHER_ADDRESS, depositData);
+
+        // payable(typeToPredicate[tokenToType[ETHER_ADDRESS]]).transfer(msg.value);
+        // transfer doesn't work as expected when receiving contract is proxified so using call
+        (bool success, bytes memory data) = typeToPredicate[tokenToType[ETHER_ADDRESS]].call{value: msg.value}("");
+        if (!success) {
+            revert("RootChainManager: ETHER_TRANSFER_FAILED");
+        }
     }
 
     function _depositFor(
