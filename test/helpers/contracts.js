@@ -1,3 +1,5 @@
+/* global artifacts */
+
 import { rootRPC, childRPC } from './constants'
 import Web3 from 'web3'
 
@@ -26,28 +28,36 @@ const rootProvider = new Web3.providers.HttpProvider(rootRPC)
 const childProvider = new Web3.providers.HttpProvider(childRPC)
 
 const rootWeb3 = new Web3(rootProvider)
+rootWeb3.setNetworkType = () => {} // Truffle work around for Web3Shim
 const childWeb3 = new Web3(childProvider)
+childWeb3.setNetworkType = () => {} // Truffle work around for Web3Shim
+
+// set web3 and provider
+const setWeb3 = (contractObj, w3) => {
+  contractObj.web3 = w3
+  contractObj.setProvider(w3.currentProvider)
+}
 
 // TODO: use different network for root and child contracts
-// // contracts on root chain
-// RootChainManager.web3 = rootWeb3
-// RootChainManagerProxy.web3 = rootWeb3
-// DummyStateSender.web3 = rootWeb3
-// ERC20Predicate.web3 = rootWeb3
-// ERC721Predicate.web3 = rootWeb3
-// ERC1155Predicate.web3 = rootWeb3
-// EtherPredicate.web3 = rootWeb3
-// DummyERC20.web3 = rootWeb3
-// DummyERC721.web3 = rootWeb3
-// DummyERC1155.web3 = rootWeb3
+// contracts on root chain
+setWeb3(RootChainManager, rootWeb3)
+setWeb3(RootChainManagerProxy, rootWeb3)
+setWeb3(DummyStateSender, rootWeb3)
+setWeb3(ERC20Predicate, rootWeb3)
+setWeb3(ERC721Predicate, rootWeb3)
+setWeb3(ERC1155Predicate, rootWeb3)
+setWeb3(EtherPredicate, rootWeb3)
+setWeb3(DummyERC20, rootWeb3)
+setWeb3(DummyERC721, rootWeb3)
+setWeb3(DummyERC1155, rootWeb3)
 
-// // contracts on child chain
-// ChildChainManager.web3 = childWeb3
-// ChildChainManagerProxy.web3 = childWeb3
-// ChildERC20.web3 = childWeb3
-// ChildERC721.web3 = childWeb3
-// ChildERC1155.web3 = childWeb3
-// MaticWETH.web3 = childWeb3
+// contracts on child chain
+setWeb3(ChildChainManager, childWeb3)
+setWeb3(ChildChainManagerProxy, childWeb3)
+setWeb3(ChildERC20, childWeb3)
+setWeb3(ChildERC721, childWeb3)
+setWeb3(ChildERC1155, childWeb3)
+setWeb3(MaticWETH, childWeb3)
 
 export default {
   RootChainManager,
