@@ -81,6 +81,9 @@ contract('RootChainManager', async(accounts) => {
       newAccountBalance.should.be.a.bignumber.that.equals(
         accountBalance.sub(depositAmount)
       )
+
+      // update account balance
+      accountBalance = newAccountBalance
     })
 
     it('Deposit amount should be credited to correct contract', async() => {
@@ -88,6 +91,9 @@ contract('RootChainManager', async(accounts) => {
       newContractBalance.should.be.a.bignumber.that.equals(
         contractBalance.add(depositAmount)
       )
+
+      // update balance
+      contractBalance = newContractBalance
     })
 
     it('Can receive deposit tx', async() => {
@@ -146,7 +152,21 @@ contract('RootChainManager', async(accounts) => {
       )
 
       // start exit
-      // await contracts.root.rootChainManager.exit(data)
+      await contracts.root.rootChainManager.exit(data, { from: depositReceiver })
+    })
+
+    it('Should have more amount in withdrawer account after withdraw', async() => {
+      const newAccountBalance = await dummyERC20.balanceOf(depositReceiver)
+      newAccountBalance.should.be.a.bignumber.that.equals(
+        accountBalance.add(depositAmount)
+      )
+    })
+
+    it('Should have less amount in predicate contract after withdraw', async() => {
+      const newContractBalance = await dummyERC20.balanceOf(contracts.root.erc20Predicate.address)
+      newContractBalance.should.be.a.bignumber.that.equals(
+        contractBalance.sub(withdrawAmount)
+      )
     })
   })
 })

@@ -277,7 +277,7 @@ contract RootChainManager is IRootChainManager, Initializable, AccessControl {
         ];
         ITokenPredicate(predicateAddress).validateExitLog(
             _msgSender(),
-            logRLP.toBytes()
+            logRLP.toRlpBytes()
         );
 
         require(
@@ -311,7 +311,7 @@ contract RootChainManager is IRootChainManager, Initializable, AccessControl {
         ITokenPredicate(predicateAddress).exitTokens(
             _msgSender(),
             _childToRootToken[childToken],
-            logRLP.toBytes()
+            logRLP.toRlpBytes()
         );
     }
 
