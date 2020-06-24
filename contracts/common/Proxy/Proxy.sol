@@ -1,17 +1,7 @@
 pragma solidity ^0.6.6;
 import {IERCProxy} from "./IERCProxy.sol";
-import {ProxyStorage} from "./ProxyStorage.sol";
 
-contract Proxy is ProxyStorage, IERCProxy {
-
-    fallback() external virtual payable {
-        delegatedFwd(proxyTo, msg.data);
-    }
-
-    receive() external virtual payable {
-        delegatedFwd(proxyTo, msg.data);
-    }
-
+abstract contract Proxy is IERCProxy {
     function delegatedFwd(address _dst, bytes memory _calldata) internal {
         // solium-disable-next-line security/no-inline-assembly
         assembly {
@@ -45,7 +35,5 @@ contract Proxy is ProxyStorage, IERCProxy {
         proxyTypeId = 2;
     }
 
-    function implementation() external virtual override view returns (address) {
-        return proxyTo;
-    }
+    function implementation() external virtual override view returns (address);
 }

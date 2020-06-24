@@ -14,12 +14,12 @@ contract UpgradableProxy is Proxy {
         setImplementation(_proxyTo);
     }
 
-    fallback() external override payable {
+    fallback() external payable {
         delegatedFwd(loadImplementation(), msg.data);
     }
 
-    receive() external override payable {
-        delegatedFwd(proxyTo, msg.data);
+    receive() external payable {
+        delegatedFwd(loadImplementation(), msg.data);
     }
 
     modifier onlyProxyOwner() {
