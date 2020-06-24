@@ -186,7 +186,7 @@ contract('ChildChainManager', async(accounts) => {
     })
 
     it('Token should not exist before deposit', async() => {
-      await expectRevert.unspecified(contracts.child.dummyERC721.ownerOf(depositTokenId))
+      await expectRevert(contracts.child.dummyERC721.ownerOf(depositTokenId), 'value out of range')
     })
 
     it('Can receive ERC721 deposit sync', async() => {

@@ -30,7 +30,7 @@ contract('ChildERC721', (accounts) => {
     })
 
     it('Token should not exist before deposit', async() => {
-      await expectRevert.unspecified(contracts.dummyERC721.ownerOf(tokenId))
+      await expectRevert(contracts.dummyERC721.ownerOf(tokenId), 'value out of range')
     })
 
     it('Can receive deposit tx', async() => {
@@ -122,7 +122,7 @@ contract('ChildERC721', (accounts) => {
     })
 
     it('Token should not exist after burning', async() => {
-      await expectRevert.unspecified(contracts.dummyERC721.ownerOf(tokenId))
+      await expectRevert(contracts.dummyERC721.ownerOf(tokenId), 'value out of range')
     })
   })
 })
