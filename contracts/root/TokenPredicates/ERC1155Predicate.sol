@@ -19,11 +19,6 @@ contract ERC1155Predicate is ITokenPredicate, ERC1155Receiver, AccessControl, In
     // keccak256("TransferBatch(address,address,address,uint256[],uint256[])")
     bytes32 public constant TRANSFER_BATCH_EVENT_SIG = 0x4a39dc06d4c0dbc64b70af90fd698a233a518aa5d07e595d983b8c0526c8f7fb;
 
-    // bytes4(keccak256("onERC1155Received(address,address,uint256,uint256,bytes)"))
-    bytes4 public constant ERC1155_RECEIVE_SELECTOR = 0xf23a6e61;
-    // bytes4(keccak256("onERC1155BatchReceived(address,address,uint256[],uint256[],bytes)"))
-    bytes4 public constant ERC1155_BATCH_RECEIVE_SELECTOR = 0xbc197c81;
-
     event LockedBatchERC1155(
         address indexed depositor,
         address indexed depositReceiver,
@@ -51,7 +46,7 @@ contract ERC1155Predicate is ITokenPredicate, ERC1155Receiver, AccessControl, In
         uint256,
         bytes calldata
     ) external override returns (bytes4) {
-        return ERC1155_RECEIVE_SELECTOR;
+        return 0;
     }
 
     function onERC1155BatchReceived(
@@ -61,7 +56,7 @@ contract ERC1155Predicate is ITokenPredicate, ERC1155Receiver, AccessControl, In
         uint256[] calldata,
         bytes calldata
     ) external override returns (bytes4) {
-        return ERC1155_BATCH_RECEIVE_SELECTOR;
+        return ERC1155Receiver(0).onERC1155BatchReceived.selector;
     }
 
     function lockTokens(

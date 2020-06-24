@@ -1,6 +1,7 @@
 pragma solidity ^0.6.6;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 import {RLPReader} from "../../lib/RLPReader.sol";
 import {ITokenPredicate} from "./ITokenPredicate.sol";
@@ -9,6 +10,7 @@ import {Initializable} from "../../common/Initializable.sol";
 contract ERC20Predicate is ITokenPredicate, AccessControl, Initializable {
     using RLPReader for bytes;
     using RLPReader for RLPReader.RLPItem;
+    using SafeERC20 for IERC20;
 
     bytes32 public constant MANAGER_ROLE = keccak256("MANAGER_ROLE");
     bytes32 public constant TOKEN_TYPE = keccak256("ERC20");
@@ -44,8 +46,7 @@ contract ERC20Predicate is ITokenPredicate, AccessControl, Initializable {
         only(MANAGER_ROLE)
     {
         uint256 amount = abi.decode(depositData, (uint256));
-        // 1. best practice for transfer/transferFrom is using this: https://github.com/OpenZeppelin/openzeppelin-contracts/blob/82769e54c32aa03c15185daf24222ab72db8863d/contracts/token/ERC20/SafeERC20.sol#L22
-        IERC20(rootToken).transferFrom(depositor, address(this), amount);
+        IERC20(rootToken).safeTransferFrom(depositor, address(this), amount);
         emit LockedERC20(depositor, depositReceiver, rootToken, amount);
     }
 
@@ -74,7 +75,7 @@ contract ERC20Predicate is ITokenPredicate, AccessControl, Initializable {
             "ERC20Predicate: INVALID_RECEIVER"
         );
 
-        IERC20(rootToken).transfer(
+        IERC20(rootToken).safeTransfer(
             withdrawer,
             logRLPList[2].toUint() // log data field
         );
