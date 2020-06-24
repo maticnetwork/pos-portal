@@ -7,7 +7,10 @@ interface IRootChainManager {
         bytes32 indexed tokenType
     );
 
-    event PredicateRegistered(bytes32 tokenType, address predicateAddress);
+    event PredicateRegistered(
+        bytes32 indexed tokenType,
+        address indexed predicateAddress
+    );
 
     function registerPredicate(bytes32 tokenType, address predicateAddress)
         external;
