@@ -61,6 +61,7 @@ contract('RootChainManager', async(accounts) => {
     let withdrawTx
     let checkpointData
     let headerNumber
+    let exitTx
 
     before(async() => {
       contracts = await deployer.deployInitializedContracts(accounts)
@@ -152,7 +153,14 @@ contract('RootChainManager', async(accounts) => {
       )
 
       // start exit
-      await contracts.root.rootChainManager.exit(data, { from: depositReceiver })
+      exitTx = await contracts.root.rootChainManager.exit(data, { from: depositReceiver })
+      should.exist(exitTx)
+    })
+
+    it('Should emit Transfer log in exit tx', () => {
+      const logs = logDecoder.decodeLogs(exitTx.receipt.rawLogs)
+      const exitTransferLog = logs.find(l => l.event === 'Transfer')
+      should.exist(exitTransferLog)
     })
 
     it('Should have more amount in withdrawer account after withdraw', async() => {
