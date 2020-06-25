@@ -247,7 +247,7 @@ contract RootChainManager is IRootChainManager, Initializable, AccessControl {
         ITokenPredicate(predicateAddress).exitTokens(
             _msgSender(),
             childToRootToken[childToken],
-            logRLP.toBytes()
+            logRLP.toRlpBytes()
         );
     }
 
