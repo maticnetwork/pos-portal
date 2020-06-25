@@ -3,6 +3,7 @@ const bluebird = require('bluebird')
 const Merkle = artifacts.require('Merkle')
 const MerklePatriciaProof = artifacts.require('MerklePatriciaProof')
 const RLPReader = artifacts.require('RLPReader')
+const SafeERC20 = artifacts.require('SafeERC20')
 
 const RootChainManager = artifacts.require('RootChainManager')
 const RootChainManagerProxy = artifacts.require('RootChainManagerProxy')
@@ -38,6 +39,10 @@ const libDeps = [
       ERC721Predicate,
       ERC1155Predicate
     ]
+  },
+  {
+    lib: SafeERC20,
+    contracts: [ERC20Predicate]
   }
 ]
 

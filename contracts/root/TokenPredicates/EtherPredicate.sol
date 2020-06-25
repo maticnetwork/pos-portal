@@ -1,6 +1,5 @@
 pragma solidity ^0.6.6;
 
-// import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 import {RLPReader} from "../../lib/RLPReader.sol";
 import {ITokenPredicate} from "./ITokenPredicate.sol";
@@ -48,13 +47,18 @@ contract EtherPredicate is ITokenPredicate, AccessControl, Initializable {
         emit LockedEther(depositor, depositReceiver, amount);
     }
 
-    function validateExitLog(address withdrawer, bytes calldata log)
-        external
+    function exitTokens(
+        address withdrawer,
+        address,
+        bytes memory log
+    )
+        public
         override
-        pure
+        only(MANAGER_ROLE)
     {
         RLPReader.RLPItem[] memory logRLPList = log.toRlpItem().toList();
         RLPReader.RLPItem[] memory logTopicRLPList = logRLPList[1].toList(); // topics
+
         require(
             bytes32(logTopicRLPList[0].toUint()) == TRANSFER_EVENT_SIG, // topic0 is event sig
             "EtherPredicate: INVALID_SIGNATURE"
@@ -67,19 +71,7 @@ contract EtherPredicate is ITokenPredicate, AccessControl, Initializable {
             address(logTopicRLPList[2].toUint()) == address(0), // topic2 is to address
             "EtherPredicate: INVALID_RECEIVER"
         );
-    }
 
-    function exitTokens(
-        address withdrawer,
-        address,
-        bytes memory log
-    )
-        public
-        override
-        only(MANAGER_ROLE)
-    {
-        address payable _withdrawer = address(uint160(withdrawer));
-        RLPReader.RLPItem[] memory logRLPList = log.toRlpItem().toList();
-        _withdrawer.transfer(logRLPList[2].toUint());
+        payable(withdrawer).transfer(logRLPList[2].toUint());
     }
 }
