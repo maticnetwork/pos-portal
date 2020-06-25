@@ -274,7 +274,7 @@ contract('RootChainManager', async(accounts) => {
     it('Should start exit', async() => {
       console.log("erc721")
       console.log(withdrawTx.receipt)
-      const logIndex = 0
+      const logIndex = 1
       const data = bufferToHex(
         rlp.encode([
           headerNumber,
