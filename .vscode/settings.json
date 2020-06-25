@@ -1,0 +1,18 @@
+{
+	"solidity.linter": "solium",
+    	"solidity.compileUsingRemoteVersion": "v0.6.6+commit.6c089d02",
+    	"solidity.packageDefaultDependenciesContractsDirectory": "",
+    	"solidity.packageDefaultDependenciesDirectory": "node_modules",
+    	"workbench.colorTheme": "Solidity Visual Auditor Dark",
+		"solidity-va.deco.statevars": false,
+		"solidity.soliumRules": {
+			"quotes": ["error", "double"],
+			"no-empty-blocks": "off",
+			"indentation": ["error", 4],
+			"arg-overflow": ["warning", 3],
+			"no-constant": ["error"],
+			"security/enforce-explicit-visibility": ["error"],
+			"security/no-block-members": ["warning"],
+			"security/no-inline-assembly": ["warning"]
+		},
+}
