@@ -3,6 +3,7 @@ import chaiAsPromised from 'chai-as-promised'
 import chaiBN from 'chai-bn'
 import BN from 'bn.js'
 import { defaultAbiCoder as abi } from 'ethers/utils/abi-coder'
+import { expectRevert } from '@openzeppelin/test-helpers'
 import { bufferToHex, rlp } from 'ethereumjs-util'
 
 import * as deployer from '../helpers/deployer'
@@ -47,7 +48,7 @@ const submitCheckpoint = async(checkpointManager, receiptObj) => {
 }
 
 contract('RootChainManager', async(accounts) => {
-  describe('Withdraw ERC20', async() => {
+  describe.only('Withdraw ERC20', async() => {
     const depositAmount = mockValues.amounts[1]
     const withdrawAmount = mockValues.amounts[1]
     const depositReceiver = accounts[0]
@@ -135,6 +136,28 @@ contract('RootChainManager', async(accounts) => {
       root.should.equal(headerData.root)
     })
 
+    // call exit from some account other than depositReceiver
+    it('start exit using non-deposit receiver account', async() => {
+      const logIndex = 0
+      const data = bufferToHex(
+        rlp.encode([
+          headerNumber,
+          bufferToHex(Buffer.concat(checkpointData.proof)),
+          checkpointData.number,
+          checkpointData.timestamp,
+          bufferToHex(checkpointData.transactionsRoot),
+          bufferToHex(checkpointData.receiptsRoot),
+          bufferToHex(checkpointData.receipt),
+          bufferToHex(rlp.encode(checkpointData.receiptParentNodes)),
+          bufferToHex(rlp.encode(checkpointData.path)), // branch mask,
+          logIndex
+        ])
+      )
+      // start exit
+      exitTx = await expectRevert(contracts.root.rootChainManager.exit(data,
+        { from: accounts[1] }), 'ERC20Predicate: INVALID_SENDER')
+    })
+
     it('Should start exit', async() => {
       const logIndex = 0
       const data = bufferToHex(
@@ -151,10 +174,30 @@ contract('RootChainManager', async(accounts) => {
           logIndex
         ])
       )
-
       // start exit
       exitTx = await contracts.root.rootChainManager.exit(data, { from: depositReceiver })
       should.exist(exitTx)
+    })
+
+    it('start exit again', async() => {
+      const logIndex = 0
+      const data = bufferToHex(
+        rlp.encode([
+          headerNumber,
+          bufferToHex(Buffer.concat(checkpointData.proof)),
+          checkpointData.number,
+          checkpointData.timestamp,
+          bufferToHex(checkpointData.transactionsRoot),
+          bufferToHex(checkpointData.receiptsRoot),
+          bufferToHex(checkpointData.receipt),
+          bufferToHex(rlp.encode(checkpointData.receiptParentNodes)),
+          bufferToHex(rlp.encode(checkpointData.path)), // branch mask,
+          logIndex
+        ])
+      )
+      // start exit
+      await expectRevert(contracts.root.rootChainManager.exit(data,
+        { from: depositReceiver }), 'EXIT_ALREADY_PROCESSED')
     })
 
     it('Should emit Transfer log in exit tx', () => {
@@ -178,7 +221,7 @@ contract('RootChainManager', async(accounts) => {
     })
   })
 
-  describe('Withdraw ERC721', async() => {
+  describe.only('Withdraw ERC721', async() => {
     const depositTokenId = mockValues.numbers[4]
     const depositForAccount = mockValues.addresses[0]
     const depositAmount = new BN('1')
@@ -269,6 +312,27 @@ contract('RootChainManager', async(accounts) => {
       root.should.equal(headerData.root)
     })
 
+    it('start exit using a non-deposit receiver account', async() => {
+      const logIndex = 1
+      const data = bufferToHex(
+        rlp.encode([
+          headerNumber,
+          bufferToHex(Buffer.concat(checkpointData.proof)),
+          checkpointData.number,
+          checkpointData.timestamp,
+          bufferToHex(checkpointData.transactionsRoot),
+          bufferToHex(checkpointData.receiptsRoot),
+          bufferToHex(checkpointData.receipt),
+          bufferToHex(rlp.encode(checkpointData.receiptParentNodes)),
+          bufferToHex(rlp.encode(checkpointData.path)), // branch mask,
+          logIndex
+        ])
+      )
+      // start exit
+      await expectRevert(contracts.root.rootChainManager.exit(data, { from: accounts[1] }),
+        'ERC721Predicate: INVALID_SENDER')
+    })
+
     it('Should start exit', async() => {
       const logIndex = 1
       const data = bufferToHex(
@@ -285,10 +349,30 @@ contract('RootChainManager', async(accounts) => {
           logIndex
         ])
       )
-
       // start exit
       exitTx = await contracts.root.rootChainManager.exit(data, { from: depositReceiver })
       should.exist(exitTx)
+    })
+
+    it('start exit again', async() => {
+      const logIndex = 1
+      const data = bufferToHex(
+        rlp.encode([
+          headerNumber,
+          bufferToHex(Buffer.concat(checkpointData.proof)),
+          checkpointData.number,
+          checkpointData.timestamp,
+          bufferToHex(checkpointData.transactionsRoot),
+          bufferToHex(checkpointData.receiptsRoot),
+          bufferToHex(checkpointData.receipt),
+          bufferToHex(rlp.encode(checkpointData.receiptParentNodes)),
+          bufferToHex(rlp.encode(checkpointData.path)), // branch mask,
+          logIndex
+        ])
+      )
+      // start exit
+      await expectRevert(contracts.root.rootChainManager.exit(data,
+        { from: depositReceiver }), 'EXIT_ALREADY_PROCESSED')
     })
 
     it('Should emit Transfer log in exit tx', () => {
@@ -414,9 +498,8 @@ contract('RootChainManager', async(accounts) => {
       root.should.equal(headerData.root)
     })
 
-    it('Should start exit', async() => {
+    it('start exit with non-deposit receiver', async() => {
       const logIndex = 0
-      console.log(withdrawTx.receipt)
       const data = bufferToHex(
         rlp.encode([
           headerNumber,
@@ -431,10 +514,51 @@ contract('RootChainManager', async(accounts) => {
           logIndex
         ])
       )
+      // start exit
+      await expectRevert(contracts.root.rootChainManager.exit(data,
+        { from: accounts[1] }), 'ERC1155Predicate: INVALID_SENDER')
+    })
 
+    it('Should start exit', async() => {
+      const logIndex = 0
+      const data = bufferToHex(
+        rlp.encode([
+          headerNumber,
+          bufferToHex(Buffer.concat(checkpointData.proof)),
+          checkpointData.number,
+          checkpointData.timestamp,
+          bufferToHex(checkpointData.transactionsRoot),
+          bufferToHex(checkpointData.receiptsRoot),
+          bufferToHex(checkpointData.receipt),
+          bufferToHex(rlp.encode(checkpointData.receiptParentNodes)),
+          bufferToHex(rlp.encode(checkpointData.path)), // branch mask,
+          logIndex
+        ])
+      )
       // start exit
       exitTx = await contracts.root.rootChainManager.exit(data, { from: depositReceiver })
       should.exist(exitTx)
+    })
+
+    it('start exit again', async() => {
+      const logIndex = 0
+      const data = bufferToHex(
+        rlp.encode([
+          headerNumber,
+          bufferToHex(Buffer.concat(checkpointData.proof)),
+          checkpointData.number,
+          checkpointData.timestamp,
+          bufferToHex(checkpointData.transactionsRoot),
+          bufferToHex(checkpointData.receiptsRoot),
+          bufferToHex(checkpointData.receipt),
+          bufferToHex(rlp.encode(checkpointData.receiptParentNodes)),
+          bufferToHex(rlp.encode(checkpointData.path)), // branch mask,
+          logIndex
+        ])
+      )
+      // start exit
+      await expectRevert(contracts.root.rootChainManager.exit(data,
+        { from: depositReceiver }), 'EXIT_ALREADY_PROCESSED')
     })
 
     it('Should emit Transfer log in exit tx', () => {
