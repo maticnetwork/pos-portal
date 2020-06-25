@@ -3,6 +3,7 @@
 import { rootRPC, childRPC } from './constants'
 import Web3 from 'web3'
 
+const MockCheckpointManager = artifacts.require('MockCheckpointManager')
 const RootChainManager = artifacts.require('RootChainManager')
 const RootChainManagerProxy = artifacts.require('RootChainManagerProxy')
 const DummyStateSender = artifacts.require('DummyStateSender')
@@ -27,9 +28,9 @@ const MaticWETH = artifacts.require('MaticWETH')
 const rootProvider = new Web3.providers.HttpProvider(rootRPC)
 const childProvider = new Web3.providers.HttpProvider(childRPC)
 
-const rootWeb3 = new Web3(rootProvider)
+export const rootWeb3 = new Web3(rootProvider)
 rootWeb3.setNetworkType = () => {} // Truffle work around for Web3Shim
-const childWeb3 = new Web3(childProvider)
+export const childWeb3 = new Web3(childProvider)
 childWeb3.setNetworkType = () => {} // Truffle work around for Web3Shim
 
 // set web3 and provider
@@ -38,8 +39,8 @@ const setWeb3 = (contractObj, w3) => {
   contractObj.setProvider(w3.currentProvider)
 }
 
-// TODO: use different network for root and child contracts
 // contracts on root chain
+setWeb3(MockCheckpointManager, rootWeb3)
 setWeb3(RootChainManager, rootWeb3)
 setWeb3(RootChainManagerProxy, rootWeb3)
 setWeb3(DummyStateSender, rootWeb3)
@@ -60,6 +61,7 @@ setWeb3(ChildERC1155, childWeb3)
 setWeb3(MaticWETH, childWeb3)
 
 export default {
+  MockCheckpointManager,
   RootChainManager,
   RootChainManagerProxy,
   DummyStateSender,
