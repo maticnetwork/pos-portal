@@ -19,16 +19,13 @@ interface ITokenPredicate {
         bytes calldata depositData
     ) external;
 
-    /// @notice Validates exit while withdraw process
-    /// @dev Validates exit log while withdrawing. Reverts if validation fails
-    /// @param withdrawer Address who wants to withdraw tokens
-    /// @param logRLPList Log bytes from sidechain
     function validateExitLog(address withdrawer, bytes calldata logRLPList)
         external
         pure;
 
-    /// @notice Processes exit after success withdraw
-    /// @dev It processes withdraw based on custom logic. Example: transfer ERC20/ERC721, mint ERC721 if mintable withdraw
+    /// @notice Validates and processes exit while withdraw process
+    /// @dev Validates exit log emitted on sidechain. Reverts if validation fails.
+    /// @dev Processes withdraw based on custom logic. Example: transfer ERC20/ERC721, mint ERC721 if mintable withdraw
     /// @param withdrawer Address who wants to withdraw tokens
     /// @param rootToken Token which gets withdrawn
     /// @param logRLPList Valid sidechain log for data like amount, token id etc.
