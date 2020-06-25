@@ -105,18 +105,18 @@ contract ERC1155Predicate is ITokenPredicate, ERC1155Receiver, AccessControl, In
         bytes memory logData = logRLPList[2].toBytes();
 
         require(
-            withdrawer == address(logTopicRLPList[1].toUint()), // topic1 is from address
+            withdrawer == address(logTopicRLPList[2].toUint()), // topic2 is from address
             "ERC1155Predicate: INVALID_SENDER"
         );
         require(
-            address(logTopicRLPList[2].toUint()) == address(0), // topic2 is to address
+            address(logTopicRLPList[3].toUint()) == address(0), // topic3 is to address
             "ERC1155Predicate: INVALID_RECEIVER"
         );
 
-        if (bytes32(logTopicRLPList[0].toUint()) == TRANSFER_SINGLE_EVENT_SIG) {
-            (, , , uint256 id, uint256 amount) = abi.decode(
+        if (bytes32(logTopicRLPList[0].toUint()) == TRANSFER_SINGLE_EVENT_SIG) { // topic0 is event sig
+            (uint256 id, uint256 amount) = abi.decode(
                 logData,
-                (address, address, address, uint256, uint256)
+                (uint256, uint256)
             );
             IERC1155(rootToken).safeTransferFrom(
                 address(this),
@@ -126,9 +126,9 @@ contract ERC1155Predicate is ITokenPredicate, ERC1155Receiver, AccessControl, In
                 bytes("")
             );
         } else if (bytes32(logTopicRLPList[0].toUint()) == TRANSFER_BATCH_EVENT_SIG) {
-            (, , , uint256[] memory ids, uint256[] memory amounts) = abi.decode(
+            (uint256[] memory ids, uint256[] memory amounts) = abi.decode(
                 logData,
-                (address, address, address, uint256[], uint256[])
+                (uint256[], uint256[])
             );
             IERC1155(rootToken).safeBatchTransferFrom(
                 address(this),

@@ -439,7 +439,7 @@ contract('RootChainManager', async(accounts) => {
 
     it('Should emit Transfer log in exit tx', () => {
       const logs = logDecoder.decodeLogs(exitTx.receipt.rawLogs)
-      const exitTransferLog = logs.find(l => l.event === 'Transfer')
+      const exitTransferLog = logs.find(l => l.event === 'TransferSingle')
       should.exist(exitTransferLog)
     })
 
