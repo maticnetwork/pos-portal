@@ -22,7 +22,6 @@ export class LogDecoder {
   decodeLogs(logs = []) {
     return logs.map(log => {
       for (let i = 0; i < this._interfaces.length; i++) {
-        // todo :please optimize me
         try {
           const parsedLog = this._interfaces[i].parseLog(log)
           if (parsedLog) {
