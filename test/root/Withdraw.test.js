@@ -47,7 +47,7 @@ const submitCheckpoint = async(checkpointManager, receiptObj) => {
 }
 
 contract('RootChainManager', async(accounts) => {
-  describe('Withdraw ERC20', async() => {
+  describe.only('Withdraw ERC20', async() => {
     const depositAmount = mockValues.amounts[1]
     const withdrawAmount = mockValues.amounts[1]
     const depositReceiver = accounts[0]
@@ -108,6 +108,8 @@ contract('RootChainManager', async(accounts) => {
     it('Can receive withdraw tx', async() => {
       withdrawTx = await contracts.child.dummyERC20.withdraw(withdrawAmount, { from: depositReceiver })
       should.exist(withdrawTx)
+      console.log("ERC20")
+      console.log(withdrawTx.receipt)
     })
 
     it('Should emit Transfer log in withdraw tx', () => {
@@ -172,6 +174,142 @@ contract('RootChainManager', async(accounts) => {
 
     it('Should have less amount in predicate contract after withdraw', async() => {
       const newContractBalance = await dummyERC20.balanceOf(contracts.root.erc20Predicate.address)
+      newContractBalance.should.be.a.bignumber.that.equals(
+        contractBalance.sub(withdrawAmount)
+      )
+    })
+  })
+
+  describe.only('Withdraw ERC721', async() => {
+    const depositTokenId = mockValues.numbers[4]
+    const depositForAccount = mockValues.addresses[0]
+    const depositAmount = new BN('1')
+    const withdrawAmount = new BN('1')
+    const depositReceiver = accounts[0]
+    const depositData = abi.encode(['uint256'], [depositTokenId.toString()])
+    let contracts
+    let dummyERC721
+    let rootChainManager
+    let accountBalance
+    let contractBalance
+    let transferLog
+    let withdrawTx
+    let checkpointData
+    let headerNumber
+    let exitTx
+
+    before(async() => {
+      contracts = await deployer.deployInitializedContracts(accounts)
+      dummyERC721 = contracts.root.dummyERC721
+      rootChainManager = contracts.root.rootChainManager
+      await dummyERC721.mint(depositTokenId)
+      accountBalance = await dummyERC721.balanceOf(accounts[0])
+      contractBalance = await dummyERC721.balanceOf(contracts.root.erc721Predicate.address)
+    })
+
+    it('Depositor should be able to approve and deposit', async() => {
+      await dummyERC721.approve(contracts.root.erc721Predicate.address, depositTokenId)
+      const depositTx = await rootChainManager.depositFor(depositForAccount, dummyERC721.address, depositData)
+      should.exist(depositTx)
+    })
+
+    it('Deposit amount should be deducted from depositor account', async() => {
+      const newAccountBalance = await dummyERC721.balanceOf(accounts[0])
+      newAccountBalance.should.be.a.bignumber.that.equals(
+        accountBalance.sub(depositAmount)
+      )
+
+      // update account balance
+      accountBalance = newAccountBalance
+    })
+
+    it('Deposit amount should be credited to correct contract', async() => {
+      const newContractBalance = await dummyERC721.balanceOf(contracts.root.erc721Predicate.address)
+      newContractBalance.should.be.a.bignumber.that.equals(
+        contractBalance.add(depositAmount)
+      )
+
+      // update balance
+      contractBalance = newContractBalance
+    })
+
+    it('Can receive deposit tx', async() => {
+      const depositTx = await contracts.child.dummyERC721.deposit(depositReceiver, depositData)
+      should.exist(depositTx)
+      const logs = logDecoder.decodeLogs(depositTx.receipt.rawLogs)
+      const transferLog = logs.find(l => l.event === 'Transfer')
+      should.exist(transferLog)
+    })
+
+    it('Can receive withdraw tx', async() => {
+      withdrawTx = await contracts.child.dummyERC721.withdraw(depositTokenId, { from: depositReceiver })
+      should.exist(withdrawTx)
+    })
+
+    it('Should emit Transfer log in withdraw tx', () => {
+      const logs = logDecoder.decodeLogs(withdrawTx.receipt.rawLogs)
+      transferLog = logs.find(l => l.event === 'Transfer')
+      should.exist(transferLog)
+    })
+
+    it('Should submit checkpoint', async() => {
+      // submit checkpoint including burn (withdraw) tx
+      checkpointData = await submitCheckpoint(contracts.root.checkpointManager, withdrawTx.receipt)
+      should.exist(checkpointData)
+    })
+
+    it('Should match checkpoint details', async() => {
+      const root = bufferToHex(checkpointData.header.root)
+      should.exist(root)
+
+      // fetch latest header number
+      headerNumber = await contracts.root.checkpointManager.currentCheckpointNumber()
+      headerNumber.should.be.bignumber.gt('0')
+
+      // fetch header block details and validate
+      const headerData = await contracts.root.checkpointManager.headerBlocks(headerNumber)
+      root.should.equal(headerData.root)
+    })
+
+    it('Should start exit', async() => {
+      console.log("erc721")
+      console.log(withdrawTx.receipt)
+      const logIndex = 0
+      const data = bufferToHex(
+        rlp.encode([
+          headerNumber,
+          bufferToHex(Buffer.concat(checkpointData.proof)),
+          checkpointData.number,
+          checkpointData.timestamp,
+          bufferToHex(checkpointData.transactionsRoot),
+          bufferToHex(checkpointData.receiptsRoot),
+          bufferToHex(checkpointData.receipt),
+          bufferToHex(rlp.encode(checkpointData.receiptParentNodes)),
+          bufferToHex(rlp.encode(checkpointData.path)), // branch mask,
+          logIndex
+        ])
+      )
+
+      // start exit
+      exitTx = await contracts.root.rootChainManager.exit(data, { from: depositReceiver })
+      should.exist(exitTx)
+    })
+
+    it('Should emit Transfer log in exit tx', () => {
+      const logs = logDecoder.decodeLogs(exitTx.receipt.rawLogs)
+      const exitTransferLog = logs.find(l => l.event === 'Transfer')
+      should.exist(exitTransferLog)
+    })
+
+    it('Should have more amount in withdrawer account after withdraw', async() => {
+      const newAccountBalance = await dummyERC721.balanceOf(depositReceiver)
+      newAccountBalance.should.be.a.bignumber.that.equals(
+        accountBalance.add(depositAmount)
+      )
+    })
+
+    it('Should have less amount in predicate contract after withdraw', async() => {
+      const newContractBalance = await dummyERC721.balanceOf(contracts.root.erc721Predicate.address)
       newContractBalance.should.be.a.bignumber.that.equals(
         contractBalance.sub(withdrawAmount)
       )
