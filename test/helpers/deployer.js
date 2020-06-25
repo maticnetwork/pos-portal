@@ -3,6 +3,7 @@ import { etherAddress } from './constants'
 
 export const deployFreshRootContracts = async(accounts) => {
   const [
+    checkpointManager,
     rootChainManagerLogic,
     dummyStateSender,
     erc20PredicateLogic,
@@ -13,6 +14,7 @@ export const deployFreshRootContracts = async(accounts) => {
     dummyERC721,
     dummyERC1155
   ] = await Promise.all([
+    contracts.MockCheckpointManager.new(),
     contracts.RootChainManager.new(),
     contracts.DummyStateSender.new(),
     contracts.ERC20Predicate.new(),
@@ -45,6 +47,7 @@ export const deployFreshRootContracts = async(accounts) => {
   const etherPredicate = await contracts.EtherPredicate.at(etherPredicateProxy.address)
 
   return {
+    checkpointManager,
     rootChainManager,
     dummyStateSender,
     erc20Predicate,
@@ -94,6 +97,7 @@ export const deployInitializedContracts = async(accounts) => {
     deployFreshChildContracts(accounts)
   ])
 
+  await root.rootChainManager.setCheckpointManager(root.checkpointManager.address)
   await root.rootChainManager.setStateSender(root.dummyStateSender.address)
   await root.rootChainManager.setChildChainManagerAddress(child.childChainManager.address)
 
