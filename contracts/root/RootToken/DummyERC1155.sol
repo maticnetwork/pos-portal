@@ -8,7 +8,6 @@ contract DummyERC1155 is ERC1155, NetworkAgnostic, ChainConstants {
     constructor(string memory uri)
         public
         ERC1155(uri)
-        // TODO: get name from uri
         NetworkAgnostic(uri, "1", ROOT_CHAIN_ID)
     {}
 

@@ -14,14 +14,12 @@ contract UpgradableProxy is Proxy {
         setImplementation(_proxyTo);
     }
 
-    fallback() external override payable {
-        // require(currentContract != 0, "If app code has not been set yet, do not call");
-        // Todo: filter out some calls or handle in the end fallback
+    fallback() external payable {
         delegatedFwd(loadImplementation(), msg.data);
     }
 
-    receive() external override payable {
-        delegatedFwd(proxyTo, msg.data);
+    receive() external payable {
+        delegatedFwd(loadImplementation(), msg.data);
     }
 
     modifier onlyProxyOwner() {
