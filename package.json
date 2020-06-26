@@ -22,6 +22,7 @@
     "lint:sol": "solium -d contracts/",
     "debug": "truffle debug",
     "artifacts": "node generate-artifacts.js",
+    "flatten": "node flatten-contracts.js",
     "test:ci": "scripts/run-test.sh"
   },
   "repository": {
@@ -71,7 +72,8 @@
     "glob": "^7.1.6",
     "nunjucks": "^3.2.1",
     "solium": "^1.2.5",
-    "truffle": "^5.1.21"
+    "truffle": "^5.1.21",
+    "truffle-flattener": "^1.4.4"
   },
   "dependencies": {
     "ganache-cli": "^6.9.1"
