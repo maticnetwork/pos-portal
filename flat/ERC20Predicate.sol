@@ -1,34 +1,7 @@
 
-// File: @openzeppelin/contracts/GSN/Context.sol
-
-pragma solidity ^0.6.0;
-
-/*
- * @dev Provides information about the current execution context, including the
- * sender of the transaction and its data. While these are generally available
- * via msg.sender and msg.data, they should not be accessed in such a direct
- * manner, since when dealing with GSN meta-transactions the account sending and
- * paying for execution may not be the actual sender (as far as an application
- * is concerned).
- *
- * This contract is only required for intermediate, library-like contracts.
- */
-contract Context {
-    // Empty internal constructor, to prevent people from mistakenly deploying
-    // an instance of this contract, which should be used via inheritance.
-    constructor () internal { }
-
-    function _msgSender() internal view virtual returns (address payable) {
-        return msg.sender;
-    }
-
-    function _msgData() internal view virtual returns (bytes memory) {
-        this; // silence state mutability warning without generating bytecode - see https://github.com/ethereum/solidity/issues/2691
-        return msg.data;
-    }
-}
-
 // File: @openzeppelin/contracts/token/ERC20/IERC20.sol
+
+// SPDX-License-Identifier: MIT
 
 pragma solidity ^0.6.0;
 
@@ -108,6 +81,8 @@ interface IERC20 {
 
 // File: @openzeppelin/contracts/math/SafeMath.sol
 
+// SPDX-License-Identifier: MIT
+
 pragma solidity ^0.6.0;
 
 /**
@@ -131,6 +106,7 @@ library SafeMath {
      * Counterpart to Solidity's `+` operator.
      *
      * Requirements:
+     *
      * - Addition cannot overflow.
      */
     function add(uint256 a, uint256 b) internal pure returns (uint256) {
@@ -147,6 +123,7 @@ library SafeMath {
      * Counterpart to Solidity's `-` operator.
      *
      * Requirements:
+     *
      * - Subtraction cannot overflow.
      */
     function sub(uint256 a, uint256 b) internal pure returns (uint256) {
@@ -160,6 +137,7 @@ library SafeMath {
      * Counterpart to Solidity's `-` operator.
      *
      * Requirements:
+     *
      * - Subtraction cannot overflow.
      */
     function sub(uint256 a, uint256 b, string memory errorMessage) internal pure returns (uint256) {
@@ -176,6 +154,7 @@ library SafeMath {
      * Counterpart to Solidity's `*` operator.
      *
      * Requirements:
+     *
      * - Multiplication cannot overflow.
      */
     function mul(uint256 a, uint256 b) internal pure returns (uint256) {
@@ -201,6 +180,7 @@ library SafeMath {
      * uses an invalid opcode to revert (consuming all remaining gas).
      *
      * Requirements:
+     *
      * - The divisor cannot be zero.
      */
     function div(uint256 a, uint256 b) internal pure returns (uint256) {
@@ -216,10 +196,10 @@ library SafeMath {
      * uses an invalid opcode to revert (consuming all remaining gas).
      *
      * Requirements:
+     *
      * - The divisor cannot be zero.
      */
     function div(uint256 a, uint256 b, string memory errorMessage) internal pure returns (uint256) {
-        // Solidity only automatically asserts when dividing by 0
         require(b > 0, errorMessage);
         uint256 c = a / b;
         // assert(a == b * c + a % b); // There is no case in which this doesn't hold
@@ -236,6 +216,7 @@ library SafeMath {
      * invalid opcode to revert (consuming all remaining gas).
      *
      * Requirements:
+     *
      * - The divisor cannot be zero.
      */
     function mod(uint256 a, uint256 b) internal pure returns (uint256) {
@@ -251,6 +232,7 @@ library SafeMath {
      * invalid opcode to revert (consuming all remaining gas).
      *
      * Requirements:
+     *
      * - The divisor cannot be zero.
      */
     function mod(uint256 a, uint256 b, string memory errorMessage) internal pure returns (uint256) {
@@ -260,6 +242,8 @@ library SafeMath {
 }
 
 // File: @openzeppelin/contracts/utils/Address.sol
+
+// SPDX-License-Identifier: MIT
 
 pragma solidity ^0.6.2;
 
@@ -318,316 +302,171 @@ library Address {
         (bool success, ) = recipient.call{ value: amount }("");
         require(success, "Address: unable to send value, recipient may have reverted");
     }
+
+    /**
+     * @dev Performs a Solidity function call using a low level `call`. A
+     * plain`call` is an unsafe replacement for a function call: use this
+     * function instead.
+     *
+     * If `target` reverts with a revert reason, it is bubbled up by this
+     * function (like regular Solidity function calls).
+     *
+     * Requirements:
+     *
+     * - `target` must be a contract.
+     * - calling `target` with `data` must not revert.
+     *
+     * _Available since v3.1._
+     */
+    function functionCall(address target, bytes memory data) internal returns (bytes memory) {
+      return functionCall(target, data, "Address: low-level call failed");
+    }
+
+    /**
+     * @dev Same as {xref-Address-functionCall-address-bytes-}[`functionCall`], but with
+     * `errorMessage` as a fallback revert reason when `target` reverts.
+     *
+     * _Available since v3.1._
+     */
+    function functionCall(address target, bytes memory data, string memory errorMessage) internal returns (bytes memory) {
+        return _functionCallWithValue(target, data, 0, errorMessage);
+    }
+
+    /**
+     * @dev Performs a Solidity function call using a low level `call`,
+     * transferring `value` wei. A plain`call` is an unsafe replacement for a
+     * function call: use this function instead.
+     *
+     * If `target` reverts with a revert reason, it is bubbled up by this
+     * function (like regular Solidity function calls).
+     *
+     * Requirements:
+     *
+     * - `target` must be a contract.
+     * - the calling contract must have an ETH balance of at least `value`.
+     * - calling `target` with `data` must not revert.
+     *
+     * _Available since v3.1._
+     */
+    function functionCallWithValue(address target, bytes memory data, uint256 value) internal returns (bytes memory) {
+        return functionCallWithValue(target, data, value, "Address: low-level call with value failed");
+    }
+
+    /**
+     * @dev Same as {xref-Address-functionCallWithValue-address-bytes-uint256-}[`functionCallWithValue`], but
+     * with `errorMessage` as a fallback revert reason when `target` reverts.
+     *
+     * _Available since v3.1._
+     */
+    function functionCallWithValue(address target, bytes memory data, uint256 value, string memory errorMessage) internal returns (bytes memory) {
+        require(address(this).balance >= value, "Address: insufficient balance for call");
+        return _functionCallWithValue(target, data, value, errorMessage);
+    }
+
+    function _functionCallWithValue(address target, bytes memory data, uint256 weiValue, string memory errorMessage) private returns (bytes memory) {
+        require(isContract(target), "Address: call to non-contract");
+
+        // solhint-disable-next-line avoid-low-level-calls
+        (bool success, bytes memory returndata) = target.call{ value: weiValue }(data);
+        if (success) {
+            return returndata;
+        } else {
+            // Look for revert reason and bubble it up if present
+            if (returndata.length > 0) {
+                // The easiest way to bubble the revert reason is using memory via assembly
+
+                // solhint-disable-next-line no-inline-assembly
+                assembly {
+                    let returndata_size := mload(returndata)
+                    revert(add(32, returndata), returndata_size)
+                }
+            } else {
+                revert(errorMessage);
+            }
+        }
+    }
 }
 
-// File: @openzeppelin/contracts/token/ERC20/ERC20.sol
+// File: @openzeppelin/contracts/token/ERC20/SafeERC20.sol
+
+// SPDX-License-Identifier: MIT
 
 pragma solidity ^0.6.0;
 
 
 
 
-
 /**
- * @dev Implementation of the {IERC20} interface.
- *
- * This implementation is agnostic to the way tokens are created. This means
- * that a supply mechanism has to be added in a derived contract using {_mint}.
- * For a generic mechanism see {ERC20MinterPauser}.
- *
- * TIP: For a detailed writeup see our guide
- * https://forum.zeppelin.solutions/t/how-to-implement-erc20-supply-mechanisms/226[How
- * to implement supply mechanisms].
- *
- * We have followed general OpenZeppelin guidelines: functions revert instead
- * of returning `false` on failure. This behavior is nonetheless conventional
- * and does not conflict with the expectations of ERC20 applications.
- *
- * Additionally, an {Approval} event is emitted on calls to {transferFrom}.
- * This allows applications to reconstruct the allowance for all accounts just
- * by listening to said events. Other implementations of the EIP may not emit
- * these events, as it isn't required by the specification.
- *
- * Finally, the non-standard {decreaseAllowance} and {increaseAllowance}
- * functions have been added to mitigate the well-known issues around setting
- * allowances. See {IERC20-approve}.
+ * @title SafeERC20
+ * @dev Wrappers around ERC20 operations that throw on failure (when the token
+ * contract returns false). Tokens that return no value (and instead revert or
+ * throw on failure) are also supported, non-reverting calls are assumed to be
+ * successful.
+ * To use this library you can add a `using SafeERC20 for IERC20;` statement to your contract,
+ * which allows you to call the safe operations as `token.safeTransfer(...)`, etc.
  */
-contract ERC20 is Context, IERC20 {
+library SafeERC20 {
     using SafeMath for uint256;
     using Address for address;
 
-    mapping (address => uint256) private _balances;
+    function safeTransfer(IERC20 token, address to, uint256 value) internal {
+        _callOptionalReturn(token, abi.encodeWithSelector(token.transfer.selector, to, value));
+    }
 
-    mapping (address => mapping (address => uint256)) private _allowances;
-
-    uint256 private _totalSupply;
-
-    string private _name;
-    string private _symbol;
-    uint8 private _decimals;
-
-    /**
-     * @dev Sets the values for {name} and {symbol}, initializes {decimals} with
-     * a default value of 18.
-     *
-     * To select a different value for {decimals}, use {_setupDecimals}.
-     *
-     * All three of these values are immutable: they can only be set once during
-     * construction.
-     */
-    constructor (string memory name, string memory symbol) public {
-        _name = name;
-        _symbol = symbol;
-        _decimals = 18;
+    function safeTransferFrom(IERC20 token, address from, address to, uint256 value) internal {
+        _callOptionalReturn(token, abi.encodeWithSelector(token.transferFrom.selector, from, to, value));
     }
 
     /**
-     * @dev Returns the name of the token.
+     * @dev Deprecated. This function has issues similar to the ones found in
+     * {IERC20-approve}, and its usage is discouraged.
+     *
+     * Whenever possible, use {safeIncreaseAllowance} and
+     * {safeDecreaseAllowance} instead.
      */
-    function name() public view returns (string memory) {
-        return _name;
+    function safeApprove(IERC20 token, address spender, uint256 value) internal {
+        // safeApprove should only be called when setting an initial allowance,
+        // or when resetting it to zero. To increase and decrease it, use
+        // 'safeIncreaseAllowance' and 'safeDecreaseAllowance'
+        // solhint-disable-next-line max-line-length
+        require((value == 0) || (token.allowance(address(this), spender) == 0),
+            "SafeERC20: approve from non-zero to non-zero allowance"
+        );
+        _callOptionalReturn(token, abi.encodeWithSelector(token.approve.selector, spender, value));
+    }
+
+    function safeIncreaseAllowance(IERC20 token, address spender, uint256 value) internal {
+        uint256 newAllowance = token.allowance(address(this), spender).add(value);
+        _callOptionalReturn(token, abi.encodeWithSelector(token.approve.selector, spender, newAllowance));
+    }
+
+    function safeDecreaseAllowance(IERC20 token, address spender, uint256 value) internal {
+        uint256 newAllowance = token.allowance(address(this), spender).sub(value, "SafeERC20: decreased allowance below zero");
+        _callOptionalReturn(token, abi.encodeWithSelector(token.approve.selector, spender, newAllowance));
     }
 
     /**
-     * @dev Returns the symbol of the token, usually a shorter version of the
-     * name.
+     * @dev Imitates a Solidity high-level call (i.e. a regular function call to a contract), relaxing the requirement
+     * on the return value: the return value is optional (but if data is returned, it must not be false).
+     * @param token The token targeted by the call.
+     * @param data The call data (encoded using abi.encode or one of its variants).
      */
-    function symbol() public view returns (string memory) {
-        return _symbol;
+    function _callOptionalReturn(IERC20 token, bytes memory data) private {
+        // We need to perform a low level call here, to bypass Solidity's return data size checking mechanism, since
+        // we're implementing it ourselves. We use {Address.functionCall} to perform this call, which verifies that
+        // the target address contains contract code and also asserts for success in the low-level call.
+
+        bytes memory returndata = address(token).functionCall(data, "SafeERC20: low-level call failed");
+        if (returndata.length > 0) { // Return data is optional
+            // solhint-disable-next-line max-line-length
+            require(abi.decode(returndata, (bool)), "SafeERC20: ERC20 operation did not succeed");
+        }
     }
-
-    /**
-     * @dev Returns the number of decimals used to get its user representation.
-     * For example, if `decimals` equals `2`, a balance of `505` tokens should
-     * be displayed to a user as `5,05` (`505 / 10 ** 2`).
-     *
-     * Tokens usually opt for a value of 18, imitating the relationship between
-     * Ether and Wei. This is the value {ERC20} uses, unless {_setupDecimals} is
-     * called.
-     *
-     * NOTE: This information is only used for _display_ purposes: it in
-     * no way affects any of the arithmetic of the contract, including
-     * {IERC20-balanceOf} and {IERC20-transfer}.
-     */
-    function decimals() public view returns (uint8) {
-        return _decimals;
-    }
-
-    /**
-     * @dev See {IERC20-totalSupply}.
-     */
-    function totalSupply() public view override returns (uint256) {
-        return _totalSupply;
-    }
-
-    /**
-     * @dev See {IERC20-balanceOf}.
-     */
-    function balanceOf(address account) public view override returns (uint256) {
-        return _balances[account];
-    }
-
-    /**
-     * @dev See {IERC20-transfer}.
-     *
-     * Requirements:
-     *
-     * - `recipient` cannot be the zero address.
-     * - the caller must have a balance of at least `amount`.
-     */
-    function transfer(address recipient, uint256 amount) public virtual override returns (bool) {
-        _transfer(_msgSender(), recipient, amount);
-        return true;
-    }
-
-    /**
-     * @dev See {IERC20-allowance}.
-     */
-    function allowance(address owner, address spender) public view virtual override returns (uint256) {
-        return _allowances[owner][spender];
-    }
-
-    /**
-     * @dev See {IERC20-approve}.
-     *
-     * Requirements:
-     *
-     * - `spender` cannot be the zero address.
-     */
-    function approve(address spender, uint256 amount) public virtual override returns (bool) {
-        _approve(_msgSender(), spender, amount);
-        return true;
-    }
-
-    /**
-     * @dev See {IERC20-transferFrom}.
-     *
-     * Emits an {Approval} event indicating the updated allowance. This is not
-     * required by the EIP. See the note at the beginning of {ERC20};
-     *
-     * Requirements:
-     * - `sender` and `recipient` cannot be the zero address.
-     * - `sender` must have a balance of at least `amount`.
-     * - the caller must have allowance for ``sender``'s tokens of at least
-     * `amount`.
-     */
-    function transferFrom(address sender, address recipient, uint256 amount) public virtual override returns (bool) {
-        _transfer(sender, recipient, amount);
-        _approve(sender, _msgSender(), _allowances[sender][_msgSender()].sub(amount, "ERC20: transfer amount exceeds allowance"));
-        return true;
-    }
-
-    /**
-     * @dev Atomically increases the allowance granted to `spender` by the caller.
-     *
-     * This is an alternative to {approve} that can be used as a mitigation for
-     * problems described in {IERC20-approve}.
-     *
-     * Emits an {Approval} event indicating the updated allowance.
-     *
-     * Requirements:
-     *
-     * - `spender` cannot be the zero address.
-     */
-    function increaseAllowance(address spender, uint256 addedValue) public virtual returns (bool) {
-        _approve(_msgSender(), spender, _allowances[_msgSender()][spender].add(addedValue));
-        return true;
-    }
-
-    /**
-     * @dev Atomically decreases the allowance granted to `spender` by the caller.
-     *
-     * This is an alternative to {approve} that can be used as a mitigation for
-     * problems described in {IERC20-approve}.
-     *
-     * Emits an {Approval} event indicating the updated allowance.
-     *
-     * Requirements:
-     *
-     * - `spender` cannot be the zero address.
-     * - `spender` must have allowance for the caller of at least
-     * `subtractedValue`.
-     */
-    function decreaseAllowance(address spender, uint256 subtractedValue) public virtual returns (bool) {
-        _approve(_msgSender(), spender, _allowances[_msgSender()][spender].sub(subtractedValue, "ERC20: decreased allowance below zero"));
-        return true;
-    }
-
-    /**
-     * @dev Moves tokens `amount` from `sender` to `recipient`.
-     *
-     * This is internal function is equivalent to {transfer}, and can be used to
-     * e.g. implement automatic token fees, slashing mechanisms, etc.
-     *
-     * Emits a {Transfer} event.
-     *
-     * Requirements:
-     *
-     * - `sender` cannot be the zero address.
-     * - `recipient` cannot be the zero address.
-     * - `sender` must have a balance of at least `amount`.
-     */
-    function _transfer(address sender, address recipient, uint256 amount) internal virtual {
-        require(sender != address(0), "ERC20: transfer from the zero address");
-        require(recipient != address(0), "ERC20: transfer to the zero address");
-
-        _beforeTokenTransfer(sender, recipient, amount);
-
-        _balances[sender] = _balances[sender].sub(amount, "ERC20: transfer amount exceeds balance");
-        _balances[recipient] = _balances[recipient].add(amount);
-        emit Transfer(sender, recipient, amount);
-    }
-
-    /** @dev Creates `amount` tokens and assigns them to `account`, increasing
-     * the total supply.
-     *
-     * Emits a {Transfer} event with `from` set to the zero address.
-     *
-     * Requirements
-     *
-     * - `to` cannot be the zero address.
-     */
-    function _mint(address account, uint256 amount) internal virtual {
-        require(account != address(0), "ERC20: mint to the zero address");
-
-        _beforeTokenTransfer(address(0), account, amount);
-
-        _totalSupply = _totalSupply.add(amount);
-        _balances[account] = _balances[account].add(amount);
-        emit Transfer(address(0), account, amount);
-    }
-
-    /**
-     * @dev Destroys `amount` tokens from `account`, reducing the
-     * total supply.
-     *
-     * Emits a {Transfer} event with `to` set to the zero address.
-     *
-     * Requirements
-     *
-     * - `account` cannot be the zero address.
-     * - `account` must have at least `amount` tokens.
-     */
-    function _burn(address account, uint256 amount) internal virtual {
-        require(account != address(0), "ERC20: burn from the zero address");
-
-        _beforeTokenTransfer(account, address(0), amount);
-
-        _balances[account] = _balances[account].sub(amount, "ERC20: burn amount exceeds balance");
-        _totalSupply = _totalSupply.sub(amount);
-        emit Transfer(account, address(0), amount);
-    }
-
-    /**
-     * @dev Sets `amount` as the allowance of `spender` over the `owner`s tokens.
-     *
-     * This is internal function is equivalent to `approve`, and can be used to
-     * e.g. set automatic allowances for certain subsystems, etc.
-     *
-     * Emits an {Approval} event.
-     *
-     * Requirements:
-     *
-     * - `owner` cannot be the zero address.
-     * - `spender` cannot be the zero address.
-     */
-    function _approve(address owner, address spender, uint256 amount) internal virtual {
-        require(owner != address(0), "ERC20: approve from the zero address");
-        require(spender != address(0), "ERC20: approve to the zero address");
-
-        _allowances[owner][spender] = amount;
-        emit Approval(owner, spender, amount);
-    }
-
-    /**
-     * @dev Sets {decimals} to a value other than the default one of 18.
-     *
-     * WARNING: This function should only be called from the constructor. Most
-     * applications that interact with token contracts will not expect
-     * {decimals} to ever change, and may work incorrectly if it does.
-     */
-    function _setupDecimals(uint8 decimals_) internal {
-        _decimals = decimals_;
-    }
-
-    /**
-     * @dev Hook that is called before any transfer of tokens. This includes
-     * minting and burning.
-     *
-     * Calling conditions:
-     *
-     * - when `from` and `to` are both non-zero, `amount` of ``from``'s tokens
-     * will be to transferred to `to`.
-     * - when `from` is zero, `amount` tokens will be minted for `to`.
-     * - when `to` is zero, `amount` of ``from``'s tokens will be burned.
-     * - `from` and `to` are never both zero.
-     *
-     * To learn more about hooks, head to xref:ROOT:extending-contracts.adoc#using-hooks[Using Hooks].
-     */
-    function _beforeTokenTransfer(address from, address to, uint256 amount) internal virtual { }
 }
 
 // File: @openzeppelin/contracts/utils/EnumerableSet.sol
+
+// SPDX-License-Identifier: MIT
 
 pragma solidity ^0.6.0;
 
@@ -871,7 +710,36 @@ library EnumerableSet {
     }
 }
 
+// File: @openzeppelin/contracts/GSN/Context.sol
+
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.6.0;
+
+/*
+ * @dev Provides information about the current execution context, including the
+ * sender of the transaction and its data. While these are generally available
+ * via msg.sender and msg.data, they should not be accessed in such a direct
+ * manner, since when dealing with GSN meta-transactions the account sending and
+ * paying for execution may not be the actual sender (as far as an application
+ * is concerned).
+ *
+ * This contract is only required for intermediate, library-like contracts.
+ */
+abstract contract Context {
+    function _msgSender() internal view virtual returns (address payable) {
+        return msg.sender;
+    }
+
+    function _msgData() internal view virtual returns (bytes memory) {
+        this; // silence state mutability warning without generating bytecode - see https://github.com/ethereum/solidity/issues/2691
+        return msg.data;
+    }
+}
+
 // File: @openzeppelin/contracts/access/AccessControl.sol
+
+// SPDX-License-Identifier: MIT
 
 pragma solidity ^0.6.0;
 
@@ -895,7 +763,7 @@ pragma solidity ^0.6.0;
  *
  * ```
  * function foo() public {
- *     require(hasRole(MY_ROLE, _msgSender()));
+ *     require(hasRole(MY_ROLE, msg.sender));
  *     ...
  * }
  * ```
@@ -908,6 +776,10 @@ pragma solidity ^0.6.0;
  * that only accounts with this role will be able to grant or revoke other
  * roles. More complex role relationships can be created by using
  * {_setRoleAdmin}.
+ *
+ * WARNING: The `DEFAULT_ADMIN_ROLE` is also its own admin: it has permission to
+ * grant and revoke this role. Extra precautions should be taken to secure
+ * accounts that have been granted it.
  */
 abstract contract AccessControl is Context {
     using EnumerableSet for EnumerableSet.AddressSet;
@@ -921,6 +793,16 @@ abstract contract AccessControl is Context {
     mapping (bytes32 => RoleData) private _roles;
 
     bytes32 public constant DEFAULT_ADMIN_ROLE = 0x00;
+
+    /**
+     * @dev Emitted when `newAdminRole` is set as ``role``'s admin role, replacing `previousAdminRole`
+     *
+     * `DEFAULT_ADMIN_ROLE` is the starting admin for all roles, despite
+     * {RoleAdminChanged} not being emitted signaling this.
+     *
+     * _Available since v3.1._
+     */
+    event RoleAdminChanged(bytes32 indexed role, bytes32 indexed previousAdminRole, bytes32 indexed newAdminRole);
 
     /**
      * @dev Emitted when `account` is granted `role`.
@@ -1053,8 +935,11 @@ abstract contract AccessControl is Context {
 
     /**
      * @dev Sets `adminRole` as ``role``'s admin role.
+     *
+     * Emits a {RoleAdminChanged} event.
      */
     function _setRoleAdmin(bytes32 role, bytes32 adminRole) internal virtual {
+        emit RoleAdminChanged(role, _roles[role].adminRole, adminRole);
         _roles[role].adminRole = adminRole;
     }
 
@@ -1071,214 +956,449 @@ abstract contract AccessControl is Context {
     }
 }
 
-// File: contracts/child/IChildToken.sol
+// File: contracts/lib/RLPReader.sol
 
+/*
+ * @author Hamdi Allam hamdi.allam97@gmail.com
+ * Please reach out with any questions or concerns
+ * https://github.com/hamdiallam/Solidity-RLP/blob/e681e25a376dbd5426b509380bc03446f05d0f97/contracts/RLPReader.sol
+ */
 pragma solidity 0.6.6;
 
+library RLPReader {
+    uint8 constant STRING_SHORT_START = 0x80;
+    uint8 constant STRING_LONG_START = 0xb8;
+    uint8 constant LIST_SHORT_START = 0xc0;
+    uint8 constant LIST_LONG_START = 0xf8;
+    uint8 constant WORD_SIZE = 32;
 
-interface IChildToken {
-  function deposit(address user, uint256 amount) external;
-  function withdraw(uint256 amount) external;
-}
-
-// File: contracts/common/EIP712Base.sol
-
-pragma solidity >=0.4.21 <0.7.0;
-
-contract EIP712Base {
-  struct EIP712Domain {
-    string name;
-    string version;
-    uint256 chainId;
-    address verifyingContract;
-  }
-
-  bytes32 internal constant EIP712_DOMAIN_TYPEHASH = keccak256(bytes("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"));
-  bytes32 internal domainSeperator;
-
-  constructor(string memory name, string memory version, uint256 _chainId) public {
-    domainSeperator = keccak256(abi.encode(
-      EIP712_DOMAIN_TYPEHASH,
-      keccak256(bytes(name)),
-      keccak256(bytes(version)),
-      getChainID(_chainId),
-      address(this)
-    ));
-  }
-
-  function getChainID(uint256 _chainId) internal pure returns (uint256 id) {
-    assembly {
-      id := _chainId
+    struct RLPItem {
+        uint256 len;
+        uint256 memPtr;
     }
-  }
 
-  function getDomainSeperator() private view returns(bytes32) {
-    return domainSeperator;
-  }
-
-  /**
-  * Accept message hash and returns hash message in EIP712 compatible form
-  * So that it can be used to recover signer from signature signed using EIP712 formatted data
-  * https://eips.ethereum.org/EIPS/eip-712
-  * "\\x19" makes the encoding deterministic
-  * "\\x01" is the version byte to make it compatible to EIP-191
-  */
-  function toTypedMessageHash(bytes32 messageHash) internal view returns(bytes32) {
-    return keccak256(abi.encodePacked("\x19\x01", getDomainSeperator(), messageHash));
-  }
-}
-
-// File: contracts/common/NetworkAgnostic.sol
-
-pragma solidity >=0.4.21 <0.7.0;
-
-
-
-contract NetworkAgnostic is EIP712Base {
-  using SafeMath for uint256;
-  bytes32 private constant META_TRANSACTION_TYPEHASH = keccak256(bytes("MetaTransaction(uint256 nonce,address from,bytes functionSignature)"));
-  event MetaTransactionExecuted(address userAddress, address payable relayerAddress, bytes functionSignature);
-  mapping(address => uint256) nonces;
-
-  /*
-   * Meta transaction structure.
-   * No point of including value field here as if user is doing value transfer then he has the funds to pay for gas
-   * He should call the desired function directly in that case.
-   */
-  struct MetaTransaction {
-    uint256 nonce;
-    address from;
-    bytes functionSignature;
-  }
-
-  constructor(string memory name, string memory version, uint256 chainId) public EIP712Base(name, version, chainId) {}
-
-  function executeMetaTransaction(address userAddress,
-    bytes memory functionSignature, bytes32 sigR, bytes32 sigS, uint8 sigV) public payable returns(bytes memory) {
-    MetaTransaction memory metaTx = MetaTransaction({
-      nonce: nonces[userAddress],
-      from: userAddress,
-      functionSignature: functionSignature
-    });
-    require(verify(userAddress, metaTx, sigR, sigS, sigV), "Signer and signature do not match");
-    // Append userAddress and relayer address at the end to extract it from calling context
-    (bool success, bytes memory returnData) = address(this).call(abi.encodePacked(functionSignature, userAddress));
-    require(success, "Function call not successfull");
-    nonces[userAddress] = nonces[userAddress].add(1);
-    emit MetaTransactionExecuted(userAddress, msg.sender, functionSignature);
-    return returnData;
-  }
-
-  function hashMetaTransaction(MetaTransaction memory metaTx) internal pure returns (bytes32) {
-    return keccak256(abi.encode(
-      META_TRANSACTION_TYPEHASH,
-      metaTx.nonce,
-      metaTx.from,
-      keccak256(metaTx.functionSignature)
-    ));
-  }
-
-  function getNonce(address user) public view returns(uint256 nonce) {
-    nonce = nonces[user];
-  }
-
-  function verify(address signer, MetaTransaction memory metaTx, bytes32 sigR, bytes32 sigS, uint8 sigV) internal view returns (bool) {
-    return signer == ecrecover(toTypedMessageHash(hashMetaTransaction(metaTx)), sigV, sigR, sigS);
-  }
-  function _msgSender() internal virtual view returns(address payable sender) {
-    if(msg.sender == address(this)) {
-      bytes memory array = msg.data;
-      uint256 index = msg.data.length;
-      assembly {
-        // Load the 32 bytes word from memory with the address on the lower 20 bytes, and mask those.
-        sender := and(mload(add(array, index)), 0xffffffffffffffffffffffffffffffffffffffff)
-      }
-    } else {
-      sender = msg.sender;
+    struct Iterator {
+        RLPItem item; // Item that's being iterated over.
+        uint256 nextPtr; // Position of the next item in the list.
     }
-    return sender;
-  }
 
-  // To recieve ether in contract
-  receive() external payable {}
+    /*
+     * @dev Returns the next element in the iteration. Reverts if it has not next element.
+     * @param self The iterator.
+     * @return The next element in the iteration.
+     */
+    function next(Iterator memory self) internal pure returns (RLPItem memory) {
+        require(hasNext(self));
+
+        uint256 ptr = self.nextPtr;
+        uint256 itemLength = _itemLength(ptr);
+        self.nextPtr = ptr + itemLength;
+
+        return RLPItem(itemLength, ptr);
+    }
+
+    /*
+     * @dev Returns true if the iteration has more elements.
+     * @param self The iterator.
+     * @return true if the iteration has more elements.
+     */
+    function hasNext(Iterator memory self) internal pure returns (bool) {
+        RLPItem memory item = self.item;
+        return self.nextPtr < item.memPtr + item.len;
+    }
+
+    /*
+     * @param item RLP encoded bytes
+     */
+    function toRlpItem(bytes memory item)
+        internal
+        pure
+        returns (RLPItem memory)
+    {
+        uint256 memPtr;
+        assembly {
+            memPtr := add(item, 0x20)
+        }
+
+        return RLPItem(item.length, memPtr);
+    }
+
+    /*
+     * @dev Create an iterator. Reverts if item is not a list.
+     * @param self The RLP item.
+     * @return An 'Iterator' over the item.
+     */
+    function iterator(RLPItem memory self)
+        internal
+        pure
+        returns (Iterator memory)
+    {
+        require(isList(self));
+
+        uint256 ptr = self.memPtr + _payloadOffset(self.memPtr);
+        return Iterator(self, ptr);
+    }
+
+    /*
+     * @param item RLP encoded bytes
+     */
+    function rlpLen(RLPItem memory item) internal pure returns (uint256) {
+        return item.len;
+    }
+
+    /*
+     * @param item RLP encoded bytes
+     */
+    function payloadLen(RLPItem memory item) internal pure returns (uint256) {
+        return item.len - _payloadOffset(item.memPtr);
+    }
+
+    /*
+     * @param item RLP encoded list in bytes
+     */
+    function toList(RLPItem memory item)
+        internal
+        pure
+        returns (RLPItem[] memory)
+    {
+        require(isList(item));
+
+        uint256 items = numItems(item);
+        RLPItem[] memory result = new RLPItem[](items);
+
+        uint256 memPtr = item.memPtr + _payloadOffset(item.memPtr);
+        uint256 dataLen;
+        for (uint256 i = 0; i < items; i++) {
+            dataLen = _itemLength(memPtr);
+            result[i] = RLPItem(dataLen, memPtr);
+            memPtr = memPtr + dataLen;
+        }
+
+        return result;
+    }
+
+    // @return indicator whether encoded payload is a list. negate this function call for isData.
+    function isList(RLPItem memory item) internal pure returns (bool) {
+        if (item.len == 0) return false;
+
+        uint8 byte0;
+        uint256 memPtr = item.memPtr;
+        assembly {
+            byte0 := byte(0, mload(memPtr))
+        }
+
+        if (byte0 < LIST_SHORT_START) return false;
+        return true;
+    }
+
+    /** RLPItem conversions into data types **/
+
+    // @returns raw rlp encoding in bytes
+    function toRlpBytes(RLPItem memory item)
+        internal
+        pure
+        returns (bytes memory)
+    {
+        bytes memory result = new bytes(item.len);
+        if (result.length == 0) return result;
+
+        uint256 ptr;
+        assembly {
+            ptr := add(0x20, result)
+        }
+
+        copy(item.memPtr, ptr, item.len);
+        return result;
+    }
+
+    // any non-zero byte is considered true
+    function toBoolean(RLPItem memory item) internal pure returns (bool) {
+        require(item.len == 1);
+        uint256 result;
+        uint256 memPtr = item.memPtr;
+        assembly {
+            result := byte(0, mload(memPtr))
+        }
+
+        return result == 0 ? false : true;
+    }
+
+    function toAddress(RLPItem memory item) internal pure returns (address) {
+        // 1 byte for the length prefix
+        require(item.len == 21);
+
+        return address(toUint(item));
+    }
+
+    function toUint(RLPItem memory item) internal pure returns (uint256) {
+        require(item.len > 0 && item.len <= 33);
+
+        uint256 offset = _payloadOffset(item.memPtr);
+        uint256 len = item.len - offset;
+
+        uint256 result;
+        uint256 memPtr = item.memPtr + offset;
+        assembly {
+            result := mload(memPtr)
+
+            // shfit to the correct location if neccesary
+            if lt(len, 32) {
+                result := div(result, exp(256, sub(32, len)))
+            }
+        }
+
+        return result;
+    }
+
+    // enforces 32 byte length
+    function toUintStrict(RLPItem memory item) internal pure returns (uint256) {
+        // one byte prefix
+        require(item.len == 33);
+
+        uint256 result;
+        uint256 memPtr = item.memPtr + 1;
+        assembly {
+            result := mload(memPtr)
+        }
+
+        return result;
+    }
+
+    function toBytes(RLPItem memory item) internal pure returns (bytes memory) {
+        require(item.len > 0);
+
+        uint256 offset = _payloadOffset(item.memPtr);
+        uint256 len = item.len - offset; // data length
+        bytes memory result = new bytes(len);
+
+        uint256 destPtr;
+        assembly {
+            destPtr := add(0x20, result)
+        }
+
+        copy(item.memPtr + offset, destPtr, len);
+        return result;
+    }
+
+    /*
+     * Private Helpers
+     */
+
+    // @return number of payload items inside an encoded list.
+    function numItems(RLPItem memory item) private pure returns (uint256) {
+        if (item.len == 0) return 0;
+
+        uint256 count = 0;
+        uint256 currPtr = item.memPtr + _payloadOffset(item.memPtr);
+        uint256 endPtr = item.memPtr + item.len;
+        while (currPtr < endPtr) {
+            currPtr = currPtr + _itemLength(currPtr); // skip over an item
+            count++;
+        }
+
+        return count;
+    }
+
+    // @return entire rlp item byte length
+    function _itemLength(uint256 memPtr) private pure returns (uint256) {
+        uint256 itemLen;
+        uint256 byte0;
+        assembly {
+            byte0 := byte(0, mload(memPtr))
+        }
+
+        if (byte0 < STRING_SHORT_START) itemLen = 1;
+        else if (byte0 < STRING_LONG_START)
+            itemLen = byte0 - STRING_SHORT_START + 1;
+        else if (byte0 < LIST_SHORT_START) {
+            assembly {
+                let byteLen := sub(byte0, 0xb7) // # of bytes the actual length is
+                memPtr := add(memPtr, 1) // skip over the first byte
+
+                /* 32 byte word size */
+                let dataLen := div(mload(memPtr), exp(256, sub(32, byteLen))) // right shifting to get the len
+                itemLen := add(dataLen, add(byteLen, 1))
+            }
+        } else if (byte0 < LIST_LONG_START) {
+            itemLen = byte0 - LIST_SHORT_START + 1;
+        } else {
+            assembly {
+                let byteLen := sub(byte0, 0xf7)
+                memPtr := add(memPtr, 1)
+
+                let dataLen := div(mload(memPtr), exp(256, sub(32, byteLen))) // right shifting to the correct length
+                itemLen := add(dataLen, add(byteLen, 1))
+            }
+        }
+
+        return itemLen;
+    }
+
+    // @return number of bytes until the data
+    function _payloadOffset(uint256 memPtr) private pure returns (uint256) {
+        uint256 byte0;
+        assembly {
+            byte0 := byte(0, mload(memPtr))
+        }
+
+        if (byte0 < STRING_SHORT_START) return 0;
+        else if (
+            byte0 < STRING_LONG_START ||
+            (byte0 >= LIST_SHORT_START && byte0 < LIST_LONG_START)
+        ) return 1;
+        else if (byte0 < LIST_SHORT_START)
+            // being explicit
+            return byte0 - (STRING_LONG_START - 1) + 1;
+        else return byte0 - (LIST_LONG_START - 1) + 1;
+    }
+
+    /*
+     * @param src Pointer to source
+     * @param dest Pointer to destination
+     * @param len Amount of memory to copy from the source
+     */
+    function copy(
+        uint256 src,
+        uint256 dest,
+        uint256 len
+    ) private pure {
+        if (len == 0) return;
+
+        // copy as many word sizes as possible
+        for (; len >= WORD_SIZE; len -= WORD_SIZE) {
+            assembly {
+                mstore(dest, mload(src))
+            }
+
+            src += WORD_SIZE;
+            dest += WORD_SIZE;
+        }
+
+        // left over bytes. Mask is used to remove unwanted bytes from the word
+        uint256 mask = 256**(WORD_SIZE - len) - 1;
+        assembly {
+            let srcpart := and(mload(src), not(mask)) // zero out src
+            let destpart := and(mload(dest), mask) // retrieve the bytes
+            mstore(dest, or(destpart, srcpart))
+        }
+    }
 }
 
-// File: contracts/child/ChildToken.sol
+// File: contracts/root/TokenPredicates/ITokenPredicate.sol
 
-pragma solidity "0.6.6";
-
-
+pragma solidity ^0.6.6;
 
 
+interface ITokenPredicate {
+    function lockTokens(
+        address depositor,
+        address depositReceiver,
+        address rootToken,
+        bytes calldata depositData
+    ) external;
 
-contract ChildToken is ERC20, IChildToken, AccessControl, NetworkAgnostic {
-  bytes32 public constant DEPOSITOR_ROLE = keccak256("DEPOSITOR_ROLE");
+    function exitTokens(
+        address withdrawer,
+        address rootToken,
+        bytes calldata logRLPList
+    ) external;
+}
 
-  address private _rootToken;
+// File: contracts/common/Initializable.sol
 
-  event Burned(
-    address indexed rootToken,
-    address indexed user,
-    uint256 amount
-  );
+pragma solidity ^0.6.6;
 
-  constructor(
-    string memory name,
-    string memory symbol,
-    uint8 decimals
-  ) 
-    public
-    ERC20(name, symbol)
-    NetworkAgnostic(name, "1", 3)
-  {
-    _setupDecimals(decimals);
-    _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
-    _setupRole(DEPOSITOR_ROLE, _msgSender());
-  }
+contract Initializable {
+    bool inited = false;
 
-  modifier only(bytes32 role) {
-    require(
-      hasRole(role, _msgSender()),
-      "Insufficient permissions"
-    );
-    _;
-  }
+    modifier initializer() {
+        require(!inited, "already inited");
+        inited = true;
+        _;
+    }
+}
 
-  function setRootToken(address newRootToken) external only(DEFAULT_ADMIN_ROLE) {
-    _rootToken = newRootToken;
-  }
+// File: contracts/root/TokenPredicates/ERC20Predicate.sol
 
-  function rootToken() public view returns (address) {
-    return _rootToken;
-  }
-  
-  function _msgSender() internal view override(Context, NetworkAgnostic) returns (address payable) {
-    return NetworkAgnostic._msgSender();
-  }
+pragma solidity ^0.6.6;
 
-  function deposit(address user, uint256 amount) override external only(DEPOSITOR_ROLE) {
-    require(
-      amount > 0,
-      "amount should be possitive"
-    );
-    require(
-      user != address(0x0),
-      "Cannot deposit for zero address"
-    );
-    _mint(user, amount);
-  }
 
-  function withdraw(uint256 amount) override external {
-    require(
-      amount > 0,
-      "withdraw amount should be positie"
-    );
-    require(
-      amount <= balanceOf(_msgSender()),
-      "withdraw amount cannot be more than balance"
+
+
+
+
+
+contract ERC20Predicate is ITokenPredicate, AccessControl, Initializable {
+    using RLPReader for bytes;
+    using RLPReader for RLPReader.RLPItem;
+    using SafeERC20 for IERC20;
+
+    bytes32 public constant MANAGER_ROLE = keccak256("MANAGER_ROLE");
+    bytes32 public constant TOKEN_TYPE = keccak256("ERC20");
+    bytes32 public constant TRANSFER_EVENT_SIG = 0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef;
+
+    event LockedERC20(
+        address indexed depositor,
+        address indexed depositReceiver,
+        address indexed rootToken,
+        uint256 amount
     );
 
-    _burn(_msgSender(), amount);
-    emit Burned(_rootToken, _msgSender(), amount);
-  }
+    modifier only(bytes32 role) {
+        require(hasRole(role, _msgSender()), "ERC20Predicate: INSUFFICIENT_PERMISSIONS");
+        _;
+    }
+
+    constructor() public {}
+
+    function initialize(address _owner) external initializer {
+        _setupRole(DEFAULT_ADMIN_ROLE, _owner);
+        _setupRole(MANAGER_ROLE, _owner);
+    }
+
+    function lockTokens(
+        address depositor,
+        address depositReceiver,
+        address rootToken,
+        bytes calldata depositData
+    )
+        external
+        override
+        only(MANAGER_ROLE)
+    {
+        uint256 amount = abi.decode(depositData, (uint256));
+        IERC20(rootToken).safeTransferFrom(depositor, address(this), amount);
+        emit LockedERC20(depositor, depositReceiver, rootToken, amount);
+    }
+
+    function exitTokens(
+        address withdrawer,
+        address rootToken,
+        bytes memory log
+    )
+        public
+        override
+        only(MANAGER_ROLE)
+    {
+        RLPReader.RLPItem[] memory logRLPList = log.toRlpItem().toList();
+        RLPReader.RLPItem[] memory logTopicRLPList = logRLPList[1].toList(); // topics
+
+        require(
+            bytes32(logTopicRLPList[0].toUint()) == TRANSFER_EVENT_SIG, // topic0 is event sig
+            "ERC20Predicate: INVALID_SIGNATURE"
+        );
+        require(
+            withdrawer == address(logTopicRLPList[1].toUint()), // topic1 is from address
+            "ERC20Predicate: INVALID_SENDER"
+        );
+        require(
+            address(logTopicRLPList[2].toUint()) == address(0), // topic2 is to address
+            "ERC20Predicate: INVALID_RECEIVER"
+        );
+
+        IERC20(rootToken).safeTransfer(
+            withdrawer,
+            logRLPList[2].toUint() // log data field
+        );
+    }
 }

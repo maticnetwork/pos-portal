@@ -1437,12 +1437,3 @@ contract ChildERC20 is ERC20, IChildToken, AccessControl, NetworkAgnostic {
         _burn(_msgSender(), amount);
     }
 }
-
-// File: contracts/child/ChildToken/MaticWETH.sol
-
-pragma solidity "0.6.6";
-
-
-contract MaticWETH is ChildERC20 {
-    constructor() public ChildERC20("Wrapped Ether", "WETH", 18) {}
-}
