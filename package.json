@@ -21,7 +21,7 @@
     "lint:sol:fix": "solium -d contracts/ --fix",
     "lint:sol": "solium -d contracts/",
     "debug": "truffle debug",
-    "minify:artifacts": "node minify.js",
+    "artifacts": "node generate-artifacts.js",
     "test:ci": "scripts/run-test.sh"
   },
   "repository": {
@@ -67,6 +67,7 @@
     "ethereumjs-util": "^7.0.2",
     "ethereumjs-wallet": "0.6.2",
     "ethers": "^4.0.46",
+    "fs": "0.0.1-security",
     "glob": "^7.1.6",
     "nunjucks": "^3.2.1",
     "solium": "^1.2.5",
