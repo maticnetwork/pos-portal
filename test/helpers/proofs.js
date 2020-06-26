@@ -178,6 +178,38 @@ export function getReceiptBytes(receipt) {
   ])
 }
 
+export function getFakeReceiptBytes(receipt, dummyData) {
+  return rlp.encode([
+    toBuffer(
+      receipt.status !== undefined && receipt.status != null
+        ? receipt.status
+          ? 1
+          : 0
+        : receipt.root
+    ),
+    toBuffer(receipt.cumulativeGasUsed),
+    toBuffer(receipt.logsBloom),
+
+    // encoded log array
+    receipt.logs.map(l => {
+      // generate a random data
+      const hex = '0123456789abcdef'
+      if (dummyData === '') {
+        dummyData = '0x'
+        for (let i = 0; i < l.data.length; ++i) {
+          dummyData += hex.charAt(Math.floor(Math.random() * hex.length))
+        }
+        // [address, [topics array], data]
+        return [
+          toBuffer(l.address), // convert address to buffer
+          l.topics.map(toBuffer), // convert topics to buffer
+          toBuffer(dummyData) // convert data to buffer
+        ]
+      }
+    })
+  ])
+}
+
 export async function getReceiptProof(receipt, block, web3, receipts) {
   const receiptsTrie = new Trie()
   const receiptPromises = []

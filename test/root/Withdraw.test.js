@@ -11,6 +11,7 @@ import { mockValues } from '../helpers/constants'
 import { childWeb3 } from '../helpers/contracts'
 import logDecoder from '../helpers/log-decoder'
 import { build as buildCheckpoint } from '../helpers/checkpoint'
+import { getFakeReceiptBytes } from '../helpers/proofs'
 
 // Enable and inject BN dependency
 chai
@@ -48,7 +49,7 @@ const submitCheckpoint = async(checkpointManager, receiptObj) => {
 }
 
 contract('RootChainManager', async(accounts) => {
-  describe.only('Withdraw ERC20', async() => {
+  describe('Withdraw ERC20', async() => {
     const depositAmount = mockValues.amounts[1]
     const withdrawAmount = mockValues.amounts[1]
     const depositReceiver = accounts[0]
@@ -120,6 +121,7 @@ contract('RootChainManager', async(accounts) => {
     it('Should submit checkpoint', async() => {
       // submit checkpoint including burn (withdraw) tx
       checkpointData = await submitCheckpoint(contracts.root.checkpointManager, withdrawTx.receipt)
+      // console.log(bufferToHex(checkpointData.receipt))
       should.exist(checkpointData)
     })
 
@@ -137,7 +139,7 @@ contract('RootChainManager', async(accounts) => {
     })
 
     // call exit from some account other than depositReceiver
-    it('start exit using non-deposit receiver account', async() => {
+    it('Should fail: exit using non-deposit receiver account', async() => {
       const logIndex = 0
       const data = bufferToHex(
         rlp.encode([
@@ -156,6 +158,53 @@ contract('RootChainManager', async(accounts) => {
       // start exit
       exitTx = await expectRevert(contracts.root.rootChainManager.exit(data,
         { from: accounts[1] }), 'ERC20Predicate: INVALID_SENDER')
+    })
+
+    it('Should fail: exit with a random data receipt', async() => {
+      const receipt = await childWeb3.eth.getTransactionReceipt(withdrawTx.receipt.transactionHash)
+      const dummyReceipt = getFakeReceiptBytes(receipt, '')
+      const logIndex = 0
+      const data = bufferToHex(
+        rlp.encode([
+          headerNumber,
+          bufferToHex(Buffer.concat(checkpointData.proof)),
+          checkpointData.number,
+          checkpointData.timestamp,
+          bufferToHex(checkpointData.transactionsRoot),
+          bufferToHex(checkpointData.receiptsRoot),
+          bufferToHex(dummyReceipt),
+          bufferToHex(rlp.encode(checkpointData.receiptParentNodes)),
+          bufferToHex(rlp.encode(checkpointData.path)), // branch mask,
+          logIndex
+        ])
+      )
+      // start exit
+      await expectRevert(contracts.root.rootChainManager.exit(data,
+        { from: depositReceiver }), 'RootChainManager: INVALID_PROOF')
+    })
+
+    it('Should fail: exit with a fake amount data in receipt', async() => {
+      const receipt = await childWeb3.eth.getTransactionReceipt(
+        withdrawTx.receipt.transactionHash)
+      const dummyReceipt = getFakeReceiptBytes(receipt, mockValues.bytes32[4])
+      const logIndex = 0
+      const data = bufferToHex(
+        rlp.encode([
+          headerNumber,
+          bufferToHex(Buffer.concat(checkpointData.proof)),
+          checkpointData.number,
+          checkpointData.timestamp,
+          bufferToHex(checkpointData.transactionsRoot),
+          bufferToHex(checkpointData.receiptsRoot),
+          bufferToHex(dummyReceipt),
+          bufferToHex(rlp.encode(checkpointData.receiptParentNodes)),
+          bufferToHex(rlp.encode(checkpointData.path)), // branch mask,
+          logIndex
+        ])
+      )
+      // start exit
+      await expectRevert(contracts.root.rootChainManager.exit(data,
+        { from: depositReceiver }), 'revert')
     })
 
     it('Should start exit', async() => {
@@ -179,7 +228,7 @@ contract('RootChainManager', async(accounts) => {
       should.exist(exitTx)
     })
 
-    it('start exit again', async() => {
+    it('Should fail: start exit again', async() => {
       const logIndex = 0
       const data = bufferToHex(
         rlp.encode([
@@ -221,7 +270,7 @@ contract('RootChainManager', async(accounts) => {
     })
   })
 
-  describe.only('Withdraw ERC721', async() => {
+  describe('Withdraw ERC721', async() => {
     const depositTokenId = mockValues.numbers[4]
     const depositForAccount = mockValues.addresses[0]
     const depositAmount = new BN('1')
@@ -312,7 +361,7 @@ contract('RootChainManager', async(accounts) => {
       root.should.equal(headerData.root)
     })
 
-    it('start exit using a non-deposit receiver account', async() => {
+    it('Should fail: exit using a non-deposit receiver account', async() => {
       const logIndex = 1
       const data = bufferToHex(
         rlp.encode([
@@ -329,8 +378,57 @@ contract('RootChainManager', async(accounts) => {
         ])
       )
       // start exit
-      await expectRevert(contracts.root.rootChainManager.exit(data, { from: accounts[1] }),
-        'ERC721Predicate: INVALID_SENDER')
+      await expectRevert(contracts.root.rootChainManager.exit(data,
+        { from: accounts[1] }), // non deposit receiver
+      'ERC721Predicate: INVALID_SENDER')
+    })
+
+    it('Should fail: exit with a random data receipt', async() => {
+      const receipt = await childWeb3.eth.getTransactionReceipt(
+        withdrawTx.receipt.transactionHash)
+      const dummyReceipt = getFakeReceiptBytes(receipt, '')
+      const logIndex = 1
+      const data = bufferToHex(
+        rlp.encode([
+          headerNumber,
+          bufferToHex(Buffer.concat(checkpointData.proof)),
+          checkpointData.number,
+          checkpointData.timestamp,
+          bufferToHex(checkpointData.transactionsRoot),
+          bufferToHex(checkpointData.receiptsRoot),
+          bufferToHex(dummyReceipt),
+          bufferToHex(rlp.encode(checkpointData.receiptParentNodes)),
+          bufferToHex(rlp.encode(checkpointData.path)), // branch mask,
+          logIndex
+        ])
+      )
+      // start exit
+      await expectRevert(contracts.root.rootChainManager.exit(data,
+        { from: depositReceiver }), 'revert')
+    })
+
+    it('Should fail: exit with a fake amount data in receipt', async() => {
+      const receipt = await childWeb3.eth.getTransactionReceipt(
+        withdrawTx.receipt.transactionHash)
+      const dummyReceipt = getFakeReceiptBytes(receipt, mockValues.bytes32[4])
+      const logIndex = 1
+      const data = bufferToHex(
+        rlp.encode([
+          headerNumber,
+          bufferToHex(Buffer.concat(checkpointData.proof)),
+          checkpointData.number,
+          checkpointData.timestamp,
+          bufferToHex(checkpointData.transactionsRoot),
+          bufferToHex(checkpointData.receiptsRoot),
+          bufferToHex(dummyReceipt),
+          bufferToHex(rlp.encode(checkpointData.receiptParentNodes)),
+          bufferToHex(rlp.encode(checkpointData.path)), // branch mask,
+          logIndex
+        ])
+      )
+      // start exit
+      await expectRevert(contracts.root.rootChainManager.exit(data,
+        { from: depositReceiver }), 'revert')
     })
 
     it('Should start exit', async() => {
@@ -354,7 +452,7 @@ contract('RootChainManager', async(accounts) => {
       should.exist(exitTx)
     })
 
-    it('start exit again', async() => {
+    it('Should fail: start exit again', async() => {
       const logIndex = 1
       const data = bufferToHex(
         rlp.encode([
@@ -396,7 +494,7 @@ contract('RootChainManager', async(accounts) => {
     })
   })
 
-  describe.only('Withdraw ERC1155', async() => {
+  describe('Withdraw ERC1155', async() => {
     const tokenId = mockValues.numbers[8]
     const depositAmount = mockValues.amounts[1]
     const withdrawAmount = mockValues.amounts[1]
@@ -498,7 +596,7 @@ contract('RootChainManager', async(accounts) => {
       root.should.equal(headerData.root)
     })
 
-    it('start exit with non-deposit receiver', async() => {
+    it('Should fail: start exit with non-deposit receiver', async() => {
       const logIndex = 0
       const data = bufferToHex(
         rlp.encode([
@@ -519,6 +617,53 @@ contract('RootChainManager', async(accounts) => {
         { from: accounts[1] }), 'ERC1155Predicate: INVALID_SENDER')
     })
 
+    it('Should fail: exit with a random data receipt', async() => {
+      const receipt = await childWeb3.eth.getTransactionReceipt(withdrawTx.receipt.transactionHash)
+      const dummyReceipt = getFakeReceiptBytes(receipt, '')
+      const logIndex = 0
+      const data = bufferToHex(
+        rlp.encode([
+          headerNumber,
+          bufferToHex(Buffer.concat(checkpointData.proof)),
+          checkpointData.number,
+          checkpointData.timestamp,
+          bufferToHex(checkpointData.transactionsRoot),
+          bufferToHex(checkpointData.receiptsRoot),
+          bufferToHex(dummyReceipt),
+          bufferToHex(rlp.encode(checkpointData.receiptParentNodes)),
+          bufferToHex(rlp.encode(checkpointData.path)), // branch mask,
+          logIndex
+        ])
+      )
+      // start exit
+      await expectRevert(contracts.root.rootChainManager.exit(data,
+        { from: depositReceiver }), 'RootChainManager: INVALID_PROOF')
+    })
+
+    it('Should fail: exit with a fake amount data in receipt', async() => {
+      const receipt = await childWeb3.eth.getTransactionReceipt(
+        withdrawTx.receipt.transactionHash)
+      const dummyReceipt = getFakeReceiptBytes(receipt, mockValues.bytes32[4])
+      const logIndex = 0
+      const data = bufferToHex(
+        rlp.encode([
+          headerNumber,
+          bufferToHex(Buffer.concat(checkpointData.proof)),
+          checkpointData.number,
+          checkpointData.timestamp,
+          bufferToHex(checkpointData.transactionsRoot),
+          bufferToHex(checkpointData.receiptsRoot),
+          bufferToHex(dummyReceipt),
+          bufferToHex(rlp.encode(checkpointData.receiptParentNodes)),
+          bufferToHex(rlp.encode(checkpointData.path)), // branch mask,
+          logIndex
+        ])
+      )
+      // start exit
+      await expectRevert(contracts.root.rootChainManager.exit(data,
+        { from: depositReceiver }), 'revert')
+    })
+
     it('Should start exit', async() => {
       const logIndex = 0
       const data = bufferToHex(
@@ -536,7 +681,8 @@ contract('RootChainManager', async(accounts) => {
         ])
       )
       // start exit
-      exitTx = await contracts.root.rootChainManager.exit(data, { from: depositReceiver })
+      exitTx = await contracts.root.rootChainManager.exit(data,
+        { from: depositReceiver })
       should.exist(exitTx)
     })
 
