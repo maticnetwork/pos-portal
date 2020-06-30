@@ -49,8 +49,15 @@ const submitCheckpoint = async(checkpointManager, receiptObj) => {
   return checkpointData
 }
 
+const toHex = (buf) => {
+  buf = buf.toString('hex')
+  if (buf.substring(0, 2) == '0x')
+  { return buf }
+  return '0x' + buf.toString('hex')
+}
+
 contract('RootChainManager', async(accounts) => {
-  describe('Withdraw ERC20', async() => {
+  describe.only('Withdraw ERC20', async() => {
     const depositAmount = mockValues.amounts[1]
     const withdrawAmount = mockValues.amounts[1]
     const depositReceiver = accounts[0]
@@ -78,6 +85,11 @@ contract('RootChainManager', async(accounts) => {
       await dummyERC20.approve(contracts.root.erc20Predicate.address, depositAmount)
       const depositTx = await rootChainManager.depositFor(depositReceiver, dummyERC20.address, depositData)
       should.exist(depositTx)
+      await dummyERC20.approve(contracts.root.erc20Predicate.address, mockValues.amounts[2])
+      await dummyERC20.mint(depositAmount)
+      await dummyERC20.transfer(accounts[2], depositAmount)
+      const extraDepositTx = await rootChainManager.depositFor(accounts[2], dummyERC20.address, depositData, { from: accounts[2] })
+      should.exist(extraDepositTx)
     })
 
     it('Deposit amount should be deducted from depositor account', async() => {
@@ -85,7 +97,6 @@ contract('RootChainManager', async(accounts) => {
       newAccountBalance.should.be.a.bignumber.that.equals(
         accountBalance.sub(depositAmount)
       )
-
       // update account balance
       accountBalance = newAccountBalance
     })
@@ -207,6 +218,28 @@ contract('RootChainManager', async(accounts) => {
         { from: depositReceiver }), 'revert')
     })
 
+    it('Should fail to start exit (changed the block number)', async() => {
+      const logIndex = 0
+      const fakeBlockNumber = checkpointData.number + 1
+      const data = bufferToHex(
+        rlp.encode([
+          headerNumber,
+          bufferToHex(Buffer.concat(checkpointData.proof)),
+          fakeBlockNumber,
+          checkpointData.timestamp,
+          bufferToHex(checkpointData.transactionsRoot),
+          bufferToHex(checkpointData.receiptsRoot),
+          bufferToHex(checkpointData.receipt),
+          bufferToHex(rlp.encode(checkpointData.receiptParentNodes)),
+          bufferToHex(rlp.encode(checkpointData.path)), // branch mask,
+          logIndex
+        ])
+      )
+      // start exit
+      await expectRevert(contracts.root.rootChainManager.exit(data,
+        { from: depositReceiver }), 'Leaf index is too big')
+    })
+
     it('Should start exit', async() => {
       const logIndex = 0
       const data = bufferToHex(
@@ -223,6 +256,7 @@ contract('RootChainManager', async(accounts) => {
           logIndex
         ])
       )
+      console.log(data)
       // start exit
       exitTx = await contracts.root.rootChainManager.exit(data, { from: depositReceiver })
       should.exist(exitTx)
@@ -247,6 +281,27 @@ contract('RootChainManager', async(accounts) => {
       // start exit
       await expectRevert(contracts.root.rootChainManager.exit(data,
         { from: depositReceiver }), 'EXIT_ALREADY_PROCESSED')
+    })
+
+    it('Should fail to start exit (change the log index to generate same exit hash)', async() => {
+      const logIndex = toHex(Array(64).fill(0).join(''))
+      const data = bufferToHex(
+        rlp.encode([
+          headerNumber,
+          bufferToHex(Buffer.concat(checkpointData.proof)),
+          checkpointData.number,
+          checkpointData.timestamp,
+          bufferToHex(checkpointData.transactionsRoot),
+          bufferToHex(checkpointData.receiptsRoot),
+          bufferToHex(checkpointData.receipt),
+          bufferToHex(rlp.encode(checkpointData.receiptParentNodes)),
+          bufferToHex(rlp.encode(checkpointData.path)), // branch mask,
+          logIndex
+        ])
+      )
+      console.log(data)
+      // start exit
+      await contracts.root.rootChainManager.exit(data, { from: depositReceiver })
     })
 
     it('Should emit Transfer log in exit tx', () => {
