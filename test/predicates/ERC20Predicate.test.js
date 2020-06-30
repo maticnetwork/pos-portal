@@ -2,11 +2,13 @@ import chai from 'chai'
 import chaiAsPromised from 'chai-as-promised'
 import chaiBN from 'chai-bn'
 import BN from 'bn.js'
-import { AbiCoder, RLP } from 'ethers/utils'
+import { AbiCoder } from 'ethers/utils'
+import { expectRevert } from '@openzeppelin/test-helpers'
 
 import * as deployer from '../helpers/deployer'
 import { mockValues } from '../helpers/constants'
 import logDecoder from '../helpers/log-decoder.js'
+import { getERC20TransferLog } from '../helpers/logs'
 
 // Enable and inject BN dependency
 chai
@@ -16,13 +18,12 @@ chai
 
 const should = chai.should()
 const abi = new AbiCoder()
-const TRANSFER_EVENT_SIG = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef'
 
 contract('ERC20Predicate', (accounts) => {
   describe('lockTokens', () => {
     const depositAmount = mockValues.amounts[4]
     const depositReceiver = mockValues.addresses[7]
-    const depositor = accounts[0]
+    const depositor = accounts[1]
     let dummyERC20
     let erc20Predicate
     let oldAccountBalance
@@ -34,13 +35,14 @@ contract('ERC20Predicate', (accounts) => {
       const contracts = await deployer.deployFreshRootContracts(accounts)
       dummyERC20 = contracts.dummyERC20
       erc20Predicate = contracts.erc20Predicate
+      await dummyERC20.transfer(depositor, depositAmount)
       oldAccountBalance = await dummyERC20.balanceOf(depositor)
       oldContractBalance = await dummyERC20.balanceOf(erc20Predicate.address)
-      await dummyERC20.approve(erc20Predicate.address, depositAmount)
+      await dummyERC20.approve(erc20Predicate.address, depositAmount, { from: depositor })
     })
 
     it('Depositor should have proper balance', () => {
-      depositAmount.should.be.a.bignumber.lessThan(oldAccountBalance)
+      depositAmount.should.be.a.bignumber.at.most(oldAccountBalance)
     })
 
     it('Depositor should have approved proper amount', async() => {
@@ -100,6 +102,28 @@ contract('ERC20Predicate', (accounts) => {
     })
   })
 
+  describe('lockTokens called by non manager', () => {
+    const depositAmount = mockValues.amounts[3]
+    const depositor = accounts[1]
+    const depositReceiver = accounts[2]
+    const depositData = abi.encode(['uint256'], [depositAmount.toString()])
+    let dummyERC20
+    let erc20Predicate
+
+    before(async() => {
+      const contracts = await deployer.deployFreshRootContracts(accounts)
+      dummyERC20 = contracts.dummyERC20
+      erc20Predicate = contracts.erc20Predicate
+      await dummyERC20.approve(erc20Predicate.address, depositAmount, { from: depositor })
+    })
+
+    it('Should revert with correct reason', async() => {
+      await expectRevert(
+        erc20Predicate.lockTokens(depositor, depositReceiver, dummyERC20.address, depositData, { from: depositor }),
+        'ERC20Predicate: INSUFFICIENT_PERMISSIONS')
+    })
+  })
+
   describe('exitTokens', () => {
     const withdrawAmount = mockValues.amounts[2]
     const depositAmount = withdrawAmount.add(mockValues.amounts[3])
@@ -126,15 +150,11 @@ contract('ERC20Predicate', (accounts) => {
     })
 
     it('Should be able to receive exitTokens tx', async() => {
-      const burnLog = RLP.encode([
-        '0x0',
-        [
-          TRANSFER_EVENT_SIG,
-          withdrawer,
-          mockValues.zeroAddress
-        ],
-        '0x' + withdrawAmount.toString(16)
-      ])
+      const burnLog = getERC20TransferLog({
+        from: withdrawer,
+        to: mockValues.zeroAddress,
+        amount: withdrawAmount
+      })
       exitTokensTx = await erc20Predicate.exitTokens(withdrawer, dummyERC20.address, burnLog)
       should.exist(exitTokensTx)
     })
@@ -151,6 +171,114 @@ contract('ERC20Predicate', (accounts) => {
       newAccountBalance.should.be.a.bignumber.that.equals(
         oldAccountBalance.add(withdrawAmount)
       )
+    })
+  })
+
+  describe('exitTokens with incorrect burn transaction signature', () => {
+    const withdrawAmount = mockValues.amounts[2]
+    const depositAmount = withdrawAmount.add(mockValues.amounts[3])
+    const withdrawer = mockValues.addresses[8]
+    let dummyERC20
+    let erc20Predicate
+
+    before(async() => {
+      const contracts = await deployer.deployFreshRootContracts(accounts)
+      dummyERC20 = contracts.dummyERC20
+      erc20Predicate = contracts.erc20Predicate
+      await dummyERC20.approve(erc20Predicate.address, depositAmount)
+      const depositData = abi.encode(['uint256'], [depositAmount.toString()])
+      await erc20Predicate.lockTokens(accounts[0], withdrawer, dummyERC20.address, depositData)
+    })
+
+    it('Should revert with correct reason', async() => {
+      const burnLog = getERC20TransferLog({
+        overrideSig: mockValues.bytes32[2],
+        from: withdrawer,
+        to: mockValues.zeroAddress,
+        amount: withdrawAmount
+      })
+      await expectRevert(erc20Predicate.exitTokens(withdrawer, dummyERC20.address, burnLog), 'ERC20Predicate: INVALID_SIGNATURE')
+    })
+  })
+
+  describe('exitTokens called by different user', () => {
+    const withdrawAmount = mockValues.amounts[2]
+    const depositAmount = withdrawAmount.add(mockValues.amounts[3])
+    const withdrawer = mockValues.addresses[8]
+    const exitCaller = mockValues.addresses[3]
+    let dummyERC20
+    let erc20Predicate
+
+    before(async() => {
+      const contracts = await deployer.deployFreshRootContracts(accounts)
+      dummyERC20 = contracts.dummyERC20
+      erc20Predicate = contracts.erc20Predicate
+      await dummyERC20.approve(erc20Predicate.address, depositAmount)
+      const depositData = abi.encode(['uint256'], [depositAmount.toString()])
+      await erc20Predicate.lockTokens(accounts[0], withdrawer, dummyERC20.address, depositData)
+    })
+
+    it('Should revert with correct reason', async() => {
+      const burnLog = getERC20TransferLog({
+        from: withdrawer,
+        to: mockValues.zeroAddress,
+        amount: withdrawAmount
+      })
+      await expectRevert(erc20Predicate.exitTokens(exitCaller, dummyERC20.address, burnLog), 'ERC20Predicate: INVALID_SENDER')
+    })
+  })
+
+  describe('exitTokens called using normal transfer log instead of burn', () => {
+    const withdrawAmount = mockValues.amounts[2]
+    const depositAmount = withdrawAmount.add(mockValues.amounts[3])
+    const withdrawer = mockValues.addresses[8]
+    let dummyERC20
+    let erc20Predicate
+
+    before(async() => {
+      const contracts = await deployer.deployFreshRootContracts(accounts)
+      dummyERC20 = contracts.dummyERC20
+      erc20Predicate = contracts.erc20Predicate
+      await dummyERC20.approve(erc20Predicate.address, depositAmount)
+      const depositData = abi.encode(['uint256'], [depositAmount.toString()])
+      await erc20Predicate.lockTokens(accounts[0], withdrawer, dummyERC20.address, depositData)
+    })
+
+    it('Should revert with correct reason', async() => {
+      const burnLog = getERC20TransferLog({
+        from: withdrawer,
+        to: mockValues.addresses[8],
+        amount: withdrawAmount
+      })
+      await expectRevert(erc20Predicate.exitTokens(withdrawer, dummyERC20.address, burnLog), 'ERC20Predicate: INVALID_RECEIVER')
+    })
+  })
+
+  describe('exitTokens called by non manager', () => {
+    const withdrawAmount = mockValues.amounts[2]
+    const depositAmount = withdrawAmount.add(mockValues.amounts[3])
+    const withdrawer = mockValues.addresses[8]
+    let dummyERC20
+    let erc20Predicate
+
+    before(async() => {
+      const contracts = await deployer.deployFreshRootContracts(accounts)
+      dummyERC20 = contracts.dummyERC20
+      erc20Predicate = contracts.erc20Predicate
+      await dummyERC20.approve(erc20Predicate.address, depositAmount)
+      const depositData = abi.encode(['uint256'], [depositAmount.toString()])
+      await erc20Predicate.lockTokens(accounts[0], withdrawer, dummyERC20.address, depositData)
+    })
+
+    it('Should revert with correct reason', async() => {
+      const burnLog = getERC20TransferLog({
+        from: withdrawer,
+        to: mockValues.addresses[8],
+        amount: withdrawAmount
+      })
+      await expectRevert(
+        erc20Predicate.exitTokens(withdrawer, dummyERC20.address, burnLog, { from: accounts[2] }),
+        'ERC20Predicate: INSUFFICIENT_PERMISSIONS')
     })
   })
 })
