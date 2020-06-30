@@ -59,6 +59,7 @@ const toHex = (buf) => {
 contract('RootChainManager', async(accounts) => {
   describe.only('Withdraw ERC20', async() => {
     const depositAmount = mockValues.amounts[1]
+    let totalDepositedAmount = new BN('0')
     const withdrawAmount = mockValues.amounts[1]
     const depositReceiver = accounts[0]
     const depositData = abi.encode(['uint256'], [depositAmount.toString()])
@@ -85,11 +86,14 @@ contract('RootChainManager', async(accounts) => {
       await dummyERC20.approve(contracts.root.erc20Predicate.address, depositAmount)
       const depositTx = await rootChainManager.depositFor(depositReceiver, dummyERC20.address, depositData)
       should.exist(depositTx)
-      await dummyERC20.approve(contracts.root.erc20Predicate.address, mockValues.amounts[2])
+      totalDepositedAmount = totalDepositedAmount.add(depositAmount)
+      // await dummyERC20.approve(accounts[2], mockValues.amounts[2])
       await dummyERC20.mint(depositAmount)
       await dummyERC20.transfer(accounts[2], depositAmount)
+      await dummyERC20.approve(contracts.root.erc20Predicate.address, mockValues.amounts[2], { from: accounts[2] })
       const extraDepositTx = await rootChainManager.depositFor(accounts[2], dummyERC20.address, depositData, { from: accounts[2] })
       should.exist(extraDepositTx)
+      totalDepositedAmount = totalDepositedAmount.add(depositAmount)
     })
 
     it('Deposit amount should be deducted from depositor account', async() => {
@@ -103,8 +107,10 @@ contract('RootChainManager', async(accounts) => {
 
     it('Deposit amount should be credited to correct contract', async() => {
       const newContractBalance = await dummyERC20.balanceOf(contracts.root.erc20Predicate.address)
+      console.log(newContractBalance)
+      console.log(totalDepositedAmount)
       newContractBalance.should.be.a.bignumber.that.equals(
-        contractBalance.add(depositAmount)
+        contractBalance.add(totalDepositedAmount)
       )
 
       // update balance
@@ -256,7 +262,7 @@ contract('RootChainManager', async(accounts) => {
           logIndex
         ])
       )
-      console.log(data)
+      // console.log(data)
       // start exit
       exitTx = await contracts.root.rootChainManager.exit(data, { from: depositReceiver })
       should.exist(exitTx)
@@ -299,9 +305,10 @@ contract('RootChainManager', async(accounts) => {
           logIndex
         ])
       )
-      console.log(data)
+      // console.log(data)
       // start exit
-      await contracts.root.rootChainManager.exit(data, { from: depositReceiver })
+      await expectRevert.unspecified(contracts.root.rootChainManager.exit(data,
+        { from: depositReceiver }))
     })
 
     it('Should emit Transfer log in exit tx', () => {
