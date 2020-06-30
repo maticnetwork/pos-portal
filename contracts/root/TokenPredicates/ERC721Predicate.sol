@@ -90,7 +90,7 @@ contract ERC721Predicate is ITokenPredicate, AccessControl, Initializable, IERC7
         IERC721(rootToken).safeTransferFrom(
             address(this),
             withdrawer,
-            logRLPList[2].toUint() // log data field
+            logTopicRLPList[3].toUint() // topic3 is tokenId field
         );
     }
 }
