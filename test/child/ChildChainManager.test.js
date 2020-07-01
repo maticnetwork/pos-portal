@@ -43,6 +43,22 @@ contract('ChildChainManager', async(accounts) => {
     })
   })
 
+  describe('Map tokens by calling from non mapper account', async() => {
+    const mockRootToken = mockValues.addresses[9]
+    const mockChildToken = mockValues.addresses[6]
+    let contracts
+    before(async() => {
+      contracts = await deployer.deployFreshChildContracts(accounts)
+    })
+
+    it('Tx should revert with correct reason', async() => {
+      await expectRevert(
+        contracts.childChainManager.mapToken(mockRootToken, mockChildToken, { from: accounts[1] }),
+        'ChildChainManager: INSUFFICIENT_PERMISSIONS'
+      )
+    })
+  })
+
   describe('Map tokens on receiving state', async() => {
     const syncId = mockValues.numbers[8]
     const mockTokenType = mockValues.bytes32[3]
@@ -71,6 +87,47 @@ contract('ChildChainManager', async(accounts) => {
     it('Should set childToRootToken map', async() => {
       const rootToken = await contracts.childChainManager.childToRootToken(mockChildToken)
       rootToken.should.equal(mockRootToken)
+    })
+  })
+
+  describe('Receive state from non state syncer account', () => {
+    const syncId = mockValues.numbers[8]
+    const mockTokenType = mockValues.bytes32[3]
+    const mockRootToken = mockValues.addresses[0]
+    const mockChildToken = mockValues.addresses[1]
+    const syncData = abi.encode(['address', 'address', 'bytes32'], [mockRootToken, mockChildToken, mockTokenType])
+    let contracts
+    let syncState
+    before(async() => {
+      contracts = await deployer.deployFreshChildContracts(accounts)
+      const parentContracts = await deployer.deployFreshRootContracts(accounts)
+      const syncType = await parentContracts.rootChainManager.MAP_TOKEN()
+      syncState = abi.encode(['bytes32', 'bytes'], [syncType, syncData])
+    })
+
+    it('Tx should revert with correct reason', async() => {
+      await expectRevert(
+        contracts.childChainManager.onStateReceive(syncId, syncState, { from: accounts[1] }),
+        'ChildChainManager: INSUFFICIENT_PERMISSIONS'
+      )
+    })
+  })
+
+  describe('Receive non supported sync', () => {
+    const syncId = mockValues.numbers[3]
+    const syncType = mockValues.bytes32[2]
+    let contracts
+    let syncState
+    before(async() => {
+      contracts = await deployer.deployFreshChildContracts(accounts)
+      syncState = abi.encode(['bytes32', 'bytes'], [syncType, '0x0'])
+    })
+
+    it('Tx should revert with correct reason', async() => {
+      await expectRevert(
+        contracts.childChainManager.onStateReceive(syncId, syncState),
+        'ChildChainManager: INVALID_SYNC_TYPE'
+      )
     })
   })
 
