@@ -8,6 +8,7 @@ import * as deployer from '../helpers/deployer'
 import { mockValues } from '../helpers/constants'
 import logDecoder from '../helpers/log-decoder.js'
 import { constructERC1155DepositData } from '../helpers/utils'
+import expectRevert from '@openzeppelin/test-helpers/src/expectRevert'
 
 chai
   .use(chaiAsPromised)
@@ -77,6 +78,26 @@ contract('ChildERC1155', (accounts) => {
       const newAccountBalance = await contracts.dummyERC1155.balanceOf(user, tokenId)
       newAccountBalance.should.be.a.bignumber.that.equals(
         oldAccountBalance.add(depositAmount)
+      )
+    })
+  })
+
+  describe('Deposit called by non depositor account', () => {
+    const tokenId = mockValues.numbers[8]
+    const depositAmount = mockValues.amounts[7]
+    const user = mockValues.addresses[3]
+    const depositData = constructERC1155DepositData([tokenId], [depositAmount])
+    let dummyERC1155
+
+    before(async() => {
+      const contracts = await deployer.deployFreshChildContracts(accounts)
+      dummyERC1155 = contracts.dummyERC1155
+    })
+
+    it('Tx should revert with proper reason', async() => {
+      await expectRevert(
+        dummyERC1155.deposit(user, depositData, { from: accounts[1] }),
+        'ChildERC1155: INSUFFICIENT_PERMISSIONS'
       )
     })
   })
