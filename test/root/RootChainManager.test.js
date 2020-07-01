@@ -7,6 +7,7 @@ import { expectRevert } from '@openzeppelin/test-helpers'
 
 import * as deployer from '../helpers/deployer'
 import { mockValues, etherAddress } from '../helpers/constants'
+import { constructERC1155DepositData } from '../helpers/utils'
 import logDecoder from '../helpers/log-decoder.js'
 
 // Enable and inject BN dependency
@@ -235,6 +236,28 @@ contract('RootChainManager', async(accounts) => {
       const newContractBalance = await dummyERC20.balanceOf(contracts.root.erc20Predicate.address)
       newContractBalance.should.be.a.bignumber.that.equals(
         oldContractBalance.add(depositAmount)
+      )
+    })
+  })
+
+  describe('Deposit ERC20 for zero address', async() => {
+    const depositAmount = mockValues.amounts[1]
+    const depositForAccount = mockValues.zeroAddress
+    let rootChainManager
+    let dummyERC20
+
+    before(async() => {
+      const contracts = await deployer.deployInitializedContracts(accounts)
+      rootChainManager = contracts.root.rootChainManager
+      dummyERC20 = contracts.root.dummyERC20
+      await dummyERC20.approve(contracts.root.erc20Predicate.address, depositAmount)
+    })
+
+    it('transaction should revert', async() => {
+      const depositData = abi.encode(['uint256'], [depositAmount.toString()])
+      await expectRevert(
+        rootChainManager.depositFor(depositForAccount, dummyERC20.address, depositData),
+        'RootChainManager: INVALID_USER'
       )
     })
   })
@@ -492,6 +515,24 @@ contract('RootChainManager', async(accounts) => {
     })
   })
 
+  describe('Deposit Ether for zero address', async() => {
+    const depositAmount = mockValues.amounts[1]
+    const depositForAccount = mockValues.zeroAddress
+    let rootChainManager
+
+    before(async() => {
+      const contracts = await deployer.deployInitializedContracts(accounts)
+      rootChainManager = contracts.root.rootChainManager
+    })
+
+    it('transaction should revert', async() => {
+      await expectRevert(
+        rootChainManager.depositEtherFor(depositForAccount, { value: depositAmount }),
+        'RootChainManager: INVALID_USER'
+      )
+    })
+  })
+
   describe('Deposit ERC721', async() => {
     const depositTokenId = mockValues.numbers[4]
     const depositForAccount = mockValues.addresses[0]
@@ -600,6 +641,29 @@ contract('RootChainManager', async(accounts) => {
     })
   })
 
+  describe('Deposit ERC721 for zero address', async() => {
+    const depositTokenId = mockValues.numbers[4]
+    const depositForAccount = mockValues.zeroAddress
+    let rootChainManager
+    let dummyERC721
+
+    before(async() => {
+      const contracts = await deployer.deployInitializedContracts(accounts)
+      rootChainManager = contracts.root.rootChainManager
+      dummyERC721 = contracts.root.dummyERC721
+      await dummyERC721.mint(depositTokenId)
+      await dummyERC721.approve(contracts.root.erc721Predicate.address, depositTokenId)
+    })
+
+    it('transaction should revert', async() => {
+      const depositData = abi.encode(['uint256'], [depositTokenId.toString()])
+      await expectRevert(
+        rootChainManager.depositFor(depositForAccount, dummyERC721.address, depositData),
+        'RootChainManager: INVALID_USER'
+      )
+    })
+  })
+
   describe('Deposit Single ERC1155', async() => {
     const depositTokenId = mockValues.numbers[4]
     const depositAmount = mockValues.amounts[1]
@@ -633,18 +697,7 @@ contract('RootChainManager', async(accounts) => {
 
     it('Depositor should be able to approve and deposit', async() => {
       await dummyERC1155.setApprovalForAll(erc1155Predicate.address, true)
-      const depositData = abi.encode(
-        [
-          'uint256[]',
-          'uint256[]',
-          'bytes'
-        ],
-        [
-          [depositTokenId.toString()],
-          [depositAmount.toString()],
-          ['0x0']
-        ]
-      )
+      const depositData = constructERC1155DepositData([depositTokenId], [depositAmount])
       depositTx = await rootChainManager.depositFor(depositForAccount, dummyERC1155.address, depositData)
       should.exist(depositTx)
     })
@@ -820,17 +873,9 @@ contract('RootChainManager', async(accounts) => {
 
     it('Depositor should be able to approve and deposit', async() => {
       await dummyERC1155.setApprovalForAll(erc1155Predicate.address, true)
-      const depositData = abi.encode(
-        [
-          'uint256[]',
-          'uint256[]',
-          'bytes'
-        ],
-        [
-          [depositTokenIdA.toString(), depositTokenIdB.toString(), depositTokenIdC.toString()],
-          [depositAmountA.toString(), depositAmountB.toString(), depositAmountC.toString()],
-          ['0x0']
-        ]
+      const depositData = constructERC1155DepositData(
+        [depositTokenIdA, depositTokenIdB, depositTokenIdC],
+        [depositAmountA, depositAmountB, depositAmountC]
       )
       depositTx = await rootChainManager.depositFor(depositForAccount, dummyERC1155.address, depositData)
       should.exist(depositTx)
@@ -1004,6 +1049,30 @@ contract('RootChainManager', async(accounts) => {
       const newContractBalance = await dummyERC1155.balanceOf(erc1155Predicate.address, depositTokenIdC)
       newContractBalance.should.be.a.bignumber.that.equals(
         oldContractBalanceC.add(depositAmountC)
+      )
+    })
+  })
+
+  describe('Deposit ERC1155 for zero address', async() => {
+    const depositTokenId = mockValues.numbers[4]
+    const depositAmount = mockValues.amounts[1]
+    const depositForAccount = mockValues.zeroAddress
+    let rootChainManager
+    let dummyERC1155
+
+    before(async() => {
+      const contracts = await deployer.deployInitializedContracts(accounts)
+      rootChainManager = contracts.root.rootChainManager
+      dummyERC1155 = contracts.root.dummyERC1155
+      await dummyERC1155.mint(accounts[0], depositTokenId, depositAmount)
+      await dummyERC1155.setApprovalForAll(contracts.root.erc1155Predicate.address, true)
+    })
+
+    it('transaction should revert', async() => {
+      const depositData = constructERC1155DepositData([depositTokenId], [depositAmount])
+      await expectRevert(
+        rootChainManager.depositFor(depositForAccount, dummyERC1155.address, depositData),
+        'RootChainManager: INVALID_USER'
       )
     })
   })

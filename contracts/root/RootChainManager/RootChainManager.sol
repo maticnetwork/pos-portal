@@ -153,6 +153,10 @@ contract RootChainManager is IRootChainManager, Initializable, AccessControl {
             predicateAddress != address(0),
             "RootChainManager: INVALID_TOKEN_TYPE"
         );
+        require(
+            user != address(0),
+            "RootChainManager: INVALID_USER"
+        );
 
         ITokenPredicate(predicateAddress).lockTokens(
             _msgSender(),
