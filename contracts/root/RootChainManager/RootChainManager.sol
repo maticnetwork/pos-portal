@@ -119,6 +119,10 @@ contract RootChainManager is IRootChainManager, Initializable, AccessControl {
         address rootToken,
         bytes calldata depositData
     ) external override {
+        require(
+            rootToken != ETHER_ADDRESS,
+            "RootChainManager: INVALID_ROOT_TOKEN"
+        );
         _depositFor(user, rootToken, depositData);
     }
 
