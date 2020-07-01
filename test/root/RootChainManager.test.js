@@ -872,4 +872,61 @@ contract('RootChainManager', async(accounts) => {
       )
     })
   })
+
+  describe('Depoist token before it is mapped', async() => {
+    const depositAmount = mockValues.amounts[1]
+    const depositForAccount = mockValues.addresses[0]
+    let contracts
+    let dummyERC20
+    let rootChainManager
+    let erc20Predicate
+
+    before(async() => {
+      contracts = await deployer.deployFreshRootContracts(accounts)
+      dummyERC20 = contracts.dummyERC20
+      rootChainManager = contracts.rootChainManager
+      erc20Predicate = contracts.erc1155Predicate
+      await dummyERC20.approve(erc20Predicate.address, depositAmount)
+    })
+
+    it('Should revert with correct reason', async() => {
+      const depositData = abi.encode(['uint256'], [depositAmount.toString()])
+      await expectRevert(
+        rootChainManager.depositFor(depositForAccount, dummyERC20.address, depositData),
+        'RootChainManager: TOKEN_NOT_MAPPED'
+      )
+    })
+  })
+
+  describe('Depoist token whose predicate is disabled', async() => {
+    const depositAmount = mockValues.amounts[1]
+    const depositForAccount = mockValues.addresses[0]
+    const mockType = mockValues.bytes32[1]
+    const mockChild = mockValues.addresses[6]
+    let contracts
+    let dummyERC20
+    let rootChainManager
+    let erc20Predicate
+
+    before(async() => {
+      contracts = await deployer.deployFreshRootContracts(accounts)
+      dummyERC20 = contracts.dummyERC20
+      rootChainManager = contracts.rootChainManager
+      erc20Predicate = contracts.erc1155Predicate
+      await dummyERC20.approve(erc20Predicate.address, depositAmount)
+      await contracts.rootChainManager.setStateSender(contracts.dummyStateSender.address)
+      await contracts.rootChainManager.setChildChainManagerAddress(mockValues.addresses[1])
+      await rootChainManager.registerPredicate(mockType, erc20Predicate.address)
+      await rootChainManager.mapToken(dummyERC20.address, mockChild, mockType)
+      await rootChainManager.registerPredicate(mockType, mockValues.zeroAddress)
+    })
+
+    it('Should revert with correct reason', async() => {
+      const depositData = abi.encode(['uint256'], [depositAmount.toString()])
+      await expectRevert(
+        rootChainManager.depositFor(depositForAccount, dummyERC20.address, depositData),
+        'RootChainManager: INVALID_TOKEN_TYPE'
+      )
+    })
+  })
 })
