@@ -187,7 +187,7 @@ contract RootChainManager is IRootChainManager, Initializable, AccessControl {
             abi.encodePacked(
                 inputDataRLPList[2].toBytes(), // blockNumber
                 inputDataRLPList[6].toBytes(), // receipt
-                inputDataRLPList[9].toBytes() // logIndex
+                inputDataRLPList[9].toUint() // logIndex
             )
         );
         require(
