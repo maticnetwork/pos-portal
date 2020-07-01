@@ -3,6 +3,7 @@ import chaiAsPromised from 'chai-as-promised'
 import chaiBN from 'chai-bn'
 import BN from 'bn.js'
 import { defaultAbiCoder as abi } from 'ethers/utils/abi-coder'
+import { expectRevert } from '@openzeppelin/test-helpers'
 
 import * as deployer from '../helpers/deployer'
 import { mockValues, etherAddress } from '../helpers/constants'
@@ -30,11 +31,27 @@ contract('RootChainManager', async(accounts) => {
       stateSenderAddress.should.equal(mockStateSenderAddress)
     })
 
+    it('Should revert while setting stateSenderAddress from non admin account', async() => {
+      const mockStateSenderAddress = mockValues.addresses[3]
+      await expectRevert(
+        contracts.rootChainManager.setStateSender(mockStateSenderAddress, { from: accounts[4] }),
+        'RootChainManager: INSUFFICIENT_PERMISSIONS'
+      )
+    })
+
     it('Can set childChainManagerAddress', async() => {
       const mockChildChainManagerAddress = mockValues.addresses[1]
       await contracts.rootChainManager.setChildChainManagerAddress(mockChildChainManagerAddress)
       const childChainManagerAddress = await contracts.rootChainManager.childChainManagerAddress()
       childChainManagerAddress.should.equal(mockChildChainManagerAddress)
+    })
+
+    it('Should revert while setting childChainManagerAddress from non admin account', async() => {
+      const mockChildChainManagerAddress = mockValues.addresses[3]
+      await expectRevert(
+        contracts.rootChainManager.setChildChainManagerAddress(mockChildChainManagerAddress, { from: accounts[4] }),
+        'RootChainManager: INSUFFICIENT_PERMISSIONS'
+      )
     })
 
     it('Can register predicate', async() => {
@@ -45,38 +62,60 @@ contract('RootChainManager', async(accounts) => {
       predicate.should.equal(mockPredicate)
     })
 
-    it('Can set rootToChildToken map', async() => {
-      await contracts.rootChainManager.setStateSender(contracts.dummyStateSender.address)
-
-      const mockChildChainManagerAddress = mockValues.addresses[1]
-      await contracts.rootChainManager.setChildChainManagerAddress(mockChildChainManagerAddress)
-
+    it('Should revert while registering predicate from non mapper account', async() => {
       const mockType = mockValues.bytes32[3]
-      const mockPredicate = mockValues.addresses[4]
-      await contracts.rootChainManager.registerPredicate(mockType, mockPredicate)
-
-      const mockParent = mockValues.addresses[3]
-      const mockChild = mockValues.addresses[4]
-      await contracts.rootChainManager.mapToken(mockParent, mockChild, mockType)
-      const childTokenAddress = await contracts.rootChainManager.rootToChildToken(mockParent)
-      childTokenAddress.should.equal(mockChild)
+      const mockPredicate = mockValues.addresses[5]
+      await expectRevert(
+        contracts.rootChainManager.registerPredicate(mockType, mockPredicate, { from: accounts[4] }),
+        'RootChainManager: INSUFFICIENT_PERMISSIONS'
+      )
     })
 
-    it('Can set childToRootToken map', async() => {
-      await contracts.rootChainManager.setStateSender(contracts.dummyStateSender.address)
+    describe('Token Mapping', () => {
+      const mockParent = mockValues.addresses[3]
+      const mockChild = mockValues.addresses[4]
+      const mockType = mockValues.bytes32[3]
 
-      const mockChildChainManagerAddress = mockValues.addresses[1]
-      await contracts.rootChainManager.setChildChainManagerAddress(mockChildChainManagerAddress)
+      before(async() => {
+        await contracts.rootChainManager.setStateSender(contracts.dummyStateSender.address)
 
-      const mockType = mockValues.bytes32[1]
-      const mockPredicate = mockValues.addresses[4]
-      await contracts.rootChainManager.registerPredicate(mockType, mockPredicate)
+        const mockChildChainManagerAddress = mockValues.addresses[1]
+        await contracts.rootChainManager.setChildChainManagerAddress(mockChildChainManagerAddress)
 
-      const mockParent = mockValues.addresses[5]
-      const mockChild = mockValues.addresses[6]
-      await contracts.rootChainManager.mapToken(mockParent, mockChild, mockType)
-      const parentTokenAddress = await contracts.rootChainManager.childToRootToken(mockChild)
-      parentTokenAddress.should.equal(mockParent)
+        const mockPredicate = mockValues.addresses[4]
+        await contracts.rootChainManager.registerPredicate(mockType, mockPredicate)
+      })
+
+      it('Can map token', async() => {
+        await contracts.rootChainManager.mapToken(mockParent, mockChild, mockType)
+      })
+
+      it('Should set correct rootToChildToken map', async() => {
+        const childTokenAddress = await contracts.rootChainManager.rootToChildToken(mockParent)
+        childTokenAddress.should.equal(mockChild)
+        const parentTokenAddress = await contracts.rootChainManager.childToRootToken(mockChild)
+        parentTokenAddress.should.equal(mockParent)
+      })
+
+      it('Should set correct childToRootToken map', async() => {
+        const parentTokenAddress = await contracts.rootChainManager.childToRootToken(mockChild)
+        parentTokenAddress.should.equal(mockParent)
+      })
+
+      it('Should fail while mapping token from non mapper account', async() => {
+        await expectRevert(
+          contracts.rootChainManager.mapToken(mockParent, mockChild, mockType, { from: accounts[4] }),
+          'RootChainManager: INSUFFICIENT_PERMISSIONS'
+        )
+      })
+
+      it('Should fail while mapping token using non existant predicate', async() => {
+        const mockType = mockValues.bytes32[0]
+        await expectRevert(
+          contracts.rootChainManager.mapToken(mockParent, mockChild, mockType),
+          'RootChainManager: TOKEN_TYPE_NOT_SUPPORTED'
+        )
+      })
     })
   })
 
