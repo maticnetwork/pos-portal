@@ -1,14 +1,14 @@
-pragma solidity "0.6.6";
+pragma solidity ^0.6.6;
 
 import {ERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import {NetworkAgnostic} from "../../common/NetworkAgnostic.sol";
 import {ChainConstants} from "../../ChainConstants.sol";
 
 contract DummyERC721 is ERC721, NetworkAgnostic, ChainConstants {
-    constructor(string memory name, string memory symbol)
+    constructor(string memory name_, string memory symbol_)
         public
-        ERC721(name, symbol)
-        NetworkAgnostic(name, "1", ROOT_CHAIN_ID)
+        ERC721(name_, symbol_)
+        NetworkAgnostic(name_, ERC712_VERSION, ROOT_CHAIN_ID)
     {}
 
     function _msgSender()

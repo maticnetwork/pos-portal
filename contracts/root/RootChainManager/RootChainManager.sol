@@ -75,6 +75,7 @@ contract RootChainManager is IRootChainManager, Initializable, AccessControl {
         external
         only(DEFAULT_ADMIN_ROLE)
     {
+        require(newChildChainManager != address(0x0), "RootChainManager: INVALID_CHILD_CHAIN_ADDRESS");
         childChainManagerAddress = newChildChainManager;
     }
 
@@ -119,6 +120,10 @@ contract RootChainManager is IRootChainManager, Initializable, AccessControl {
         address rootToken,
         bytes calldata depositData
     ) external override {
+        require(
+            rootToken != ETHER_ADDRESS,
+            "RootChainManager: INVALID_ROOT_TOKEN"
+        );
         _depositFor(user, rootToken, depositData);
     }
 
@@ -128,7 +133,7 @@ contract RootChainManager is IRootChainManager, Initializable, AccessControl {
 
         // payable(typeToPredicate[tokenToType[ETHER_ADDRESS]]).transfer(msg.value);
         // transfer doesn't work as expected when receiving contract is proxified so using call
-        (bool success, ) = typeToPredicate[tokenToType[ETHER_ADDRESS]].call{value: msg.value}("");
+        (bool success, /* bytes memory data */) = typeToPredicate[tokenToType[ETHER_ADDRESS]].call{value: msg.value}("");
         if (!success) {
             revert("RootChainManager: ETHER_TRANSFER_FAILED");
         }
@@ -148,6 +153,10 @@ contract RootChainManager is IRootChainManager, Initializable, AccessControl {
         require(
             predicateAddress != address(0),
             "RootChainManager: INVALID_TOKEN_TYPE"
+        );
+        require(
+            user != address(0),
+            "RootChainManager: INVALID_USER"
         );
 
         ITokenPredicate(predicateAddress).lockTokens(
