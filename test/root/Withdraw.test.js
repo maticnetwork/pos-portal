@@ -11,7 +11,7 @@ import { mockValues } from '../helpers/constants'
 import { childWeb3 } from '../helpers/contracts'
 import logDecoder from '../helpers/log-decoder'
 import { build as buildCheckpoint } from '../helpers/checkpoint'
-import { getFakeReceiptBytes } from '../helpers/proofs'
+import { getFakeReceiptBytes, getDiffEncodedReceipt } from '../helpers/proofs'
 import { constructERC1155DepositData } from '../helpers/utils'
 
 // Enable and inject BN dependency
