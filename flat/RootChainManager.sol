@@ -565,15 +565,18 @@ pragma solidity 0.6.6;
 library Merkle {
     function checkMembership(
         bytes32 leaf,
-        uint256 mainIndex,
+        uint256 index,
         bytes32 rootHash,
         bytes memory proof
     ) public pure returns (bool) {
+        require(proof.length % 32 == 0, "Invalid proof length");
+        uint256 proofHeight = proof.length / 32;
+        // Proof of size n means, height of the tree is n+1.
+        // In a tree of height n+1, max #leafs possible is 2 ^ n
+        require(index < 2 ** proofHeight, "Leaf index is too big");
+
         bytes32 proofElement;
         bytes32 computedHash = leaf;
-        require(proof.length % 32 == 0, "Invalid proof length");
-
-        uint256 index = mainIndex;
         for (uint256 i = 32; i <= proof.length; i += 32) {
             assembly {
                 proofElement := mload(add(proof, i))
@@ -600,7 +603,16 @@ library Merkle {
 pragma solidity ^0.6.6;
 
 
+/// @title Token predicate interface for all pos portal predicates
+/// @notice Abstract interface that defines methods for custom predicates
 interface ITokenPredicate {
+
+    /// @notice Deposit tokens into pos portal
+    /// @dev When `depositor` deposits tokens into pos portal, tokens get locked into predicate contract.
+    /// @param depositor Address who wants to deposit tokens
+    /// @param depositReceiver Address (address) who wants to receive tokens on side chain
+    /// @param rootToken Token which gets deposited
+    /// @param depositData Extra data for deposit (amount for ERC20, token id for ERC721 etc.) [ABI encoded]
     function lockTokens(
         address depositor,
         address depositReceiver,
@@ -608,6 +620,12 @@ interface ITokenPredicate {
         bytes calldata depositData
     ) external;
 
+    /// @notice Validates and processes exit while withdraw process
+    /// @dev Validates exit log emitted on sidechain. Reverts if validation fails.
+    /// @dev Processes withdraw based on custom logic. Example: transfer ERC20/ERC721, mint ERC721 if mintable withdraw
+    /// @param withdrawer Address who wants to withdraw tokens
+    /// @param rootToken Token which gets withdrawn
+    /// @param logRLPList Valid sidechain log for data like amount, token id etc.
     function exitTokens(
         address withdrawer,
         address rootToken,
@@ -1389,6 +1407,10 @@ contract RootChainManager is IRootChainManager, Initializable, AccessControl {
         address rootToken,
         bytes calldata depositData
     ) external override {
+        require(
+            rootToken != ETHER_ADDRESS,
+            "RootChainManager: INVALID_ROOT_TOKEN"
+        );
         _depositFor(user, rootToken, depositData);
     }
 
@@ -1398,7 +1420,7 @@ contract RootChainManager is IRootChainManager, Initializable, AccessControl {
 
         // payable(typeToPredicate[tokenToType[ETHER_ADDRESS]]).transfer(msg.value);
         // transfer doesn't work as expected when receiving contract is proxified so using call
-        (bool success, bytes memory data) = typeToPredicate[tokenToType[ETHER_ADDRESS]].call{value: msg.value}("");
+        (bool success, ) = typeToPredicate[tokenToType[ETHER_ADDRESS]].call{value: msg.value}("");
         if (!success) {
             revert("RootChainManager: ETHER_TRANSFER_FAILED");
         }
@@ -1418,6 +1440,10 @@ contract RootChainManager is IRootChainManager, Initializable, AccessControl {
         require(
             predicateAddress != address(0),
             "RootChainManager: INVALID_TOKEN_TYPE"
+        );
+        require(
+            user != address(0),
+            "RootChainManager: INVALID_USER"
         );
 
         ITokenPredicate(predicateAddress).lockTokens(
@@ -1457,7 +1483,7 @@ contract RootChainManager is IRootChainManager, Initializable, AccessControl {
             abi.encodePacked(
                 inputDataRLPList[2].toBytes(), // blockNumber
                 inputDataRLPList[6].toBytes(), // receipt
-                inputDataRLPList[9].toBytes() // logIndex
+                inputDataRLPList[9].toUint() // logIndex
             )
         );
         require(

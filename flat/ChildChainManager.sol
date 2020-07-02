@@ -809,6 +809,8 @@ contract ChildChainManager is IChildChainManager, Initializable, AccessControl {
                 (address, address, bytes32)
             );
             _mapToken(rootToken, childToken);
+        } else {
+            revert("ChildChainManager: INVALID_SYNC_TYPE");
         }
     }
 

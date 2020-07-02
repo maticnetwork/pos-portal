@@ -1422,18 +1422,10 @@ contract ChildERC20 is ERC20, IChildToken, AccessControl, NetworkAgnostic {
         only(DEPOSITOR_ROLE)
     {
         uint256 amount = abi.decode(depositData, (uint256));
-        require(amount > 0, "ChildERC20: INVALID_AMOUNT");
-        require(user != address(0x0), "ChildERC20: INVALID_DEPOSIT_USER");
         _mint(user, amount);
     }
 
     function withdraw(uint256 amount) external {
-        require(amount > 0, "ChildERC20: INVALID_WITHDRAW_AMOUNT");
-        require(
-            amount <= balanceOf(_msgSender()),
-            "ChildERC20: INSUFFICIENT_BALANCE"
-        );
-
         _burn(_msgSender(), amount);
     }
 }
