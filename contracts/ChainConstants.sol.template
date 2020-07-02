@@ -1,6 +1,8 @@
-pragma solidity >=0.4.21 <0.7.0;
+pragma solidity ^0.6.6;
 
 contract ChainConstants {
+    string constant public ERC712_VERSION = "1";
+
     uint256 constant public ROOT_CHAIN_ID = {{ rootChainId }};
     bytes constant public ROOT_CHAIN_ID_BYTES = hex"{{ rootChainIdHex }}";
 
