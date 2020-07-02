@@ -1,4 +1,4 @@
-pragma solidity 0.6.6;
+pragma solidity ^0.6.6;
 
 interface IChildChainManager {
     event TokenMapped(address indexed rootToken, address indexed childToken);

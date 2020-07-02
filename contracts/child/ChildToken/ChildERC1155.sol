@@ -1,4 +1,4 @@
-pragma solidity "0.6.6";
+pragma solidity ^0.6.6;
 
 import {ERC1155} from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
@@ -10,7 +10,7 @@ import {IChildToken} from "./IChildToken.sol";
 contract ChildERC1155 is ERC1155, IChildToken, AccessControl {
     bytes32 public constant DEPOSITOR_ROLE = keccak256("DEPOSITOR_ROLE");
 
-    constructor(string memory _uri) public ERC1155(_uri) {
+    constructor(string memory uri_) public ERC1155(uri_) {
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
         _setupRole(DEPOSITOR_ROLE, _msgSender());
     }
