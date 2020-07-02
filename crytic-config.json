@@ -4,6 +4,9 @@
           {
               "command": ["npm", "run", "template:process"]
           }
+      ],
+      "filter_paths": [
+          "openzepellin"
       ]
   }
 }
