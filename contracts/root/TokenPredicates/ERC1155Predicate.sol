@@ -75,19 +75,19 @@ contract ERC1155Predicate is ITokenPredicate, ERC1155Receiver, AccessControl, In
             uint256[] memory amounts,
             bytes memory data
         ) = abi.decode(depositData, (uint256[], uint256[], bytes));
-        IERC1155(rootToken).safeBatchTransferFrom(
-            depositor,
-            address(this),
-            ids,
-            amounts,
-            data
-        );
         emit LockedBatchERC1155(
             depositor,
             depositReceiver,
             rootToken,
             ids,
             amounts
+        );
+        IERC1155(rootToken).safeBatchTransferFrom(
+            depositor,
+            address(this),
+            ids,
+            amounts,
+            data
         );
     }
 

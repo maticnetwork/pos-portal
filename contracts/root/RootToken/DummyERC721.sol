@@ -5,10 +5,10 @@ import {NetworkAgnostic} from "../../common/NetworkAgnostic.sol";
 import {ChainConstants} from "../../ChainConstants.sol";
 
 contract DummyERC721 is ERC721, NetworkAgnostic, ChainConstants {
-    constructor(string memory name, string memory symbol)
+    constructor(string memory _name, string memory _symbol)
         public
-        ERC721(name, symbol)
-        NetworkAgnostic(name, "1", ROOT_CHAIN_ID)
+        ERC721(_name, _symbol)
+        NetworkAgnostic(_name, ERC712_VERSION, ROOT_CHAIN_ID)
     {}
 
     function _msgSender()

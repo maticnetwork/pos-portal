@@ -10,7 +10,7 @@ import {IChildToken} from "./IChildToken.sol";
 contract ChildERC1155 is ERC1155, IChildToken, AccessControl {
     bytes32 public constant DEPOSITOR_ROLE = keccak256("DEPOSITOR_ROLE");
 
-    constructor(string memory uri) public ERC1155(uri) {
+    constructor(string memory _uri) public ERC1155(_uri) {
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
         _setupRole(DEPOSITOR_ROLE, _msgSender());
     }
