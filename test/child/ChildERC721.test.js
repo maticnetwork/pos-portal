@@ -71,6 +71,25 @@ contract('ChildERC721', (accounts) => {
     })
   })
 
+  describe('Deposit called by non depositor account', () => {
+    const tokenId = mockValues.numbers[6]
+    const user = mockValues.addresses[3]
+    const depositData = abi.encode(['uint256'], [tokenId])
+    let dummyERC721
+
+    before(async() => {
+      const contracts = await deployer.deployFreshChildContracts(accounts)
+      dummyERC721 = contracts.dummyERC721
+    })
+
+    it('Tx should revert with proper reason', async() => {
+      await expectRevert(
+        dummyERC721.deposit(user, depositData, { from: accounts[1] }),
+        'ChildERC721: INSUFFICIENT_PERMISSIONS'
+      )
+    })
+  })
+
   describe('Should burn token on withdraw', () => {
     const tokenId = mockValues.numbers[6]
     const user = accounts[0]
