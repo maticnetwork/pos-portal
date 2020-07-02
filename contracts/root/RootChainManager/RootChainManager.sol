@@ -75,7 +75,7 @@ contract RootChainManager is IRootChainManager, Initializable, AccessControl {
         external
         only(DEFAULT_ADMIN_ROLE)
     {
-        require(newChildChainManager != address(0x0), "New child manager should not be zero");
+        require(newChildChainManager != address(0x0), "RootChainManager: INVALID_CHILD_CHAIN_ADDRESS");
         childChainManagerAddress = newChildChainManager;
     }
 
