@@ -7,6 +7,7 @@ import { defaultAbiCoder as abi } from 'ethers/utils/abi-coder'
 import * as deployer from '../helpers/deployer'
 import { mockValues } from '../helpers/constants'
 import logDecoder from '../helpers/log-decoder.js'
+import { expectRevert } from '@openzeppelin/test-helpers'
 
 chai
   .use(chaiAsPromised)
@@ -66,6 +67,25 @@ contract('ChildERC20', (accounts) => {
       const newAccountBalance = await contracts.dummyERC20.balanceOf(depositReceiver)
       newAccountBalance.should.be.a.bignumber.that.equals(
         oldAccountBalance.add(depositAmount)
+      )
+    })
+  })
+
+  describe('Deposit called by non depositor account', () => {
+    const depositAmount = mockValues.amounts[0]
+    const depositReceiver = mockValues.addresses[4]
+    const depositData = abi.encode(['uint256'], [depositAmount.toString()])
+    let dummyERC20
+
+    before(async() => {
+      const contracts = await deployer.deployFreshChildContracts(accounts)
+      dummyERC20 = contracts.dummyERC20
+    })
+
+    it('Tx should revert with proper reason', async() => {
+      await expectRevert(
+        dummyERC20.deposit(depositReceiver, depositData, { from: accounts[1] }),
+        'ChildERC20: INSUFFICIENT_PERMISSIONS'
       )
     })
   })
