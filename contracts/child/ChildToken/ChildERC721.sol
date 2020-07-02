@@ -4,14 +4,15 @@ import {ERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 import {IChildToken} from "./IChildToken.sol";
 import {NetworkAgnostic} from "../../common/NetworkAgnostic.sol";
+import {ChainConstants} from "../../ChainConstants.sol";
 
-contract ChildERC721 is ERC721, IChildToken, AccessControl, NetworkAgnostic {
+contract ChildERC721 is ERC721, IChildToken, AccessControl, NetworkAgnostic, ChainConstants {
     bytes32 public constant DEPOSITOR_ROLE = keccak256("DEPOSITOR_ROLE");
 
     constructor(
-        string memory name,
-        string memory symbol
-    ) public ERC721(name, symbol) NetworkAgnostic(name, "1", 3) {
+        string memory _name,
+        string memory _symbol
+    ) public ERC721(_name, _symbol) NetworkAgnostic(_name, ERC712_VERSION, ROOT_CHAIN_ID) {
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
         _setupRole(DEPOSITOR_ROLE, _msgSender());
     }
