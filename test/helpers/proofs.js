@@ -76,7 +76,6 @@ export async function getTxProof(tx, block) {
         if (reminder.length > 0) {
           return reject(new Error('Node does not contain the key'))
         }
-
         const prf = {
           blockHash: toBuffer(tx.blockHash),
           parentNodes: stack.map(s => s.raw),
@@ -178,6 +177,38 @@ export function getReceiptBytes(receipt) {
   ])
 }
 
+export function getDiffEncodedReceipt(receipt) {
+  return rlp.encode([
+    toBuffer(
+      receipt.status !== undefined && receipt.status != null
+        ? receipt.status
+          ? 1
+          : 0
+        : receipt.root
+    ),
+    toBuffer(receipt.cumulativeGasUsed),
+    toBuffer(receipt.logsBloom),
+
+    // encoded log array
+    receipt.logs.map(l => {
+      // [address, [topics array], data]
+      if (l.data.length < 67) {
+        // remove left padding
+        return [
+          toBuffer(l.address), // convert address to buffer
+          l.topics.map(toBuffer), // convert topics to buffer
+          toBuffer('0x' + l.data.slice(2).replace(/^0+/, '')) // convert data to buffer
+        ]
+      }
+      return [
+        toBuffer(l.address), // convert address to buffer
+        l.topics.map(toBuffer), // convert topics to buffer
+        toBuffer(l.data) // convert data to buffer
+      ]
+    })
+  ])
+}
+
 export function getFakeReceiptBytes(receipt, dummyData) {
   return rlp.encode([
     toBuffer(
@@ -199,13 +230,13 @@ export function getFakeReceiptBytes(receipt, dummyData) {
         for (let i = 0; i < l.data.length; ++i) {
           dummyData += hex.charAt(Math.floor(Math.random() * hex.length))
         }
-        // [address, [topics array], data]
-        return [
-          toBuffer(l.address), // convert address to buffer
-          l.topics.map(toBuffer), // convert topics to buffer
-          toBuffer(dummyData) // convert data to buffer
-        ]
       }
+      // [address, [topics array], data]
+      return [
+        toBuffer(l.address), // convert address to buffer
+        l.topics.map(toBuffer), // convert topics to buffer
+        toBuffer(dummyData) // convert data to buffer
+      ]
     })
   ])
 }

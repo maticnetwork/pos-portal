@@ -132,7 +132,7 @@ contract RootChainManager is IRootChainManager, Initializable, AccessControl {
 
         // payable(typeToPredicate[tokenToType[ETHER_ADDRESS]]).transfer(msg.value);
         // transfer doesn't work as expected when receiving contract is proxified so using call
-        (bool success, bytes memory data) = typeToPredicate[tokenToType[ETHER_ADDRESS]].call{value: msg.value}("");
+        (bool success, ) = typeToPredicate[tokenToType[ETHER_ADDRESS]].call{value: msg.value}("");
         if (!success) {
             revert("RootChainManager: ETHER_TRANSFER_FAILED");
         }
@@ -195,7 +195,7 @@ contract RootChainManager is IRootChainManager, Initializable, AccessControl {
             abi.encodePacked(
                 inputDataRLPList[2].toBytes(), // blockNumber
                 inputDataRLPList[6].toBytes(), // receipt
-                inputDataRLPList[9].toBytes() // logIndex
+                inputDataRLPList[9].toUint() // logIndex
             )
         );
         require(
