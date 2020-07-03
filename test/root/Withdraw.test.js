@@ -312,7 +312,7 @@ contract('RootChainManager', async(accounts) => {
       )
       // start exit
       await expectRevert(contracts.root.rootChainManager.exit(data,
-        { from: depositReceiver }), 'INVALID_PROOF')
+        { from: depositReceiver }), 'EXIT_ALREADY_PROCESSED')
     })
 
     it('Should fail: start exit again', async() => {

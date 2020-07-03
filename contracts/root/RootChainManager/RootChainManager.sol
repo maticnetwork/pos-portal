@@ -194,8 +194,8 @@ contract RootChainManager is IRootChainManager, Initializable, AccessControl {
         // unique exit is identified using hash of (blockNumber, receipt, logIndex)
         bytes32 exitHash = keccak256(
             abi.encodePacked(
-                inputDataRLPList[2].toBytes(), // blockNumber
-                inputDataRLPList[6].toBytes(), // receipt
+                inputDataRLPList[2].toUint(), // blockNumber
+                inputDataRLPList[8].toBytes().toRlpItem().toUint(), // branchMask
                 inputDataRLPList[9].toUint() // logIndex
             )
         );
