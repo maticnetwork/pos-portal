@@ -27,7 +27,7 @@ contract UpgradableProxy is Proxy {
         _;
     }
 
-    function owner() external view returns(address) {
+    function proxyOwner() external view returns(address) {
         return loadOwner();
     }
 
@@ -53,7 +53,7 @@ contract UpgradableProxy is Proxy {
         return _impl;
     }
 
-    function transferOwnership(address newOwner) public onlyProxyOwner {
+    function transferProxyOwnership(address newOwner) public onlyProxyOwner {
         require(newOwner != address(0), "ZERO_ADDRESS");
         emit OwnerUpdate(newOwner, loadOwner());
         setOwner(newOwner);
