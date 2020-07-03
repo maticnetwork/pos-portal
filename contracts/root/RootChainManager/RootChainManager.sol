@@ -195,7 +195,7 @@ contract RootChainManager is IRootChainManager, Initializable, AccessControl {
         bytes32 exitHash = keccak256(
             abi.encodePacked(
                 inputDataRLPList[2].toUint(), // blockNumber
-                inputDataRLPList[8].toBytes().toRlpItem().toUint(), // branchMask
+                inputDataRLPList[8].toUint(), // branchMask
                 inputDataRLPList[9].toUint() // logIndex
             )
         );
@@ -226,7 +226,7 @@ contract RootChainManager is IRootChainManager, Initializable, AccessControl {
         ];
 
         require(
-            inputDataRLPList[8].toBytes().toRlpItem().toUint() &
+            inputDataRLPList[8].toUint() &
                 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF00000000 ==
                 0,
             "RootChainManager: INVALID_BRANCH_MASK"
