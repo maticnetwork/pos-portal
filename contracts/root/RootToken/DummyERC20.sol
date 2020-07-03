@@ -1,14 +1,14 @@
-pragma solidity "0.6.6";
+pragma solidity ^0.6.6;
 
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {NetworkAgnostic} from "../../common/NetworkAgnostic.sol";
 import {ChainConstants} from "../../ChainConstants.sol";
 
 contract DummyERC20 is ERC20, NetworkAgnostic, ChainConstants {
-    constructor(string memory name, string memory symbol)
+    constructor(string memory name_, string memory symbol_)
         public
-        ERC20(name, symbol)
-        NetworkAgnostic(name, "1", ROOT_CHAIN_ID)
+        ERC20(name_, symbol_)
+        NetworkAgnostic(name_, ERC712_VERSION, ROOT_CHAIN_ID)
     {
         uint256 amount = 10**10 * (10**18);
         _mint(_msgSender(), amount);

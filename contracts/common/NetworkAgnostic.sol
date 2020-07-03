@@ -1,4 +1,4 @@
-pragma solidity >=0.4.21 <0.7.0;
+pragma solidity ^0.6.6;
 
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {EIP712Base} from "./EIP712Base.sol";
@@ -46,21 +46,27 @@ contract NetworkAgnostic is EIP712Base {
             from: userAddress,
             functionSignature: functionSignature
         });
+
         require(
             verify(userAddress, metaTx, sigR, sigS, sigV),
             "Signer and signature do not match"
         );
-        // Append userAddress and relayer address at the end to extract it from calling context
-        (bool success, bytes memory returnData) = address(this).call(
-            abi.encodePacked(functionSignature, userAddress)
-        );
-        require(success, "Function call not successfull");
+
+        // increase nonce for user (to avoid re-use)
         nonces[userAddress] = nonces[userAddress].add(1);
+
         emit MetaTransactionExecuted(
             userAddress,
             msg.sender,
             functionSignature
         );
+
+        // Append userAddress and relayer address at the end to extract it from calling context
+        (bool success, bytes memory returnData) = address(this).call(
+            abi.encodePacked(functionSignature, userAddress)
+        );
+        require(success, "Function call not successful");
+
         return returnData;
     }
 

@@ -58,8 +58,8 @@ contract ERC721Predicate is ITokenPredicate, AccessControl, Initializable, IERC7
         only(MANAGER_ROLE)
     {
         uint256 tokenId = abi.decode(depositData, (uint256));
-        IERC721(rootToken).safeTransferFrom(depositor, address(this), tokenId);
         emit LockedERC721(depositor, depositReceiver, rootToken, tokenId);
+        IERC721(rootToken).safeTransferFrom(depositor, address(this), tokenId);
     }
 
     function exitTokens(

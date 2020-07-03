@@ -4,7 +4,7 @@
  *
  * @dev Library for verifing merkle patricia proofs.
  */
-pragma solidity 0.6.6;
+pragma solidity ^0.6.6;
 
 import {RLPReader} from "./RLPReader.sol";
 
@@ -102,6 +102,8 @@ library MerklePatriciaProof {
                 return false;
             }
         }
+
+        return false;
     }
 
     function _nibblesToTraverse(
@@ -109,7 +111,7 @@ library MerklePatriciaProof {
         bytes memory path,
         uint256 pathPtr
     ) private pure returns (uint256) {
-        uint256 len;
+        uint256 len = 0;
         // encodedPartialPath has elements that are each two hex characters (1 byte), but partialPath
         // and slicedPath have elements that are each one hex character (1 nibble)
         bytes memory partialPath = _getNibbleArray(encodedPartialPath);
@@ -136,7 +138,7 @@ library MerklePatriciaProof {
         pure
         returns (bytes memory)
     {
-        bytes memory nibbles;
+        bytes memory nibbles = "";
         if (b.length > 0) {
             uint8 offset;
             uint8 hpNibble = uint8(_getNthNibbleOfBytes(0, b));

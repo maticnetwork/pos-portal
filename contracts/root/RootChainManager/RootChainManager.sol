@@ -75,6 +75,7 @@ contract RootChainManager is IRootChainManager, Initializable, AccessControl {
         external
         only(DEFAULT_ADMIN_ROLE)
     {
+        require(newChildChainManager != address(0x0), "RootChainManager: INVALID_CHILD_CHAIN_ADDRESS");
         childChainManagerAddress = newChildChainManager;
     }
 
@@ -132,7 +133,7 @@ contract RootChainManager is IRootChainManager, Initializable, AccessControl {
 
         // payable(typeToPredicate[tokenToType[ETHER_ADDRESS]]).transfer(msg.value);
         // transfer doesn't work as expected when receiving contract is proxified so using call
-        (bool success, ) = typeToPredicate[tokenToType[ETHER_ADDRESS]].call{value: msg.value}("");
+        (bool success, /* bytes memory data */) = typeToPredicate[tokenToType[ETHER_ADDRESS]].call{value: msg.value}("");
         if (!success) {
             revert("RootChainManager: ETHER_TRANSFER_FAILED");
         }
@@ -193,8 +194,8 @@ contract RootChainManager is IRootChainManager, Initializable, AccessControl {
         // unique exit is identified using hash of (blockNumber, receipt, logIndex)
         bytes32 exitHash = keccak256(
             abi.encodePacked(
-                inputDataRLPList[2].toBytes(), // blockNumber
-                inputDataRLPList[6].toBytes(), // receipt
+                inputDataRLPList[2].toUint(), // blockNumber
+                inputDataRLPList[8].toUint(), // branchMask
                 inputDataRLPList[9].toUint() // logIndex
             )
         );
@@ -225,7 +226,7 @@ contract RootChainManager is IRootChainManager, Initializable, AccessControl {
         ];
 
         require(
-            inputDataRLPList[8].toBytes().toRlpItem().toUint() &
+            inputDataRLPList[8].toUint() &
                 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF00000000 ==
                 0,
             "RootChainManager: INVALID_BRANCH_MASK"
