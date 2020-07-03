@@ -1021,7 +1021,8 @@ contract ERC1155 is Context, ERC165, IERC1155, IERC1155MetadataURI {
 
 // File: contracts/common/EIP712Base.sol
 
-pragma solidity >=0.4.21 <0.7.0;
+pragma solidity ^0.6.6;
+
 
 contract EIP712Base {
     struct EIP712Domain {
@@ -1085,7 +1086,7 @@ contract EIP712Base {
 
 // File: contracts/common/NetworkAgnostic.sol
 
-pragma solidity >=0.4.21 <0.7.0;
+pragma solidity ^0.6.6;
 
 
 
@@ -1132,21 +1133,27 @@ contract NetworkAgnostic is EIP712Base {
             from: userAddress,
             functionSignature: functionSignature
         });
+
         require(
             verify(userAddress, metaTx, sigR, sigS, sigV),
             "Signer and signature do not match"
         );
-        // Append userAddress and relayer address at the end to extract it from calling context
-        (bool success, bytes memory returnData) = address(this).call(
-            abi.encodePacked(functionSignature, userAddress)
-        );
-        require(success, "Function call not successfull");
+
+        // increase nonce for user (to avoid re-use)
         nonces[userAddress] = nonces[userAddress].add(1);
+
         emit MetaTransactionExecuted(
             userAddress,
             msg.sender,
             functionSignature
         );
+
+        // Append userAddress and relayer address at the end to extract it from calling context
+        (bool success, bytes memory returnData) = address(this).call(
+            abi.encodePacked(functionSignature, userAddress)
+        );
+        require(success, "Function call not successful");
+
         return returnData;
     }
 
@@ -1193,9 +1200,11 @@ contract NetworkAgnostic is EIP712Base {
 
 // File: contracts/ChainConstants.sol
 
-pragma solidity >=0.4.21 <0.7.0;
+pragma solidity ^0.6.6;
 
 contract ChainConstants {
+    string constant public ERC712_VERSION = "1";
+
     uint256 constant public ROOT_CHAIN_ID = 5;
     bytes constant public ROOT_CHAIN_ID_BYTES = hex"05";
 
@@ -1205,16 +1214,16 @@ contract ChainConstants {
 
 // File: contracts/root/RootToken/DummyERC1155.sol
 
-pragma solidity "0.6.6";
+pragma solidity ^0.6.6;
 
 
 
 
 contract DummyERC1155 is ERC1155, NetworkAgnostic, ChainConstants {
-    constructor(string memory uri)
+    constructor(string memory uri_)
         public
-        ERC1155(uri)
-        NetworkAgnostic(uri, "1", ROOT_CHAIN_ID)
+        ERC1155(uri_)
+        NetworkAgnostic(uri_, ERC712_VERSION, ROOT_CHAIN_ID)
     {}
 
     function _msgSender()

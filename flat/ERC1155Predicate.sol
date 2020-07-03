@@ -911,7 +911,7 @@ abstract contract AccessControl is Context {
  * Please reach out with any questions or concerns
  * https://github.com/hamdiallam/Solidity-RLP/blob/e681e25a376dbd5426b509380bc03446f05d0f97/contracts/RLPReader.sol
  */
-pragma solidity 0.6.6;
+pragma solidity ^0.6.6;
 
 library RLPReader {
     uint8 constant STRING_SHORT_START = 0x80;
@@ -1359,19 +1359,19 @@ contract ERC1155Predicate is ITokenPredicate, ERC1155Receiver, AccessControl, In
             uint256[] memory amounts,
             bytes memory data
         ) = abi.decode(depositData, (uint256[], uint256[], bytes));
-        IERC1155(rootToken).safeBatchTransferFrom(
-            depositor,
-            address(this),
-            ids,
-            amounts,
-            data
-        );
         emit LockedBatchERC1155(
             depositor,
             depositReceiver,
             rootToken,
             ids,
             amounts
+        );
+        IERC1155(rootToken).safeBatchTransferFrom(
+            depositor,
+            address(this),
+            ids,
+            amounts,
+            data
         );
     }
 

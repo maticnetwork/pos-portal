@@ -827,7 +827,7 @@ abstract contract AccessControl is Context {
  * Please reach out with any questions or concerns
  * https://github.com/hamdiallam/Solidity-RLP/blob/e681e25a376dbd5426b509380bc03446f05d0f97/contracts/RLPReader.sol
  */
-pragma solidity 0.6.6;
+pragma solidity ^0.6.6;
 
 library RLPReader {
     uint8 constant STRING_SHORT_START = 0x80;
@@ -1258,8 +1258,8 @@ contract ERC721Predicate is ITokenPredicate, AccessControl, Initializable, IERC7
         only(MANAGER_ROLE)
     {
         uint256 tokenId = abi.decode(depositData, (uint256));
-        IERC721(rootToken).safeTransferFrom(depositor, address(this), tokenId);
         emit LockedERC721(depositor, depositReceiver, rootToken, tokenId);
+        IERC721(rootToken).safeTransferFrom(depositor, address(this), tokenId);
     }
 
     function exitTokens(
