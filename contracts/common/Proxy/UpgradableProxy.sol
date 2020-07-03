@@ -4,13 +4,13 @@ import {Proxy} from "./Proxy.sol";
 
 contract UpgradableProxy is Proxy {
     event ProxyUpdated(address indexed _new, address indexed _old);
-    event OwnerUpdate(address _new, address _old);
+    event ProxyOwnerUpdate(address _new, address _old);
 
     bytes32 constant IMPLEMENTATION_SLOT = keccak256("matic.network.proxy.implementation");
     bytes32 constant OWNER_SLOT = keccak256("matic.network.proxy.owner");
 
     constructor(address _proxyTo) public {
-        setOwner(msg.sender);
+        setProxyOwner(msg.sender);
         setImplementation(_proxyTo);
     }
 
@@ -23,15 +23,15 @@ contract UpgradableProxy is Proxy {
     }
 
     modifier onlyProxyOwner() {
-        require(loadOwner() == msg.sender, "NOT_OWNER");
+        require(loadProxyOwner() == msg.sender, "NOT_OWNER");
         _;
     }
 
     function proxyOwner() external view returns(address) {
-        return loadOwner();
+        return loadProxyOwner();
     }
 
-    function loadOwner() internal view returns(address) {
+    function loadProxyOwner() internal view returns(address) {
         address _owner;
         bytes32 position = OWNER_SLOT;
         assembly {
@@ -55,11 +55,11 @@ contract UpgradableProxy is Proxy {
 
     function transferProxyOwnership(address newOwner) public onlyProxyOwner {
         require(newOwner != address(0), "ZERO_ADDRESS");
-        emit OwnerUpdate(newOwner, loadOwner());
-        setOwner(newOwner);
+        emit ProxyOwnerUpdate(newOwner, loadProxyOwner());
+        setProxyOwner(newOwner);
     }
 
-    function setOwner(address newOwner) private {
+    function setProxyOwner(address newOwner) private {
         bytes32 position = OWNER_SLOT;
         assembly {
             sstore(position, newOwner)
