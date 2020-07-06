@@ -43,7 +43,7 @@ contract ChildChainManager is IChildChainManager, Initializable, AccessControl {
     }
 
     /**
-     * @notice Receive state sync data from root chain, only callabel by state syncer
+     * @notice Receive state sync data from root chain, only callable by state syncer
      * @dev state syncing mechanism is used for both depositing tokens and mapping them
      * @param data bytes data from RootChainManager contract
      * `data` is made up of bytes32 `syncType` and bytes `syncData`
