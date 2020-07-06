@@ -498,6 +498,9 @@ library Address {
      * If `target` reverts with a revert reason, it is bubbled up by this
      * function (like regular Solidity function calls).
      *
+     * Returns the raw returned data. To convert to the expected return value,
+     * use https://solidity.readthedocs.io/en/latest/units-and-global-variables.html?highlight=abi.decode#abi-encoding-and-decoding-functions[`abi.decode`].
+     *
      * Requirements:
      *
      * - `target` must be a contract.
@@ -520,18 +523,13 @@ library Address {
     }
 
     /**
-     * @dev Performs a Solidity function call using a low level `call`,
-     * transferring `value` wei. A plain`call` is an unsafe replacement for a
-     * function call: use this function instead.
-     *
-     * If `target` reverts with a revert reason, it is bubbled up by this
-     * function (like regular Solidity function calls).
+     * @dev Same as {xref-Address-functionCall-address-bytes-}[`functionCall`],
+     * but also transferring `value` wei to `target`.
      *
      * Requirements:
      *
-     * - `target` must be a contract.
      * - the calling contract must have an ETH balance of at least `value`.
-     * - calling `target` with `data` must not revert.
+     * - the called Solidity function must be `payable`.
      *
      * _Available since v3.1._
      */
@@ -1157,12 +1155,14 @@ pragma solidity ^0.6.6;
 /// @notice Abstract interface that defines methods for custom predicates
 interface ITokenPredicate {
 
-    /// @notice Deposit tokens into pos portal
-    /// @dev When `depositor` deposits tokens into pos portal, tokens get locked into predicate contract.
-    /// @param depositor Address who wants to deposit tokens
-    /// @param depositReceiver Address (address) who wants to receive tokens on side chain
-    /// @param rootToken Token which gets deposited
-    /// @param depositData Extra data for deposit (amount for ERC20, token id for ERC721 etc.) [ABI encoded]
+    /**
+     * @notice Deposit tokens into pos portal
+     * @dev When `depositor` deposits tokens into pos portal, tokens get locked into predicate contract.
+     * @param depositor Address who wants to deposit tokens
+     * @param depositReceiver Address (address) who wants to receive tokens on side chain
+     * @param rootToken Token which gets deposited
+     * @param depositData Extra data for deposit (amount for ERC20, token id for ERC721 etc.) [ABI encoded]
+     */
     function lockTokens(
         address depositor,
         address depositReceiver,
@@ -1170,12 +1170,14 @@ interface ITokenPredicate {
         bytes calldata depositData
     ) external;
 
-    /// @notice Validates and processes exit while withdraw process
-    /// @dev Validates exit log emitted on sidechain. Reverts if validation fails.
-    /// @dev Processes withdraw based on custom logic. Example: transfer ERC20/ERC721, mint ERC721 if mintable withdraw
-    /// @param withdrawer Address who wants to withdraw tokens
-    /// @param rootToken Token which gets withdrawn
-    /// @param logRLPList Valid sidechain log for data like amount, token id etc.
+    /**
+     * @notice Validates and processes exit while withdraw process
+     * @dev Validates exit log emitted on sidechain. Reverts if validation fails.
+     * @dev Processes withdraw based on custom logic. Example: transfer ERC20/ERC721, mint ERC721 if mintable withdraw
+     * @param withdrawer Address who wants to withdraw tokens
+     * @param rootToken Token which gets withdrawn
+     * @param logRLPList Valid sidechain log for data like amount, token id etc.
+     */
     function exitTokens(
         address withdrawer,
         address rootToken,
@@ -1234,6 +1236,9 @@ contract ERC721Predicate is ITokenPredicate, AccessControl, Initializable, IERC7
         _setupRole(MANAGER_ROLE, _owner);
     }
 
+    /**
+     * @notice accepts safe ERC721 transfer
+     */
     function onERC721Received(
         address,
         address,
@@ -1247,6 +1252,13 @@ contract ERC721Predicate is ITokenPredicate, AccessControl, Initializable, IERC7
         return IERC721Receiver.onERC721Received.selector;
     }
 
+    /**
+     * @notice Lock ERC721 tokens for deposit, callable only by manager
+     * @param depositor Address who wants to deposit token
+     * @param depositReceiver Address (address) who wants to receive token on child chain
+     * @param rootToken Token which gets deposited
+     * @param depositData ABI encoded tokenId
+     */
     function lockTokens(
         address depositor,
         address depositReceiver,
@@ -1262,6 +1274,14 @@ contract ERC721Predicate is ITokenPredicate, AccessControl, Initializable, IERC7
         IERC721(rootToken).safeTransferFrom(depositor, address(this), tokenId);
     }
 
+    /**
+     * @notice Validates log signature, from and to address
+     * then sends the correct tokenId to withdrawer
+     * callable only by manager
+     * @param withdrawer Address who wants to withdraw token
+     * @param rootToken Token which gets withdrawn
+     * @param log Valid ERC721 burn log from child chain
+     */
     function exitTokens(
         address withdrawer,
         address rootToken,

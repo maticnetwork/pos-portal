@@ -557,6 +557,9 @@ library Address {
      * If `target` reverts with a revert reason, it is bubbled up by this
      * function (like regular Solidity function calls).
      *
+     * Returns the raw returned data. To convert to the expected return value,
+     * use https://solidity.readthedocs.io/en/latest/units-and-global-variables.html?highlight=abi.decode#abi-encoding-and-decoding-functions[`abi.decode`].
+     *
      * Requirements:
      *
      * - `target` must be a contract.
@@ -579,18 +582,13 @@ library Address {
     }
 
     /**
-     * @dev Performs a Solidity function call using a low level `call`,
-     * transferring `value` wei. A plain`call` is an unsafe replacement for a
-     * function call: use this function instead.
-     *
-     * If `target` reverts with a revert reason, it is bubbled up by this
-     * function (like regular Solidity function calls).
+     * @dev Same as {xref-Address-functionCall-address-bytes-}[`functionCall`],
+     * but also transferring `value` wei to `target`.
      *
      * Requirements:
      *
-     * - `target` must be a contract.
      * - the calling contract must have an ETH balance of at least `value`.
-     * - calling `target` with `data` must not revert.
+     * - the called Solidity function must be `payable`.
      *
      * _Available since v3.1._
      */
@@ -1888,16 +1886,10 @@ contract EIP712Base {
                 EIP712_DOMAIN_TYPEHASH,
                 keccak256(bytes(name)),
                 keccak256(bytes(version)),
-                getChainID(_chainId),
+                _chainId,
                 address(this)
             )
         );
-    }
-
-    function getChainID(uint256 _chainId) internal pure returns (uint256 id) {
-        assembly {
-            id := _chainId
-        }
     }
 
     function getDomainSeperator() private view returns (bytes32) {
@@ -2099,6 +2091,14 @@ contract ChildERC721 is ERC721, IChildToken, AccessControl, NetworkAgnostic, Cha
         return sender;
     }
 
+    /**
+     * @notice called when token is deposited on root chain
+     * @dev Should be callable only by ChildChainManager
+     * Should handle deposit by minting the required tokenId for user
+     * Make sure minting is done only by this function
+     * @param user user address for whom deposit is being done
+     * @param depositData abi encoded tokenId
+     */
     function deposit(address user, bytes calldata depositData)
         external
         override
@@ -2108,6 +2108,11 @@ contract ChildERC721 is ERC721, IChildToken, AccessControl, NetworkAgnostic, Cha
         _mint(user, tokenId);
     }
 
+    /**
+     * @notice called when user wants to withdraw token back to root chain
+     * @dev Should burn user's token. This transaction will be verified when exiting on root chain
+     * @param tokenId tokenId to withdraw
+     */
     function withdraw(uint256 tokenId) external {
         require(_msgSender() == ownerOf(tokenId), "ChildERC721: INVALID_TOKEN_OWNER");
         _burn(tokenId);

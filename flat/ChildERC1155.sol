@@ -528,6 +528,9 @@ library Address {
      * If `target` reverts with a revert reason, it is bubbled up by this
      * function (like regular Solidity function calls).
      *
+     * Returns the raw returned data. To convert to the expected return value,
+     * use https://solidity.readthedocs.io/en/latest/units-and-global-variables.html?highlight=abi.decode#abi-encoding-and-decoding-functions[`abi.decode`].
+     *
      * Requirements:
      *
      * - `target` must be a contract.
@@ -550,18 +553,13 @@ library Address {
     }
 
     /**
-     * @dev Performs a Solidity function call using a low level `call`,
-     * transferring `value` wei. A plain`call` is an unsafe replacement for a
-     * function call: use this function instead.
-     *
-     * If `target` reverts with a revert reason, it is bubbled up by this
-     * function (like regular Solidity function calls).
+     * @dev Same as {xref-Address-functionCall-address-bytes-}[`functionCall`],
+     * but also transferring `value` wei to `target`.
      *
      * Requirements:
      *
-     * - `target` must be a contract.
      * - the calling contract must have an ETH balance of at least `value`.
-     * - calling `target` with `data` must not revert.
+     * - the called Solidity function must be `payable`.
      *
      * _Available since v3.1._
      */
@@ -1492,6 +1490,193 @@ interface IChildToken {
     function deposit(address user, bytes calldata depositData) external;
 }
 
+// File: contracts/common/EIP712Base.sol
+
+pragma solidity ^0.6.6;
+
+
+contract EIP712Base {
+    struct EIP712Domain {
+        string name;
+        string version;
+        uint256 chainId;
+        address verifyingContract;
+    }
+
+    bytes32 internal constant EIP712_DOMAIN_TYPEHASH = keccak256(
+        bytes(
+            "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
+        )
+    );
+    bytes32 internal domainSeperator;
+
+    constructor(
+        string memory name,
+        string memory version,
+        uint256 _chainId
+    ) public {
+        domainSeperator = keccak256(
+            abi.encode(
+                EIP712_DOMAIN_TYPEHASH,
+                keccak256(bytes(name)),
+                keccak256(bytes(version)),
+                _chainId,
+                address(this)
+            )
+        );
+    }
+
+    function getDomainSeperator() private view returns (bytes32) {
+        return domainSeperator;
+    }
+
+    /**
+     * Accept message hash and returns hash message in EIP712 compatible form
+     * So that it can be used to recover signer from signature signed using EIP712 formatted data
+     * https://eips.ethereum.org/EIPS/eip-712
+     * "\\x19" makes the encoding deterministic
+     * "\\x01" is the version byte to make it compatible to EIP-191
+     */
+    function toTypedMessageHash(bytes32 messageHash)
+        internal
+        view
+        returns (bytes32)
+    {
+        return
+            keccak256(
+                abi.encodePacked("\x19\x01", getDomainSeperator(), messageHash)
+            );
+    }
+}
+
+// File: contracts/common/NetworkAgnostic.sol
+
+pragma solidity ^0.6.6;
+
+
+
+contract NetworkAgnostic is EIP712Base {
+    using SafeMath for uint256;
+    bytes32 private constant META_TRANSACTION_TYPEHASH = keccak256(
+        bytes(
+            "MetaTransaction(uint256 nonce,address from,bytes functionSignature)"
+        )
+    );
+    event MetaTransactionExecuted(
+        address userAddress,
+        address payable relayerAddress,
+        bytes functionSignature
+    );
+    mapping(address => uint256) nonces;
+
+    /*
+     * Meta transaction structure.
+     * No point of including value field here as if user is doing value transfer then he has the funds to pay for gas
+     * He should call the desired function directly in that case.
+     */
+    struct MetaTransaction {
+        uint256 nonce;
+        address from;
+        bytes functionSignature;
+    }
+
+    constructor(
+        string memory name,
+        string memory version,
+        uint256 chainId
+    ) public EIP712Base(name, version, chainId) {}
+
+    function executeMetaTransaction(
+        address userAddress,
+        bytes memory functionSignature,
+        bytes32 sigR,
+        bytes32 sigS,
+        uint8 sigV
+    ) public payable returns (bytes memory) {
+        MetaTransaction memory metaTx = MetaTransaction({
+            nonce: nonces[userAddress],
+            from: userAddress,
+            functionSignature: functionSignature
+        });
+
+        require(
+            verify(userAddress, metaTx, sigR, sigS, sigV),
+            "Signer and signature do not match"
+        );
+
+        // increase nonce for user (to avoid re-use)
+        nonces[userAddress] = nonces[userAddress].add(1);
+
+        emit MetaTransactionExecuted(
+            userAddress,
+            msg.sender,
+            functionSignature
+        );
+
+        // Append userAddress and relayer address at the end to extract it from calling context
+        (bool success, bytes memory returnData) = address(this).call(
+            abi.encodePacked(functionSignature, userAddress)
+        );
+        require(success, "Function call not successful");
+
+        return returnData;
+    }
+
+    function hashMetaTransaction(MetaTransaction memory metaTx)
+        internal
+        pure
+        returns (bytes32)
+    {
+        return
+            keccak256(
+                abi.encode(
+                    META_TRANSACTION_TYPEHASH,
+                    metaTx.nonce,
+                    metaTx.from,
+                    keccak256(metaTx.functionSignature)
+                )
+            );
+    }
+
+    function getNonce(address user) public view returns (uint256 nonce) {
+        nonce = nonces[user];
+    }
+
+    function verify(
+        address signer,
+        MetaTransaction memory metaTx,
+        bytes32 sigR,
+        bytes32 sigS,
+        uint8 sigV
+    ) internal view returns (bool) {
+        return
+            signer ==
+            ecrecover(
+                toTypedMessageHash(hashMetaTransaction(metaTx)),
+                sigV,
+                sigR,
+                sigS
+            );
+    }
+
+    // To recieve ether in contract
+    receive() external payable {}
+}
+
+// File: contracts/ChainConstants.sol
+
+pragma solidity ^0.6.6;
+
+contract ChainConstants {
+    string constant public ERC712_VERSION = "1";
+
+    uint256 constant public ROOT_CHAIN_ID = 5;
+    bytes constant public ROOT_CHAIN_ID_BYTES = hex"05";
+
+    uint256 constant public CHILD_CHAIN_ID = 15001;
+    bytes constant public CHILD_CHAIN_ID_BYTES = hex"3A99";
+}
+
 // File: contracts/child/ChildToken/ChildERC1155.sol
 
 pragma solidity ^0.6.6;
@@ -1499,13 +1684,22 @@ pragma solidity ^0.6.6;
 
 
 
-// import {NetworkAgnostic} from "../../common/NetworkAgnostic.sol";
 
-// TODO: network agnostic
-contract ChildERC1155 is ERC1155, IChildToken, AccessControl {
+
+contract ChildERC1155 is
+    ERC1155,
+    IChildToken,
+    AccessControl,
+    NetworkAgnostic,
+    ChainConstants
+{
     bytes32 public constant DEPOSITOR_ROLE = keccak256("DEPOSITOR_ROLE");
 
-    constructor(string memory uri_) public ERC1155(uri_) {
+    constructor(string memory uri_)
+        public
+        ERC1155(uri_)
+        NetworkAgnostic(uri_, ERC712_VERSION, ROOT_CHAIN_ID)
+    {
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
         _setupRole(DEPOSITOR_ROLE, _msgSender());
     }
@@ -1540,6 +1734,14 @@ contract ChildERC1155 is ERC1155, IChildToken, AccessControl {
         return sender;
     }
 
+    /**
+     * @notice called when tokens are deposited on root chain
+     * @dev Should be callable only by ChildChainManager
+     * Should handle deposit by minting the required tokens for user
+     * Make sure minting is done only by this function
+     * @param user user address for whom deposit is being done
+     * @param depositData abi encoded ids array and amounts array
+     */
     function deposit(address user, bytes calldata depositData)
         external
         override
@@ -1554,10 +1756,22 @@ contract ChildERC1155 is ERC1155, IChildToken, AccessControl {
         _mintBatch(user, ids, amounts, data);
     }
 
+    /**
+     * @notice called when user wants to withdraw single token back to root chain
+     * @dev Should burn user's tokens. This transaction will be verified when exiting on root chain
+     * @param id id to withdraw
+     * @param amount amount to withdraw
+     */
     function withdrawSingle(uint256 id, uint256 amount) external {
         _burn(_msgSender(), id, amount);
     }
 
+    /**
+     * @notice called when user wants to batch withdraw tokens back to root chain
+     * @dev Should burn user's tokens. This transaction will be verified when exiting on root chain
+     * @param ids ids to withdraw
+     * @param amounts amounts to withdraw
+     */
     function withdrawBatch(uint256[] calldata ids, uint256[] calldata amounts)
         external
     {
