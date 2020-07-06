@@ -9,7 +9,7 @@
     "bor": "cd test-blockchain && bash run-docker.sh",
     "bor:clean": "cd test-blockchain && bash stop-docker.sh",
     "truffle": "truffle",
-    "build": "truffle compile",
+    "build": "truffle compile && node generate-artifacts.js && node flatten-contracts.js",
     "migrate:2": "truffle migrate --network root --f 2 --to 2",
     "migrate:3": "truffle migrate --network child --f 3 --to 3",
     "migrate:4": "truffle migrate --network root --f 4 --to 4",

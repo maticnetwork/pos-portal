@@ -1529,7 +1529,7 @@ contract RootChainManager is IRootChainManager, Initializable, AccessControl {
 
     /**
      * @notice exit tokens by providing proof
-     * @dev This function if the transaction actually happened on child chain
+     * @dev This function verifies if the transaction actually happened on child chain
      * the transaction log is then sent to token predicate to handle it accordingly
      *
      * @param inputData RLP encoded data of the reference tx containing following list of fields
