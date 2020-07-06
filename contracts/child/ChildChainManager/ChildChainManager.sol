@@ -29,6 +29,11 @@ contract ChildChainManager is IChildChainManager, Initializable, AccessControl {
         _setupRole(STATE_SYNCER_ROLE, _owner);
     }
 
+    /**
+     * @notice Map a token to enable its movement via the PoS Portal, callable only by mappers
+     * @param rootToken address of token on root chain
+     * @param childToken address of token on child chain
+     */
     function mapToken(address rootToken, address childToken)
         external
         override
@@ -37,6 +42,18 @@ contract ChildChainManager is IChildChainManager, Initializable, AccessControl {
         _mapToken(rootToken, childToken);
     }
 
+    /**
+     * @notice Receive state sync data from root chain, only callabel by state syncer
+     * @dev state syncing mechanism is used for both depositing tokens and mapping them
+     * @param id state sync id
+     * @param data bytes data from RootChainManager contract
+     * `data` is made up of bytes32 `syncType` and bytes `syncData`
+     * `syncType` determines if it is deposit or token mapping
+     * in case of token mapping, `syncData` is encoded address `rootToken`, address `childToken` and bytes32 `tokenType`
+     * in case of deposit, `syncData` is encoded address `user`, address `rootToken` and bytes `depositData`
+     * `depositData` is token specific data (amount in case of ERC20). It is passed as is to child token
+     * @return
+     */
     function onStateReceive(uint256, bytes calldata data)
         external
         override
