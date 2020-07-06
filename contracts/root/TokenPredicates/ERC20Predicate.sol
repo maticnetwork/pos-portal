@@ -35,6 +35,13 @@ contract ERC20Predicate is ITokenPredicate, AccessControl, Initializable {
         _setupRole(MANAGER_ROLE, _owner);
     }
 
+    /**
+     * @notice Lock ERC20 tokens for deposit, callable only by manager
+     * @param depositor Address who wants to deposit tokens
+     * @param depositReceiver Address (address) who wants to receive tokens on child chain
+     * @param rootToken Token which gets deposited
+     * @param depositData ABI encoded amount
+     */
     function lockTokens(
         address depositor,
         address depositReceiver,
@@ -50,6 +57,14 @@ contract ERC20Predicate is ITokenPredicate, AccessControl, Initializable {
         IERC20(rootToken).safeTransferFrom(depositor, address(this), amount);
     }
 
+    /**
+     * @notice Validates log signature, from and to address
+     * then sends the correct amount to withdrawer
+     * callable only by manager
+     * @param withdrawer Address who wants to withdraw tokens
+     * @param rootToken Token which gets withdrawn
+     * @param log Valid ERC20 burn log from child chain
+     */
     function exitTokens(
         address withdrawer,
         address rootToken,

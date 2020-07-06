@@ -31,8 +31,17 @@ contract EtherPredicate is ITokenPredicate, AccessControl, Initializable {
         _setupRole(MANAGER_ROLE, _owner);
     }
 
+    /**
+     * @notice Receive Ether to lock for deposit, callable only by manager
+     */
     receive() external payable only(MANAGER_ROLE) {}
 
+    /**
+     * @notice handle ether lock, callable only by manager
+     * @param depositor Address who wants to deposit tokens
+     * @param depositReceiver Address (address) who wants to receive tokens on child chain
+     * @param depositData ABI encoded amount
+     */
     function lockTokens(
         address depositor,
         address depositReceiver,
@@ -47,6 +56,13 @@ contract EtherPredicate is ITokenPredicate, AccessControl, Initializable {
         emit LockedEther(depositor, depositReceiver, amount);
     }
 
+    /**
+     * @notice Validates log signature, from and to address
+     * then sends the correct amount to withdrawer
+     * callable only by manager
+     * @param withdrawer Address who wants to withdraw tokens
+     * @param log Valid ERC20 burn log from child chain
+     */
     function exitTokens(
         address withdrawer,
         address,
