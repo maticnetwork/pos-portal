@@ -45,6 +45,14 @@ contract ChildERC721 is ERC721, IChildToken, AccessControl, NetworkAgnostic, Cha
         return sender;
     }
 
+    /**
+     * @notice called when token is deposited on root chain
+     * @dev Should be callable only by ChildChainManager
+     * Should handle deposit by minting the required tokenId for user
+     * Make sure minting is done only by this function
+     * @param user user address for whom deposit is being done
+     * @param depositData abi encoded tokenId
+     */
     function deposit(address user, bytes calldata depositData)
         external
         override
@@ -54,6 +62,11 @@ contract ChildERC721 is ERC721, IChildToken, AccessControl, NetworkAgnostic, Cha
         _mint(user, tokenId);
     }
 
+    /**
+     * @notice called when user wants to withdraw token back to root chain
+     * @dev Should burn user's token. This transaction will be verified when exiting on root chain
+     * @param tokenId tokenId to withdraw
+     */
     function withdraw(uint256 tokenId) external {
         require(_msgSender() == ownerOf(tokenId), "ChildERC721: INVALID_TOKEN_OWNER");
         _burn(tokenId);

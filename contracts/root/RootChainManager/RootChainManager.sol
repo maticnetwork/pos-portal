@@ -40,15 +40,30 @@ contract RootChainManager is IRootChainManager, Initializable, AccessControl {
         _;
     }
 
+    /**
+     * @notice Deposit ether by directly sending to the contract
+     * The account sending ether receives WETH on child chain
+     */
     receive() external payable {
         _depositEtherFor(_msgSender());
     }
 
+    /**
+     * @notice Initialize the contract after it has been proxified
+     * @dev meant to be called once immediately after deployment
+     * @param _owner the account that should be granted admin role
+     */
     function initialize(address _owner) external initializer {
         _setupRole(DEFAULT_ADMIN_ROLE, _owner);
         _setupRole(MAPPER_ROLE, _owner);
     }
 
+    /**
+     * @notice Set the state sender, callable only by admins
+     * @dev This should be the state sender from plasma contracts
+     * It is used to send bytes from root to child chain
+     * @param newStateSender address of state sender contract
+     */
     function setStateSender(address newStateSender)
         external
         only(DEFAULT_ADMIN_ROLE)
@@ -56,10 +71,19 @@ contract RootChainManager is IRootChainManager, Initializable, AccessControl {
         _stateSender = IStateSender(newStateSender);
     }
 
+    /**
+     * @notice Get the address of contract set as state sender
+     * @return The address of state sender contract
+     */
     function stateSenderAddress() external view returns (address) {
         return address(_stateSender);
     }
 
+    /**
+     * @notice Set the checkpoint manager, callable only by admins
+     * @dev This should be the plasma contract responsible for keeping track of checkpoints
+     * @param newCheckpointManager address of checkpoint manager contract
+     */
     function setCheckpointManager(address newCheckpointManager)
         external
         only(DEFAULT_ADMIN_ROLE)
@@ -67,10 +91,19 @@ contract RootChainManager is IRootChainManager, Initializable, AccessControl {
         _checkpointManager = ICheckpointManager(newCheckpointManager);
     }
 
+    /**
+     * @notice Get the address of contract set as checkpoint manager
+     * @return The address of checkpoint manager contract
+     */
     function checkpointManagerAddress() external view returns (address) {
         return address(_checkpointManager);
     }
 
+    /**
+     * @notice Set the child chain manager, callable only by admins
+     * @dev This should be the contract responsible to receive deposit bytes on child chain
+     * @param newChildChainManager address of child chain manager contract
+     */
     function setChildChainManagerAddress(address newChildChainManager)
         external
         only(DEFAULT_ADMIN_ROLE)
@@ -79,6 +112,12 @@ contract RootChainManager is IRootChainManager, Initializable, AccessControl {
         childChainManagerAddress = newChildChainManager;
     }
 
+    /**
+     * @notice Register a token predicate address against its type, callable only by mappers
+     * @dev A predicate is a contract responsible to process the token specific logic while locking or exiting tokens
+     * @param tokenType bytes32 unique identifier for the token type
+     * @param predicateAddress address of token predicate address
+     */
     function registerPredicate(bytes32 tokenType, address predicateAddress)
         external
         override
@@ -88,6 +127,12 @@ contract RootChainManager is IRootChainManager, Initializable, AccessControl {
         emit PredicateRegistered(tokenType, predicateAddress);
     }
 
+    /**
+     * @notice Map a token to enable its movement via the PoS Portal, callable only by mappers
+     * @param rootToken address of token on root chain
+     * @param childToken address of token on child chain
+     * @param tokenType bytes32 unique identifier for the token type
+     */
     function mapToken(
         address rootToken,
         address childToken,
@@ -111,10 +156,23 @@ contract RootChainManager is IRootChainManager, Initializable, AccessControl {
         );
     }
 
+    /**
+     * @notice Move ether from root to child chain, accepts ether transfer
+     * Keep in mind this ether cannot be used to pay gas on child chain
+     * Use Matic tokens deposited using plasma mechanism for that
+     * @param user address of account that should receive WETH on child chain
+     */
     function depositEtherFor(address user) external override payable {
         _depositEtherFor(user);
     }
 
+    /**
+     * @notice Move tokens from root to child chain
+     * @dev This mechanism supports arbitrary tokens as long as its predicate has been registered and the token is mapped
+     * @param user address of account that should receive this deposit on child chain
+     * @param rootToken address of token that is being deposited
+     * @param depositData bytes data that is sent to predicate and child token contracts to handle deposit
+     */
     function depositFor(
         address user,
         address rootToken,
@@ -173,17 +231,21 @@ contract RootChainManager is IRootChainManager, Initializable, AccessControl {
     }
 
     /**
+     * @notice exit tokens by providing proof
+     * @dev This function verifies if the transaction actually happened on child chain
+     * the transaction log is then sent to token predicate to handle it accordingly
+     *
      * @param inputData RLP encoded data of the reference tx containing following list of fields
-     *  0 - headerNumber Header block number of which the reference tx was a part of
-     *  1 - blockProof Proof that the block header (in the child chain) is a leaf in the submitted merkle root
-     *  2 - blockNumber Block number of which the reference tx is a part of
-     *  3 - blockTime Reference tx block time
-     *  4 - blocktxRoot Transactions root of block
-     *  5 - blockReceiptsRoot Receipts root of block
-     *  6 - receipt Receipt of the reference transaction
-     *  7 - receiptProof Merkle proof of the reference receipt
-     *  8 - branchMask Merkle proof branchMask for the receipt
-     *  9 - logIndex Log Index to read from the receipt
+     *  0 - headerNumber - Checkpoint header block number containing the reference tx
+     *  1 - blockProof - Proof that the block header (in the child chain) is a leaf in the submitted merkle root
+     *  2 - blockNumber - Block number containing the reference tx on child chain
+     *  3 - blockTime - Reference tx block time
+     *  4 - txRoot - Transactions root of block
+     *  5 - receiptRoot - Receipts root of block
+     *  6 - receipt - Receipt of the reference transaction
+     *  7 - receiptProof - Merkle proof of the reference receipt
+     *  8 - branchMask - 32 bits denoting the path of receipt in merkle tree
+     *  9 - receiptLogIndex - Log Index to read from the receipt
      */
     function exit(bytes calldata inputData) external override {
         RLPReader.RLPItem[] memory inputDataRLPList = inputData
@@ -191,12 +253,12 @@ contract RootChainManager is IRootChainManager, Initializable, AccessControl {
             .toList();
 
         // checking if exit has already been processed
-        // unique exit is identified using hash of (blockNumber, receipt, logIndex)
+        // unique exit is identified using hash of (blockNumber, branchMask, receiptLogIndex)
         bytes32 exitHash = keccak256(
             abi.encodePacked(
                 inputDataRLPList[2].toUint(), // blockNumber
                 inputDataRLPList[8].toUint(), // branchMask
-                inputDataRLPList[9].toUint() // logIndex
+                inputDataRLPList[9].toUint() // receiptLogIndex
             )
         );
         require(
@@ -205,15 +267,17 @@ contract RootChainManager is IRootChainManager, Initializable, AccessControl {
         );
         processedExits[exitHash] = true;
 
-        // verifying child withdraw log
         RLPReader.RLPItem[] memory receiptRLPList = inputDataRLPList[6]
             .toBytes()
             .toRlpItem()
             .toList();
         RLPReader.RLPItem memory logRLP = receiptRLPList[3]
-            .toList()[inputDataRLPList[9].toUint()]; /* logIndex */
+            .toList()[
+                inputDataRLPList[9].toUint() // receiptLogIndex
+            ];
 
         address childToken = RLPReader.toAddress(logRLP.toList()[0]); // log emitter address field
+        // log should be emmited only by the child token
         require(
             childToRootToken[childToken] != address(0),
             "RootChainManager: TOKEN_NOT_MAPPED"
@@ -225,6 +289,7 @@ contract RootChainManager is IRootChainManager, Initializable, AccessControl {
             ]
         ];
 
+        // branch mask can be maximum 32 bits
         require(
             inputDataRLPList[8].toUint() &
                 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF00000000 ==
@@ -238,7 +303,7 @@ contract RootChainManager is IRootChainManager, Initializable, AccessControl {
                 inputDataRLPList[6].toBytes(), // receipt
                 inputDataRLPList[8].toBytes(), // branchMask
                 inputDataRLPList[7].toBytes(), // receiptProof
-                bytes32(inputDataRLPList[5].toUint()) // receiptsRoot
+                bytes32(inputDataRLPList[5].toUint()) // receiptRoot
             ),
             "RootChainManager: INVALID_PROOF"
         );
