@@ -9,7 +9,7 @@
     "bor": "cd test-blockchain && bash run-docker.sh",
     "bor:clean": "cd test-blockchain && bash stop-docker.sh",
     "truffle": "truffle",
-    "build": "truffle compile",
+    "build": "truffle compile && node generate-artifacts.js && node flatten-contracts.js",
     "migrate:2": "truffle migrate --network root --f 2 --to 2",
     "migrate:3": "truffle migrate --network child --f 3 --to 3",
     "migrate:4": "truffle migrate --network root --f 4 --to 4",
@@ -21,6 +21,8 @@
     "lint:sol:fix": "solium -d contracts/ --fix",
     "lint:sol": "solium -d contracts/",
     "debug": "truffle debug",
+    "artifacts": "node generate-artifacts.js",
+    "flatten": "node flatten-contracts.js",
     "test:ci": "scripts/run-test.sh"
   },
   "repository": {
@@ -66,10 +68,12 @@
     "ethereumjs-util": "^7.0.2",
     "ethereumjs-wallet": "0.6.2",
     "ethers": "^4.0.46",
+    "fs": "0.0.1-security",
     "glob": "^7.1.6",
     "nunjucks": "^3.2.1",
     "solium": "^1.2.5",
-    "truffle": "^5.1.21"
+    "truffle": "^5.1.21",
+    "truffle-flattener": "^1.4.4"
   },
   "dependencies": {
     "ganache-cli": "^6.9.1"
