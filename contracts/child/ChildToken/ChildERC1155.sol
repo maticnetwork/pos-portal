@@ -3,14 +3,23 @@ pragma solidity ^0.6.6;
 import {ERC1155} from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 import {IChildToken} from "./IChildToken.sol";
+import {NetworkAgnostic} from "../../common/NetworkAgnostic.sol";
+import {ChainConstants} from "../../ChainConstants.sol";
 
-// import {NetworkAgnostic} from "../../common/NetworkAgnostic.sol";
-
-// TODO: network agnostic
-contract ChildERC1155 is ERC1155, IChildToken, AccessControl {
+contract ChildERC1155 is
+    ERC1155,
+    IChildToken,
+    AccessControl,
+    NetworkAgnostic,
+    ChainConstants
+{
     bytes32 public constant DEPOSITOR_ROLE = keccak256("DEPOSITOR_ROLE");
 
-    constructor(string memory uri_) public ERC1155(uri_) {
+    constructor(string memory uri_)
+        public
+        ERC1155(uri_)
+        NetworkAgnostic(uri_, ERC712_VERSION, ROOT_CHAIN_ID)
+    {
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
         _setupRole(DEPOSITOR_ROLE, _msgSender());
     }
