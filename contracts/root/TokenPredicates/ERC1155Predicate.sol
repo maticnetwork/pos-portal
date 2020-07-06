@@ -39,6 +39,9 @@ contract ERC1155Predicate is ITokenPredicate, ERC1155Receiver, AccessControl, In
         _setupRole(MANAGER_ROLE, _owner);
     }
 
+    /**
+     * @notice rejects single transfer
+     */
     function onERC1155Received(
         address,
         address,
@@ -49,6 +52,9 @@ contract ERC1155Predicate is ITokenPredicate, ERC1155Receiver, AccessControl, In
         return 0;
     }
 
+    /**
+     * @notice accepts batch transfer
+     */
     function onERC1155BatchReceived(
         address,
         address,
@@ -59,6 +65,13 @@ contract ERC1155Predicate is ITokenPredicate, ERC1155Receiver, AccessControl, In
         return ERC1155Receiver(0).onERC1155BatchReceived.selector;
     }
 
+    /**
+     * @notice Lock ERC1155 tokens for deposit, callable only by manager
+     * @param depositor Address who wants to deposit tokens
+     * @param depositReceiver Address (address) who wants to receive tokens on child chain
+     * @param rootToken Token which gets deposited
+     * @param depositData ABI encoded id array and amount array
+     */
     function lockTokens(
         address depositor,
         address depositReceiver,
@@ -91,6 +104,14 @@ contract ERC1155Predicate is ITokenPredicate, ERC1155Receiver, AccessControl, In
         );
     }
 
+    /**
+     * @notice Validates log signature, from and to address
+     * then sends the correct tokenId, amount to withdrawer
+     * callable only by manager
+     * @param withdrawer Address who wants to withdraw tokens
+     * @param rootToken Token which gets withdrawn
+     * @param log Valid ERC1155 TransferSingle burn or TransferBatch burn log from child chain
+     */
     function exitTokens(
         address withdrawer,
         address rootToken,

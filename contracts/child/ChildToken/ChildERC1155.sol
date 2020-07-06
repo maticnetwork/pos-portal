@@ -3,14 +3,23 @@ pragma solidity ^0.6.6;
 import {ERC1155} from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 import {IChildToken} from "./IChildToken.sol";
+import {NetworkAgnostic} from "../../common/NetworkAgnostic.sol";
+import {ChainConstants} from "../../ChainConstants.sol";
 
-// import {NetworkAgnostic} from "../../common/NetworkAgnostic.sol";
-
-// TODO: network agnostic
-contract ChildERC1155 is ERC1155, IChildToken, AccessControl {
+contract ChildERC1155 is
+    ERC1155,
+    IChildToken,
+    AccessControl,
+    NetworkAgnostic,
+    ChainConstants
+{
     bytes32 public constant DEPOSITOR_ROLE = keccak256("DEPOSITOR_ROLE");
 
-    constructor(string memory uri_) public ERC1155(uri_) {
+    constructor(string memory uri_)
+        public
+        ERC1155(uri_)
+        NetworkAgnostic(uri_, ERC712_VERSION, ROOT_CHAIN_ID)
+    {
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
         _setupRole(DEPOSITOR_ROLE, _msgSender());
     }
@@ -45,6 +54,14 @@ contract ChildERC1155 is ERC1155, IChildToken, AccessControl {
         return sender;
     }
 
+    /**
+     * @notice called when tokens are deposited on root chain
+     * @dev Should be callable only by ChildChainManager
+     * Should handle deposit by minting the required tokens for user
+     * Make sure minting is done only by this function
+     * @param user user address for whom deposit is being done
+     * @param depositData abi encoded ids array and amounts array
+     */
     function deposit(address user, bytes calldata depositData)
         external
         override
@@ -59,10 +76,22 @@ contract ChildERC1155 is ERC1155, IChildToken, AccessControl {
         _mintBatch(user, ids, amounts, data);
     }
 
+    /**
+     * @notice called when user wants to withdraw single token back to root chain
+     * @dev Should burn user's tokens. This transaction will be verified when exiting on root chain
+     * @param id id to withdraw
+     * @param amount amount to withdraw
+     */
     function withdrawSingle(uint256 id, uint256 amount) external {
         _burn(_msgSender(), id, amount);
     }
 
+    /**
+     * @notice called when user wants to batch withdraw tokens back to root chain
+     * @dev Should burn user's tokens. This transaction will be verified when exiting on root chain
+     * @param ids ids to withdraw
+     * @param amounts amounts to withdraw
+     */
     function withdrawBatch(uint256[] calldata ids, uint256[] calldata amounts)
         external
     {
