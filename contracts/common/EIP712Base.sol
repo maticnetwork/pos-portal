@@ -26,16 +26,10 @@ contract EIP712Base {
                 EIP712_DOMAIN_TYPEHASH,
                 keccak256(bytes(name)),
                 keccak256(bytes(version)),
-                getChainID(_chainId),
+                _chainId,
                 address(this)
             )
         );
-    }
-
-    function getChainID(uint256 _chainId) internal pure returns (uint256 id) {
-        assembly {
-            id := _chainId
-        }
     }
 
     function getDomainSeperator() private view returns (bytes32) {
