@@ -1,9 +1,9 @@
 pragma solidity ^0.6.6;
 
-import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import {IERC721Receiver} from "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 import {RLPReader} from "../../lib/RLPReader.sol";
+import {IMintableERC721} from "../RootToken/IMintableERC721.sol";
 import {ITokenPredicate} from "./ITokenPredicate.sol";
 import {Initializable} from "../../common/Initializable.sol";
 
@@ -72,7 +72,7 @@ contract MintableERC721Predicate is ITokenPredicate, AccessControl, Initializabl
     {
         uint256 tokenId = abi.decode(depositData, (uint256));
         emit LockedMintableERC721(depositor, depositReceiver, rootToken, tokenId);
-        IERC721(rootToken).safeTransferFrom(depositor, address(this), tokenId);
+        IMintableERC721(rootToken).safeTransferFrom(depositor, address(this), tokenId);
     }
 
     /**
@@ -110,7 +110,7 @@ contract MintableERC721Predicate is ITokenPredicate, AccessControl, Initializabl
             "MintableERC721Predicate: INVALID_RECEIVER"
         );
 
-        IERC721 token = IERC721(rootToken);
+        IMintableERC721 token = IMintableERC721(rootToken);
         uint256 tokenId = logTopicRLPList[3].toUint(); // topic3 is tokenId field
         if (token.exists(tokenId)) {
           token.safeTransferFrom(
