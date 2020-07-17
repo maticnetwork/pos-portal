@@ -22,6 +22,11 @@ chai
 
 const should = chai.should()
 
+const ERC20_TRANSFER_EVENT_SIG = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef'
+const ERC721_TRANSFER_EVENT_SIG = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef'
+const ERC1155_TRANSFER_SINGLE_EVENT_SIG = '0xc3d58168c5ae7397731d063d5bbf3d657854427343f4c083240f7aacaa2d0f62'
+const ERC1155_TRANSFER_BATCH_EVENT_SIG = '0x4a39dc06d4c0dbc64b70af90fd698a233a518aa5d07e595d983b8c0526c8f7fb'
+
 // submit checkpoint
 const submitCheckpoint = async(checkpointManager, receiptObj) => {
   const tx = await childWeb3.eth.getTransaction(receiptObj.transactionHash)
@@ -374,6 +379,160 @@ contract('RootChainManager', async(accounts) => {
       const newContractBalance = await dummyERC20.balanceOf(contracts.root.erc20Predicate.address)
       newContractBalance.should.be.a.bignumber.that.equals(
         contractBalance.sub(withdrawAmount)
+      )
+    })
+  })
+
+  describe.only('Alice deposits ERC20, then transfers to Bob, Bob withdraws the ERC20', async() => {
+    const withdrawAmount = mockValues.amounts[2]
+    const transferAmount = withdrawAmount.add(mockValues.amounts[5])
+    const depositAmount = transferAmount.add(mockValues.amounts[9])
+    const depositData = abi.encode(['uint256'], [depositAmount.toString()])
+    const admin = accounts[0]
+    const alice = accounts[0]
+    const bob = accounts[1]
+    let contracts
+    let rootDummyERC20
+    let childDummyERC20
+    let rootChainManager
+    let erc20Predicate
+    let aliceOldBalance
+    let bobOldBalance
+    let contractOldBalance
+    let transferLog
+    let withdrawTx
+    let checkpointData
+    let headerNumber
+    let exitTx
+
+    before(async() => {
+      contracts = await deployer.deployInitializedContracts(accounts)
+      rootDummyERC20 = contracts.root.dummyERC20
+      childDummyERC20 = contracts.child.dummyERC20
+      rootChainManager = contracts.root.rootChainManager
+      erc20Predicate = contracts.root.erc20Predicate
+      await rootDummyERC20.transfer(alice, depositAmount, { from: admin })
+      aliceOldBalance = await rootDummyERC20.balanceOf(alice)
+      bobOldBalance = await rootDummyERC20.balanceOf(bob)
+      contractOldBalance = await rootDummyERC20.balanceOf(erc20Predicate.address)
+    })
+
+    it('Alice should be able to deposit', async() => {
+      await rootDummyERC20.approve(erc20Predicate.address, depositAmount, { from: alice })
+      const depositTx = await rootChainManager.depositFor(alice, rootDummyERC20.address, depositData, { from: alice })
+      should.exist(depositTx)
+    })
+
+    it('Tokens should be minted for Alice on child chain', async() => {
+      await childDummyERC20.deposit(alice, depositData, { from: admin })
+      const aliceBalance = await childDummyERC20.balanceOf(alice)
+      aliceBalance.should.be.a.bignumber.that.equals(depositAmount)
+    })
+
+    it('Alice should be able to transfer tokens to Bob', async() => {
+      await childDummyERC20.transfer(bob, transferAmount, { from: alice })
+      const aliceBalance = await childDummyERC20.balanceOf(alice)
+      const bobBalance = await childDummyERC20.balanceOf(bob)
+      aliceBalance.should.be.a.bignumber.that.equals(depositAmount.sub(transferAmount))
+      bobBalance.should.be.a.bignumber.that.equals(transferAmount)
+    })
+
+    it('Bob should be able to withdraw tokens', async() => {
+      withdrawTx = await childDummyERC20.withdraw(withdrawAmount, { from: bob })
+      const bobBalance = await childDummyERC20.balanceOf(bob)
+      bobBalance.should.be.a.bignumber.that.equals(transferAmount.sub(withdrawAmount))
+    })
+
+    it('Should emit Transfer log while during withdraw transaction', () => {
+      const logs = logDecoder.decodeLogs(withdrawTx.receipt.rawLogs)
+      transferLog = logs.find(l => l.event === 'Transfer')
+      should.exist(transferLog)
+    })
+
+    describe('Correct values should be emitted in Withdraw(burn) Transfer log', () => {
+      it('Event should be emitted by correct contract', () => {
+        transferLog.address.should.equal(
+          childDummyERC20.address.toLowerCase()
+        )
+      })
+
+      it('Should emit proper From', () => {
+        transferLog.args.from.should.equal(bob)
+      })
+
+      it('Should emit proper To', () => {
+        transferLog.args.to.should.equal(mockValues.zeroAddress)
+      })
+
+      it('Should emit correct amount', () => {
+        const transferLogAmount = new BN(transferLog.args.value.toString())
+        transferLogAmount.should.be.bignumber.that.equals(withdrawAmount)
+      })
+    })
+
+    it('Checkpoint should be submitted', async() => {
+      // submit checkpoint including burn (withdraw) tx
+      checkpointData = await submitCheckpoint(contracts.root.checkpointManager, withdrawTx.receipt, { from: admin })
+      should.exist(checkpointData)
+    })
+
+    it('Should match checkpoint details', async() => {
+      const root = bufferToHex(checkpointData.header.root)
+      should.exist(root)
+
+      // fetch latest header number
+      headerNumber = await contracts.root.checkpointManager.currentCheckpointNumber()
+      headerNumber.should.be.bignumber.gt('0')
+
+      // fetch header block details and validate
+      const headerData = await contracts.root.checkpointManager.headerBlocks(headerNumber)
+      root.should.equal(headerData.root)
+    })
+
+    it('Bob should be able to send exit tx', async() => {
+      const logIndex = withdrawTx.receipt.rawLogs.findIndex(log => log.topics[0].toLowerCase() === ERC20_TRANSFER_EVENT_SIG.toLowerCase())
+      const data = bufferToHex(
+        rlp.encode([
+          headerNumber,
+          bufferToHex(Buffer.concat(checkpointData.proof)),
+          checkpointData.number,
+          checkpointData.timestamp,
+          bufferToHex(checkpointData.transactionsRoot),
+          bufferToHex(checkpointData.receiptsRoot),
+          bufferToHex(checkpointData.receipt),
+          bufferToHex(rlp.encode(checkpointData.receiptParentNodes)),
+          bufferToHex(rlp.encode(checkpointData.path)), // branch mask,
+          logIndex
+        ])
+      )
+      exitTx = await contracts.root.rootChainManager.exit(data, { from: bob })
+      should.exist(exitTx)
+    })
+
+    it('Alice should have correct final balance on root chain', async() => {
+      const aliceBalance = await rootDummyERC20.balanceOf(alice)
+      aliceBalance.should.be.a.bignumber.that.equals(aliceOldBalance.sub(depositAmount))
+    })
+
+    it('Alice should have correct final balance on child chain', async() => {
+      const aliceBalance = await childDummyERC20.balanceOf(alice)
+      aliceBalance.should.be.a.bignumber.that.equals(depositAmount.sub(transferAmount))
+    })
+
+    it('Bob should have correct final balance on root chain', async() => {
+      const bobBalance = await rootDummyERC20.balanceOf(bob)
+      bobBalance.should.be.a.bignumber.that.equals(bobOldBalance.add(withdrawAmount))
+    })
+
+    it('Bob should have correct final balance on child chain', async() => {
+      const bobBalance = await childDummyERC20.balanceOf(bob)
+      bobBalance.should.be.a.bignumber.that.equals(transferAmount.sub(withdrawAmount))
+    })
+
+    it('Contract should have correct final balance on root chain', async() => {
+      const contractBalance = await rootDummyERC20.balanceOf(erc20Predicate.address)
+      contractBalance.should.be.a.bignumber.that.equals(
+        contractOldBalance.add(depositAmount).sub(withdrawAmount)
       )
     })
   })
