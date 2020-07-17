@@ -74,6 +74,10 @@ module.exports = async(deployer, network, accounts) => {
   await deployer.deploy(DummyERC721, 'Dummy ERC721', 'DERC721')
   await deployer.deploy(DummyERC1155, 'Dummy ERC1155')
   const contractAddresses = utils.getContractAddresses()
+  contractAddresses.root.Merkle = Merkle.address
+  contractAddresses.root.MerklePatriciaProof = MerklePatriciaProof.address
+  contractAddresses.root.RLPReader = RLPReader.address
+  contractAddresses.root.SafeERC20 = SafeERC20.address
   contractAddresses.root.RootChainManager = RootChainManager.address
   contractAddresses.root.RootChainManagerProxy = RootChainManagerProxy.address
   contractAddresses.root.DummyStateSender = DummyStateSender.address
