@@ -18,7 +18,7 @@ contract DummyMintableERC721 is ERC721, AccessControl, NetworkAgnostic, ChainCon
     }
 
     modifier only(bytes32 role) {
-        require(hasRole(role, _msgSender()), "DummyERC721: INSUFFICIENT_PERMISSIONS");
+        require(hasRole(role, _msgSender()), "DummyMintableERC721: INSUFFICIENT_PERMISSIONS");
         _;
     }
 

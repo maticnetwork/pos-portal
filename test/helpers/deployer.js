@@ -138,6 +138,9 @@ export const deployInitializedContracts = async(accounts) => {
   await child.dummyMintableERC721.grantRole(DEPOSITOR_ROLE, child.childChainManager.address)
   await child.childChainManager.mapToken(root.dummyMintableERC721.address, child.dummyMintableERC721.address)
 
+  const PREDICATE_ROLE = await root.dummyMintableERC721.PREDICATE_ROLE()
+  await root.dummyMintableERC721.grantRole(PREDICATE_ROLE, root.mintableERC721Predicate.address)
+
   const ERC1155Type = await root.erc1155Predicate.TOKEN_TYPE()
   await root.erc1155Predicate.grantRole(MANAGER_ROLE, root.rootChainManager.address)
   await root.rootChainManager.registerPredicate(ERC1155Type, root.erc1155Predicate.address)

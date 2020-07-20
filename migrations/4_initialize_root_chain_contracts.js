@@ -4,6 +4,7 @@ const ERC721Predicate = artifacts.require('ERC721Predicate')
 const MintableERC721Predicate = artifacts.require('MintableERC721Predicate')
 const ERC1155Predicate = artifacts.require('ERC1155Predicate')
 const EtherPredicate = artifacts.require('EtherPredicate')
+const DummyMintableERC721 = artifacts.require('DummyMintableERC721')
 
 const utils = require('./utils')
 const config = require('./config')
@@ -17,6 +18,7 @@ module.exports = async(deployer) => {
   const MintableERC721PredicateInstance = await MintableERC721Predicate.at(contractAddresses.root.MintableERC721PredicateProxy)
   const ERC1155PredicateInstance = await ERC1155Predicate.at(contractAddresses.root.ERC1155PredicateProxy)
   const EtherPredicateInstance = await EtherPredicate.at(contractAddresses.root.EtherPredicateProxy)
+  const DummyMintableERC721Instance = await DummyMintableERC721.at(contractAddresses.root.DummyMintableERC721)
 
   console.log('Setting StateSender')
   await RootChainManagerInstance.setStateSender(contractAddresses.root.DummyStateSender)
@@ -42,6 +44,10 @@ module.exports = async(deployer) => {
 
   console.log('Granting manager role on EtherPredicate')
   await EtherPredicateInstance.grantRole(MANAGER_ROLE, RootChainManagerInstance.address)
+
+  console.log('Granting predicate role on dummyMintableERC721')
+  const PREDICATE_ROLE = await DummyMintableERC721Instance.PREDICATE_ROLE()
+  await DummyMintableERC721Instance.grantRole(PREDICATE_ROLE, MintableERC721PredicateInstance.address)
 
   console.log('Registering ERC20Predicate')
   const ERC20Type = await ERC20PredicateInstance.TOKEN_TYPE()
