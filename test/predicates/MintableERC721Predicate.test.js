@@ -19,7 +19,7 @@ chai
 const should = chai.should()
 const abi = new AbiCoder()
 
-contract.only('MintableERC721Predicate', (accounts) => {
+contract('MintableERC721Predicate', (accounts) => {
   describe('lockTokens', () => {
     const tokenId = mockValues.numbers[2]
     const depositReceiver = mockValues.addresses[7]

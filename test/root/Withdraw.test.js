@@ -22,6 +22,9 @@ chai
 
 const should = chai.should()
 
+const ERC721_TRANSFER_EVENT_SIG = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef'
+const STATE_SYNCED_EVENT_SIG = '0x103fed9db65eac19c4d870f49ab7520fe03b99f1838e5996caf47e9e43308392'
+
 // submit checkpoint
 const submitCheckpoint = async(checkpointManager, receiptObj) => {
   const tx = await childWeb3.eth.getTransaction(receiptObj.transactionHash)
@@ -58,6 +61,14 @@ function pad(n, width, z) {
   z = z || '0'
   n = n + ''
   return n.length >= width ? n : new Array(width - n.length + 1).join(z) + n
+}
+
+const syncState = async({ tx, contracts }) => {
+  const evt = tx.receipt.rawLogs.find(l => l.topics[0] === STATE_SYNCED_EVENT_SIG)
+  const [syncData] = abi.decode(['bytes'], evt.data)
+  const syncId = evt.topics[1]
+  const stateReceiveTx = await contracts.child.childChainManager.onStateReceive(syncId, syncData)
+  return stateReceiveTx
 }
 
 contract('RootChainManager', async(accounts) => {
@@ -1194,6 +1205,213 @@ contract('RootChainManager', async(accounts) => {
       newContractBalanceC.should.be.a.bignumber.that.equals(
         contractBalanceC.sub(withdrawAmountC)
       )
+    })
+  })
+
+  /**
+   * Alice has token on child chain
+   * Alice withdraws this token to root chain
+   * Alice deposits token to child chain for self
+   * Alice transfers it to Bob on child chain
+   * Bob withdraws the token to root chain
+   * Bob transfers this token to Charlie on root chain
+   * Charlie deposits token to child chain for Daniel
+   */
+  describe('Withdraw MintableERC721', () => {
+    const admin = accounts[0]
+    const alice = accounts[0]
+    const bob = accounts[1]
+    const charlie = accounts[2]
+    const daniel = accounts[3]
+    const tokenId = mockValues.numbers[3]
+    let contracts
+    let rootChainManager
+    let rootMintableERC721
+    let childMintableERC721
+    let mintableERC721Predicate
+    let checkpointManager
+    let burnTx1
+    let burnTx2
+    let checkpointData1
+    let checkpointData2
+    let headerNumber1
+    let headerNumber2
+
+    before(async() => {
+      contracts = await deployer.deployInitializedContracts(accounts)
+      rootChainManager = contracts.root.rootChainManager
+      rootMintableERC721 = contracts.root.dummyMintableERC721
+      childMintableERC721 = contracts.child.dummyMintableERC721
+      mintableERC721Predicate = contracts.root.mintableERC721Predicate
+      checkpointManager = contracts.root.checkpointManager
+      await childMintableERC721.mint(alice, tokenId, { from: admin })
+    })
+
+    it('Alice should have token on child chain', async() => {
+      const owner = await childMintableERC721.ownerOf(tokenId)
+      owner.should.equal(alice)
+    })
+
+    it('Token should not exist on root chain', async() => {
+      await expectRevert(rootMintableERC721.ownerOf(tokenId), 'ERC721: owner query for nonexistent token')
+    })
+
+    it('Alice should be able to send burn tx', async() => {
+      burnTx1 = await childMintableERC721.withdraw(tokenId, { from: alice })
+      should.exist(burnTx1)
+    })
+
+    it('Token should be burned on child chain', async() => {
+      await expectRevert(childMintableERC721.ownerOf(tokenId), 'value out of range')
+    })
+
+    it('Checkpoint should be submitted', async() => {
+      // submit checkpoint including burn (withdraw) tx
+      checkpointData1 = await submitCheckpoint(checkpointManager, burnTx1.receipt)
+      should.exist(checkpointData1)
+    })
+
+    it('Checkpoint details should match', async() => {
+      const root = bufferToHex(checkpointData1.header.root)
+      should.exist(root)
+
+      // fetch latest header number
+      headerNumber1 = await contracts.root.checkpointManager.currentCheckpointNumber()
+      headerNumber1.should.be.bignumber.gt('0')
+
+      // fetch header block details and validate
+      const headerData = await contracts.root.checkpointManager.headerBlocks(headerNumber1)
+      root.should.equal(headerData.root)
+    })
+
+    it('Alice should be able to send exit tx', async() => {
+      const logIndex = burnTx1.receipt.rawLogs.findIndex(log => log.topics[0].toLowerCase() === ERC721_TRANSFER_EVENT_SIG.toLowerCase())
+      const data = bufferToHex(
+        rlp.encode([
+          headerNumber1,
+          bufferToHex(Buffer.concat(checkpointData1.proof)),
+          checkpointData1.number,
+          checkpointData1.timestamp,
+          bufferToHex(checkpointData1.transactionsRoot),
+          bufferToHex(checkpointData1.receiptsRoot),
+          bufferToHex(checkpointData1.receipt),
+          bufferToHex(rlp.encode(checkpointData1.receiptParentNodes)),
+          bufferToHex(rlp.encode(checkpointData1.path)), // branch mask,
+          logIndex
+        ])
+      )
+      const exitTx = await contracts.root.rootChainManager.exit(data, { from: alice })
+      should.exist(exitTx)
+    })
+
+    it('Token should be minted for Alice on root chain', async() => {
+      const owner = await rootMintableERC721.ownerOf(tokenId)
+      owner.should.equal(alice)
+    })
+
+    it('Alice should be able to deposit token', async() => {
+      await rootMintableERC721.approve(mintableERC721Predicate.address, tokenId, { from: alice })
+      const depositData = abi.encode(['uint256'], [tokenId.toString()])
+      const depositTx = await rootChainManager.depositFor(alice, rootMintableERC721.address, depositData, { from: alice })
+      should.exist(depositTx)
+      const syncTx = await syncState({ tx: depositTx, contracts })
+      should.exist(syncTx)
+    })
+
+    it('Token should be transferred to predicate on root chain', async() => {
+      const owner = await rootMintableERC721.ownerOf(tokenId)
+      owner.should.equal(mintableERC721Predicate.address)
+    })
+
+    it('Token should be minted for Alice on child chain', async() => {
+      const owner = await childMintableERC721.ownerOf(tokenId)
+      // const owner = await childMintableERC721.ownerOf(tokenId)
+      // owner.should.equal(alice)
+      owner.should.equal(alice)
+    })
+
+    it('Alice should transfer token to bob', async() => {
+      await childMintableERC721.transferFrom(alice, bob, tokenId, { from: alice })
+      const owner = await childMintableERC721.ownerOf(tokenId)
+      owner.should.equal(bob)
+    })
+
+    it('Bob should be able to burn token', async() => {
+      burnTx2 = await childMintableERC721.withdraw(tokenId, { from: bob })
+      should.exist(burnTx2)
+    })
+
+    it('Token should be burned on child chain', async() => {
+      await expectRevert(childMintableERC721.ownerOf(tokenId), 'value out of range')
+    })
+
+    it('checkpoint should be submitted', async() => {
+      // submit checkpoint including burn (withdraw) tx
+      checkpointData2 = await submitCheckpoint(checkpointManager, burnTx2.receipt)
+      should.exist(checkpointData2)
+    })
+
+    it('checkpoint details should match', async() => {
+      const root = bufferToHex(checkpointData2.header.root)
+      should.exist(root)
+
+      // fetch latest header number
+      headerNumber2 = await contracts.root.checkpointManager.currentCheckpointNumber()
+      headerNumber2.should.be.bignumber.gt('0')
+
+      // fetch header block details and validate
+      const headerData = await contracts.root.checkpointManager.headerBlocks(headerNumber2)
+      root.should.equal(headerData.root)
+    })
+
+    it('bob should be able to exit token', async() => {
+      const logIndex = burnTx1.receipt.rawLogs.findIndex(log => log.topics[0].toLowerCase() === ERC721_TRANSFER_EVENT_SIG.toLowerCase())
+      const data = bufferToHex(
+        rlp.encode([
+          headerNumber2,
+          bufferToHex(Buffer.concat(checkpointData2.proof)),
+          checkpointData2.number,
+          checkpointData2.timestamp,
+          bufferToHex(checkpointData2.transactionsRoot),
+          bufferToHex(checkpointData2.receiptsRoot),
+          bufferToHex(checkpointData2.receipt),
+          bufferToHex(rlp.encode(checkpointData2.receiptParentNodes)),
+          bufferToHex(rlp.encode(checkpointData2.path)), // branch mask,
+          logIndex
+        ])
+      )
+      const exitTx = await contracts.root.rootChainManager.exit(data, { from: bob })
+      should.exist(exitTx)
+    })
+
+    it('Token should be transferred to Bob on root chain', async() => {
+      const owner = await rootMintableERC721.ownerOf(tokenId)
+      owner.should.equal(bob)
+    })
+
+    it('Bob should transfer token to Charlie', async() => {
+      await rootMintableERC721.transferFrom(bob, charlie, tokenId, { from: bob })
+      const owner = await rootMintableERC721.ownerOf(tokenId)
+      owner.should.equal(charlie)
+    })
+
+    it('Charlie should be able to deposit token for Daniel', async() => {
+      await rootMintableERC721.approve(mintableERC721Predicate.address, tokenId, { from: charlie })
+      const depositData = abi.encode(['uint256'], [tokenId.toString()])
+      const depositTx = await rootChainManager.depositFor(daniel, rootMintableERC721.address, depositData, { from: charlie })
+      should.exist(depositTx)
+      const syncTx = await syncState({ tx: depositTx, contracts })
+      should.exist(syncTx)
+    })
+
+    it('Token should be transferred to predicate on root chain', async() => {
+      const owner = await rootMintableERC721.ownerOf(tokenId)
+      owner.should.equal(mintableERC721Predicate.address)
+    })
+
+    it('Token should be minted for Daniel on child chain', async() => {
+      const owner = await childMintableERC721.ownerOf(tokenId)
+      owner.should.equal(daniel)
     })
   })
 })
