@@ -26,10 +26,19 @@ interface IRootChainManager {
 
     function depositEtherFor(address user) external payable;
 
+    function depositEtherFor(address user, address callback) external payable;
+
     function depositFor(
         address user,
         address rootToken,
         bytes calldata depositData
+    ) external;
+
+    function depositFor(
+        address user,
+        address rootToken,
+        bytes calldata depositData,
+        address callback
     ) external;
 
     function exit(bytes calldata inputData) external;

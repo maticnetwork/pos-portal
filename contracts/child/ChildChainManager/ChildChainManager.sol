@@ -6,6 +6,11 @@ import {IChildToken} from "../ChildToken/IChildToken.sol";
 import {Initializable} from "../../common/Initializable.sol";
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 
+interface IDepositCallback {
+    function processSyncDeposit(address user, address rootToken, bytes calldata depositData) external;
+}
+
+
 contract ChildChainManager is IChildChainManager, Initializable, AccessControl {
     bytes32 public constant DEPOSIT = keccak256("DEPOSIT");
     bytes32 public constant MAP_TOKEN = keccak256("MAP_TOKEN");
@@ -87,7 +92,7 @@ contract ChildChainManager is IChildChainManager, Initializable, AccessControl {
         IChildToken childTokenContract = IChildToken(childTokenAddress);
         childTokenContract.deposit(user, depositData);
         if (syncData.length > 64 + depositData.length) {
-            callback.processSyncDeposit(user, rootToken, depositData);
+            IDepositCallback(callback).processSyncDeposit(user, rootToken, depositData);
         }
     }
 
