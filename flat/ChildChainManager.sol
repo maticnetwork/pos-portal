@@ -828,8 +828,9 @@ contract ChildChainManager is IChildChainManager, Initializable, AccessControl {
     }
 
     function _syncDeposit(bytes memory syncData) private {
-        (address user, address rootToken, bytes memory depositData) = abi
-            .decode(syncData, (address, address, bytes));
+        // address callback is optional
+        (address user, address rootToken, bytes memory depositData, address callback) = abi
+            .decode(syncData, (address, address, bytes, address));
         address childTokenAddress = rootToChildToken[rootToken];
         require(
             childTokenAddress != address(0x0),
@@ -837,6 +838,9 @@ contract ChildChainManager is IChildChainManager, Initializable, AccessControl {
         );
         IChildToken childTokenContract = IChildToken(childTokenAddress);
         childTokenContract.deposit(user, depositData);
+        if (syncData.length > 64 + depositData.length) {
+            callback.processSyncDeposit(user, rootToken, depositData);
+        }
     }
 
     function _mapToken(address rootToken, address childToken) private {
