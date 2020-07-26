@@ -91,7 +91,8 @@ contract ChildChainManager is IChildChainManager, Initializable, AccessControl {
         );
         IChildToken childTokenContract = IChildToken(childTokenAddress);
         childTokenContract.deposit(user, depositData);
-        if (syncData.length > 64 + depositData.length) {
+        // Checks if callback address exists in syncData
+        if (syncData.length > 256 + depositData.length) {
             IDepositCallback(callback).processSyncDeposit(user, rootToken, depositData);
         }
     }
