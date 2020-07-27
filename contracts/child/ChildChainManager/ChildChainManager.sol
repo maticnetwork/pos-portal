@@ -81,7 +81,6 @@ contract ChildChainManager is IChildChainManager, Initializable, AccessControl {
     }
 
     function _syncDeposit(bytes memory syncData) private {
-        // address callback is optional
         (address user, address rootToken, bytes memory depositData, address callback) = abi
             .decode(syncData, (address, address, bytes, address));
         address childTokenAddress = rootToChildToken[rootToken];
@@ -91,8 +90,7 @@ contract ChildChainManager is IChildChainManager, Initializable, AccessControl {
         );
         IChildToken childTokenContract = IChildToken(childTokenAddress);
         childTokenContract.deposit(user, depositData);
-        // Checks if callback address exists in syncData
-        if (syncData.length > 256 + depositData.length) {
+        if (callback != address(0)) {
             IDepositCallback(callback).processSyncDeposit(user, rootToken, depositData);
         }
     }

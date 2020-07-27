@@ -1562,13 +1562,8 @@ contract RootChainManager is IRootChainManager, Initializable, AccessControl {
             rootToken,
             depositData
         );        
-        bytes memory syncData;
-        if(callback == address(0)) {
-            syncData = abi.encode(user, rootToken, depositData);
-        } 
-        else {
-            syncData = abi.encode(user, rootToken, depositData, callback);
-        }
+        bytes memory syncData = abi.encode(user, rootToken, depositData, callback);
+        
         _stateSender.syncState(
             childChainManagerAddress,
             abi.encode(DEPOSIT, syncData)
