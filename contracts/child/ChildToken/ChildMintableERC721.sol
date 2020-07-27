@@ -70,12 +70,13 @@ contract ChildMintableERC721 is
 
     /**
      * @notice Example function to handle minting tokens on matic chain
-     * @dev Minting can be done as per requirement
+     * @dev Minting can be done as per requirement,
+     * This implementation allows only admin to mint tokens but it can be changed as per requirement
      * Should verify if token is withdrawn by checking `withdrawnTokens` mapping
      * @param user user for whom tokens are being minted
      * @param tokenId tokenId to mint
      */
-    function mint(address user, uint256 tokenId) public {
+    function mint(address user, uint256 tokenId) public only(DEFAULT_ADMIN_ROLE) {
         require(!withdrawnTokens[tokenId], "ChildMintableERC721: TOKEN_EXISTS_ON_ROOT_CHAIN");
         _mint(user, tokenId);
     }
