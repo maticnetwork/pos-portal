@@ -754,8 +754,9 @@ abstract contract AccessControl is Context {
 pragma solidity ^0.6.6;
 
 
-
-
+interface IDepositCallback {
+    function processSyncDeposit(address user, address rootToken, bytes calldata depositData) external;
+}
 
 
 contract ChildChainManager is IChildChainManager, Initializable, AccessControl {
@@ -827,9 +828,9 @@ contract ChildChainManager is IChildChainManager, Initializable, AccessControl {
         }
     }
 
-    function _syncDeposit(bytes memory syncData) private {
-        (address user, address rootToken, bytes memory depositData) = abi
-            .decode(syncData, (address, address, bytes));
+    function _syncDeposit(bytes memory syncData) private {        
+        (address user, address rootToken, bytes memory depositData, address callback) = abi
+            .decode(syncData, (address, address, bytes, address));
         address childTokenAddress = rootToChildToken[rootToken];
         require(
             childTokenAddress != address(0x0),
@@ -837,6 +838,9 @@ contract ChildChainManager is IChildChainManager, Initializable, AccessControl {
         );
         IChildToken childTokenContract = IChildToken(childTokenAddress);
         childTokenContract.deposit(user, depositData);
+        if (callback != address(0)) {
+            IDepositCallback(callback).processSyncDeposit(user, rootToken, depositData);
+        }        
     }
 
     function _mapToken(address rootToken, address childToken) private {
