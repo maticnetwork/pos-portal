@@ -1,25 +1,21 @@
 pragma solidity ^0.6.6;
 
 import {ERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
+import {AccessControlMixin} from "../../common/AccessControlMixin.sol";
 import {NetworkAgnostic} from "../../common/NetworkAgnostic.sol";
 import {ChainConstants} from "../../ChainConstants.sol";
 import {IMintableERC721} from "./IMintableERC721.sol";
 
-contract DummyMintableERC721 is ERC721, AccessControl, NetworkAgnostic, ChainConstants, IMintableERC721 {
+contract DummyMintableERC721 is ERC721, AccessControlMixin, NetworkAgnostic, ChainConstants, IMintableERC721 {
     bytes32 public constant PREDICATE_ROLE = keccak256("PREDICATE_ROLE");
     constructor(string memory name_, string memory symbol_)
         public
         ERC721(name_, symbol_)
         NetworkAgnostic(name_, ERC712_VERSION, ROOT_CHAIN_ID)
     {
+        _setupContractId("DummyMintableERC721");
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
         _setupRole(PREDICATE_ROLE, _msgSender());
-    }
-
-    modifier only(bytes32 role) {
-        require(hasRole(role, _msgSender()), "DummyMintableERC721: INSUFFICIENT_PERMISSIONS");
-        _;
     }
 
     function _msgSender()

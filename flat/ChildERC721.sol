@@ -1848,6 +1848,26 @@ abstract contract AccessControl is Context {
     }
 }
 
+// File: contracts/common/AccessControlMixin.sol
+
+pragma solidity ^0.6.6;
+
+
+contract AccessControlMixin is AccessControl {
+    string private _revertMsg;
+    function _setupContractId(string memory contractId) internal {
+        _revertMsg = string(abi.encodePacked(contractId, ": INSUFFICIENT_PERMISSIONS"));
+    }
+
+    modifier only(bytes32 role) {
+        require(
+            hasRole(role, _msgSender()),
+            _revertMsg
+        );
+        _;
+    }
+}
+
 // File: contracts/child/ChildToken/IChildToken.sol
 
 pragma solidity ^0.6.6;
@@ -2053,20 +2073,16 @@ pragma solidity ^0.6.6;
 
 
 
-contract ChildERC721 is ERC721, IChildToken, AccessControl, NetworkAgnostic, ChainConstants {
+contract ChildERC721 is ERC721, IChildToken, AccessControlMixin, NetworkAgnostic, ChainConstants {
     bytes32 public constant DEPOSITOR_ROLE = keccak256("DEPOSITOR_ROLE");
 
     constructor(
         string memory name_,
         string memory symbol_
     ) public ERC721(name_, symbol_) NetworkAgnostic(name_, ERC712_VERSION, ROOT_CHAIN_ID) {
+        _setupContractId("ChildERC721");
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
         _setupRole(DEPOSITOR_ROLE, _msgSender());
-    }
-
-    modifier only(bytes32 role) {
-        require(hasRole(role, _msgSender()), "ChildERC721: INSUFFICIENT_PERMISSIONS");
-        _;
     }
 
     function _msgSender()

@@ -1,13 +1,13 @@
 pragma solidity ^0.6.6;
 
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
+import {AccessControlMixin} from "../../common/AccessControlMixin.sol";
 import {IChildToken} from "./IChildToken.sol";
 import {NetworkAgnostic} from "../../common/NetworkAgnostic.sol";
 import {ChainConstants} from "../../ChainConstants.sol";
 
 
-contract ChildERC20 is ERC20, IChildToken, AccessControl, NetworkAgnostic, ChainConstants {
+contract ChildERC20 is ERC20, IChildToken, AccessControlMixin, NetworkAgnostic, ChainConstants {
     bytes32 public constant DEPOSITOR_ROLE = keccak256("DEPOSITOR_ROLE");
 
     constructor(
@@ -15,14 +15,10 @@ contract ChildERC20 is ERC20, IChildToken, AccessControl, NetworkAgnostic, Chain
         string memory symbol_,
         uint8 decimals_
     ) public ERC20(name_, symbol_) NetworkAgnostic(name_, ERC712_VERSION, ROOT_CHAIN_ID) {
+        _setupContractId("ChildERC20");
         _setupDecimals(decimals_);
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
         _setupRole(DEPOSITOR_ROLE, _msgSender());
-    }
-
-    modifier only(bytes32 role) {
-        require(hasRole(role, _msgSender()), "ChildERC20: INSUFFICIENT_PERMISSIONS");
-        _;
     }
 
     function _msgSender()

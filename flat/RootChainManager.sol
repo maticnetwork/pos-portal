@@ -1294,6 +1294,26 @@ abstract contract AccessControl is Context {
     }
 }
 
+// File: contracts/common/AccessControlMixin.sol
+
+pragma solidity ^0.6.6;
+
+
+contract AccessControlMixin is AccessControl {
+    string private _revertMsg;
+    function _setupContractId(string memory contractId) internal {
+        _revertMsg = string(abi.encodePacked(contractId, ": INSUFFICIENT_PERMISSIONS"));
+    }
+
+    modifier only(bytes32 role) {
+        require(
+            hasRole(role, _msgSender()),
+            _revertMsg
+        );
+        _;
+    }
+}
+
 // File: contracts/root/RootChainManager/RootChainManager.sol
 
 pragma solidity ^0.6.6;
@@ -1307,7 +1327,7 @@ pragma solidity ^0.6.6;
 
 
 
-contract RootChainManager is IRootChainManager, Initializable, AccessControl {
+contract RootChainManager is IRootChainManager, Initializable, AccessControlMixin {
     using RLPReader for bytes;
     using RLPReader for RLPReader.RLPItem;
     using Merkle for bytes32;
@@ -1329,14 +1349,6 @@ contract RootChainManager is IRootChainManager, Initializable, AccessControl {
     ICheckpointManager private _checkpointManager;
     address public childChainManagerAddress;
 
-    modifier only(bytes32 role) {
-        require(
-            hasRole(role, _msgSender()),
-            "RootChainManager: INSUFFICIENT_PERMISSIONS"
-        );
-        _;
-    }
-
     /**
      * @notice Deposit ether by directly sending to the contract
      * The account sending ether receives WETH on child chain
@@ -1351,6 +1363,7 @@ contract RootChainManager is IRootChainManager, Initializable, AccessControl {
      * @param _owner the account that should be granted admin role
      */
     function initialize(address _owner) external initializer {
+        _setupContractId("RootChainManager");
         _setupRole(DEFAULT_ADMIN_ROLE, _owner);
         _setupRole(MAPPER_ROLE, _owner);
     }

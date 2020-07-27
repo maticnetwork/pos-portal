@@ -1,13 +1,13 @@
 pragma solidity ^0.6.6;
 
 import {ERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
+import {AccessControlMixin} from "../../common/AccessControlMixin.sol";
 import {IChildToken} from "./IChildToken.sol";
 import {NetworkAgnostic} from "../../common/NetworkAgnostic.sol";
 import {ChainConstants} from "../../ChainConstants.sol";
 
 
-contract ChildMintableERC721 is ERC721, IChildToken, AccessControl, NetworkAgnostic, ChainConstants {
+contract ChildMintableERC721 is ERC721, IChildToken, AccessControlMixin, NetworkAgnostic, ChainConstants {
     bytes32 public constant DEPOSITOR_ROLE = keccak256("DEPOSITOR_ROLE");
     mapping (uint256 => bool) public withdrawnTokens;
 
@@ -15,13 +15,9 @@ contract ChildMintableERC721 is ERC721, IChildToken, AccessControl, NetworkAgnos
         string memory name_,
         string memory symbol_
     ) public ERC721(name_, symbol_) NetworkAgnostic(name_, ERC712_VERSION, ROOT_CHAIN_ID) {
+        _setupContractId("ChildMintableERC721");
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
         _setupRole(DEPOSITOR_ROLE, _msgSender());
-    }
-
-    modifier only(bytes32 role) {
-        require(hasRole(role, _msgSender()), "ChildMintableERC721: INSUFFICIENT_PERMISSIONS");
-        _;
     }
 
     function _msgSender()

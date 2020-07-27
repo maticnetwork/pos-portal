@@ -749,6 +749,26 @@ abstract contract AccessControl is Context {
     }
 }
 
+// File: contracts/common/AccessControlMixin.sol
+
+pragma solidity ^0.6.6;
+
+
+contract AccessControlMixin is AccessControl {
+    string private _revertMsg;
+    function _setupContractId(string memory contractId) internal {
+        _revertMsg = string(abi.encodePacked(contractId, ": INSUFFICIENT_PERMISSIONS"));
+    }
+
+    modifier only(bytes32 role) {
+        require(
+            hasRole(role, _msgSender()),
+            _revertMsg
+        );
+        _;
+    }
+}
+
 // File: contracts/child/ChildChainManager/ChildChainManager.sol
 
 pragma solidity ^0.6.6;
@@ -758,7 +778,7 @@ pragma solidity ^0.6.6;
 
 
 
-contract ChildChainManager is IChildChainManager, Initializable, AccessControl {
+contract ChildChainManager is IChildChainManager, Initializable, AccessControlMixin {
     bytes32 public constant DEPOSIT = keccak256("DEPOSIT");
     bytes32 public constant MAP_TOKEN = keccak256("MAP_TOKEN");
     bytes32 public constant MAPPER_ROLE = keccak256("MAPPER_ROLE");
@@ -767,15 +787,8 @@ contract ChildChainManager is IChildChainManager, Initializable, AccessControl {
     mapping(address => address) public rootToChildToken;
     mapping(address => address) public childToRootToken;
 
-    modifier only(bytes32 role) {
-        require(
-            hasRole(role, _msgSender()),
-            "ChildChainManager: INSUFFICIENT_PERMISSIONS"
-        );
-        _;
-    }
-
     function initialize(address _owner) external initializer {
+        _setupContractId("ChildChainManager");
         _setupRole(DEFAULT_ADMIN_ROLE, _owner);
         _setupRole(MAPPER_ROLE, _owner);
         _setupRole(STATE_SYNCER_ROLE, _owner);

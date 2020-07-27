@@ -1,7 +1,7 @@
 pragma solidity ^0.6.6;
 
 import {ERC1155} from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
-import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
+import {AccessControlMixin} from "../../common/AccessControlMixin.sol";
 import {IChildToken} from "./IChildToken.sol";
 import {NetworkAgnostic} from "../../common/NetworkAgnostic.sol";
 import {ChainConstants} from "../../ChainConstants.sol";
@@ -9,7 +9,7 @@ import {ChainConstants} from "../../ChainConstants.sol";
 contract ChildERC1155 is
     ERC1155,
     IChildToken,
-    AccessControl,
+    AccessControlMixin,
     NetworkAgnostic,
     ChainConstants
 {
@@ -20,16 +20,9 @@ contract ChildERC1155 is
         ERC1155(uri_)
         NetworkAgnostic(uri_, ERC712_VERSION, ROOT_CHAIN_ID)
     {
+        _setupContractId("ChildERC1155");
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
         _setupRole(DEPOSITOR_ROLE, _msgSender());
-    }
-
-    modifier only(bytes32 role) {
-        require(
-            hasRole(role, _msgSender()),
-            "ChildERC1155: INSUFFICIENT_PERMISSIONS"
-        );
-        _;
     }
 
     function _msgSender()

@@ -8,9 +8,9 @@ import {MerklePatriciaProof} from "../../lib/MerklePatriciaProof.sol";
 import {Merkle} from "../../lib/Merkle.sol";
 import {ITokenPredicate} from "../TokenPredicates/ITokenPredicate.sol";
 import {Initializable} from "../../common/Initializable.sol";
-import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
+import {AccessControlMixin} from "../../common/AccessControlMixin.sol";
 
-contract RootChainManager is IRootChainManager, Initializable, AccessControl {
+contract RootChainManager is IRootChainManager, Initializable, AccessControlMixin {
     using RLPReader for bytes;
     using RLPReader for RLPReader.RLPItem;
     using Merkle for bytes32;
@@ -32,14 +32,6 @@ contract RootChainManager is IRootChainManager, Initializable, AccessControl {
     ICheckpointManager private _checkpointManager;
     address public childChainManagerAddress;
 
-    modifier only(bytes32 role) {
-        require(
-            hasRole(role, _msgSender()),
-            "RootChainManager: INSUFFICIENT_PERMISSIONS"
-        );
-        _;
-    }
-
     /**
      * @notice Deposit ether by directly sending to the contract
      * The account sending ether receives WETH on child chain
@@ -54,6 +46,7 @@ contract RootChainManager is IRootChainManager, Initializable, AccessControl {
      * @param _owner the account that should be granted admin role
      */
     function initialize(address _owner) external initializer {
+        _setupContractId("RootChainManager");
         _setupRole(DEFAULT_ADMIN_ROLE, _owner);
         _setupRole(MAPPER_ROLE, _owner);
     }
