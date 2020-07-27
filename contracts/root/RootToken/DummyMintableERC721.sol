@@ -5,8 +5,15 @@ import {AccessControlMixin} from "../../common/AccessControlMixin.sol";
 import {NetworkAgnostic} from "../../common/NetworkAgnostic.sol";
 import {ChainConstants} from "../../ChainConstants.sol";
 import {IMintableERC721} from "./IMintableERC721.sol";
+import {ContextLib} from "../../lib/ContextLib.sol";
 
-contract DummyMintableERC721 is ERC721, AccessControlMixin, NetworkAgnostic, ChainConstants, IMintableERC721 {
+contract DummyMintableERC721 is
+    ERC721,
+    AccessControlMixin,
+    NetworkAgnostic,
+    ChainConstants,
+    IMintableERC721
+{
     bytes32 public constant PREDICATE_ROLE = keccak256("PREDICATE_ROLE");
     constructor(string memory name_, string memory symbol_)
         public
@@ -24,20 +31,7 @@ contract DummyMintableERC721 is ERC721, AccessControlMixin, NetworkAgnostic, Cha
         view
         returns (address payable sender)
     {
-        if (msg.sender == address(this)) {
-            bytes memory array = msg.data;
-            uint256 index = msg.data.length;
-            assembly {
-                // Load the 32 bytes word from memory with the address on the lower 20 bytes, and mask those.
-                sender := and(
-                    mload(add(array, index)),
-                    0xffffffffffffffffffffffffffffffffffffffff
-                )
-            }
-        } else {
-            sender = msg.sender;
-        }
-        return sender;
+        return ContextLib.msgSender();
     }
 
     /**

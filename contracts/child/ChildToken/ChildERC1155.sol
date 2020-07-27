@@ -5,6 +5,7 @@ import {AccessControlMixin} from "../../common/AccessControlMixin.sol";
 import {IChildToken} from "./IChildToken.sol";
 import {NetworkAgnostic} from "../../common/NetworkAgnostic.sol";
 import {ChainConstants} from "../../ChainConstants.sol";
+import {ContextLib} from "../../lib/ContextLib.sol";
 
 contract ChildERC1155 is
     ERC1155,
@@ -31,20 +32,7 @@ contract ChildERC1155 is
         view
         returns (address payable sender)
     {
-        if (msg.sender == address(this)) {
-            bytes memory array = msg.data;
-            uint256 index = msg.data.length;
-            assembly {
-                // Load the 32 bytes word from memory with the address on the lower 20 bytes, and mask those.
-                sender := and(
-                    mload(add(array, index)),
-                    0xffffffffffffffffffffffffffffffffffffffff
-                )
-            }
-        } else {
-            sender = msg.sender;
-        }
-        return sender;
+        return ContextLib.msgSender();
     }
 
     /**

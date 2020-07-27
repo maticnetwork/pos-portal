@@ -1401,6 +1401,33 @@ contract ChainConstants {
     bytes constant public CHILD_CHAIN_ID_BYTES = hex"3A99";
 }
 
+// File: contracts/lib/ContextLib.sol
+
+pragma solidity ^0.6.6;
+
+library ContextLib {
+    function msgSender()
+        internal
+        view
+        returns (address payable sender)
+    {
+        if (msg.sender == address(this)) {
+            bytes memory array = msg.data;
+            uint256 index = msg.data.length;
+            assembly {
+                // Load the 32 bytes word from memory with the address on the lower 20 bytes, and mask those.
+                sender := and(
+                    mload(add(array, index)),
+                    0xffffffffffffffffffffffffffffffffffffffff
+                )
+            }
+        } else {
+            sender = msg.sender;
+        }
+        return sender;
+    }
+}
+
 // File: contracts/child/ChildToken/ChildERC20.sol
 
 pragma solidity ^0.6.6;
@@ -1411,7 +1438,14 @@ pragma solidity ^0.6.6;
 
 
 
-contract ChildERC20 is ERC20, IChildToken, AccessControlMixin, NetworkAgnostic, ChainConstants {
+
+contract ChildERC20 is
+    ERC20,
+    IChildToken,
+    AccessControlMixin,
+    NetworkAgnostic,
+    ChainConstants
+{
     bytes32 public constant DEPOSITOR_ROLE = keccak256("DEPOSITOR_ROLE");
 
     constructor(
@@ -1431,20 +1465,7 @@ contract ChildERC20 is ERC20, IChildToken, AccessControlMixin, NetworkAgnostic, 
         view
         returns (address payable sender)
     {
-        if (msg.sender == address(this)) {
-            bytes memory array = msg.data;
-            uint256 index = msg.data.length;
-            assembly {
-                // Load the 32 bytes word from memory with the address on the lower 20 bytes, and mask those.
-                sender := and(
-                    mload(add(array, index)),
-                    0xffffffffffffffffffffffffffffffffffffffff
-                )
-            }
-        } else {
-            sender = msg.sender;
-        }
-        return sender;
+        return ContextLib.msgSender();
     }
 
     /**

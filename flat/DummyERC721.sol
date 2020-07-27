@@ -1816,23 +1816,13 @@ contract ChainConstants {
     bytes constant public CHILD_CHAIN_ID_BYTES = hex"3A99";
 }
 
-// File: contracts/root/RootToken/DummyERC721.sol
+// File: contracts/lib/ContextLib.sol
 
 pragma solidity ^0.6.6;
 
-
-
-
-contract DummyERC721 is ERC721, NetworkAgnostic, ChainConstants {
-    constructor(string memory name_, string memory symbol_)
-        public
-        ERC721(name_, symbol_)
-        NetworkAgnostic(name_, ERC712_VERSION, ROOT_CHAIN_ID)
-    {}
-
-    function _msgSender()
+library ContextLib {
+    function msgSender()
         internal
-        override
         view
         returns (address payable sender)
     {
@@ -1850,6 +1840,31 @@ contract DummyERC721 is ERC721, NetworkAgnostic, ChainConstants {
             sender = msg.sender;
         }
         return sender;
+    }
+}
+
+// File: contracts/root/RootToken/DummyERC721.sol
+
+pragma solidity ^0.6.6;
+
+
+
+
+
+contract DummyERC721 is ERC721, NetworkAgnostic, ChainConstants {
+    constructor(string memory name_, string memory symbol_)
+        public
+        ERC721(name_, symbol_)
+        NetworkAgnostic(name_, ERC712_VERSION, ROOT_CHAIN_ID)
+    {}
+
+    function _msgSender()
+        internal
+        override
+        view
+        returns (address payable sender)
+    {
+        return ContextLib.msgSender();
     }
 
     function mint(uint256 tokenId) public {
