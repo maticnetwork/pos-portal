@@ -99,8 +99,7 @@ contract('ChildMintableERC721', (accounts) => {
 
     before(async() => {
       contracts = await deployer.deployFreshChildContracts(accounts)
-      const depositData = abi.encode(['uint256'], [tokenId])
-      await contracts.dummyMintableERC721.deposit(user, depositData)
+      await contracts.dummyMintableERC721.mint(user, tokenId)
     })
 
     it('User should own token', async() => {
@@ -142,6 +141,92 @@ contract('ChildMintableERC721', (accounts) => {
 
     it('Token should not exist after burning', async() => {
       await expectRevert(contracts.dummyMintableERC721.ownerOf(tokenId), 'value out of range')
+    })
+  })
+
+  describe('Should burn token on withdraw for second time', () => {
+    const tokenId = mockValues.numbers[6]
+    const user = accounts[0]
+    let contracts
+    let withdrawTx2
+    let transferLog2
+
+    before(async() => {
+      contracts = await deployer.deployFreshChildContracts(accounts)
+      await contracts.dummyMintableERC721.mint(user, tokenId)
+    })
+
+    it('Should be able to withdraw token once', async() => {
+      const withdrawTx = await contracts.dummyMintableERC721.withdraw(tokenId)
+      should.exist(withdrawTx)
+    })
+
+    it('Should be able to deposit token', async() => {
+      const depositData = abi.encode(['uint256'], [tokenId])
+      const depositTx = await contracts.dummyMintableERC721.deposit(user, depositData)
+      should.exist(depositTx)
+    })
+
+    it('User should own token', async() => {
+      const owner = await contracts.dummyMintableERC721.ownerOf(tokenId)
+      owner.should.equal(user)
+    })
+
+    it('Can receive withdraw tx', async() => {
+      withdrawTx2 = await contracts.dummyMintableERC721.withdraw(tokenId)
+      should.exist(withdrawTx2)
+    })
+
+    it('Should emit Transfer log', () => {
+      const logs = logDecoder.decodeLogs(withdrawTx2.receipt.rawLogs)
+      transferLog2 = logs.find(l => l.event === 'Transfer')
+      should.exist(transferLog2)
+    })
+
+    describe('Correct values should be emitted in Transfer log', () => {
+      it('Event should be emitted by correct contract', () => {
+        transferLog2.address.should.equal(
+          contracts.dummyMintableERC721.address.toLowerCase()
+        )
+      })
+
+      it('Should emit proper From', () => {
+        transferLog2.args.from.should.equal(user)
+      })
+
+      it('Should emit proper To', () => {
+        transferLog2.args.to.should.equal(mockValues.zeroAddress)
+      })
+
+      it('Should emit correct tokenId', () => {
+        const transferLogTokenId = transferLog2.args.tokenId.toNumber()
+        transferLogTokenId.should.equal(tokenId)
+      })
+    })
+
+    it('Token should not exist after burning', async() => {
+      await expectRevert(contracts.dummyMintableERC721.ownerOf(tokenId), 'value out of range')
+    })
+  })
+
+  describe('Minting token that has been withdrawn to root chain', () => {
+    const user = accounts[0]
+    const tokenId = mockValues.numbers[6]
+    let dummyMintableERC721
+
+    before(async() => {
+      const contracts = await deployer.deployFreshChildContracts(accounts)
+      dummyMintableERC721 = contracts.dummyMintableERC721
+      await dummyMintableERC721.mint(user, tokenId)
+      await dummyMintableERC721.withdraw(tokenId)
+    })
+
+    it('Token should not exist', async() => {
+      await expectRevert(dummyMintableERC721.ownerOf(tokenId), 'value out of range')
+    })
+
+    it('Minting withdrawn token should revert with correct reason', async() => {
+      await expectRevert(dummyMintableERC721.mint(user, tokenId), 'ChildMintableERC721: TOKEN_EXISTS_ON_ROOT_CHAIN')
     })
   })
 })
