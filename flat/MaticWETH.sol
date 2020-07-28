@@ -1401,11 +1401,11 @@ contract ChainConstants {
     bytes constant public CHILD_CHAIN_ID_BYTES = hex"3A99";
 }
 
-// File: contracts/lib/ContextLib.sol
+// File: contracts/common/ContextMixin.sol
 
 pragma solidity ^0.6.6;
 
-library ContextLib {
+abstract contract ContextMixin {
     function msgSender()
         internal
         view
@@ -1444,7 +1444,8 @@ contract ChildERC20 is
     IChildToken,
     AccessControlMixin,
     NetworkAgnostic,
-    ChainConstants
+    ChainConstants,
+    ContextMixin
 {
     bytes32 public constant DEPOSITOR_ROLE = keccak256("DEPOSITOR_ROLE");
 
@@ -1465,7 +1466,7 @@ contract ChildERC20 is
         view
         returns (address payable sender)
     {
-        return ContextLib.msgSender();
+        return ContextMixin.msgSender();
     }
 
     /**

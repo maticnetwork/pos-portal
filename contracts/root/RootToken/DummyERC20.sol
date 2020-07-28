@@ -3,9 +3,9 @@ pragma solidity ^0.6.6;
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {NetworkAgnostic} from "../../common/NetworkAgnostic.sol";
 import {ChainConstants} from "../../ChainConstants.sol";
-import {ContextLib} from "../../lib/ContextLib.sol";
+import {ContextMixin} from "../../common/ContextMixin.sol";
 
-contract DummyERC20 is ERC20, NetworkAgnostic, ChainConstants {
+contract DummyERC20 is ERC20, NetworkAgnostic, ChainConstants, ContextMixin {
     constructor(string memory name_, string memory symbol_)
         public
         ERC20(name_, symbol_)
@@ -21,7 +21,7 @@ contract DummyERC20 is ERC20, NetworkAgnostic, ChainConstants {
         view
         returns (address payable sender)
     {
-        return ContextLib.msgSender();
+        return ContextMixin.msgSender();
     }
 
     function mint(uint256 amount) public {

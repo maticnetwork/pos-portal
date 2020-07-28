@@ -5,14 +5,15 @@ import {AccessControlMixin} from "../../common/AccessControlMixin.sol";
 import {IChildToken} from "./IChildToken.sol";
 import {NetworkAgnostic} from "../../common/NetworkAgnostic.sol";
 import {ChainConstants} from "../../ChainConstants.sol";
-import {ContextLib} from "../../lib/ContextLib.sol";
+import {ContextMixin} from "../../common/ContextMixin.sol";
 
 contract ChildERC1155 is
     ERC1155,
     IChildToken,
     AccessControlMixin,
     NetworkAgnostic,
-    ChainConstants
+    ChainConstants,
+    ContextMixin
 {
     bytes32 public constant DEPOSITOR_ROLE = keccak256("DEPOSITOR_ROLE");
 
@@ -32,7 +33,7 @@ contract ChildERC1155 is
         view
         returns (address payable sender)
     {
-        return ContextLib.msgSender();
+        return ContextMixin.msgSender();
     }
 
     /**

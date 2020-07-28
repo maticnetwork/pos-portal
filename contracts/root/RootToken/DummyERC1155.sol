@@ -3,9 +3,9 @@ pragma solidity ^0.6.6;
 import {ERC1155} from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import {NetworkAgnostic} from "../../common/NetworkAgnostic.sol";
 import {ChainConstants} from "../../ChainConstants.sol";
-import {ContextLib} from "../../lib/ContextLib.sol";
+import {ContextMixin} from "../../common/ContextMixin.sol";
 
-contract DummyERC1155 is ERC1155, NetworkAgnostic, ChainConstants {
+contract DummyERC1155 is ERC1155, NetworkAgnostic, ChainConstants, ContextMixin {
     constructor(string memory uri_)
         public
         ERC1155(uri_)
@@ -18,7 +18,7 @@ contract DummyERC1155 is ERC1155, NetworkAgnostic, ChainConstants {
         view
         returns (address payable sender)
     {
-        return ContextLib.msgSender();
+        return ContextMixin.msgSender();
     }
 
     function mint(address account, uint256 id, uint256 amount) public {

@@ -1204,11 +1204,11 @@ contract ChainConstants {
     bytes constant public CHILD_CHAIN_ID_BYTES = hex"3A99";
 }
 
-// File: contracts/lib/ContextLib.sol
+// File: contracts/common/ContextMixin.sol
 
 pragma solidity ^0.6.6;
 
-library ContextLib {
+abstract contract ContextMixin {
     function msgSender()
         internal
         view
@@ -1239,7 +1239,7 @@ pragma solidity ^0.6.6;
 
 
 
-contract DummyERC1155 is ERC1155, NetworkAgnostic, ChainConstants {
+contract DummyERC1155 is ERC1155, NetworkAgnostic, ChainConstants, ContextMixin {
     constructor(string memory uri_)
         public
         ERC1155(uri_)
@@ -1252,7 +1252,7 @@ contract DummyERC1155 is ERC1155, NetworkAgnostic, ChainConstants {
         view
         returns (address payable sender)
     {
-        return ContextLib.msgSender();
+        return ContextMixin.msgSender();
     }
 
     function mint(address account, uint256 id, uint256 amount) public {

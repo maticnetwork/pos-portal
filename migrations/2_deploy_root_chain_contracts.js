@@ -4,7 +4,7 @@ const Merkle = artifacts.require('Merkle')
 const MerklePatriciaProof = artifacts.require('MerklePatriciaProof')
 const RLPReader = artifacts.require('RLPReader')
 const SafeERC20 = artifacts.require('SafeERC20')
-const ContextLib = artifacts.require('ContextLib')
+
 
 const RootChainManager = artifacts.require('RootChainManager')
 const RootChainManagerProxy = artifacts.require('RootChainManagerProxy')
@@ -47,10 +47,6 @@ const libDeps = [
   {
     lib: SafeERC20,
     contracts: [ERC20Predicate]
-  },
-  {
-    lib: ContextLib,
-    contracts: [DummyERC20, DummyERC721, DummyERC1155, DummyMintableERC721]
   }
 ]
 

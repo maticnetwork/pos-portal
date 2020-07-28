@@ -1,6 +1,6 @@
 pragma solidity ^0.6.6;
 
-library ContextLib {
+abstract contract ContextMixin {
     function msgSender()
         internal
         view

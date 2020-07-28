@@ -5,7 +5,7 @@ import {AccessControlMixin} from "../../common/AccessControlMixin.sol";
 import {IChildToken} from "./IChildToken.sol";
 import {NetworkAgnostic} from "../../common/NetworkAgnostic.sol";
 import {ChainConstants} from "../../ChainConstants.sol";
-import {ContextLib} from "../../lib/ContextLib.sol";
+import {ContextMixin} from "../../common/ContextMixin.sol";
 
 
 contract ChildMintableERC721 is
@@ -13,7 +13,8 @@ contract ChildMintableERC721 is
     IChildToken,
     AccessControlMixin,
     NetworkAgnostic,
-    ChainConstants
+    ChainConstants,
+    ContextMixin
 {
     bytes32 public constant DEPOSITOR_ROLE = keccak256("DEPOSITOR_ROLE");
     mapping (uint256 => bool) public withdrawnTokens;
@@ -33,7 +34,7 @@ contract ChildMintableERC721 is
         view
         returns (address payable sender)
     {
-        return ContextLib.msgSender();
+        return ContextMixin.msgSender();
     }
 
     /**

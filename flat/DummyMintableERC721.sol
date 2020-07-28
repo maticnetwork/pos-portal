@@ -2077,11 +2077,11 @@ interface IMintableERC721 is IERC721 {
     function exists(uint256 tokenId) external view returns (bool);
 }
 
-// File: contracts/lib/ContextLib.sol
+// File: contracts/common/ContextMixin.sol
 
 pragma solidity ^0.6.6;
 
-library ContextLib {
+abstract contract ContextMixin {
     function msgSender()
         internal
         view
@@ -2119,7 +2119,8 @@ contract DummyMintableERC721 is
     AccessControlMixin,
     NetworkAgnostic,
     ChainConstants,
-    IMintableERC721
+    IMintableERC721,
+    ContextMixin
 {
     bytes32 public constant PREDICATE_ROLE = keccak256("PREDICATE_ROLE");
     constructor(string memory name_, string memory symbol_)
@@ -2138,7 +2139,7 @@ contract DummyMintableERC721 is
         view
         returns (address payable sender)
     {
-        return ContextLib.msgSender();
+        return ContextMixin.msgSender();
     }
 
     /**

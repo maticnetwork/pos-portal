@@ -5,14 +5,15 @@ import {AccessControlMixin} from "../../common/AccessControlMixin.sol";
 import {NetworkAgnostic} from "../../common/NetworkAgnostic.sol";
 import {ChainConstants} from "../../ChainConstants.sol";
 import {IMintableERC721} from "./IMintableERC721.sol";
-import {ContextLib} from "../../lib/ContextLib.sol";
+import {ContextMixin} from "../../common/ContextMixin.sol";
 
 contract DummyMintableERC721 is
     ERC721,
     AccessControlMixin,
     NetworkAgnostic,
     ChainConstants,
-    IMintableERC721
+    IMintableERC721,
+    ContextMixin
 {
     bytes32 public constant PREDICATE_ROLE = keccak256("PREDICATE_ROLE");
     constructor(string memory name_, string memory symbol_)
@@ -31,7 +32,7 @@ contract DummyMintableERC721 is
         view
         returns (address payable sender)
     {
-        return ContextLib.msgSender();
+        return ContextMixin.msgSender();
     }
 
     /**
