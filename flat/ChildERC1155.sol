@@ -1482,6 +1482,26 @@ abstract contract AccessControl is Context {
     }
 }
 
+// File: contracts/common/AccessControlMixin.sol
+
+pragma solidity ^0.6.6;
+
+
+contract AccessControlMixin is AccessControl {
+    string private _revertMsg;
+    function _setupContractId(string memory contractId) internal {
+        _revertMsg = string(abi.encodePacked(contractId, ": INSUFFICIENT_PERMISSIONS"));
+    }
+
+    modifier only(bytes32 role) {
+        require(
+            hasRole(role, _msgSender()),
+            _revertMsg
+        );
+        _;
+    }
+}
+
 // File: contracts/child/ChildToken/IChildToken.sol
 
 pragma solidity ^0.6.6;
@@ -1677,44 +1697,13 @@ contract ChainConstants {
     bytes constant public CHILD_CHAIN_ID_BYTES = hex"3A99";
 }
 
-// File: contracts/child/ChildToken/ChildERC1155.sol
+// File: contracts/common/ContextMixin.sol
 
 pragma solidity ^0.6.6;
 
-
-
-
-
-
-contract ChildERC1155 is
-    ERC1155,
-    IChildToken,
-    AccessControl,
-    NetworkAgnostic,
-    ChainConstants
-{
-    bytes32 public constant DEPOSITOR_ROLE = keccak256("DEPOSITOR_ROLE");
-
-    constructor(string memory uri_)
-        public
-        ERC1155(uri_)
-        NetworkAgnostic(uri_, ERC712_VERSION, ROOT_CHAIN_ID)
-    {
-        _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
-        _setupRole(DEPOSITOR_ROLE, _msgSender());
-    }
-
-    modifier only(bytes32 role) {
-        require(
-            hasRole(role, _msgSender()),
-            "ChildERC1155: INSUFFICIENT_PERMISSIONS"
-        );
-        _;
-    }
-
-    function _msgSender()
+abstract contract ContextMixin {
+    function msgSender()
         internal
-        override
         view
         returns (address payable sender)
     {
@@ -1732,6 +1721,46 @@ contract ChildERC1155 is
             sender = msg.sender;
         }
         return sender;
+    }
+}
+
+// File: contracts/child/ChildToken/ChildERC1155.sol
+
+pragma solidity ^0.6.6;
+
+
+
+
+
+
+
+contract ChildERC1155 is
+    ERC1155,
+    IChildToken,
+    AccessControlMixin,
+    NetworkAgnostic,
+    ChainConstants,
+    ContextMixin
+{
+    bytes32 public constant DEPOSITOR_ROLE = keccak256("DEPOSITOR_ROLE");
+
+    constructor(string memory uri_)
+        public
+        ERC1155(uri_)
+        NetworkAgnostic(uri_, ERC712_VERSION, ROOT_CHAIN_ID)
+    {
+        _setupContractId("ChildERC1155");
+        _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
+        _setupRole(DEPOSITOR_ROLE, _msgSender());
+    }
+
+    function _msgSender()
+        internal
+        override
+        view
+        returns (address payable sender)
+    {
+        return ContextMixin.msgSender();
     }
 
     /**

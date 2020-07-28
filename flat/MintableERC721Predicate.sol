@@ -1,116 +1,27 @@
 
-// File: @openzeppelin/contracts/token/ERC20/IERC20.sol
+// File: @openzeppelin/contracts/token/ERC721/IERC721Receiver.sol
 
 // SPDX-License-Identifier: MIT
 
 pragma solidity ^0.6.0;
 
 /**
- * @dev Interface of the ERC20 standard as defined in the EIP.
+ * @title ERC721 token receiver interface
+ * @dev Interface for any contract that wants to support safeTransfers
+ * from ERC721 asset contracts.
  */
-interface IERC20 {
+interface IERC721Receiver {
     /**
-     * @dev Returns the amount of tokens in existence.
+     * @dev Whenever an {IERC721} `tokenId` token is transferred to this contract via {IERC721-safeTransferFrom}
+     * by `operator` from `from`, this function is called.
+     *
+     * It must return its Solidity selector to confirm the token transfer.
+     * If any other value is returned or the interface is not implemented by the recipient, the transfer will be reverted.
+     *
+     * The selector can be obtained in Solidity with `IERC721.onERC721Received.selector`.
      */
-    function totalSupply() external view returns (uint256);
-
-    /**
-     * @dev Returns the amount of tokens owned by `account`.
-     */
-    function balanceOf(address account) external view returns (uint256);
-
-    /**
-     * @dev Moves `amount` tokens from the caller's account to `recipient`.
-     *
-     * Returns a boolean value indicating whether the operation succeeded.
-     *
-     * Emits a {Transfer} event.
-     */
-    function transfer(address recipient, uint256 amount) external returns (bool);
-
-    /**
-     * @dev Returns the remaining number of tokens that `spender` will be
-     * allowed to spend on behalf of `owner` through {transferFrom}. This is
-     * zero by default.
-     *
-     * This value changes when {approve} or {transferFrom} are called.
-     */
-    function allowance(address owner, address spender) external view returns (uint256);
-
-    /**
-     * @dev Sets `amount` as the allowance of `spender` over the caller's tokens.
-     *
-     * Returns a boolean value indicating whether the operation succeeded.
-     *
-     * IMPORTANT: Beware that changing an allowance with this method brings the risk
-     * that someone may use both the old and the new allowance by unfortunate
-     * transaction ordering. One possible solution to mitigate this race
-     * condition is to first reduce the spender's allowance to 0 and set the
-     * desired value afterwards:
-     * https://github.com/ethereum/EIPs/issues/20#issuecomment-263524729
-     *
-     * Emits an {Approval} event.
-     */
-    function approve(address spender, uint256 amount) external returns (bool);
-
-    /**
-     * @dev Moves `amount` tokens from `sender` to `recipient` using the
-     * allowance mechanism. `amount` is then deducted from the caller's
-     * allowance.
-     *
-     * Returns a boolean value indicating whether the operation succeeded.
-     *
-     * Emits a {Transfer} event.
-     */
-    function transferFrom(address sender, address recipient, uint256 amount) external returns (bool);
-
-    /**
-     * @dev Emitted when `value` tokens are moved from one account (`from`) to
-     * another (`to`).
-     *
-     * Note that `value` may be zero.
-     */
-    event Transfer(address indexed from, address indexed to, uint256 value);
-
-    /**
-     * @dev Emitted when the allowance of a `spender` for an `owner` is set by
-     * a call to {approve}. `value` is the new allowance.
-     */
-    event Approval(address indexed owner, address indexed spender, uint256 value);
-}
-
-// File: contracts/child/ChildChainManager/IChildChainManager.sol
-
-pragma solidity ^0.6.6;
-
-interface IChildChainManager {
-    event TokenMapped(address indexed rootToken, address indexed childToken);
-
-    function mapToken(address rootToken, address childToken) external;
-
-    function onStateReceive(uint256 id, bytes calldata data) external;
-}
-
-// File: contracts/child/ChildToken/IChildToken.sol
-
-pragma solidity ^0.6.6;
-
-interface IChildToken {
-    function deposit(address user, bytes calldata depositData) external;
-}
-
-// File: contracts/common/Initializable.sol
-
-pragma solidity ^0.6.6;
-
-contract Initializable {
-    bool inited = false;
-
-    modifier initializer() {
-        require(!inited, "already inited");
-        inited = true;
-        _;
-    }
+    function onERC721Received(address operator, address from, uint256 tokenId, bytes calldata data)
+    external returns (bytes4);
 }
 
 // File: @openzeppelin/contracts/utils/EnumerableSet.sol
@@ -769,7 +680,568 @@ contract AccessControlMixin is AccessControl {
     }
 }
 
-// File: contracts/child/ChildChainManager/ChildChainManager.sol
+// File: contracts/lib/RLPReader.sol
+
+/*
+ * @author Hamdi Allam hamdi.allam97@gmail.com
+ * Please reach out with any questions or concerns
+ * https://github.com/hamdiallam/Solidity-RLP/blob/e681e25a376dbd5426b509380bc03446f05d0f97/contracts/RLPReader.sol
+ */
+pragma solidity ^0.6.6;
+
+library RLPReader {
+    uint8 constant STRING_SHORT_START = 0x80;
+    uint8 constant STRING_LONG_START = 0xb8;
+    uint8 constant LIST_SHORT_START = 0xc0;
+    uint8 constant LIST_LONG_START = 0xf8;
+    uint8 constant WORD_SIZE = 32;
+
+    struct RLPItem {
+        uint256 len;
+        uint256 memPtr;
+    }
+
+    struct Iterator {
+        RLPItem item; // Item that's being iterated over.
+        uint256 nextPtr; // Position of the next item in the list.
+    }
+
+    /*
+     * @dev Returns the next element in the iteration. Reverts if it has not next element.
+     * @param self The iterator.
+     * @return The next element in the iteration.
+     */
+    function next(Iterator memory self) internal pure returns (RLPItem memory) {
+        require(hasNext(self));
+
+        uint256 ptr = self.nextPtr;
+        uint256 itemLength = _itemLength(ptr);
+        self.nextPtr = ptr + itemLength;
+
+        return RLPItem(itemLength, ptr);
+    }
+
+    /*
+     * @dev Returns true if the iteration has more elements.
+     * @param self The iterator.
+     * @return true if the iteration has more elements.
+     */
+    function hasNext(Iterator memory self) internal pure returns (bool) {
+        RLPItem memory item = self.item;
+        return self.nextPtr < item.memPtr + item.len;
+    }
+
+    /*
+     * @param item RLP encoded bytes
+     */
+    function toRlpItem(bytes memory item)
+        internal
+        pure
+        returns (RLPItem memory)
+    {
+        uint256 memPtr;
+        assembly {
+            memPtr := add(item, 0x20)
+        }
+
+        return RLPItem(item.length, memPtr);
+    }
+
+    /*
+     * @dev Create an iterator. Reverts if item is not a list.
+     * @param self The RLP item.
+     * @return An 'Iterator' over the item.
+     */
+    function iterator(RLPItem memory self)
+        internal
+        pure
+        returns (Iterator memory)
+    {
+        require(isList(self));
+
+        uint256 ptr = self.memPtr + _payloadOffset(self.memPtr);
+        return Iterator(self, ptr);
+    }
+
+    /*
+     * @param item RLP encoded bytes
+     */
+    function rlpLen(RLPItem memory item) internal pure returns (uint256) {
+        return item.len;
+    }
+
+    /*
+     * @param item RLP encoded bytes
+     */
+    function payloadLen(RLPItem memory item) internal pure returns (uint256) {
+        return item.len - _payloadOffset(item.memPtr);
+    }
+
+    /*
+     * @param item RLP encoded list in bytes
+     */
+    function toList(RLPItem memory item)
+        internal
+        pure
+        returns (RLPItem[] memory)
+    {
+        require(isList(item));
+
+        uint256 items = numItems(item);
+        RLPItem[] memory result = new RLPItem[](items);
+
+        uint256 memPtr = item.memPtr + _payloadOffset(item.memPtr);
+        uint256 dataLen;
+        for (uint256 i = 0; i < items; i++) {
+            dataLen = _itemLength(memPtr);
+            result[i] = RLPItem(dataLen, memPtr);
+            memPtr = memPtr + dataLen;
+        }
+
+        return result;
+    }
+
+    // @return indicator whether encoded payload is a list. negate this function call for isData.
+    function isList(RLPItem memory item) internal pure returns (bool) {
+        if (item.len == 0) return false;
+
+        uint8 byte0;
+        uint256 memPtr = item.memPtr;
+        assembly {
+            byte0 := byte(0, mload(memPtr))
+        }
+
+        if (byte0 < LIST_SHORT_START) return false;
+        return true;
+    }
+
+    /** RLPItem conversions into data types **/
+
+    // @returns raw rlp encoding in bytes
+    function toRlpBytes(RLPItem memory item)
+        internal
+        pure
+        returns (bytes memory)
+    {
+        bytes memory result = new bytes(item.len);
+        if (result.length == 0) return result;
+
+        uint256 ptr;
+        assembly {
+            ptr := add(0x20, result)
+        }
+
+        copy(item.memPtr, ptr, item.len);
+        return result;
+    }
+
+    // any non-zero byte is considered true
+    function toBoolean(RLPItem memory item) internal pure returns (bool) {
+        require(item.len == 1);
+        uint256 result;
+        uint256 memPtr = item.memPtr;
+        assembly {
+            result := byte(0, mload(memPtr))
+        }
+
+        return result == 0 ? false : true;
+    }
+
+    function toAddress(RLPItem memory item) internal pure returns (address) {
+        // 1 byte for the length prefix
+        require(item.len == 21);
+
+        return address(toUint(item));
+    }
+
+    function toUint(RLPItem memory item) internal pure returns (uint256) {
+        require(item.len > 0 && item.len <= 33);
+
+        uint256 offset = _payloadOffset(item.memPtr);
+        uint256 len = item.len - offset;
+
+        uint256 result;
+        uint256 memPtr = item.memPtr + offset;
+        assembly {
+            result := mload(memPtr)
+
+            // shfit to the correct location if neccesary
+            if lt(len, 32) {
+                result := div(result, exp(256, sub(32, len)))
+            }
+        }
+
+        return result;
+    }
+
+    // enforces 32 byte length
+    function toUintStrict(RLPItem memory item) internal pure returns (uint256) {
+        // one byte prefix
+        require(item.len == 33);
+
+        uint256 result;
+        uint256 memPtr = item.memPtr + 1;
+        assembly {
+            result := mload(memPtr)
+        }
+
+        return result;
+    }
+
+    function toBytes(RLPItem memory item) internal pure returns (bytes memory) {
+        require(item.len > 0);
+
+        uint256 offset = _payloadOffset(item.memPtr);
+        uint256 len = item.len - offset; // data length
+        bytes memory result = new bytes(len);
+
+        uint256 destPtr;
+        assembly {
+            destPtr := add(0x20, result)
+        }
+
+        copy(item.memPtr + offset, destPtr, len);
+        return result;
+    }
+
+    /*
+     * Private Helpers
+     */
+
+    // @return number of payload items inside an encoded list.
+    function numItems(RLPItem memory item) private pure returns (uint256) {
+        if (item.len == 0) return 0;
+
+        uint256 count = 0;
+        uint256 currPtr = item.memPtr + _payloadOffset(item.memPtr);
+        uint256 endPtr = item.memPtr + item.len;
+        while (currPtr < endPtr) {
+            currPtr = currPtr + _itemLength(currPtr); // skip over an item
+            count++;
+        }
+
+        return count;
+    }
+
+    // @return entire rlp item byte length
+    function _itemLength(uint256 memPtr) private pure returns (uint256) {
+        uint256 itemLen;
+        uint256 byte0;
+        assembly {
+            byte0 := byte(0, mload(memPtr))
+        }
+
+        if (byte0 < STRING_SHORT_START) itemLen = 1;
+        else if (byte0 < STRING_LONG_START)
+            itemLen = byte0 - STRING_SHORT_START + 1;
+        else if (byte0 < LIST_SHORT_START) {
+            assembly {
+                let byteLen := sub(byte0, 0xb7) // # of bytes the actual length is
+                memPtr := add(memPtr, 1) // skip over the first byte
+
+                /* 32 byte word size */
+                let dataLen := div(mload(memPtr), exp(256, sub(32, byteLen))) // right shifting to get the len
+                itemLen := add(dataLen, add(byteLen, 1))
+            }
+        } else if (byte0 < LIST_LONG_START) {
+            itemLen = byte0 - LIST_SHORT_START + 1;
+        } else {
+            assembly {
+                let byteLen := sub(byte0, 0xf7)
+                memPtr := add(memPtr, 1)
+
+                let dataLen := div(mload(memPtr), exp(256, sub(32, byteLen))) // right shifting to the correct length
+                itemLen := add(dataLen, add(byteLen, 1))
+            }
+        }
+
+        return itemLen;
+    }
+
+    // @return number of bytes until the data
+    function _payloadOffset(uint256 memPtr) private pure returns (uint256) {
+        uint256 byte0;
+        assembly {
+            byte0 := byte(0, mload(memPtr))
+        }
+
+        if (byte0 < STRING_SHORT_START) return 0;
+        else if (
+            byte0 < STRING_LONG_START ||
+            (byte0 >= LIST_SHORT_START && byte0 < LIST_LONG_START)
+        ) return 1;
+        else if (byte0 < LIST_SHORT_START)
+            // being explicit
+            return byte0 - (STRING_LONG_START - 1) + 1;
+        else return byte0 - (LIST_LONG_START - 1) + 1;
+    }
+
+    /*
+     * @param src Pointer to source
+     * @param dest Pointer to destination
+     * @param len Amount of memory to copy from the source
+     */
+    function copy(
+        uint256 src,
+        uint256 dest,
+        uint256 len
+    ) private pure {
+        if (len == 0) return;
+
+        // copy as many word sizes as possible
+        for (; len >= WORD_SIZE; len -= WORD_SIZE) {
+            assembly {
+                mstore(dest, mload(src))
+            }
+
+            src += WORD_SIZE;
+            dest += WORD_SIZE;
+        }
+
+        // left over bytes. Mask is used to remove unwanted bytes from the word
+        uint256 mask = 256**(WORD_SIZE - len) - 1;
+        assembly {
+            let srcpart := and(mload(src), not(mask)) // zero out src
+            let destpart := and(mload(dest), mask) // retrieve the bytes
+            mstore(dest, or(destpart, srcpart))
+        }
+    }
+}
+
+// File: @openzeppelin/contracts/introspection/IERC165.sol
+
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.6.0;
+
+/**
+ * @dev Interface of the ERC165 standard, as defined in the
+ * https://eips.ethereum.org/EIPS/eip-165[EIP].
+ *
+ * Implementers can declare support of contract interfaces, which can then be
+ * queried by others ({ERC165Checker}).
+ *
+ * For an implementation, see {ERC165}.
+ */
+interface IERC165 {
+    /**
+     * @dev Returns true if this contract implements the interface defined by
+     * `interfaceId`. See the corresponding
+     * https://eips.ethereum.org/EIPS/eip-165#how-interfaces-are-identified[EIP section]
+     * to learn more about how these ids are created.
+     *
+     * This function call must use less than 30 000 gas.
+     */
+    function supportsInterface(bytes4 interfaceId) external view returns (bool);
+}
+
+// File: @openzeppelin/contracts/token/ERC721/IERC721.sol
+
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.6.2;
+
+
+/**
+ * @dev Required interface of an ERC721 compliant contract.
+ */
+interface IERC721 is IERC165 {
+    /**
+     * @dev Emitted when `tokenId` token is transfered from `from` to `to`.
+     */
+    event Transfer(address indexed from, address indexed to, uint256 indexed tokenId);
+
+    /**
+     * @dev Emitted when `owner` enables `approved` to manage the `tokenId` token.
+     */
+    event Approval(address indexed owner, address indexed approved, uint256 indexed tokenId);
+
+    /**
+     * @dev Emitted when `owner` enables or disables (`approved`) `operator` to manage all of its assets.
+     */
+    event ApprovalForAll(address indexed owner, address indexed operator, bool approved);
+
+    /**
+     * @dev Returns the number of tokens in ``owner``'s account.
+     */
+    function balanceOf(address owner) external view returns (uint256 balance);
+
+    /**
+     * @dev Returns the owner of the `tokenId` token.
+     *
+     * Requirements:
+     *
+     * - `tokenId` must exist.
+     */
+    function ownerOf(uint256 tokenId) external view returns (address owner);
+
+    /**
+     * @dev Safely transfers `tokenId` token from `from` to `to`, checking first that contract recipients
+     * are aware of the ERC721 protocol to prevent tokens from being forever locked.
+     *
+     * Requirements:
+     *
+     * - `from` cannot be the zero address.
+     * - `to` cannot be the zero address.
+     * - `tokenId` token must exist and be owned by `from`.
+     * - If the caller is not `from`, it must be have been allowed to move this token by either {approve} or {setApprovalForAll}.
+     * - If `to` refers to a smart contract, it must implement {IERC721Receiver-onERC721Received}, which is called upon a safe transfer.
+     *
+     * Emits a {Transfer} event.
+     */
+    function safeTransferFrom(address from, address to, uint256 tokenId) external;
+
+    /**
+     * @dev Transfers `tokenId` token from `from` to `to`.
+     *
+     * WARNING: Usage of this method is discouraged, use {safeTransferFrom} whenever possible.
+     *
+     * Requirements:
+     *
+     * - `from` cannot be the zero address.
+     * - `to` cannot be the zero address.
+     * - `tokenId` token must be owned by `from`.
+     * - If the caller is not `from`, it must be approved to move this token by either {approve} or {setApprovalForAll}.
+     *
+     * Emits a {Transfer} event.
+     */
+    function transferFrom(address from, address to, uint256 tokenId) external;
+
+    /**
+     * @dev Gives permission to `to` to transfer `tokenId` token to another account.
+     * The approval is cleared when the token is transferred.
+     *
+     * Only a single account can be approved at a time, so approving the zero address clears previous approvals.
+     *
+     * Requirements:
+     *
+     * - The caller must own the token or be an approved operator.
+     * - `tokenId` must exist.
+     *
+     * Emits an {Approval} event.
+     */
+    function approve(address to, uint256 tokenId) external;
+
+    /**
+     * @dev Returns the account approved for `tokenId` token.
+     *
+     * Requirements:
+     *
+     * - `tokenId` must exist.
+     */
+    function getApproved(uint256 tokenId) external view returns (address operator);
+
+    /**
+     * @dev Approve or remove `operator` as an operator for the caller.
+     * Operators can call {transferFrom} or {safeTransferFrom} for any token owned by the caller.
+     *
+     * Requirements:
+     *
+     * - The `operator` cannot be the caller.
+     *
+     * Emits an {ApprovalForAll} event.
+     */
+    function setApprovalForAll(address operator, bool _approved) external;
+
+    /**
+     * @dev Returns if the `operator` is allowed to manage all of the assets of `owner`.
+     *
+     * See {setApprovalForAll}
+     */
+    function isApprovedForAll(address owner, address operator) external view returns (bool);
+
+    /**
+      * @dev Safely transfers `tokenId` token from `from` to `to`.
+      *
+      * Requirements:
+      *
+     * - `from` cannot be the zero address.
+     * - `to` cannot be the zero address.
+      * - `tokenId` token must exist and be owned by `from`.
+      * - If the caller is not `from`, it must be approved to move this token by either {approve} or {setApprovalForAll}.
+      * - If `to` refers to a smart contract, it must implement {IERC721Receiver-onERC721Received}, which is called upon a safe transfer.
+      *
+      * Emits a {Transfer} event.
+      */
+    function safeTransferFrom(address from, address to, uint256 tokenId, bytes calldata data) external;
+}
+
+// File: contracts/root/RootToken/IMintableERC721.sol
+
+pragma solidity ^0.6.6;
+
+interface IMintableERC721 is IERC721 {
+    /**
+     * @notice called by predicate contract to mint tokens while withdrawing
+     * @dev Should be callable only by MintableERC721Predicate
+     * Make sure minting is done only by this function
+     * @param user user address for whom token is being minted
+     * @param tokenId tokenId being minted
+     */
+    function mint(address user, uint256 tokenId) external;
+
+    /**
+     * @notice check if token already exists, return true if it does exist
+     * @dev this check will be used by the predicate to determine if the token needs to be minted or transfered
+     * @param tokenId tokenId being checked
+     */
+    function exists(uint256 tokenId) external view returns (bool);
+}
+
+// File: contracts/root/TokenPredicates/ITokenPredicate.sol
+
+pragma solidity ^0.6.6;
+
+
+/// @title Token predicate interface for all pos portal predicates
+/// @notice Abstract interface that defines methods for custom predicates
+interface ITokenPredicate {
+
+    /**
+     * @notice Deposit tokens into pos portal
+     * @dev When `depositor` deposits tokens into pos portal, tokens get locked into predicate contract.
+     * @param depositor Address who wants to deposit tokens
+     * @param depositReceiver Address (address) who wants to receive tokens on side chain
+     * @param rootToken Token which gets deposited
+     * @param depositData Extra data for deposit (amount for ERC20, token id for ERC721 etc.) [ABI encoded]
+     */
+    function lockTokens(
+        address depositor,
+        address depositReceiver,
+        address rootToken,
+        bytes calldata depositData
+    ) external;
+
+    /**
+     * @notice Validates and processes exit while withdraw process
+     * @dev Validates exit log emitted on sidechain. Reverts if validation fails.
+     * @dev Processes withdraw based on custom logic. Example: transfer ERC20/ERC721, mint ERC721 if mintable withdraw
+     * @param withdrawer Address who wants to withdraw tokens
+     * @param rootToken Token which gets withdrawn
+     * @param logRLPList Valid sidechain log for data like amount, token id etc.
+     */
+    function exitTokens(
+        address withdrawer,
+        address rootToken,
+        bytes calldata logRLPList
+    ) external;
+}
+
+// File: contracts/common/Initializable.sol
+
+pragma solidity ^0.6.6;
+
+contract Initializable {
+    bool inited = false;
+
+    modifier initializer() {
+        require(!inited, "already inited");
+        inited = true;
+        _;
+    }
+}
+
+// File: contracts/root/TokenPredicates/MintableERC721Predicate.sol
 
 pragma solidity ^0.6.6;
 
@@ -778,83 +1250,116 @@ pragma solidity ^0.6.6;
 
 
 
-contract ChildChainManager is IChildChainManager, Initializable, AccessControlMixin {
-    bytes32 public constant DEPOSIT = keccak256("DEPOSIT");
-    bytes32 public constant MAP_TOKEN = keccak256("MAP_TOKEN");
-    bytes32 public constant MAPPER_ROLE = keccak256("MAPPER_ROLE");
-    bytes32 public constant STATE_SYNCER_ROLE = keccak256("STATE_SYNCER_ROLE");
 
-    mapping(address => address) public rootToChildToken;
-    mapping(address => address) public childToRootToken;
+contract MintableERC721Predicate is ITokenPredicate, AccessControlMixin, Initializable, IERC721Receiver {
+    using RLPReader for bytes;
+    using RLPReader for RLPReader.RLPItem;
+
+    // keccak256("MANAGER_ROLE")
+    bytes32 public constant MANAGER_ROLE = 0x241ecf16d79d0f8dbfb92cbc07fe17840425976cf0667f022fe9877caa831b08;
+    // keccak256("MintableERC721")
+    bytes32 public constant TOKEN_TYPE = 0xd4392723c111fcb98b073fe55873efb447bcd23cd3e49ec9ea2581930cd01ddc;
+    // keccak("Transfer(address,address,uint256)")
+    bytes32 public constant TRANSFER_EVENT_SIG = 0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef;
+
+    event LockedMintableERC721(
+        address indexed depositor,
+        address indexed depositReceiver,
+        address indexed rootToken,
+        uint256 tokenId
+    );
+
+    constructor() public {}
 
     function initialize(address _owner) external initializer {
-        _setupContractId("ChildChainManager");
+        _setupContractId("MintableERC721Predicate");
         _setupRole(DEFAULT_ADMIN_ROLE, _owner);
-        _setupRole(MAPPER_ROLE, _owner);
-        _setupRole(STATE_SYNCER_ROLE, _owner);
+        _setupRole(MANAGER_ROLE, _owner);
     }
 
     /**
-     * @notice Map a token to enable its movement via the PoS Portal, callable only by mappers
-     * @param rootToken address of token on root chain
-     * @param childToken address of token on child chain
+     * @notice accepts safe ERC721 transfer
      */
-    function mapToken(address rootToken, address childToken)
+    function onERC721Received(
+        address,
+        address,
+        uint256,
+        bytes calldata
+    )
         external
         override
-        only(MAPPER_ROLE)
+        returns (bytes4)
     {
-        _mapToken(rootToken, childToken);
+        return IERC721Receiver.onERC721Received.selector;
     }
 
     /**
-     * @notice Receive state sync data from root chain, only callable by state syncer
-     * @dev state syncing mechanism is used for both depositing tokens and mapping them
-     * @param data bytes data from RootChainManager contract
-     * `data` is made up of bytes32 `syncType` and bytes `syncData`
-     * `syncType` determines if it is deposit or token mapping
-     * in case of token mapping, `syncData` is encoded address `rootToken`, address `childToken` and bytes32 `tokenType`
-     * in case of deposit, `syncData` is encoded address `user`, address `rootToken` and bytes `depositData`
-     * `depositData` is token specific data (amount in case of ERC20). It is passed as is to child token
+     * @notice Lock ERC721 tokens for deposit, callable only by manager
+     * @param depositor Address who wants to deposit token
+     * @param depositReceiver Address (address) who wants to receive token on child chain
+     * @param rootToken Token which gets deposited
+     * @param depositData ABI encoded tokenId
      */
-    function onStateReceive(uint256, bytes calldata data)
+    function lockTokens(
+        address depositor,
+        address depositReceiver,
+        address rootToken,
+        bytes calldata depositData
+    )
         external
         override
-        only(STATE_SYNCER_ROLE)
+        only(MANAGER_ROLE)
     {
-        (bytes32 syncType, bytes memory syncData) = abi.decode(
-            data,
-            (bytes32, bytes)
-        );
-
-        if (syncType == DEPOSIT) {
-            _syncDeposit(syncData);
-        } else if (syncType == MAP_TOKEN) {
-            (address rootToken, address childToken, ) = abi.decode(
-                syncData,
-                (address, address, bytes32)
-            );
-            _mapToken(rootToken, childToken);
-        } else {
-            revert("ChildChainManager: INVALID_SYNC_TYPE");
-        }
+        uint256 tokenId = abi.decode(depositData, (uint256));
+        emit LockedMintableERC721(depositor, depositReceiver, rootToken, tokenId);
+        IMintableERC721(rootToken).safeTransferFrom(depositor, address(this), tokenId);
     }
 
-    function _syncDeposit(bytes memory syncData) private {
-        (address user, address rootToken, bytes memory depositData) = abi
-            .decode(syncData, (address, address, bytes));
-        address childTokenAddress = rootToChildToken[rootToken];
+    /**
+     * @notice Validates log signature, from and to address
+     * then checks if token already exists on root chain
+     * if token exits then transfers it to withdrawer
+     * if token doesn't exit then it is minted
+     * callable only by manager
+     * @param withdrawer Address who wants to withdraw token
+     * @param rootToken Token which gets withdrawn
+     * @param log Valid ERC721 burn log from child chain
+     */
+    function exitTokens(
+        address withdrawer,
+        address rootToken,
+        bytes memory log
+    )
+        public
+        override
+        only(MANAGER_ROLE)
+    {
+        RLPReader.RLPItem[] memory logRLPList = log.toRlpItem().toList();
+        RLPReader.RLPItem[] memory logTopicRLPList = logRLPList[1].toList(); // topics
+
         require(
-            childTokenAddress != address(0x0),
-            "ChildChainManager: TOKEN_NOT_MAPPED"
+            bytes32(logTopicRLPList[0].toUint()) == TRANSFER_EVENT_SIG, // topic0 is event sig
+            "MintableERC721Predicate: INVALID_SIGNATURE"
         );
-        IChildToken childTokenContract = IChildToken(childTokenAddress);
-        childTokenContract.deposit(user, depositData);
-    }
+        require(
+            withdrawer == address(logTopicRLPList[1].toUint()), // topic1 is from address
+            "MintableERC721Predicate: INVALID_SENDER"
+        );
+        require(
+            address(logTopicRLPList[2].toUint()) == address(0), // topic2 is to address
+            "MintableERC721Predicate: INVALID_RECEIVER"
+        );
 
-    function _mapToken(address rootToken, address childToken) private {
-        rootToChildToken[rootToken] = childToken;
-        childToRootToken[childToken] = rootToken;
-        emit TokenMapped(rootToken, childToken);
+        IMintableERC721 token = IMintableERC721(rootToken);
+        uint256 tokenId = logTopicRLPList[3].toUint(); // topic3 is tokenId field
+        if (token.exists(tokenId)) {
+          token.safeTransferFrom(
+              address(this),
+              withdrawer,
+              tokenId
+          );
+        } else {
+          token.mint(withdrawer, tokenId);
+        }
     }
 }

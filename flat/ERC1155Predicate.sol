@@ -902,6 +902,26 @@ abstract contract AccessControl is Context {
     }
 }
 
+// File: contracts/common/AccessControlMixin.sol
+
+pragma solidity ^0.6.6;
+
+
+contract AccessControlMixin is AccessControl {
+    string private _revertMsg;
+    function _setupContractId(string memory contractId) internal {
+        _revertMsg = string(abi.encodePacked(contractId, ": INSUFFICIENT_PERMISSIONS"));
+    }
+
+    modifier only(bytes32 role) {
+        require(
+            hasRole(role, _msgSender()),
+            _revertMsg
+        );
+        _;
+    }
+}
+
 // File: contracts/lib/RLPReader.sol
 
 /*
@@ -1293,7 +1313,7 @@ pragma solidity ^0.6.6;
 
 
 
-contract ERC1155Predicate is ITokenPredicate, ERC1155Receiver, AccessControl, Initializable {
+contract ERC1155Predicate is ITokenPredicate, ERC1155Receiver, AccessControlMixin, Initializable {
     using RLPReader for bytes;
     using RLPReader for RLPReader.RLPItem;
 
@@ -1313,14 +1333,10 @@ contract ERC1155Predicate is ITokenPredicate, ERC1155Receiver, AccessControl, In
         uint256[] amounts
     );
 
-    modifier only(bytes32 role) {
-        require(hasRole(role, _msgSender()), "ERC1155Predicate: INSUFFICIENT_PERMISSIONS");
-        _;
-    }
-
     constructor() public {}
 
     function initialize(address _owner) external initializer {
+        _setupContractId("ERC1155Predicate");
         _setupRole(DEFAULT_ADMIN_ROLE, _owner);
         _setupRole(MANAGER_ROLE, _owner);
     }
