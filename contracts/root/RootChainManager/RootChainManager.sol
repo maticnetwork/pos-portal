@@ -210,7 +210,7 @@ contract RootChainManager is IRootChainManager, Initializable, AccessControlMixi
             "RootChainManager: INVALID_USER"
         );
 
-        ITokenPredicate(predicateAddress).lockTokens(
+        (user, rootToken, depositData) = ITokenPredicate(predicateAddress).lockTokens(
             _msgSender(),
             user,
             rootToken,

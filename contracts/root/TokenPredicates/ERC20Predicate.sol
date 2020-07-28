@@ -47,10 +47,12 @@ contract ERC20Predicate is ITokenPredicate, AccessControlMixin, Initializable {
         external
         override
         only(MANAGER_ROLE)
+        returns(address, address, bytes memory)
     {
         uint256 amount = abi.decode(depositData, (uint256));
         emit LockedERC20(depositor, depositReceiver, rootToken, amount);
         IERC20(rootToken).safeTransferFrom(depositor, address(this), amount);
+        return (depositReceiver, rootToken, depositData);
     }
 
     /**

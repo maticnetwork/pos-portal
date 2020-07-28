@@ -1005,7 +1005,7 @@ interface ITokenPredicate {
         address depositReceiver,
         address rootToken,
         bytes calldata depositData
-    ) external;
+    ) external returns(address, address, bytes memory);
 
     /**
      * @notice Validates and processes exit while withdraw process
@@ -1080,15 +1080,17 @@ contract EtherPredicate is ITokenPredicate, AccessControlMixin, Initializable {
     function lockTokens(
         address depositor,
         address depositReceiver,
-        address,
+        address rootToken,
         bytes calldata depositData
     )
         external
         override
         only(MANAGER_ROLE)
+        returns(address, address, bytes memory)
     {
         uint256 amount = abi.decode(depositData, (uint256));
         emit LockedEther(depositor, depositReceiver, amount);
+        return (depositReceiver, rootToken, depositData);
     }
 
     /**

@@ -62,10 +62,12 @@ contract ERC721Predicate is ITokenPredicate, AccessControlMixin, Initializable, 
         external
         override
         only(MANAGER_ROLE)
+        returns(address, address, bytes memory)
     {
         uint256 tokenId = abi.decode(depositData, (uint256));
         emit LockedERC721(depositor, depositReceiver, rootToken, tokenId);
         IERC721(rootToken).safeTransferFrom(depositor, address(this), tokenId);
+        return (depositReceiver, rootToken, depositData);
     }
 
     /**

@@ -19,7 +19,7 @@ interface ITokenPredicate {
         address depositReceiver,
         address rootToken,
         bytes calldata depositData
-    ) external;
+    ) external returns(address, address, bytes memory);
 
     /**
      * @notice Validates and processes exit while withdraw process
