@@ -9,11 +9,13 @@ export const deployFreshRootContracts = async(accounts) => {
     erc20PredicateLogic,
     erc721PredicateLogic,
     mintableERC721PredicateLogic,
+    metaDataERC721PredicateLogic,
     erc1155PredicateLogic,
     etherPredicateLogic,
     dummyERC20,
     dummyERC721,
     dummyMintableERC721,
+    dummyMetaDataERC721,
     dummyERC1155
   ] = await Promise.all([
     contracts.MockCheckpointManager.new(),
@@ -22,11 +24,13 @@ export const deployFreshRootContracts = async(accounts) => {
     contracts.ERC20Predicate.new(),
     contracts.ERC721Predicate.new(),
     contracts.MintableERC721Predicate.new(),
+    contracts.MetaDataERC721Predicate.new(),
     contracts.ERC1155Predicate.new(),
     contracts.EtherPredicate.new(),
     contracts.DummyERC20.new('Dummy ERC20', 'DERC20'),
     contracts.DummyERC721.new('Dummy ERC721', 'DERC721'),
     contracts.DummyMintableERC721.new('Dummy Mintable ERC721', 'DMERC721'),
+    contracts.DummyMetaDataERC721.new('Dummy MetaData ERC721', 'DMERC721'),
     contracts.DummyERC1155.new('Dummy ERC1155')
   ])
 
@@ -46,6 +50,10 @@ export const deployFreshRootContracts = async(accounts) => {
   await mintableERC721PredicateProxy.updateAndCall(mintableERC721PredicateLogic.address, mintableERC721PredicateLogic.contract.methods.initialize(accounts[0]).encodeABI())
   const mintableERC721Predicate = await contracts.MintableERC721Predicate.at(mintableERC721PredicateProxy.address)
 
+  const metaDataERC721PredicateProxy = await contracts.MetaDataERC721PredicateProxy.new('0x0000000000000000000000000000000000000000')
+  await metaDataERC721PredicateProxy.updateAndCall(metaDataERC721PredicateLogic.address, metaDataERC721PredicateLogic.contract.methods.initialize(accounts[0]).encodeABI())
+  const metaDataERC721Predicate = await contracts.MetaDataERC721Predicate.at(metaDataERC721PredicateProxy.address)
+
   const erc1155PredicateProxy = await contracts.ERC1155PredicateProxy.new('0x0000000000000000000000000000000000000000')
   await erc1155PredicateProxy.updateAndCall(erc1155PredicateLogic.address, erc1155PredicateLogic.contract.methods.initialize(accounts[0]).encodeABI())
   const erc1155Predicate = await contracts.ERC1155Predicate.at(erc1155PredicateProxy.address)
@@ -61,11 +69,13 @@ export const deployFreshRootContracts = async(accounts) => {
     erc20Predicate,
     erc721Predicate,
     mintableERC721Predicate,
+    metaDataERC721Predicate,
     erc1155Predicate,
     etherPredicate,
     dummyERC20,
     dummyERC721,
     dummyMintableERC721,
+    dummyMetaDataERC721,
     dummyERC1155
   }
 }
@@ -76,6 +86,7 @@ export const deployFreshChildContracts = async(accounts) => {
     dummyERC20,
     dummyERC721,
     dummyMintableERC721,
+    dummyMetaDataERC721,
     dummyERC1155,
     maticWETH
   ] = await Promise.all([
@@ -83,6 +94,7 @@ export const deployFreshChildContracts = async(accounts) => {
     contracts.ChildERC20.new('Dummy ERC20', 'DERC20', 18),
     contracts.ChildERC721.new('Dummy ERC721', 'DERC721'),
     contracts.ChildMintableERC721.new('Dummy Mintable ERC721', 'DMERC721'),
+    contracts.ChildMetaDataERC721.new('Dummy MetaData ERC721', 'DMERC721'),
     contracts.ChildERC1155.new('Dummy ERC1155'),
     contracts.MaticWETH.new()
   ])
@@ -96,6 +108,7 @@ export const deployFreshChildContracts = async(accounts) => {
     dummyERC20,
     dummyERC721,
     dummyMintableERC721,
+    dummyMetaDataERC721,
     dummyERC1155,
     maticWETH
   }
@@ -140,6 +153,13 @@ export const deployInitializedContracts = async(accounts) => {
 
   const PREDICATE_ROLE = await root.dummyMintableERC721.PREDICATE_ROLE()
   await root.dummyMintableERC721.grantRole(PREDICATE_ROLE, root.mintableERC721Predicate.address)
+
+  const MetaDataERC721Type = await root.metaDataERC721Predicate.TOKEN_TYPE()
+  await root.metaDataERC721Predicate.grantRole(MANAGER_ROLE, root.rootChainManager.address)
+  await root.rootChainManager.registerPredicate(MetaDataERC721Type, root.metaDataERC721Predicate.address)
+  await root.rootChainManager.mapToken(root.dummyMetaDataERC721.address, child.dummyMetaDataERC721.address, MetaDataERC721Type)
+  await child.dummyMetaDataERC721.grantRole(DEPOSITOR_ROLE, child.childChainManager.address)
+  await child.childChainManager.mapToken(root.dummyMetaDataERC721.address, child.dummyMetaDataERC721.address)
 
   const ERC1155Type = await root.erc1155Predicate.TOKEN_TYPE()
   await root.erc1155Predicate.grantRole(MANAGER_ROLE, root.rootChainManager.address)
