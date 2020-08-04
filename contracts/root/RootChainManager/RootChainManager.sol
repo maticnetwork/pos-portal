@@ -171,10 +171,10 @@ contract RootChainManager is IRootChainManager, Initializable, AccessControl {
      * Keep in mind this ether cannot be used to pay gas on child chain
      * Use Matic tokens deposited using plasma mechanism for that
      * @param user address of account that should receive WETH on child chain
-     * @param callback address of contract on matic to call callback function on when tokens are received
+     * @param depositHook address of contract on matic to call depositHook function on when tokens are received
      */
-    function depositEtherFor(address user, address callback) external override payable {
-        _depositEtherFor(user, callback);
+    function depositEtherFor(address user, address depositHook) external override payable {
+        _depositEtherFor(user, depositHook);
     }
 
     /**
@@ -202,24 +202,24 @@ contract RootChainManager is IRootChainManager, Initializable, AccessControl {
      * @param user address of account that should receive this deposit on child chain
      * @param rootToken address of token that is being deposited
      * @param depositData bytes data that is sent to predicate and child token contracts to handle deposit
-     * @param callback address of contract on matic to call callback function on when tokens are received
+     * @param depositHook address of contract on matic to call depositHook function on when tokens are received
      */
     function depositFor(
         address user,
         address rootToken,
         bytes calldata depositData,
-        address callback
+        address depositHook
     ) external override {
         require(
             rootToken != ETHER_ADDRESS,
             "RootChainManager: INVALID_ROOT_TOKEN"
         );
-        _depositFor(user, rootToken, depositData, callback);
+        _depositFor(user, rootToken, depositData, depositHook);
     }
 
-    function _depositEtherFor(address user, address callback) private {
+    function _depositEtherFor(address user, address depositHook) private {
         bytes memory depositData = abi.encode(msg.value);
-        _depositFor(user, ETHER_ADDRESS, depositData, callback);
+        _depositFor(user, ETHER_ADDRESS, depositData, depositHook);
 
         // payable(typeToPredicate[tokenToType[ETHER_ADDRESS]]).transfer(msg.value);
         // transfer doesn't work as expected when receiving contract is proxified so using call
@@ -233,7 +233,7 @@ contract RootChainManager is IRootChainManager, Initializable, AccessControl {
         address user,
         address rootToken,
         bytes memory depositData,
-        address callback
+        address depositHook
     ) private {
         require(
             rootToChildToken[rootToken] != address(0x0) &&
@@ -256,7 +256,7 @@ contract RootChainManager is IRootChainManager, Initializable, AccessControl {
             rootToken,
             depositData
         );        
-        bytes memory syncData = abi.encode(user, rootToken, depositData, callback);        
+        bytes memory syncData = abi.encode(user, rootToken, depositData, depositHook);        
         
         _stateSender.syncState(
             childChainManagerAddress,

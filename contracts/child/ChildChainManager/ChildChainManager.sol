@@ -6,7 +6,7 @@ import {IChildToken} from "../ChildToken/IChildToken.sol";
 import {Initializable} from "../../common/Initializable.sol";
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 
-interface IDepositCallback {
+interface IDepositHook {
     function processSyncDeposit(address user, address rootToken, bytes calldata depositData) external;
 }
 
@@ -81,7 +81,7 @@ contract ChildChainManager is IChildChainManager, Initializable, AccessControl {
     }
 
     function _syncDeposit(bytes memory syncData) private {
-        (address user, address rootToken, bytes memory depositData, address callback) = abi
+        (address user, address rootToken, bytes memory depositData, address depositHook) = abi
             .decode(syncData, (address, address, bytes, address));
         address childTokenAddress = rootToChildToken[rootToken];
         require(
@@ -90,8 +90,8 @@ contract ChildChainManager is IChildChainManager, Initializable, AccessControl {
         );
         IChildToken childTokenContract = IChildToken(childTokenAddress);
         childTokenContract.deposit(user, depositData);
-        if (callback != address(0)) {
-            IDepositCallback(callback).processSyncDeposit(user, rootToken, depositData);
+        if (depositHook != address(0)) {
+            try IDepositHook(depositHook).processSyncDeposit(user, rootToken, depositData) {} catch {}
         }
     }
 
