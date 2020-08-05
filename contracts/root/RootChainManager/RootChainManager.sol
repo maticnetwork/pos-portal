@@ -1,5 +1,6 @@
 pragma solidity ^0.6.6;
 
+import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {IRootChainManager} from "./IRootChainManager.sol";
 import {IStateSender} from "../StateSender/IStateSender.sol";
 import {ICheckpointManager} from "../ICheckpointManager.sol";
@@ -14,6 +15,7 @@ contract RootChainManager is IRootChainManager, Initializable, AccessControlMixi
     using RLPReader for bytes;
     using RLPReader for RLPReader.RLPItem;
     using Merkle for bytes32;
+    using SafeMath for uint256;
 
     // maybe DEPOSIT and MAP_TOKEN can be reduced to bytes4
     bytes32 public constant DEPOSIT = keccak256("DEPOSIT");
@@ -339,7 +341,7 @@ contract RootChainManager is IRootChainManager, Initializable, AccessControlMixi
                 abi.encodePacked(blockNumber, blockTime, txRoot, receiptRoot)
             )
                 .checkMembership(
-                blockNumber - startBlock,
+                blockNumber.sub(startBlock),
                 headerRoot,
                 blockProof
             ),
