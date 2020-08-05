@@ -21,11 +21,12 @@ contract ChildMintableERC721 is
 
     constructor(
         string memory name_,
-        string memory symbol_
+        string memory symbol_,
+        address childChainManager
     ) public ERC721(name_, symbol_) NetworkAgnostic(name_, ERC712_VERSION, ROOT_CHAIN_ID) {
         _setupContractId("ChildMintableERC721");
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
-        _setupRole(DEPOSITOR_ROLE, _msgSender());
+        _setupRole(DEPOSITOR_ROLE, childChainManager);
     }
 
     function _msgSender()

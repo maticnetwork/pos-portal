@@ -1744,14 +1744,14 @@ contract ChildERC1155 is
 {
     bytes32 public constant DEPOSITOR_ROLE = keccak256("DEPOSITOR_ROLE");
 
-    constructor(string memory uri_)
+    constructor(string memory uri_, address childChainManager)
         public
         ERC1155(uri_)
         NetworkAgnostic(uri_, ERC712_VERSION, ROOT_CHAIN_ID)
     {
         _setupContractId("ChildERC1155");
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
-        _setupRole(DEPOSITOR_ROLE, _msgSender());
+        _setupRole(DEPOSITOR_ROLE, childChainManager);
     }
 
     function _msgSender()
