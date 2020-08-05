@@ -273,15 +273,14 @@ contract RootChainManager is IRootChainManager, Initializable, AccessControlMixi
 
         address childToken = RLPReader.toAddress(logRLP.toList()[0]); // log emitter address field
         // log should be emmited only by the child token
+        address rootToken = childToRootToken[childToken];
         require(
-            childToRootToken[childToken] != address(0),
+            rootToken != address(0),
             "RootChainManager: TOKEN_NOT_MAPPED"
         );
 
         address predicateAddress = typeToPredicate[
-            tokenToType[
-                childToRootToken[childToken]
-            ]
+            tokenToType[rootToken]
         ];
 
         // branch mask can be maximum 32 bits
