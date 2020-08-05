@@ -1452,12 +1452,13 @@ contract ChildERC20 is
     constructor(
         string memory name_,
         string memory symbol_,
-        uint8 decimals_
+        uint8 decimals_,
+        address childChainManager
     ) public ERC20(name_, symbol_) NetworkAgnostic(name_, ERC712_VERSION, ROOT_CHAIN_ID) {
         _setupContractId("ChildERC20");
         _setupDecimals(decimals_);
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
-        _setupRole(DEPOSITOR_ROLE, _msgSender());
+        _setupRole(DEPOSITOR_ROLE, childChainManager);
     }
 
     function _msgSender()
@@ -1502,5 +1503,5 @@ pragma solidity 0.6.6;
 
 
 contract MaticWETH is ChildERC20 {
-    constructor() public ChildERC20("Wrapped Ether", "WETH", 18) {}
+    constructor(address childChainManager) public ChildERC20("Wrapped Ether", "WETH", 18, childChainManager) {}
 }

@@ -13,11 +13,11 @@ module.exports = async(deployer, network, accounts) => {
     const childChainManagerProxy = await deployer.deploy(ChildChainManagerProxy, '0x0000000000000000000000000000000000000000')
     await childChainManagerProxy.updateAndCall(childChainManager.address, childChainManager.contract.methods.initialize(accounts[0]).encodeABI())
 
-    await deployer.deploy(ChildERC20, 'Dummy ERC20', 'DERC20', 18)
-    await deployer.deploy(ChildERC721, 'Dummy ERC721', 'DERC721')
-    await deployer.deploy(ChildMintableERC721, 'Dummy Mintable ERC721', 'DMERC721')
-    await deployer.deploy(ChildERC1155, 'Dummy ERC1155')
-    await deployer.deploy(MaticWETH)
+    await deployer.deploy(ChildERC20, 'Dummy ERC20', 'DERC20', 18, ChildChainManagerProxy.address)
+    await deployer.deploy(ChildERC721, 'Dummy ERC721', 'DERC721', ChildChainManagerProxy.address)
+    await deployer.deploy(ChildMintableERC721, 'Dummy Mintable ERC721', 'DMERC721', ChildChainManagerProxy.address)
+    await deployer.deploy(ChildERC1155, 'Dummy ERC1155', ChildChainManagerProxy.address)
+    await deployer.deploy(MaticWETH, ChildChainManagerProxy.address)
 
     const contractAddresses = utils.getContractAddresses()
     contractAddresses.child.ChildChainManager = ChildChainManager.address
