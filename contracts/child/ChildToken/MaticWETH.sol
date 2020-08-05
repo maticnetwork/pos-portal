@@ -1,4 +1,4 @@
-pragma solidity ^0.6.6;
+pragma solidity 0.6.6;
 
 import {ChildERC20} from "./ChildERC20.sol";
 

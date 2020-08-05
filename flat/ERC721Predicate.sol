@@ -189,7 +189,7 @@ interface IERC721Receiver {
  * Please reach out with any questions or concerns
  * https://github.com/hamdiallam/Solidity-RLP/blob/e681e25a376dbd5426b509380bc03446f05d0f97/contracts/RLPReader.sol
  */
-pragma solidity ^0.6.6;
+pragma solidity 0.6.6;
 
 library RLPReader {
     uint8 constant STRING_SHORT_START = 0x80;
@@ -512,7 +512,7 @@ library RLPReader {
 
 // File: contracts/root/TokenPredicates/ITokenPredicate.sol
 
-pragma solidity ^0.6.6;
+pragma solidity 0.6.6;
 
 
 /// @title Token predicate interface for all pos portal predicates
@@ -551,7 +551,7 @@ interface ITokenPredicate {
 
 // File: contracts/common/Initializable.sol
 
-pragma solidity ^0.6.6;
+pragma solidity 0.6.6;
 
 contract Initializable {
     bool inited = false;
@@ -1201,7 +1201,7 @@ abstract contract AccessControl is Context {
 
 // File: contracts/common/AccessControlMixin.sol
 
-pragma solidity ^0.6.6;
+pragma solidity 0.6.6;
 
 
 contract AccessControlMixin is AccessControl {
@@ -1221,7 +1221,7 @@ contract AccessControlMixin is AccessControl {
 
 // File: contracts/root/TokenPredicates/ERC721Predicate.sol
 
-pragma solidity ^0.6.6;
+pragma solidity 0.6.6;
 
 
 

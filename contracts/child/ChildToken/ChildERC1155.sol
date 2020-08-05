@@ -1,4 +1,4 @@
-pragma solidity ^0.6.6;
+pragma solidity 0.6.6;
 
 import {ERC1155} from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import {AccessControlMixin} from "../../common/AccessControlMixin.sol";

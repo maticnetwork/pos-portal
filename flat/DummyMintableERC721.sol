@@ -1850,7 +1850,7 @@ abstract contract AccessControl is Context {
 
 // File: contracts/common/AccessControlMixin.sol
 
-pragma solidity ^0.6.6;
+pragma solidity 0.6.6;
 
 
 contract AccessControlMixin is AccessControl {
@@ -1870,7 +1870,7 @@ contract AccessControlMixin is AccessControl {
 
 // File: contracts/common/EIP712Base.sol
 
-pragma solidity ^0.6.6;
+pragma solidity 0.6.6;
 
 
 contract EIP712Base {
@@ -1929,7 +1929,7 @@ contract EIP712Base {
 
 // File: contracts/common/NetworkAgnostic.sol
 
-pragma solidity ^0.6.6;
+pragma solidity 0.6.6;
 
 
 
@@ -2043,7 +2043,7 @@ contract NetworkAgnostic is EIP712Base {
 
 // File: contracts/ChainConstants.sol
 
-pragma solidity ^0.6.6;
+pragma solidity 0.6.6;
 
 contract ChainConstants {
     string constant public ERC712_VERSION = "1";
@@ -2057,7 +2057,7 @@ contract ChainConstants {
 
 // File: contracts/root/RootToken/IMintableERC721.sol
 
-pragma solidity ^0.6.6;
+pragma solidity 0.6.6;
 
 interface IMintableERC721 is IERC721 {
     /**
@@ -2079,7 +2079,7 @@ interface IMintableERC721 is IERC721 {
 
 // File: contracts/common/ContextMixin.sol
 
-pragma solidity ^0.6.6;
+pragma solidity 0.6.6;
 
 abstract contract ContextMixin {
     function msgSender()
@@ -2106,7 +2106,7 @@ abstract contract ContextMixin {
 
 // File: contracts/root/RootToken/DummyMintableERC721.sol
 
-pragma solidity ^0.6.6;
+pragma solidity 0.6.6;
 
 
 

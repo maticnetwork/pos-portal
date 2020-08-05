@@ -163,7 +163,7 @@ library SafeMath {
 
 // File: contracts/root/RootChainManager/IRootChainManager.sol
 
-pragma solidity ^0.6.6;
+pragma solidity 0.6.6;
 
 interface IRootChainManager {
     event TokenMapped(
@@ -199,7 +199,7 @@ interface IRootChainManager {
 
 // File: contracts/root/StateSender/IStateSender.sol
 
-pragma solidity ^0.6.6;
+pragma solidity 0.6.6;
 
 interface IStateSender {
     function syncState(address receiver, bytes calldata data) external;
@@ -207,7 +207,7 @@ interface IStateSender {
 
 // File: contracts/root/ICheckpointManager.sol
 
-pragma solidity ^0.6.6;
+pragma solidity 0.6.6;
 
 contract ICheckpointManager {
     struct HeaderBlock {
@@ -232,7 +232,7 @@ contract ICheckpointManager {
  * Please reach out with any questions or concerns
  * https://github.com/hamdiallam/Solidity-RLP/blob/e681e25a376dbd5426b509380bc03446f05d0f97/contracts/RLPReader.sol
  */
-pragma solidity ^0.6.6;
+pragma solidity 0.6.6;
 
 library RLPReader {
     uint8 constant STRING_SHORT_START = 0x80;
@@ -561,7 +561,7 @@ library RLPReader {
  *
  * @dev Library for verifing merkle patricia proofs.
  */
-pragma solidity ^0.6.6;
+pragma solidity 0.6.6;
 
 
 library MerklePatriciaProof {
@@ -729,7 +729,7 @@ library MerklePatriciaProof {
 
 // File: contracts/lib/Merkle.sol
 
-pragma solidity ^0.6.6;
+pragma solidity 0.6.6;
 
 library Merkle {
     function checkMembership(
@@ -769,7 +769,7 @@ library Merkle {
 
 // File: contracts/root/TokenPredicates/ITokenPredicate.sol
 
-pragma solidity ^0.6.6;
+pragma solidity 0.6.6;
 
 
 /// @title Token predicate interface for all pos portal predicates
@@ -808,7 +808,7 @@ interface ITokenPredicate {
 
 // File: contracts/common/Initializable.sol
 
-pragma solidity ^0.6.6;
+pragma solidity 0.6.6;
 
 contract Initializable {
     bool inited = false;
@@ -1458,7 +1458,7 @@ abstract contract AccessControl is Context {
 
 // File: contracts/common/AccessControlMixin.sol
 
-pragma solidity ^0.6.6;
+pragma solidity 0.6.6;
 
 
 contract AccessControlMixin is AccessControl {
@@ -1478,7 +1478,7 @@ contract AccessControlMixin is AccessControl {
 
 // File: contracts/root/RootChainManager/RootChainManager.sol
 
-pragma solidity ^0.6.6;
+pragma solidity 0.6.6;
 
 
 
