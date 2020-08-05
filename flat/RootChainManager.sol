@@ -1741,7 +1741,10 @@ contract RootChainManager is IRootChainManager, Initializable, AccessControlMixi
         );
         processedExits[exitHash] = true;
 
-        RLPReader.RLPItem[] memory receiptRLPList = inputDataRLPList[6].toList();
+        RLPReader.RLPItem[] memory receiptRLPList = inputDataRLPList[6]
+            .toBytes()
+            .toRlpItem()
+            .toList();
         RLPReader.RLPItem memory logRLP = receiptRLPList[3]
             .toList()[
                 inputDataRLPList[9].toUint() // receiptLogIndex
