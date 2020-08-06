@@ -102,13 +102,19 @@ contract('RootChainManager', async(accounts) => {
       const depositTx = await rootChainManager.depositFor(depositReceiver, dummyERC20.address, depositData)
       should.exist(depositTx)
       totalDepositedAmount = totalDepositedAmount.add(depositAmount)
-      // await dummyERC20.approve(accounts[2], mockValues.amounts[2])
+      const syncTx = await syncState({ tx: depositTx, contracts })
+      should.exist(syncTx)
+    })
+
+    it('Second depositor should be able to approve and deposit', async() => {
       await dummyERC20.mint(depositAmount)
       await dummyERC20.transfer(accounts[2], depositAmount)
       await dummyERC20.approve(contracts.root.erc20Predicate.address, mockValues.amounts[2], { from: accounts[2] })
-      const extraDepositTx = await rootChainManager.depositFor(accounts[2], dummyERC20.address, depositData, { from: accounts[2] })
-      should.exist(extraDepositTx)
+      const depositTx = await rootChainManager.depositFor(accounts[2], dummyERC20.address, depositData, { from: accounts[2] })
+      should.exist(depositTx)
       totalDepositedAmount = totalDepositedAmount.add(depositAmount)
+      const syncTx = await syncState({ tx: depositTx, contracts })
+      should.exist(syncTx)
     })
 
     it('Deposit amount should be deducted from depositor account', async() => {
@@ -128,14 +134,6 @@ contract('RootChainManager', async(accounts) => {
 
       // update balance
       contractBalance = newContractBalance
-    })
-
-    it('Can receive deposit tx', async() => {
-      const depositTx = await contracts.child.dummyERC20.deposit(depositReceiver, depositData)
-      should.exist(depositTx)
-      const logs = logDecoder.decodeLogs(depositTx.receipt.rawLogs)
-      const transferLog = logs.find(l => l.event === 'Transfer')
-      should.exist(transferLog)
     })
 
     it('Can receive withdraw tx', async() => {
@@ -391,7 +389,6 @@ contract('RootChainManager', async(accounts) => {
 
   describe('Withdraw ERC721', async() => {
     const depositTokenId = mockValues.numbers[4]
-    const depositForAccount = mockValues.addresses[0]
     const depositAmount = new BN('1')
     const withdrawAmount = new BN('1')
     const depositReceiver = accounts[0]
@@ -418,8 +415,10 @@ contract('RootChainManager', async(accounts) => {
 
     it('Depositor should be able to approve and deposit', async() => {
       await dummyERC721.approve(contracts.root.erc721Predicate.address, depositTokenId)
-      const depositTx = await rootChainManager.depositFor(depositForAccount, dummyERC721.address, depositData)
+      const depositTx = await rootChainManager.depositFor(depositReceiver, dummyERC721.address, depositData)
       should.exist(depositTx)
+      const syncTx = await syncState({ tx: depositTx, contracts })
+      should.exist(syncTx)
     })
 
     it('Deposit amount should be deducted from depositor account', async() => {
@@ -440,14 +439,6 @@ contract('RootChainManager', async(accounts) => {
 
       // update balance
       contractBalance = newContractBalance
-    })
-
-    it('Can receive deposit tx', async() => {
-      const depositTx = await contracts.child.dummyERC721.deposit(depositReceiver, depositData)
-      should.exist(depositTx)
-      const logs = logDecoder.decodeLogs(depositTx.receipt.rawLogs)
-      const transferLog = logs.find(l => l.event === 'Transfer')
-      should.exist(transferLog)
     })
 
     it('Can receive withdraw tx', async() => {
@@ -698,6 +689,8 @@ contract('RootChainManager', async(accounts) => {
       await dummyERC1155.setApprovalForAll(contracts.root.erc1155Predicate.address, true)
       const depositTx = await rootChainManager.depositFor(depositReceiver, dummyERC1155.address, depositData)
       should.exist(depositTx)
+      const syncTx = await syncState({ tx: depositTx, contracts })
+      should.exist(syncTx)
     })
 
     it('Deposit amount should be deducted from depositor account', async() => {
@@ -718,14 +711,6 @@ contract('RootChainManager', async(accounts) => {
 
       // update balance
       contractBalance = newContractBalance
-    })
-
-    it('Can receive deposit tx', async() => {
-      const depositTx = await contracts.child.dummyERC1155.deposit(depositReceiver, depositData)
-      should.exist(depositTx)
-      const logs = logDecoder.decodeLogs(depositTx.receipt.rawLogs)
-      const transferLog = logs.find(l => l.event === 'TransferBatch')
-      should.exist(transferLog)
     })
 
     it('Can receive withdraw tx', async() => {
@@ -985,6 +970,8 @@ contract('RootChainManager', async(accounts) => {
       await dummyERC1155.setApprovalForAll(contracts.root.erc1155Predicate.address, true)
       const depositTx = await rootChainManager.depositFor(depositReceiver, dummyERC1155.address, depositData)
       should.exist(depositTx)
+      const syncTx = await syncState({ tx: depositTx, contracts })
+      should.exist(syncTx)
     })
 
     it('Deposit amount should be deducted from depositor account', async() => {
@@ -1023,14 +1010,6 @@ contract('RootChainManager', async(accounts) => {
       contractBalanceA = newContractBalanceA
       contractBalanceB = newContractBalanceB
       contractBalanceC = newContractBalanceC
-    })
-
-    it('Can receive deposit tx', async() => {
-      const depositTx = await contracts.child.dummyERC1155.deposit(depositReceiver, depositData)
-      should.exist(depositTx)
-      logs = logDecoder.decodeLogs(depositTx.receipt.rawLogs)
-      transferBatchLog = logs.find(l => l.event === 'TransferBatch')
-      should.exist(transferBatchLog)
     })
 
     it('Can receive withdraw tx', async() => {
