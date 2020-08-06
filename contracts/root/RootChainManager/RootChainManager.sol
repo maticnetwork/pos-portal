@@ -252,7 +252,10 @@ contract RootChainManager is IRootChainManager, Initializable, AccessControlMixi
         bytes32 exitHash = keccak256(
             abi.encodePacked(
                 inputDataRLPList[2].toUint(), // blockNumber
-                inputDataRLPList[8].toUint(), // branchMask
+                // first 2 nibbles are dropped while generating nibble array
+                // this allows branch masks that are valid but bypass exitHash check (changing first 2 nibbles only)
+                // so converting to nibble array and then hashing it
+                MerklePatriciaProof._getNibbleArray(inputDataRLPList[8].toBytes()), // branchMask
                 inputDataRLPList[9].toUint() // receiptLogIndex
             )
         );
