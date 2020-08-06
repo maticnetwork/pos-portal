@@ -134,7 +134,7 @@ library MerklePatriciaProof {
 
     // bytes b must be hp encoded
     function _getNibbleArray(bytes memory b)
-        private
+        internal
         pure
         returns (bytes memory)
     {
