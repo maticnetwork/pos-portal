@@ -28,7 +28,7 @@ library RLPReader {
      * @return The next element in the iteration.
      */
     function next(Iterator memory self) internal pure returns (RLPItem memory) {
-        require(hasNext(self));
+        require(hasNext(self), "RLPReader: NO_NEXT_ITEM");
 
         uint256 ptr = self.nextPtr;
         uint256 itemLength = _itemLength(ptr);
@@ -73,7 +73,7 @@ library RLPReader {
         pure
         returns (Iterator memory)
     {
-        require(isList(self));
+        require(isList(self), "RLPReader: ITERATOR_NOT_LIST");
 
         uint256 ptr = self.memPtr + _payloadOffset(self.memPtr);
         return Iterator(self, ptr);
@@ -101,7 +101,7 @@ library RLPReader {
         pure
         returns (RLPItem[] memory)
     {
-        require(isList(item));
+        require(isList(item), "RLPReader: ITEM_NOT_LIST");
 
         uint256 items = numItems(item);
         RLPItem[] memory result = new RLPItem[](items);
@@ -153,7 +153,7 @@ library RLPReader {
 
     // any non-zero byte is considered true
     function toBoolean(RLPItem memory item) internal pure returns (bool) {
-        require(item.len == 1);
+        require(item.len == 1, "RLPReader: INVALID_BOOL_LENGTH");
         uint256 result;
         uint256 memPtr = item.memPtr;
         assembly {
@@ -165,13 +165,13 @@ library RLPReader {
 
     function toAddress(RLPItem memory item) internal pure returns (address) {
         // 1 byte for the length prefix
-        require(item.len == 21);
+        require(item.len == 21, "RLPReader: INVALID_ADDRESS_LENGTH");
 
         return address(toUint(item));
     }
 
     function toUint(RLPItem memory item) internal pure returns (uint256) {
-        require(item.len > 0 && item.len <= 33);
+        require(item.len > 0 && item.len <= 33, "RLPReader: INVALID_UINT_LENGTH");
 
         uint256 offset = _payloadOffset(item.memPtr);
         uint256 len = item.len - offset;
@@ -193,7 +193,7 @@ library RLPReader {
     // enforces 32 byte length
     function toUintStrict(RLPItem memory item) internal pure returns (uint256) {
         // one byte prefix
-        require(item.len == 33);
+        require(item.len == 33, "RLPReader: INVALID_UINT_STRICT_LENGTH");
 
         uint256 result;
         uint256 memPtr = item.memPtr + 1;
@@ -205,7 +205,7 @@ library RLPReader {
     }
 
     function toBytes(RLPItem memory item) internal pure returns (bytes memory) {
-        require(item.len > 0);
+        require(item.len > 0, "RLPReader: INVALID_BYTES_LENGTH");
 
         uint256 offset = _payloadOffset(item.memPtr);
         uint256 len = item.len - offset; // data length
