@@ -885,7 +885,6 @@ library RLPReader {
 
     // @return number of payload items inside an encoded list.
     function numItems(RLPItem memory item) private pure returns (uint256) {
-        if (item.len == 0) return 0;
         // add `isList` check if `item` is expected to be passsed without a check from calling function
         // require(isList(item), "RLPReader: NUM_ITEMS_NOT_LIST");
 
