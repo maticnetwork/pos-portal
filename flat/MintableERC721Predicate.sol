@@ -739,6 +739,7 @@ library RLPReader {
         pure
         returns (RLPItem memory)
     {
+        require(item.length > 0, "RLPReader: INVALID_BYTES_LENGTH");
         uint256 memPtr;
         assembly {
             memPtr := add(item, 0x20)
@@ -803,8 +804,6 @@ library RLPReader {
 
     // @return indicator whether encoded payload is a list. negate this function call for isData.
     function isList(RLPItem memory item) internal pure returns (bool) {
-        if (item.len == 0) return false;
-
         uint8 byte0;
         uint256 memPtr = item.memPtr;
         assembly {
@@ -824,7 +823,6 @@ library RLPReader {
         returns (bytes memory)
     {
         bytes memory result = new bytes(item.len);
-        if (result.length == 0) return result;
 
         uint256 ptr;
         assembly {
@@ -855,7 +853,7 @@ library RLPReader {
     }
 
     function toUint(RLPItem memory item) internal pure returns (uint256) {
-        require(item.len > 0 && item.len <= 33, "RLPReader: INVALID_UINT_LENGTH");
+        require(item.len <= 33, "RLPReader: INVALID_UINT_LENGTH");
 
         uint256 offset = _payloadOffset(item.memPtr);
         uint256 len = item.len - offset;
@@ -889,8 +887,6 @@ library RLPReader {
     }
 
     function toBytes(RLPItem memory item) internal pure returns (bytes memory) {
-        require(item.len > 0, "RLPReader: INVALID_BYTES_LENGTH");
-
         uint256 offset = _payloadOffset(item.memPtr);
         uint256 len = item.len - offset; // data length
         bytes memory result = new bytes(len);
