@@ -654,12 +654,8 @@ library MerklePatriciaProof {
                 }
 
                 nodeKey = bytes32(RLPReader.toUintStrict(currentNodeList[1]));
-            } else {
-                return false;
             }
         }
-
-        return false;
     }
 
     function _nibblesToTraverse(
