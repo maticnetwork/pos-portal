@@ -2,7 +2,7 @@ pragma solidity ^0.6.6;
 
 import {ERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import {AccessControlMixin} from "../../common/AccessControlMixin.sol";
-import {NetworkAgnostic} from "../../common/NetworkAgnostic.sol";
+import {NativeMetaTransaction} from "../../common/NativeMetaTransaction.sol";
 import {ChainConstants} from "../../ChainConstants.sol";
 import {IMintableERC721} from "./IMintableERC721.sol";
 import {ContextMixin} from "../../common/ContextMixin.sol";
@@ -10,7 +10,7 @@ import {ContextMixin} from "../../common/ContextMixin.sol";
 contract DummyMintableERC721 is
     ERC721,
     AccessControlMixin,
-    NetworkAgnostic,
+    NativeMetaTransaction,
     ChainConstants,
     IMintableERC721,
     ContextMixin
@@ -19,7 +19,7 @@ contract DummyMintableERC721 is
     constructor(string memory name_, string memory symbol_)
         public
         ERC721(name_, symbol_)
-        NetworkAgnostic(name_, ERC712_VERSION, ROOT_CHAIN_ID)
+        NativeMetaTransaction(name_, ERC712_VERSION)
     {
         _setupContractId("DummyMintableERC721");
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
