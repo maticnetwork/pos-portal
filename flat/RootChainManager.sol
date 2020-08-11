@@ -246,36 +246,6 @@ library RLPReader {
         uint256 memPtr;
     }
 
-    struct Iterator {
-        RLPItem item; // Item that's being iterated over.
-        uint256 nextPtr; // Position of the next item in the list.
-    }
-
-    /*
-     * @dev Returns the next element in the iteration. Reverts if it has not next element.
-     * @param self The iterator.
-     * @return The next element in the iteration.
-     */
-    function next(Iterator memory self) internal pure returns (RLPItem memory) {
-        require(hasNext(self), "RLPReader: NO_NEXT_ITEM");
-
-        uint256 ptr = self.nextPtr;
-        uint256 itemLength = _itemLength(ptr);
-        self.nextPtr = ptr + itemLength;
-
-        return RLPItem(itemLength, ptr);
-    }
-
-    /*
-     * @dev Returns true if the iteration has more elements.
-     * @param self The iterator.
-     * @return true if the iteration has more elements.
-     */
-    function hasNext(Iterator memory self) internal pure returns (bool) {
-        RLPItem memory item = self.item;
-        return self.nextPtr < item.memPtr + item.len;
-    }
-
     /*
      * @param item RLP encoded bytes
      */
@@ -291,36 +261,6 @@ library RLPReader {
         }
 
         return RLPItem(item.length, memPtr);
-    }
-
-    /*
-     * @dev Create an iterator. Reverts if item is not a list.
-     * @param self The RLP item.
-     * @return An 'Iterator' over the item.
-     */
-    function iterator(RLPItem memory self)
-        internal
-        pure
-        returns (Iterator memory)
-    {
-        require(isList(self), "RLPReader: ITERATOR_NOT_LIST");
-
-        uint256 ptr = self.memPtr + _payloadOffset(self.memPtr);
-        return Iterator(self, ptr);
-    }
-
-    /*
-     * @param item RLP encoded bytes
-     */
-    function rlpLen(RLPItem memory item) internal pure returns (uint256) {
-        return item.len;
-    }
-
-    /*
-     * @param item RLP encoded bytes
-     */
-    function payloadLen(RLPItem memory item) internal pure returns (uint256) {
-        return item.len - _payloadOffset(item.memPtr);
     }
 
     /*
@@ -380,18 +320,6 @@ library RLPReader {
         return result;
     }
 
-    // any non-zero byte is considered true
-    function toBoolean(RLPItem memory item) internal pure returns (bool) {
-        require(item.len == 1, "RLPReader: INVALID_BOOL_LENGTH");
-        uint256 result;
-        uint256 memPtr = item.memPtr;
-        assembly {
-            result := byte(0, mload(memPtr))
-        }
-
-        return result == 0 ? false : true;
-    }
-
     function toAddress(RLPItem memory item) internal pure returns (address) {
         require(!isList(item), "RLPReader: DECODING_LIST_AS_ADDRESS");
         // 1 byte for the length prefix
@@ -427,6 +355,8 @@ library RLPReader {
 
     // enforces 32 byte length
     function toUintStrict(RLPItem memory item) internal pure returns (uint256) {
+        uint256 itemLength = _itemLength(item.memPtr);
+        require(itemLength == item.len, "RLPReader: UINT_STRICT_DECODED_LENGTH_MISMATCH");
         // one byte prefix
         require(item.len == 33, "RLPReader: INVALID_UINT_STRICT_LENGTH");
 
