@@ -908,26 +908,13 @@ contract ChainConstants {
     bytes constant public CHILD_CHAIN_ID_BYTES = hex"3A99";
 }
 
-// File: contracts/root/RootToken/DummyERC20.sol
+// File: contracts/common/ContextMixin.sol
 
 pragma solidity ^0.6.6;
 
-
-
-
-contract DummyERC20 is ERC20, NetworkAgnostic, ChainConstants {
-    constructor(string memory name_, string memory symbol_)
-        public
-        ERC20(name_, symbol_)
-        NetworkAgnostic(name_, ERC712_VERSION, ROOT_CHAIN_ID)
-    {
-        uint256 amount = 10**10 * (10**18);
-        _mint(_msgSender(), amount);
-    }
-
-    function _msgSender()
+abstract contract ContextMixin {
+    function msgSender()
         internal
-        override
         view
         returns (address payable sender)
     {
@@ -945,6 +932,34 @@ contract DummyERC20 is ERC20, NetworkAgnostic, ChainConstants {
             sender = msg.sender;
         }
         return sender;
+    }
+}
+
+// File: contracts/root/RootToken/DummyERC20.sol
+
+pragma solidity ^0.6.6;
+
+
+
+
+
+contract DummyERC20 is ERC20, NetworkAgnostic, ChainConstants, ContextMixin {
+    constructor(string memory name_, string memory symbol_)
+        public
+        ERC20(name_, symbol_)
+        NetworkAgnostic(name_, ERC712_VERSION, ROOT_CHAIN_ID)
+    {
+        uint256 amount = 10**10 * (10**18);
+        _mint(_msgSender(), amount);
+    }
+
+    function _msgSender()
+        internal
+        override
+        view
+        returns (address payable sender)
+    {
+        return ContextMixin.msgSender();
     }
 
     function mint(uint256 amount) public {

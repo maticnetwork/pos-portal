@@ -7,7 +7,7 @@ contract DummyERC721 is ERC721{
         public
         ERC721(name_, symbol_)
     {}
-
+    
     function mint(uint256 tokenId) public {
         _mint(_msgSender(), tokenId);
     }

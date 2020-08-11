@@ -2,12 +2,12 @@ pragma solidity ^0.6.6;
 
 import {IERC1155} from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import {ERC1155Receiver} from "@openzeppelin/contracts/token/ERC1155/ERC1155Receiver.sol";
-import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
+import {AccessControlMixin} from "../../common/AccessControlMixin.sol";
 import {RLPReader} from "../../lib/RLPReader.sol";
 import {ITokenPredicate} from "./ITokenPredicate.sol";
 import {Initializable} from "../../common/Initializable.sol";
 
-contract ERC1155Predicate is ITokenPredicate, ERC1155Receiver, AccessControl, Initializable {
+contract ERC1155Predicate is ITokenPredicate, ERC1155Receiver, AccessControlMixin, Initializable {
     using RLPReader for bytes;
     using RLPReader for RLPReader.RLPItem;
 
@@ -27,14 +27,10 @@ contract ERC1155Predicate is ITokenPredicate, ERC1155Receiver, AccessControl, In
         uint256[] amounts
     );
 
-    modifier only(bytes32 role) {
-        require(hasRole(role, _msgSender()), "ERC1155Predicate: INSUFFICIENT_PERMISSIONS");
-        _;
-    }
-
     constructor() public {}
 
     function initialize(address _owner) external initializer {
+        _setupContractId("ERC1155Predicate");
         _setupRole(DEFAULT_ADMIN_ROLE, _owner);
         _setupRole(MANAGER_ROLE, _owner);
     }

@@ -10,7 +10,7 @@ contract DummyERC20 is ERC20{
         uint256 amount = 10**10 * (10**18);
         _mint(_msgSender(), amount);
     }
-
+    
     function mint(uint256 amount) public {
         _mint(_msgSender(), amount);
     }

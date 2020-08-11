@@ -5,9 +5,11 @@ const artifactsToGenerate = [
   'ChildERC1155.json',
   'ChildERC20.json',
   'ChildERC721.json',
+  'ChildMintableERC721.json',
   'DummyERC1155.json',
   'DummyERC20.json',
   'DummyERC721.json',
+  'DummyMintableERC721.json',
   'MaticWETH.json',
   'RootChainManager.json'
 ]

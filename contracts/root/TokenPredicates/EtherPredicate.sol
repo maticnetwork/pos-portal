@@ -1,11 +1,11 @@
 pragma solidity ^0.6.6;
 
-import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
+import {AccessControlMixin} from "../../common/AccessControlMixin.sol";
 import {RLPReader} from "../../lib/RLPReader.sol";
 import {ITokenPredicate} from "./ITokenPredicate.sol";
 import {Initializable} from "../../common/Initializable.sol";
 
-contract EtherPredicate is ITokenPredicate, AccessControl, Initializable {
+contract EtherPredicate is ITokenPredicate, AccessControlMixin, Initializable {
     using RLPReader for bytes;
     using RLPReader for RLPReader.RLPItem;
 
@@ -19,14 +19,10 @@ contract EtherPredicate is ITokenPredicate, AccessControl, Initializable {
         uint256 amount
     );
 
-    modifier only(bytes32 role) {
-        require(hasRole(role, _msgSender()), "EtherPredicate: INSUFFICIENT_PERMISSIONS");
-        _;
-    }
-
     constructor() public {}
 
     function initialize(address _owner) external initializer {
+        _setupContractId("EtherPredicate");
         _setupRole(DEFAULT_ADMIN_ROLE, _owner);
         _setupRole(MANAGER_ROLE, _owner);
     }

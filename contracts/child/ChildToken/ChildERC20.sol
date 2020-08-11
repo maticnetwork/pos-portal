@@ -1,13 +1,21 @@
 pragma solidity ^0.6.6;
 
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
+import {AccessControlMixin} from "../../common/AccessControlMixin.sol";
 import {IChildToken} from "./IChildToken.sol";
 import {NativeMetaTransaction} from "../../common/NativeMetaTransaction.sol";
 import {ChainConstants} from "../../ChainConstants.sol";
+import {ContextMixin} from "../../common/ContextMixin.sol";
 
 
-contract ChildERC20 is ERC20, IChildToken, AccessControl, NativeMetaTransaction, ChainConstants {
+contract ChildERC20 is
+    ERC20,
+    IChildToken,
+    AccessControlMixin,
+    NativeMetaTransaction,
+    ChainConstants,
+    ContextMixin
+{
     bytes32 public constant DEPOSITOR_ROLE = keccak256("DEPOSITOR_ROLE");
 
     constructor(
@@ -15,14 +23,10 @@ contract ChildERC20 is ERC20, IChildToken, AccessControl, NativeMetaTransaction,
         string memory symbol_,
         uint8 decimals_
     ) public ERC20(name_, symbol_) NativeMetaTransaction(name_, ERC712_VERSION) {
+        _setupContractId("ChildERC20");
         _setupDecimals(decimals_);
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
         _setupRole(DEPOSITOR_ROLE, _msgSender());
-    }
-
-    modifier only(bytes32 role) {
-        require(hasRole(role, _msgSender()), "ChildERC20: INSUFFICIENT_PERMISSIONS");
-        _;
     }
 
     function _msgSender()
@@ -31,20 +35,7 @@ contract ChildERC20 is ERC20, IChildToken, AccessControl, NativeMetaTransaction,
         view
         returns (address payable sender)
     {
-        if (msg.sender == address(this)) {
-            bytes memory array = msg.data;
-            uint256 index = msg.data.length;
-            assembly {
-                // Load the 32 bytes word from memory with the address on the lower 20 bytes, and mask those.
-                sender := and(
-                    mload(add(array, index)),
-                    0xffffffffffffffffffffffffffffffffffffffff
-                )
-            }
-        } else {
-            sender = msg.sender;
-        }
-        return sender;
+        return ContextMixin.msgSender();
     }
 
     /**
