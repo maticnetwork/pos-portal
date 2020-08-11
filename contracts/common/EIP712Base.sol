@@ -18,15 +18,14 @@ contract EIP712Base {
 
     constructor(
         string memory name,
-        string memory version,
-        uint256 _chainId
+        string memory version
     ) public {
         domainSeperator = keccak256(
             abi.encode(
                 EIP712_DOMAIN_TYPEHASH,
                 keccak256(bytes(name)),
                 keccak256(bytes(version)),
-                _chainId,
+                getChainId(),
                 address(this)
             )
         );
@@ -36,6 +35,13 @@ contract EIP712Base {
         return domainSeperator;
     }
 
+    function getChainId() public pure returns (uint256) {
+    uint256 id;
+    assembly {
+        id := chainid()
+    }
+    return id;
+}
     /**
      * Accept message hash and returns hash message in EIP712 compatible form
      * So that it can be used to recover signer from signature signed using EIP712 formatted data

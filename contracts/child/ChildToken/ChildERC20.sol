@@ -3,18 +3,18 @@ pragma solidity ^0.6.6;
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 import {IChildToken} from "./IChildToken.sol";
-import {NetworkAgnostic} from "../../common/NetworkAgnostic.sol";
+import {NativeMetaTransaction} from "../../common/NativeMetaTransaction.sol";
 import {ChainConstants} from "../../ChainConstants.sol";
 
 
-contract ChildERC20 is ERC20, IChildToken, AccessControl, NetworkAgnostic, ChainConstants {
+contract ChildERC20 is ERC20, IChildToken, AccessControl, NativeMetaTransaction, ChainConstants {
     bytes32 public constant DEPOSITOR_ROLE = keccak256("DEPOSITOR_ROLE");
 
     constructor(
         string memory name_,
         string memory symbol_,
         uint8 decimals_
-    ) public ERC20(name_, symbol_) NetworkAgnostic(name_, ERC712_VERSION, ROOT_CHAIN_ID) {
+    ) public ERC20(name_, symbol_) NativeMetaTransaction(name_, ERC712_VERSION) {
         _setupDecimals(decimals_);
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
         _setupRole(DEPOSITOR_ROLE, _msgSender());

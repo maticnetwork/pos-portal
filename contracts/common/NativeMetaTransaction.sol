@@ -3,7 +3,7 @@ pragma solidity ^0.6.6;
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {EIP712Base} from "./EIP712Base.sol";
 
-contract NetworkAgnostic is EIP712Base {
+contract NativeMetaTransaction is EIP712Base {
     using SafeMath for uint256;
     bytes32 private constant META_TRANSACTION_TYPEHASH = keccak256(
         bytes(
@@ -30,9 +30,8 @@ contract NetworkAgnostic is EIP712Base {
 
     constructor(
         string memory name,
-        string memory version,
-        uint256 chainId
-    ) public EIP712Base(name, version, chainId) {}
+        string memory version
+    ) public EIP712Base(name, version) {}
 
     function executeMetaTransaction(
         address userAddress,
