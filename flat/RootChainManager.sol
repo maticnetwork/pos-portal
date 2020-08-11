@@ -335,6 +335,8 @@ library RLPReader {
 
         uint256 items = numItems(item);
         RLPItem[] memory result = new RLPItem[](items);
+        uint256 listLength = _itemLength(item.memPtr);
+        require(listLength == item.len, "RLPReader: LIST_DECODED_LENGTH_MISMATCH");
 
         uint256 memPtr = item.memPtr + _payloadOffset(item.memPtr);
         uint256 dataLen;
@@ -391,6 +393,7 @@ library RLPReader {
     }
 
     function toAddress(RLPItem memory item) internal pure returns (address) {
+        require(!isList(item), "RLPReader: DECODING_LIST_AS_ADDRESS");
         // 1 byte for the length prefix
         require(item.len == 21, "RLPReader: INVALID_ADDRESS_LENGTH");
 
@@ -398,15 +401,20 @@ library RLPReader {
     }
 
     function toUint(RLPItem memory item) internal pure returns (uint256) {
+        require(!isList(item), "RLPReader: DECODING_LIST_AS_UINT");
         require(item.len <= 33, "RLPReader: INVALID_UINT_LENGTH");
+
+        uint256 itemLength = _itemLength(item.memPtr);
+        require(itemLength == item.len, "RLPReader: UINT_DECODED_LENGTH_MISMATCH");
 
         uint256 offset = _payloadOffset(item.memPtr);
         uint256 len = item.len - offset;
-
         uint256 result;
+        uint dataByte0;
         uint256 memPtr = item.memPtr + offset;
         assembly {
             result := mload(memPtr)
+            dataByte0 := byte(0, result)
 
             // shfit to the correct location if neccesary
             if lt(len, 32) {
@@ -432,7 +440,10 @@ library RLPReader {
     }
 
     function toBytes(RLPItem memory item) internal pure returns (bytes memory) {
+        uint256 listLength = _itemLength(item.memPtr);
+        require(listLength == item.len, "RLPReader: BYTES_DECODED_LENGTH_MISMATCH");
         uint256 offset = _payloadOffset(item.memPtr);
+
         uint256 len = item.len - offset; // data length
         bytes memory result = new bytes(len);
 
@@ -458,6 +469,11 @@ library RLPReader {
         uint256 currPtr = item.memPtr + _payloadOffset(item.memPtr);
         uint256 endPtr = item.memPtr + item.len;
         while (currPtr < endPtr) {
+            uint256 currLen = _itemLength(currPtr);
+            currPtr = currPtr + currLen;
+            require(currPtr <= endPtr, "RLPReader: NUM_ITEMS_DECODED_LENGTH_MISMATCH");
+            count++;
+
             currPtr = currPtr + _itemLength(currPtr); // skip over an item
             count++;
         }
