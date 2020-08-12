@@ -17,7 +17,7 @@ chai
 const should = chai.should()
 
 contract('ChildERC721', (accounts) => {
-  describe.only('Should mint token on deposit', () => {
+  describe('Should mint token on deposit', () => {
     const tokenId = mockValues.numbers[6]
     const user = mockValues.addresses[3]
     const depositData = abi.encode(['uint256'], [tokenId])

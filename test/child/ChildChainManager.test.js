@@ -43,7 +43,7 @@ contract('ChildChainManager', async(accounts) => {
     })
   })
 
-  describe.only('Map tokens by calling from non mapper account', async() => {
+  describe('Map tokens by calling from non mapper account', async() => {
     const mockRootToken = mockValues.addresses[9]
     const mockChildToken = mockValues.addresses[6]
     let contracts
