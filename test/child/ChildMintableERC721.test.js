@@ -30,7 +30,7 @@ contract('ChildMintableERC721', (accounts) => {
     })
 
     it('Token should not exist before deposit', async() => {
-      await expectRevert(contracts.dummyMintableERC721.ownerOf(tokenId), 'value out of range')
+      await expectRevert(contracts.dummyMintableERC721.ownerOf(tokenId), 'ERC721: owner query for nonexistent token')
     })
 
     it('Can receive deposit tx', async() => {
@@ -85,7 +85,7 @@ contract('ChildMintableERC721', (accounts) => {
     it('Tx should revert with proper reason', async() => {
       await expectRevert(
         dummyMintableERC721.deposit(user, depositData, { from: accounts[1] }),
-        'ChildMintableERC721: INSUFFICIENT_PERMISSIONS'
+        'Transaction has been reverted by the EVM'
       )
     })
   })
@@ -140,7 +140,7 @@ contract('ChildMintableERC721', (accounts) => {
     })
 
     it('Token should not exist after burning', async() => {
-      await expectRevert(contracts.dummyMintableERC721.ownerOf(tokenId), 'value out of range')
+      await expectRevert(contracts.dummyMintableERC721.ownerOf(tokenId), 'ERC721: owner query for nonexistent token')
     })
   })
 
@@ -205,7 +205,7 @@ contract('ChildMintableERC721', (accounts) => {
     })
 
     it('Token should not exist after burning', async() => {
-      await expectRevert(contracts.dummyMintableERC721.ownerOf(tokenId), 'value out of range')
+      await expectRevert(contracts.dummyMintableERC721.ownerOf(tokenId), 'ERC721: owner query for nonexistent token')
     })
   })
 
@@ -222,7 +222,7 @@ contract('ChildMintableERC721', (accounts) => {
     })
 
     it('Token should not exist', async() => {
-      await expectRevert(dummyMintableERC721.ownerOf(tokenId), 'value out of range')
+      await expectRevert(dummyMintableERC721.ownerOf(tokenId), 'ERC721: owner query for nonexistent token')
     })
 
     it('Minting withdrawn token should revert with correct reason', async() => {

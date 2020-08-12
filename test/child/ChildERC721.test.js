@@ -17,7 +17,7 @@ chai
 const should = chai.should()
 
 contract('ChildERC721', (accounts) => {
-  describe('Should mint token on deposit', () => {
+  describe.only('Should mint token on deposit', () => {
     const tokenId = mockValues.numbers[6]
     const user = mockValues.addresses[3]
     const depositData = abi.encode(['uint256'], [tokenId])
@@ -30,7 +30,7 @@ contract('ChildERC721', (accounts) => {
     })
 
     it('Token should not exist before deposit', async() => {
-      await expectRevert(contracts.dummyERC721.ownerOf(tokenId), 'value out of range')
+      await expectRevert(contracts.dummyERC721.ownerOf(tokenId), 'ERC721: owner query for nonexistent token')
     })
 
     it('Can receive deposit tx', async() => {
@@ -85,7 +85,7 @@ contract('ChildERC721', (accounts) => {
     it('Tx should revert with proper reason', async() => {
       await expectRevert(
         dummyERC721.deposit(user, depositData, { from: accounts[1] }),
-        'ChildERC721: INSUFFICIENT_PERMISSIONS'
+        'Transaction has been reverted by the EVM'
       )
     })
   })
@@ -141,7 +141,7 @@ contract('ChildERC721', (accounts) => {
     })
 
     it('Token should not exist after burning', async() => {
-      await expectRevert(contracts.dummyERC721.ownerOf(tokenId), 'value out of range')
+      await expectRevert(contracts.dummyERC721.ownerOf(tokenId), 'ERC721: owner query for nonexistent token')
     })
   })
 })

@@ -1262,7 +1262,7 @@ contract('RootChainManager', async(accounts) => {
     })
 
     it('Token should be burned on child chain', async() => {
-      await expectRevert(childMintableERC721.ownerOf(tokenId), 'value out of range')
+      await expectRevert(childMintableERC721.ownerOf(tokenId), 'ERC721: owner query for nonexistent token')
     })
 
     it('Checkpoint should be submitted', async() => {
@@ -1342,7 +1342,7 @@ contract('RootChainManager', async(accounts) => {
     })
 
     it('Token should be burned on child chain', async() => {
-      await expectRevert(childMintableERC721.ownerOf(tokenId), 'value out of range')
+      await expectRevert(childMintableERC721.ownerOf(tokenId), 'ERC721: owner query for nonexistent token')
     })
 
     it('checkpoint should be submitted', async() => {

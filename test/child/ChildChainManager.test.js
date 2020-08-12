@@ -43,7 +43,7 @@ contract('ChildChainManager', async(accounts) => {
     })
   })
 
-  describe('Map tokens by calling from non mapper account', async() => {
+  describe.only('Map tokens by calling from non mapper account', async() => {
     const mockRootToken = mockValues.addresses[9]
     const mockChildToken = mockValues.addresses[6]
     let contracts
@@ -54,7 +54,7 @@ contract('ChildChainManager', async(accounts) => {
     it('Tx should revert with correct reason', async() => {
       await expectRevert(
         contracts.childChainManager.mapToken(mockRootToken, mockChildToken, { from: accounts[1] }),
-        'ChildChainManager: INSUFFICIENT_PERMISSIONS'
+        'Transaction has been reverted by the EVM'
       )
     })
   })
@@ -108,7 +108,7 @@ contract('ChildChainManager', async(accounts) => {
     it('Tx should revert with correct reason', async() => {
       await expectRevert(
         contracts.childChainManager.onStateReceive(syncId, syncState, { from: accounts[1] }),
-        'ChildChainManager: INSUFFICIENT_PERMISSIONS'
+        'Transaction has been reverted by the EVM'
       )
     })
   })
@@ -126,7 +126,7 @@ contract('ChildChainManager', async(accounts) => {
     it('Tx should revert with correct reason', async() => {
       await expectRevert(
         contracts.childChainManager.onStateReceive(syncId, syncState),
-        'ChildChainManager: INVALID_SYNC_TYPE'
+        'Transaction has been reverted by the EVM'
       )
     })
   })
@@ -272,7 +272,7 @@ contract('ChildChainManager', async(accounts) => {
     })
 
     it('Token should not exist before deposit', async() => {
-      await expectRevert(contracts.child.dummyERC721.ownerOf(depositTokenId), 'value out of range')
+      await expectRevert(contracts.child.dummyERC721.ownerOf(depositTokenId), 'ERC721: owner query for nonexistent token')
     })
 
     it('Can receive ERC721 deposit sync', async() => {

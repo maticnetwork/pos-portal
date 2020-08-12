@@ -85,7 +85,7 @@ contract('ChildERC20', (accounts) => {
     it('Tx should revert with proper reason', async() => {
       await expectRevert(
         dummyERC20.deposit(depositReceiver, depositData, { from: accounts[1] }),
-        'ChildERC20: INSUFFICIENT_PERMISSIONS'
+        'Transaction has been reverted by the EVM'
       )
     })
   })
