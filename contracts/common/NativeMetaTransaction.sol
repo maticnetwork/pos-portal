@@ -105,7 +105,4 @@ contract NativeMetaTransaction is EIP712Base {
                 sigS
             );
     }
-
-    // To recieve ether in contract
-    receive() external payable {}
 }

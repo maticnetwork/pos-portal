@@ -11,7 +11,7 @@ import {Initializable} from "../../common/Initializable.sol";
 import {NativeMetaTransaction} from "../../common/NativeMetaTransaction.sol";
 import {AccessControlMixin} from "../../common/AccessControlMixin.sol";
 
-contract RootChainManager is IRootChainManager, Initializable, AccessControlMixin {
+contract RootChainManager is IRootChainManager, Initializable, AccessControlMixin, NativeMetaTransaction {
     using RLPReader for bytes;
     using RLPReader for RLPReader.RLPItem;
     using Merkle for bytes32;
