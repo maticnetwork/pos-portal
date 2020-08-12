@@ -1,7 +1,8 @@
 pragma solidity ^0.6.6;
 
+import {Initializable} from "./Initializable.sol";
 
-contract EIP712Base {
+contract EIP712Base is Initializable {
     struct EIP712Domain {
         string name;
         string version;
@@ -16,10 +17,16 @@ contract EIP712Base {
     );
     bytes32 internal domainSeperator;
 
-    constructor(
+    // supposed to be called once while initializing.
+    // one of the contractsa that inherits this contract follows proxy pattern
+    // so it is not possible to do this in a constructor
+    function _initializeEIP712(
         string memory name,
         string memory version
-    ) public {
+    )
+        internal
+        initializer
+    {
         domainSeperator = keccak256(
             abi.encode(
                 EIP712_DOMAIN_TYPEHASH,
@@ -36,12 +43,13 @@ contract EIP712Base {
     }
 
     function getChainId() public pure returns (uint256) {
-    uint256 id;
-    assembly {
-        id := chainid()
+        uint256 id;
+        assembly {
+            id := chainid()
+        }
+        return id;
     }
-    return id;
-}
+
     /**
      * Accept message hash and returns hash message in EIP712 compatible form
      * So that it can be used to recover signer from signature signed using EIP712 formatted data

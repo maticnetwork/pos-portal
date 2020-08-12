@@ -10,8 +10,15 @@ import {ITokenPredicate} from "../TokenPredicates/ITokenPredicate.sol";
 import {Initializable} from "../../common/Initializable.sol";
 import {NativeMetaTransaction} from "../../common/NativeMetaTransaction.sol";
 import {AccessControlMixin} from "../../common/AccessControlMixin.sol";
+import {ChainConstants} from "../../ChainConstants.sol";
 
-contract RootChainManager is IRootChainManager, Initializable, AccessControlMixin, NativeMetaTransaction {
+contract RootChainManager is
+    IRootChainManager,
+    Initializable,
+    AccessControlMixin,
+    NativeMetaTransaction,
+    ChainConstants
+{
     using RLPReader for bytes;
     using RLPReader for RLPReader.RLPItem;
     using Merkle for bytes32;
@@ -32,11 +39,6 @@ contract RootChainManager is IRootChainManager, Initializable, AccessControlMixi
     IStateSender private _stateSender;
     ICheckpointManager private _checkpointManager;
     address public childChainManagerAddress;
-    
-    constructor(
-        string memory name,
-        string memory version
-    ) public NativeMetaTransaction(name, version) {}
 
     function _msgSender()
         internal
@@ -59,7 +61,7 @@ contract RootChainManager is IRootChainManager, Initializable, AccessControlMixi
         }
         return sender;
     }
-    
+
     /**
      * @notice Deposit ether by directly sending to the contract
      * The account sending ether receives WETH on child chain
@@ -73,7 +75,13 @@ contract RootChainManager is IRootChainManager, Initializable, AccessControlMixi
      * @dev meant to be called once immediately after deployment
      * @param _owner the account that should be granted admin role
      */
-    function initialize(address _owner) external initializer {
+    function initialize(
+        address _owner
+    )
+        external
+        initializer
+    {
+        _initializeEIP712("RootChainManager", ERC712_VERSION);
         _setupContractId("RootChainManager");
         _setupRole(DEFAULT_ADMIN_ROLE, _owner);
         _setupRole(MAPPER_ROLE, _owner);

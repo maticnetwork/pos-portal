@@ -28,11 +28,6 @@ contract NativeMetaTransaction is EIP712Base {
         bytes functionSignature;
     }
 
-    constructor(
-        string memory name,
-        string memory version
-    ) public EIP712Base(name, version) {}
-
     function executeMetaTransaction(
         address userAddress,
         bytes memory functionSignature,

@@ -22,11 +22,12 @@ contract ChildERC20 is
         string memory name_,
         string memory symbol_,
         uint8 decimals_
-    ) public ERC20(name_, symbol_) NativeMetaTransaction(name_, ERC712_VERSION) {
+    ) public ERC20(name_, symbol_) {
         _setupContractId("ChildERC20");
         _setupDecimals(decimals_);
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
         _setupRole(DEPOSITOR_ROLE, _msgSender());
+        _initializeEIP712(name_, ERC712_VERSION);
     }
 
     function _msgSender()

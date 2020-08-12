@@ -20,11 +20,11 @@ contract ChildERC1155 is
     constructor(string memory uri_)
         public
         ERC1155(uri_)
-        NativeMetaTransaction(uri_, ERC712_VERSION)
     {
         _setupContractId("ChildERC1155");
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
         _setupRole(DEPOSITOR_ROLE, _msgSender());
+        _initializeEIP712(uri_, ERC712_VERSION);
     }
 
     function _msgSender()
