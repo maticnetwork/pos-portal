@@ -226,7 +226,7 @@ contract('ChildMintableERC721', (accounts) => {
     })
 
     it('Minting withdrawn token should revert with correct reason', async() => {
-      await expectRevert(dummyMintableERC721.mint(user, tokenId), 'ChildMintableERC721: TOKEN_EXISTS_ON_ROOT_CHAIN')
+      await expectRevert(dummyMintableERC721.mint(user, tokenId), 'Transaction has been reverted by the EVM')
     })
   })
 })
