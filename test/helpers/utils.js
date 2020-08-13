@@ -43,11 +43,15 @@ export function assertBigNumberEquality(num1, num2) {
 }
 
 export const mnemonics = packageJSON.config.mnemonics
-export function generateFirstWallets(mnemonics, n, hdPathIndex = 0) {
+export function generateFirstWallets({
+  mnemonics = packageJSON.config.mnemonics,
+  n = 10,
+  hdPathIndex = 0
+}) {
   const hdwallet = hdkey.fromMasterSeed(bip39.mnemonicToSeed(mnemonics))
   const result = []
   for (let i = 0; i < n; i++) {
-    const node = hdwallet.derivePath(`m/44'/60'/0'/0/${i + hdPathIndex}`)
+    const node = hdwallet.derivePath(`m/44'/60'/0'/0/${i + hdPathIndex || 0}`)
     result.push(node.getWallet())
   }
 
