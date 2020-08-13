@@ -558,8 +558,8 @@ contract Initializable {
 
     modifier initializer() {
         require(!inited, "already inited");
-        inited = true;
         _;
+        inited = true;
     }
 }
 

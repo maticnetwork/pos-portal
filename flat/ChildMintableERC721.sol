@@ -1876,12 +1876,26 @@ interface IChildToken {
     function deposit(address user, bytes calldata depositData) external;
 }
 
+// File: contracts/common/Initializable.sol
+
+pragma solidity ^0.6.6;
+
+contract Initializable {
+    bool inited = false;
+
+    modifier initializer() {
+        require(!inited, "already inited");
+        _;
+        inited = true;
+    }
+}
+
 // File: contracts/common/EIP712Base.sol
 
 pragma solidity ^0.6.6;
 
 
-contract EIP712Base {
+contract EIP712Base is Initializable {
     struct EIP712Domain {
         string name;
         string version;
@@ -1896,24 +1910,37 @@ contract EIP712Base {
     );
     bytes32 internal domainSeperator;
 
-    constructor(
+    // supposed to be called once while initializing.
+    // one of the contractsa that inherits this contract follows proxy pattern
+    // so it is not possible to do this in a constructor
+    function _initializeEIP712(
         string memory name,
-        string memory version,
-        uint256 _chainId
-    ) public {
+        string memory version
+    )
+        internal
+        initializer
+    {
         domainSeperator = keccak256(
             abi.encode(
                 EIP712_DOMAIN_TYPEHASH,
                 keccak256(bytes(name)),
                 keccak256(bytes(version)),
-                _chainId,
+                getChainId(),
                 address(this)
             )
         );
     }
 
-    function getDomainSeperator() private view returns (bytes32) {
+    function getDomainSeperator() public view returns (bytes32) {
         return domainSeperator;
+    }
+
+    function getChainId() public pure returns (uint256) {
+        uint256 id;
+        assembly {
+            id := chainid()
+        }
+        return id;
     }
 
     /**
@@ -1935,13 +1962,13 @@ contract EIP712Base {
     }
 }
 
-// File: contracts/common/NetworkAgnostic.sol
+// File: contracts/common/NativeMetaTransaction.sol
 
 pragma solidity ^0.6.6;
 
 
 
-contract NetworkAgnostic is EIP712Base {
+contract NativeMetaTransaction is EIP712Base {
     using SafeMath for uint256;
     bytes32 private constant META_TRANSACTION_TYPEHASH = keccak256(
         bytes(
@@ -1965,12 +1992,6 @@ contract NetworkAgnostic is EIP712Base {
         address from;
         bytes functionSignature;
     }
-
-    constructor(
-        string memory name,
-        string memory version,
-        uint256 chainId
-    ) public EIP712Base(name, version, chainId) {}
 
     function executeMetaTransaction(
         address userAddress,
@@ -2044,9 +2065,6 @@ contract NetworkAgnostic is EIP712Base {
                 sigS
             );
     }
-
-    // To recieve ether in contract
-    receive() external payable {}
 }
 
 // File: contracts/ChainConstants.sol
@@ -2105,7 +2123,7 @@ contract ChildMintableERC721 is
     ERC721,
     IChildToken,
     AccessControlMixin,
-    NetworkAgnostic,
+    NativeMetaTransaction,
     ChainConstants,
     ContextMixin
 {
@@ -2115,10 +2133,11 @@ contract ChildMintableERC721 is
     constructor(
         string memory name_,
         string memory symbol_
-    ) public ERC721(name_, symbol_) NetworkAgnostic(name_, ERC712_VERSION, ROOT_CHAIN_ID) {
+    ) public ERC721(name_, symbol_) {
         _setupContractId("ChildMintableERC721");
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
         _setupRole(DEPOSITOR_ROLE, _msgSender());
+        _initializeEIP712(name_, ERC712_VERSION);
     }
 
     function _msgSender()
