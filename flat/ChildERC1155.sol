@@ -1512,7 +1512,7 @@ interface IChildToken {
 
 // File: contracts/common/Initializable.sol
 
-pragma solidity ^0.6.6;
+pragma solidity 0.6.6;
 
 contract Initializable {
     bool inited = false;
@@ -1769,7 +1769,7 @@ contract ChildERC1155 is
     {
         _setupContractId("ChildERC1155");
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
-        _setupRole(DEPOSITOR_ROLE, _msgSender());
+        _setupRole(DEPOSITOR_ROLE, childChainManager);
         _initializeEIP712(uri_, ERC712_VERSION);
     }
 

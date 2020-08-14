@@ -723,7 +723,7 @@ contract ERC20 is Context, IERC20 {
 
 // File: contracts/common/Initializable.sol
 
-pragma solidity ^0.6.6;
+pragma solidity 0.6.6;
 
 contract Initializable {
     bool inited = false;
