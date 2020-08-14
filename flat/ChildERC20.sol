@@ -1394,6 +1394,7 @@ contract NativeMetaTransaction is EIP712Base {
         bytes32 sigS,
         uint8 sigV
     ) internal view returns (bool) {
+        require(signer != address(0), "NativeMetaTransaction: INVALID_SIGNER");
         return
             signer ==
             ecrecover(
