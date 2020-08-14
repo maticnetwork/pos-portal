@@ -1,4 +1,4 @@
-pragma solidity ^0.6.6;
+pragma solidity 0.6.6;
 
 import {ERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import {AccessControlMixin} from "../../common/AccessControlMixin.sol";
@@ -19,11 +19,12 @@ contract ChildERC721 is
 
     constructor(
         string memory name_,
-        string memory symbol_
+        string memory symbol_,
+        address childChainManager
     ) public ERC721(name_, symbol_) {
         _setupContractId("ChildERC721");
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
-        _setupRole(DEPOSITOR_ROLE, _msgSender());
+        _setupRole(DEPOSITOR_ROLE, childChainManager);
         _initializeEIP712(name_, ERC712_VERSION);
     }
 

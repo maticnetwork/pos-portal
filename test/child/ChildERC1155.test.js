@@ -31,6 +31,8 @@ contract('ChildERC1155', (accounts) => {
     before(async() => {
       contracts = await deployer.deployFreshChildContracts(accounts)
       oldAccountBalance = await contracts.dummyERC1155.balanceOf(user, tokenId)
+      const DEPOSITOR_ROLE = await contracts.dummyERC1155.DEPOSITOR_ROLE()
+      await contracts.dummyERC1155.grantRole(DEPOSITOR_ROLE, accounts[0])
     })
 
     it('Can receive deposit tx', async() => {
@@ -115,6 +117,8 @@ contract('ChildERC1155', (accounts) => {
     before(async() => {
       contracts = await deployer.deployFreshChildContracts(accounts)
       const depositData = constructERC1155DepositData([tokenId], [depositAmount])
+      const DEPOSITOR_ROLE = await contracts.dummyERC1155.DEPOSITOR_ROLE()
+      await contracts.dummyERC1155.grantRole(DEPOSITOR_ROLE, accounts[0])
       await contracts.dummyERC1155.deposit(user, depositData)
       oldAccountBalance = await contracts.dummyERC1155.balanceOf(user, tokenId)
     })
@@ -192,6 +196,8 @@ contract('ChildERC1155', (accounts) => {
       oldAccountBalanceA = await contracts.dummyERC1155.balanceOf(user, tokenIdA)
       oldAccountBalanceB = await contracts.dummyERC1155.balanceOf(user, tokenIdB)
       oldAccountBalanceC = await contracts.dummyERC1155.balanceOf(user, tokenIdC)
+      const DEPOSITOR_ROLE = await contracts.dummyERC1155.DEPOSITOR_ROLE()
+      await contracts.dummyERC1155.grantRole(DEPOSITOR_ROLE, accounts[0])
     })
 
     it('Can receive deposit tx', async() => {
@@ -301,6 +307,8 @@ contract('ChildERC1155', (accounts) => {
         [tokenIdA, tokenIdB, tokenIdC],
         [depositAmountA, depositAmountB, depositAmountC]
       )
+      const DEPOSITOR_ROLE = await contracts.dummyERC1155.DEPOSITOR_ROLE()
+      await contracts.dummyERC1155.grantRole(DEPOSITOR_ROLE, accounts[0])
       await contracts.dummyERC1155.deposit(user, depositData)
       oldAccountBalanceA = await contracts.dummyERC1155.balanceOf(user, tokenIdA)
       oldAccountBalanceB = await contracts.dummyERC1155.balanceOf(user, tokenIdB)

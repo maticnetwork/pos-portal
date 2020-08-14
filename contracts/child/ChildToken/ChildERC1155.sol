@@ -1,4 +1,4 @@
-pragma solidity ^0.6.6;
+pragma solidity 0.6.6;
 
 import {ERC1155} from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import {AccessControlMixin} from "../../common/AccessControlMixin.sol";
@@ -17,13 +17,13 @@ contract ChildERC1155 is
 {
     bytes32 public constant DEPOSITOR_ROLE = keccak256("DEPOSITOR_ROLE");
 
-    constructor(string memory uri_)
+    constructor(string memory uri_, address childChainManager)
         public
         ERC1155(uri_)
     {
         _setupContractId("ChildERC1155");
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
-        _setupRole(DEPOSITOR_ROLE, _msgSender());
+        _setupRole(DEPOSITOR_ROLE, childChainManager);
         _initializeEIP712(uri_, ERC712_VERSION);
     }
 

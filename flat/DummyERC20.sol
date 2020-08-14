@@ -737,7 +737,7 @@ contract Initializable {
 
 // File: contracts/common/EIP712Base.sol
 
-pragma solidity ^0.6.6;
+pragma solidity 0.6.6;
 
 
 contract EIP712Base is Initializable {
@@ -809,7 +809,7 @@ contract EIP712Base is Initializable {
 
 // File: contracts/common/NativeMetaTransaction.sol
 
-pragma solidity ^0.6.6;
+pragma solidity 0.6.6;
 
 
 
@@ -915,7 +915,7 @@ contract NativeMetaTransaction is EIP712Base {
 
 // File: contracts/ChainConstants.sol
 
-pragma solidity ^0.6.6;
+pragma solidity 0.6.6;
 
 contract ChainConstants {
     string constant public ERC712_VERSION = "1";
@@ -929,7 +929,7 @@ contract ChainConstants {
 
 // File: contracts/common/ContextMixin.sol
 
-pragma solidity ^0.6.6;
+pragma solidity 0.6.6;
 
 abstract contract ContextMixin {
     function msgSender()
@@ -956,7 +956,7 @@ abstract contract ContextMixin {
 
 // File: contracts/root/RootToken/DummyERC20.sol
 
-pragma solidity ^0.6.6;
+pragma solidity 0.6.6;
 
 
 

@@ -27,6 +27,8 @@ contract('ChildMintableERC721', (accounts) => {
 
     before(async() => {
       contracts = await deployer.deployFreshChildContracts(accounts)
+      const DEPOSITOR_ROLE = await contracts.dummyMintableERC721.DEPOSITOR_ROLE()
+      await contracts.dummyMintableERC721.grantRole(DEPOSITOR_ROLE, accounts[0])
     })
 
     it('Token should not exist before deposit', async() => {
@@ -154,6 +156,8 @@ contract('ChildMintableERC721', (accounts) => {
     before(async() => {
       contracts = await deployer.deployFreshChildContracts(accounts)
       await contracts.dummyMintableERC721.mint(user, tokenId)
+      const DEPOSITOR_ROLE = await contracts.dummyMintableERC721.DEPOSITOR_ROLE()
+      await contracts.dummyMintableERC721.grantRole(DEPOSITOR_ROLE, accounts[0])
     })
 
     it('Should be able to withdraw token once', async() => {

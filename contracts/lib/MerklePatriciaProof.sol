@@ -4,7 +4,7 @@
  *
  * @dev Library for verifing merkle patricia proofs.
  */
-pragma solidity ^0.6.6;
+pragma solidity 0.6.6;
 
 import {RLPReader} from "./RLPReader.sol";
 
@@ -102,8 +102,6 @@ library MerklePatriciaProof {
                 return false;
             }
         }
-
-        return false;
     }
 
     function _nibblesToTraverse(
@@ -134,7 +132,7 @@ library MerklePatriciaProof {
 
     // bytes b must be hp encoded
     function _getNibbleArray(bytes memory b)
-        private
+        internal
         pure
         returns (bytes memory)
     {

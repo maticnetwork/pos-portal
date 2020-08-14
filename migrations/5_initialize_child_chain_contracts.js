@@ -35,20 +35,4 @@ module.exports = async(deployer) => {
 
   console.log('Mapping WETH')
   await ChildChainManagerInstance.mapToken('0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE', MaticWETHInstance.address)
-
-  console.log('Granting DEPOSITOR_ROLE on DummyERC20')
-  const DEPOSITOR_ROLE = await DummyERC20Instance.DEPOSITOR_ROLE()
-  await DummyERC20Instance.grantRole(DEPOSITOR_ROLE, ChildChainManagerInstance.address)
-
-  console.log('Granting DEPOSITOR_ROLE on DummyERC721')
-  await DummyERC721Instance.grantRole(DEPOSITOR_ROLE, ChildChainManagerInstance.address)
-
-  console.log('Granting DEPOSITOR_ROLE on DummyMintableERC721')
-  await DummyMintableERC721Instance.grantRole(DEPOSITOR_ROLE, ChildChainManagerInstance.address)
-
-  console.log('Granting DEPOSITOR_ROLE on DummyERC1155')
-  await DummyERC1155Instance.grantRole(DEPOSITOR_ROLE, ChildChainManagerInstance.address)
-
-  console.log('Granting DEPOSITOR_ROLE on WETH')
-  await MaticWETHInstance.grantRole(DEPOSITOR_ROLE, ChildChainManagerInstance.address)
 }

@@ -1,4 +1,4 @@
-pragma solidity ^0.6.6;
+pragma solidity 0.6.6;
 
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {EIP712Base} from "./EIP712Base.sol";

@@ -81,7 +81,7 @@ interface IERC20 {
 
 // File: contracts/child/ChildChainManager/IChildChainManager.sol
 
-pragma solidity ^0.6.6;
+pragma solidity 0.6.6;
 
 interface IChildChainManager {
     event TokenMapped(address indexed rootToken, address indexed childToken);
@@ -93,7 +93,7 @@ interface IChildChainManager {
 
 // File: contracts/child/ChildToken/IChildToken.sol
 
-pragma solidity ^0.6.6;
+pragma solidity 0.6.6;
 
 interface IChildToken {
     function deposit(address user, bytes calldata depositData) external;
@@ -101,7 +101,7 @@ interface IChildToken {
 
 // File: contracts/common/Initializable.sol
 
-pragma solidity ^0.6.6;
+pragma solidity 0.6.6;
 
 contract Initializable {
     bool inited = false;
@@ -751,7 +751,7 @@ abstract contract AccessControl is Context {
 
 // File: contracts/common/AccessControlMixin.sol
 
-pragma solidity ^0.6.6;
+pragma solidity 0.6.6;
 
 
 contract AccessControlMixin is AccessControl {
@@ -771,7 +771,7 @@ contract AccessControlMixin is AccessControl {
 
 // File: contracts/child/ChildChainManager/ChildChainManager.sol
 
-pragma solidity ^0.6.6;
+pragma solidity 0.6.6;
 
 
 

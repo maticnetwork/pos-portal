@@ -27,6 +27,8 @@ contract('ChildERC721', (accounts) => {
 
     before(async() => {
       contracts = await deployer.deployFreshChildContracts(accounts)
+      const DEPOSITOR_ROLE = await contracts.dummyERC721.DEPOSITOR_ROLE()
+      await contracts.dummyERC721.grantRole(DEPOSITOR_ROLE, accounts[0])
     })
 
     it('Token should not exist before deposit', async() => {
@@ -100,6 +102,8 @@ contract('ChildERC721', (accounts) => {
     before(async() => {
       contracts = await deployer.deployFreshChildContracts(accounts)
       const depositData = abi.encode(['uint256'], [tokenId])
+      const DEPOSITOR_ROLE = await contracts.dummyERC721.DEPOSITOR_ROLE()
+      await contracts.dummyERC721.grantRole(DEPOSITOR_ROLE, accounts[0])
       await contracts.dummyERC721.deposit(user, depositData)
     })
 

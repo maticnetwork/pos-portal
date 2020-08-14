@@ -956,7 +956,7 @@ abstract contract AccessControl is Context {
 
 // File: contracts/common/AccessControlMixin.sol
 
-pragma solidity ^0.6.6;
+pragma solidity 0.6.6;
 
 
 contract AccessControlMixin is AccessControl {
@@ -981,7 +981,7 @@ contract AccessControlMixin is AccessControl {
  * Please reach out with any questions or concerns
  * https://github.com/hamdiallam/Solidity-RLP/blob/e681e25a376dbd5426b509380bc03446f05d0f97/contracts/RLPReader.sol
  */
-pragma solidity ^0.6.6;
+pragma solidity 0.6.6;
 
 library RLPReader {
     uint8 constant STRING_SHORT_START = 0x80;
@@ -995,36 +995,6 @@ library RLPReader {
         uint256 memPtr;
     }
 
-    struct Iterator {
-        RLPItem item; // Item that's being iterated over.
-        uint256 nextPtr; // Position of the next item in the list.
-    }
-
-    /*
-     * @dev Returns the next element in the iteration. Reverts if it has not next element.
-     * @param self The iterator.
-     * @return The next element in the iteration.
-     */
-    function next(Iterator memory self) internal pure returns (RLPItem memory) {
-        require(hasNext(self));
-
-        uint256 ptr = self.nextPtr;
-        uint256 itemLength = _itemLength(ptr);
-        self.nextPtr = ptr + itemLength;
-
-        return RLPItem(itemLength, ptr);
-    }
-
-    /*
-     * @dev Returns true if the iteration has more elements.
-     * @param self The iterator.
-     * @return true if the iteration has more elements.
-     */
-    function hasNext(Iterator memory self) internal pure returns (bool) {
-        RLPItem memory item = self.item;
-        return self.nextPtr < item.memPtr + item.len;
-    }
-
     /*
      * @param item RLP encoded bytes
      */
@@ -1033,42 +1003,13 @@ library RLPReader {
         pure
         returns (RLPItem memory)
     {
+        require(item.length > 0, "RLPReader: INVALID_BYTES_LENGTH");
         uint256 memPtr;
         assembly {
             memPtr := add(item, 0x20)
         }
 
         return RLPItem(item.length, memPtr);
-    }
-
-    /*
-     * @dev Create an iterator. Reverts if item is not a list.
-     * @param self The RLP item.
-     * @return An 'Iterator' over the item.
-     */
-    function iterator(RLPItem memory self)
-        internal
-        pure
-        returns (Iterator memory)
-    {
-        require(isList(self));
-
-        uint256 ptr = self.memPtr + _payloadOffset(self.memPtr);
-        return Iterator(self, ptr);
-    }
-
-    /*
-     * @param item RLP encoded bytes
-     */
-    function rlpLen(RLPItem memory item) internal pure returns (uint256) {
-        return item.len;
-    }
-
-    /*
-     * @param item RLP encoded bytes
-     */
-    function payloadLen(RLPItem memory item) internal pure returns (uint256) {
-        return item.len - _payloadOffset(item.memPtr);
     }
 
     /*
@@ -1079,10 +1020,12 @@ library RLPReader {
         pure
         returns (RLPItem[] memory)
     {
-        require(isList(item));
+        require(isList(item), "RLPReader: ITEM_NOT_LIST");
 
         uint256 items = numItems(item);
         RLPItem[] memory result = new RLPItem[](items);
+        uint256 listLength = _itemLength(item.memPtr);
+        require(listLength == item.len, "RLPReader: LIST_DECODED_LENGTH_MISMATCH");
 
         uint256 memPtr = item.memPtr + _payloadOffset(item.memPtr);
         uint256 dataLen;
@@ -1097,8 +1040,6 @@ library RLPReader {
 
     // @return indicator whether encoded payload is a list. negate this function call for isData.
     function isList(RLPItem memory item) internal pure returns (bool) {
-        if (item.len == 0) return false;
-
         uint8 byte0;
         uint256 memPtr = item.memPtr;
         assembly {
@@ -1118,7 +1059,6 @@ library RLPReader {
         returns (bytes memory)
     {
         bytes memory result = new bytes(item.len);
-        if (result.length == 0) return result;
 
         uint256 ptr;
         assembly {
@@ -1129,35 +1069,29 @@ library RLPReader {
         return result;
     }
 
-    // any non-zero byte is considered true
-    function toBoolean(RLPItem memory item) internal pure returns (bool) {
-        require(item.len == 1);
-        uint256 result;
-        uint256 memPtr = item.memPtr;
-        assembly {
-            result := byte(0, mload(memPtr))
-        }
-
-        return result == 0 ? false : true;
-    }
-
     function toAddress(RLPItem memory item) internal pure returns (address) {
+        require(!isList(item), "RLPReader: DECODING_LIST_AS_ADDRESS");
         // 1 byte for the length prefix
-        require(item.len == 21);
+        require(item.len == 21, "RLPReader: INVALID_ADDRESS_LENGTH");
 
         return address(toUint(item));
     }
 
     function toUint(RLPItem memory item) internal pure returns (uint256) {
-        require(item.len > 0 && item.len <= 33);
+        require(!isList(item), "RLPReader: DECODING_LIST_AS_UINT");
+        require(item.len <= 33, "RLPReader: INVALID_UINT_LENGTH");
+
+        uint256 itemLength = _itemLength(item.memPtr);
+        require(itemLength == item.len, "RLPReader: UINT_DECODED_LENGTH_MISMATCH");
 
         uint256 offset = _payloadOffset(item.memPtr);
         uint256 len = item.len - offset;
-
         uint256 result;
+        uint dataByte0;
         uint256 memPtr = item.memPtr + offset;
         assembly {
             result := mload(memPtr)
+            dataByte0 := byte(0, result)
 
             // shfit to the correct location if neccesary
             if lt(len, 32) {
@@ -1170,8 +1104,10 @@ library RLPReader {
 
     // enforces 32 byte length
     function toUintStrict(RLPItem memory item) internal pure returns (uint256) {
+        uint256 itemLength = _itemLength(item.memPtr);
+        require(itemLength == item.len, "RLPReader: UINT_STRICT_DECODED_LENGTH_MISMATCH");
         // one byte prefix
-        require(item.len == 33);
+        require(item.len == 33, "RLPReader: INVALID_UINT_STRICT_LENGTH");
 
         uint256 result;
         uint256 memPtr = item.memPtr + 1;
@@ -1183,9 +1119,10 @@ library RLPReader {
     }
 
     function toBytes(RLPItem memory item) internal pure returns (bytes memory) {
-        require(item.len > 0);
-
+        uint256 listLength = _itemLength(item.memPtr);
+        require(listLength == item.len, "RLPReader: BYTES_DECODED_LENGTH_MISMATCH");
         uint256 offset = _payloadOffset(item.memPtr);
+
         uint256 len = item.len - offset; // data length
         bytes memory result = new bytes(len);
 
@@ -1204,12 +1141,18 @@ library RLPReader {
 
     // @return number of payload items inside an encoded list.
     function numItems(RLPItem memory item) private pure returns (uint256) {
-        if (item.len == 0) return 0;
+        // add `isList` check if `item` is expected to be passsed without a check from calling function
+        // require(isList(item), "RLPReader: NUM_ITEMS_NOT_LIST");
 
         uint256 count = 0;
         uint256 currPtr = item.memPtr + _payloadOffset(item.memPtr);
         uint256 endPtr = item.memPtr + item.len;
         while (currPtr < endPtr) {
+            uint256 currLen = _itemLength(currPtr);
+            currPtr = currPtr + currLen;
+            require(currPtr <= endPtr, "RLPReader: NUM_ITEMS_DECODED_LENGTH_MISMATCH");
+            count++;
+
             currPtr = currPtr + _itemLength(currPtr); // skip over an item
             count++;
         }
@@ -1304,7 +1247,7 @@ library RLPReader {
 
 // File: contracts/root/TokenPredicates/ITokenPredicate.sol
 
-pragma solidity ^0.6.6;
+pragma solidity 0.6.6;
 
 
 /// @title Token predicate interface for all pos portal predicates
@@ -1343,7 +1286,7 @@ interface ITokenPredicate {
 
 // File: contracts/common/Initializable.sol
 
-pragma solidity ^0.6.6;
+pragma solidity 0.6.6;
 
 contract Initializable {
     bool inited = false;
@@ -1357,7 +1300,7 @@ contract Initializable {
 
 // File: contracts/root/TokenPredicates/ERC20Predicate.sol
 
-pragma solidity ^0.6.6;
+pragma solidity 0.6.6;
 
 
 

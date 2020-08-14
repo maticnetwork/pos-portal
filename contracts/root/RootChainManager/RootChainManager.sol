@@ -1,5 +1,6 @@
-pragma solidity ^0.6.6;
+pragma solidity 0.6.6;
 
+import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {IRootChainManager} from "./IRootChainManager.sol";
 import {IStateSender} from "../StateSender/IStateSender.sol";
 import {ICheckpointManager} from "../ICheckpointManager.sol";
@@ -24,6 +25,7 @@ contract RootChainManager is
     using RLPReader for bytes;
     using RLPReader for RLPReader.RLPItem;
     using Merkle for bytes32;
+    using SafeMath for uint256;
 
     // maybe DEPOSIT and MAP_TOKEN can be reduced to bytes4
     bytes32 public constant DEPOSIT = keccak256("DEPOSIT");
@@ -275,7 +277,10 @@ contract RootChainManager is
         bytes32 exitHash = keccak256(
             abi.encodePacked(
                 inputDataRLPList[2].toUint(), // blockNumber
-                inputDataRLPList[8].toUint(), // branchMask
+                // first 2 nibbles are dropped while generating nibble array
+                // this allows branch masks that are valid but bypass exitHash check (changing first 2 nibbles only)
+                // so converting to nibble array and then hashing it
+                MerklePatriciaProof._getNibbleArray(inputDataRLPList[8].toBytes()), // branchMask
                 inputDataRLPList[9].toUint() // receiptLogIndex
             )
         );
@@ -296,15 +301,14 @@ contract RootChainManager is
 
         address childToken = RLPReader.toAddress(logRLP.toList()[0]); // log emitter address field
         // log should be emmited only by the child token
+        address rootToken = childToRootToken[childToken];
         require(
-            childToRootToken[childToken] != address(0),
+            rootToken != address(0),
             "RootChainManager: TOKEN_NOT_MAPPED"
         );
 
         address predicateAddress = typeToPredicate[
-            tokenToType[
-                childToRootToken[childToken]
-            ]
+            tokenToType[rootToken]
         ];
 
         // branch mask can be maximum 32 bits
@@ -364,7 +368,7 @@ contract RootChainManager is
                 abi.encodePacked(blockNumber, blockTime, txRoot, receiptRoot)
             )
                 .checkMembership(
-                blockNumber - startBlock,
+                blockNumber.sub(startBlock),
                 headerRoot,
                 blockProof
             ),
