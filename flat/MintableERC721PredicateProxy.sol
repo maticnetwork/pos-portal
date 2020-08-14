@@ -1,7 +1,7 @@
 
 // File: contracts/common/Proxy/IERCProxy.sol
 
-pragma solidity ^0.6.6;
+pragma solidity 0.6.6;
 
 interface IERCProxy {
     function proxyType() external pure returns (uint256 proxyTypeId);
@@ -11,7 +11,7 @@ interface IERCProxy {
 
 // File: contracts/common/Proxy/Proxy.sol
 
-pragma solidity ^0.6.6;
+pragma solidity 0.6.6;
 
 
 abstract contract Proxy is IERCProxy {
@@ -53,7 +53,7 @@ abstract contract Proxy is IERCProxy {
 
 // File: contracts/common/Proxy/UpgradableProxy.sol
 
-pragma solidity ^0.6.6;
+pragma solidity 0.6.6;
 
 
 contract UpgradableProxy is Proxy {
@@ -158,7 +158,7 @@ contract UpgradableProxy is Proxy {
 
 // File: contracts/root/TokenPredicates/MintableERC721PredicateProxy.sol
 
-pragma solidity ^0.6.6;
+pragma solidity 0.6.6;
 
 
 contract MintableERC721PredicateProxy is UpgradableProxy {

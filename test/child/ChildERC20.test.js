@@ -29,6 +29,8 @@ contract('ChildERC20', (accounts) => {
     before(async() => {
       contracts = await deployer.deployFreshChildContracts(accounts)
       oldAccountBalance = await contracts.dummyERC20.balanceOf(depositReceiver)
+      const DEPOSITOR_ROLE = await contracts.dummyERC20.DEPOSITOR_ROLE()
+      await contracts.dummyERC20.grantRole(DEPOSITOR_ROLE, accounts[0])
     })
 
     it('Can receive deposit tx', async() => {
@@ -101,6 +103,8 @@ contract('ChildERC20', (accounts) => {
 
     before(async() => {
       contracts = await deployer.deployFreshChildContracts(accounts)
+      const DEPOSITOR_ROLE = await contracts.dummyERC20.DEPOSITOR_ROLE()
+      await contracts.dummyERC20.grantRole(DEPOSITOR_ROLE, accounts[0])
       const depositData = abi.encode(['uint256'], [depositAmount.toString()])
       await contracts.dummyERC20.deposit(user, depositData)
       oldAccountBalance = await contracts.dummyERC20.balanceOf(user)

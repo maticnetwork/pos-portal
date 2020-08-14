@@ -1484,7 +1484,7 @@ abstract contract AccessControl is Context {
 
 // File: contracts/common/AccessControlMixin.sol
 
-pragma solidity ^0.6.6;
+pragma solidity 0.6.6;
 
 
 contract AccessControlMixin is AccessControl {
@@ -1504,7 +1504,7 @@ contract AccessControlMixin is AccessControl {
 
 // File: contracts/child/ChildToken/IChildToken.sol
 
-pragma solidity ^0.6.6;
+pragma solidity 0.6.6;
 
 interface IChildToken {
     function deposit(address user, bytes calldata depositData) external;
@@ -1512,7 +1512,7 @@ interface IChildToken {
 
 // File: contracts/common/EIP712Base.sol
 
-pragma solidity ^0.6.6;
+pragma solidity 0.6.6;
 
 
 contract EIP712Base {
@@ -1571,7 +1571,7 @@ contract EIP712Base {
 
 // File: contracts/common/NetworkAgnostic.sol
 
-pragma solidity ^0.6.6;
+pragma solidity 0.6.6;
 
 
 
@@ -1685,7 +1685,7 @@ contract NetworkAgnostic is EIP712Base {
 
 // File: contracts/ChainConstants.sol
 
-pragma solidity ^0.6.6;
+pragma solidity 0.6.6;
 
 contract ChainConstants {
     string constant public ERC712_VERSION = "1";
@@ -1699,7 +1699,7 @@ contract ChainConstants {
 
 // File: contracts/common/ContextMixin.sol
 
-pragma solidity ^0.6.6;
+pragma solidity 0.6.6;
 
 abstract contract ContextMixin {
     function msgSender()
@@ -1726,7 +1726,7 @@ abstract contract ContextMixin {
 
 // File: contracts/child/ChildToken/ChildERC1155.sol
 
-pragma solidity ^0.6.6;
+pragma solidity 0.6.6;
 
 
 
@@ -1744,14 +1744,14 @@ contract ChildERC1155 is
 {
     bytes32 public constant DEPOSITOR_ROLE = keccak256("DEPOSITOR_ROLE");
 
-    constructor(string memory uri_)
+    constructor(string memory uri_, address childChainManager)
         public
         ERC1155(uri_)
         NetworkAgnostic(uri_, ERC712_VERSION, ROOT_CHAIN_ID)
     {
         _setupContractId("ChildERC1155");
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
-        _setupRole(DEPOSITOR_ROLE, _msgSender());
+        _setupRole(DEPOSITOR_ROLE, childChainManager);
     }
 
     function _msgSender()

@@ -1,7 +1,169 @@
 
+// File: @openzeppelin/contracts/math/SafeMath.sol
+
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.6.0;
+
+/**
+ * @dev Wrappers over Solidity's arithmetic operations with added overflow
+ * checks.
+ *
+ * Arithmetic operations in Solidity wrap on overflow. This can easily result
+ * in bugs, because programmers usually assume that an overflow raises an
+ * error, which is the standard behavior in high level programming languages.
+ * `SafeMath` restores this intuition by reverting the transaction when an
+ * operation overflows.
+ *
+ * Using this library instead of the unchecked operations eliminates an entire
+ * class of bugs, so it's recommended to use it always.
+ */
+library SafeMath {
+    /**
+     * @dev Returns the addition of two unsigned integers, reverting on
+     * overflow.
+     *
+     * Counterpart to Solidity's `+` operator.
+     *
+     * Requirements:
+     *
+     * - Addition cannot overflow.
+     */
+    function add(uint256 a, uint256 b) internal pure returns (uint256) {
+        uint256 c = a + b;
+        require(c >= a, "SafeMath: addition overflow");
+
+        return c;
+    }
+
+    /**
+     * @dev Returns the subtraction of two unsigned integers, reverting on
+     * overflow (when the result is negative).
+     *
+     * Counterpart to Solidity's `-` operator.
+     *
+     * Requirements:
+     *
+     * - Subtraction cannot overflow.
+     */
+    function sub(uint256 a, uint256 b) internal pure returns (uint256) {
+        return sub(a, b, "SafeMath: subtraction overflow");
+    }
+
+    /**
+     * @dev Returns the subtraction of two unsigned integers, reverting with custom message on
+     * overflow (when the result is negative).
+     *
+     * Counterpart to Solidity's `-` operator.
+     *
+     * Requirements:
+     *
+     * - Subtraction cannot overflow.
+     */
+    function sub(uint256 a, uint256 b, string memory errorMessage) internal pure returns (uint256) {
+        require(b <= a, errorMessage);
+        uint256 c = a - b;
+
+        return c;
+    }
+
+    /**
+     * @dev Returns the multiplication of two unsigned integers, reverting on
+     * overflow.
+     *
+     * Counterpart to Solidity's `*` operator.
+     *
+     * Requirements:
+     *
+     * - Multiplication cannot overflow.
+     */
+    function mul(uint256 a, uint256 b) internal pure returns (uint256) {
+        // Gas optimization: this is cheaper than requiring 'a' not being zero, but the
+        // benefit is lost if 'b' is also tested.
+        // See: https://github.com/OpenZeppelin/openzeppelin-contracts/pull/522
+        if (a == 0) {
+            return 0;
+        }
+
+        uint256 c = a * b;
+        require(c / a == b, "SafeMath: multiplication overflow");
+
+        return c;
+    }
+
+    /**
+     * @dev Returns the integer division of two unsigned integers. Reverts on
+     * division by zero. The result is rounded towards zero.
+     *
+     * Counterpart to Solidity's `/` operator. Note: this function uses a
+     * `revert` opcode (which leaves remaining gas untouched) while Solidity
+     * uses an invalid opcode to revert (consuming all remaining gas).
+     *
+     * Requirements:
+     *
+     * - The divisor cannot be zero.
+     */
+    function div(uint256 a, uint256 b) internal pure returns (uint256) {
+        return div(a, b, "SafeMath: division by zero");
+    }
+
+    /**
+     * @dev Returns the integer division of two unsigned integers. Reverts with custom message on
+     * division by zero. The result is rounded towards zero.
+     *
+     * Counterpart to Solidity's `/` operator. Note: this function uses a
+     * `revert` opcode (which leaves remaining gas untouched) while Solidity
+     * uses an invalid opcode to revert (consuming all remaining gas).
+     *
+     * Requirements:
+     *
+     * - The divisor cannot be zero.
+     */
+    function div(uint256 a, uint256 b, string memory errorMessage) internal pure returns (uint256) {
+        require(b > 0, errorMessage);
+        uint256 c = a / b;
+        // assert(a == b * c + a % b); // There is no case in which this doesn't hold
+
+        return c;
+    }
+
+    /**
+     * @dev Returns the remainder of dividing two unsigned integers. (unsigned integer modulo),
+     * Reverts when dividing by zero.
+     *
+     * Counterpart to Solidity's `%` operator. This function uses a `revert`
+     * opcode (which leaves remaining gas untouched) while Solidity uses an
+     * invalid opcode to revert (consuming all remaining gas).
+     *
+     * Requirements:
+     *
+     * - The divisor cannot be zero.
+     */
+    function mod(uint256 a, uint256 b) internal pure returns (uint256) {
+        return mod(a, b, "SafeMath: modulo by zero");
+    }
+
+    /**
+     * @dev Returns the remainder of dividing two unsigned integers. (unsigned integer modulo),
+     * Reverts with custom message when dividing by zero.
+     *
+     * Counterpart to Solidity's `%` operator. This function uses a `revert`
+     * opcode (which leaves remaining gas untouched) while Solidity uses an
+     * invalid opcode to revert (consuming all remaining gas).
+     *
+     * Requirements:
+     *
+     * - The divisor cannot be zero.
+     */
+    function mod(uint256 a, uint256 b, string memory errorMessage) internal pure returns (uint256) {
+        require(b != 0, errorMessage);
+        return a % b;
+    }
+}
+
 // File: contracts/root/RootChainManager/IRootChainManager.sol
 
-pragma solidity ^0.6.6;
+pragma solidity 0.6.6;
 
 interface IRootChainManager {
     event TokenMapped(
@@ -37,7 +199,7 @@ interface IRootChainManager {
 
 // File: contracts/root/StateSender/IStateSender.sol
 
-pragma solidity ^0.6.6;
+pragma solidity 0.6.6;
 
 interface IStateSender {
     function syncState(address receiver, bytes calldata data) external;
@@ -45,7 +207,7 @@ interface IStateSender {
 
 // File: contracts/root/ICheckpointManager.sol
 
-pragma solidity ^0.6.6;
+pragma solidity 0.6.6;
 
 contract ICheckpointManager {
     struct HeaderBlock {
@@ -70,7 +232,7 @@ contract ICheckpointManager {
  * Please reach out with any questions or concerns
  * https://github.com/hamdiallam/Solidity-RLP/blob/e681e25a376dbd5426b509380bc03446f05d0f97/contracts/RLPReader.sol
  */
-pragma solidity ^0.6.6;
+pragma solidity 0.6.6;
 
 library RLPReader {
     uint8 constant STRING_SHORT_START = 0x80;
@@ -84,36 +246,6 @@ library RLPReader {
         uint256 memPtr;
     }
 
-    struct Iterator {
-        RLPItem item; // Item that's being iterated over.
-        uint256 nextPtr; // Position of the next item in the list.
-    }
-
-    /*
-     * @dev Returns the next element in the iteration. Reverts if it has not next element.
-     * @param self The iterator.
-     * @return The next element in the iteration.
-     */
-    function next(Iterator memory self) internal pure returns (RLPItem memory) {
-        require(hasNext(self));
-
-        uint256 ptr = self.nextPtr;
-        uint256 itemLength = _itemLength(ptr);
-        self.nextPtr = ptr + itemLength;
-
-        return RLPItem(itemLength, ptr);
-    }
-
-    /*
-     * @dev Returns true if the iteration has more elements.
-     * @param self The iterator.
-     * @return true if the iteration has more elements.
-     */
-    function hasNext(Iterator memory self) internal pure returns (bool) {
-        RLPItem memory item = self.item;
-        return self.nextPtr < item.memPtr + item.len;
-    }
-
     /*
      * @param item RLP encoded bytes
      */
@@ -122,42 +254,13 @@ library RLPReader {
         pure
         returns (RLPItem memory)
     {
+        require(item.length > 0, "RLPReader: INVALID_BYTES_LENGTH");
         uint256 memPtr;
         assembly {
             memPtr := add(item, 0x20)
         }
 
         return RLPItem(item.length, memPtr);
-    }
-
-    /*
-     * @dev Create an iterator. Reverts if item is not a list.
-     * @param self The RLP item.
-     * @return An 'Iterator' over the item.
-     */
-    function iterator(RLPItem memory self)
-        internal
-        pure
-        returns (Iterator memory)
-    {
-        require(isList(self));
-
-        uint256 ptr = self.memPtr + _payloadOffset(self.memPtr);
-        return Iterator(self, ptr);
-    }
-
-    /*
-     * @param item RLP encoded bytes
-     */
-    function rlpLen(RLPItem memory item) internal pure returns (uint256) {
-        return item.len;
-    }
-
-    /*
-     * @param item RLP encoded bytes
-     */
-    function payloadLen(RLPItem memory item) internal pure returns (uint256) {
-        return item.len - _payloadOffset(item.memPtr);
     }
 
     /*
@@ -168,10 +271,12 @@ library RLPReader {
         pure
         returns (RLPItem[] memory)
     {
-        require(isList(item));
+        require(isList(item), "RLPReader: ITEM_NOT_LIST");
 
         uint256 items = numItems(item);
         RLPItem[] memory result = new RLPItem[](items);
+        uint256 listLength = _itemLength(item.memPtr);
+        require(listLength == item.len, "RLPReader: LIST_DECODED_LENGTH_MISMATCH");
 
         uint256 memPtr = item.memPtr + _payloadOffset(item.memPtr);
         uint256 dataLen;
@@ -186,8 +291,6 @@ library RLPReader {
 
     // @return indicator whether encoded payload is a list. negate this function call for isData.
     function isList(RLPItem memory item) internal pure returns (bool) {
-        if (item.len == 0) return false;
-
         uint8 byte0;
         uint256 memPtr = item.memPtr;
         assembly {
@@ -207,7 +310,6 @@ library RLPReader {
         returns (bytes memory)
     {
         bytes memory result = new bytes(item.len);
-        if (result.length == 0) return result;
 
         uint256 ptr;
         assembly {
@@ -218,35 +320,29 @@ library RLPReader {
         return result;
     }
 
-    // any non-zero byte is considered true
-    function toBoolean(RLPItem memory item) internal pure returns (bool) {
-        require(item.len == 1);
-        uint256 result;
-        uint256 memPtr = item.memPtr;
-        assembly {
-            result := byte(0, mload(memPtr))
-        }
-
-        return result == 0 ? false : true;
-    }
-
     function toAddress(RLPItem memory item) internal pure returns (address) {
+        require(!isList(item), "RLPReader: DECODING_LIST_AS_ADDRESS");
         // 1 byte for the length prefix
-        require(item.len == 21);
+        require(item.len == 21, "RLPReader: INVALID_ADDRESS_LENGTH");
 
         return address(toUint(item));
     }
 
     function toUint(RLPItem memory item) internal pure returns (uint256) {
-        require(item.len > 0 && item.len <= 33);
+        require(!isList(item), "RLPReader: DECODING_LIST_AS_UINT");
+        require(item.len <= 33, "RLPReader: INVALID_UINT_LENGTH");
+
+        uint256 itemLength = _itemLength(item.memPtr);
+        require(itemLength == item.len, "RLPReader: UINT_DECODED_LENGTH_MISMATCH");
 
         uint256 offset = _payloadOffset(item.memPtr);
         uint256 len = item.len - offset;
-
         uint256 result;
+        uint dataByte0;
         uint256 memPtr = item.memPtr + offset;
         assembly {
             result := mload(memPtr)
+            dataByte0 := byte(0, result)
 
             // shfit to the correct location if neccesary
             if lt(len, 32) {
@@ -259,8 +355,10 @@ library RLPReader {
 
     // enforces 32 byte length
     function toUintStrict(RLPItem memory item) internal pure returns (uint256) {
+        uint256 itemLength = _itemLength(item.memPtr);
+        require(itemLength == item.len, "RLPReader: UINT_STRICT_DECODED_LENGTH_MISMATCH");
         // one byte prefix
-        require(item.len == 33);
+        require(item.len == 33, "RLPReader: INVALID_UINT_STRICT_LENGTH");
 
         uint256 result;
         uint256 memPtr = item.memPtr + 1;
@@ -272,9 +370,10 @@ library RLPReader {
     }
 
     function toBytes(RLPItem memory item) internal pure returns (bytes memory) {
-        require(item.len > 0);
-
+        uint256 listLength = _itemLength(item.memPtr);
+        require(listLength == item.len, "RLPReader: BYTES_DECODED_LENGTH_MISMATCH");
         uint256 offset = _payloadOffset(item.memPtr);
+
         uint256 len = item.len - offset; // data length
         bytes memory result = new bytes(len);
 
@@ -293,12 +392,18 @@ library RLPReader {
 
     // @return number of payload items inside an encoded list.
     function numItems(RLPItem memory item) private pure returns (uint256) {
-        if (item.len == 0) return 0;
+        // add `isList` check if `item` is expected to be passsed without a check from calling function
+        // require(isList(item), "RLPReader: NUM_ITEMS_NOT_LIST");
 
         uint256 count = 0;
         uint256 currPtr = item.memPtr + _payloadOffset(item.memPtr);
         uint256 endPtr = item.memPtr + item.len;
         while (currPtr < endPtr) {
+            uint256 currLen = _itemLength(currPtr);
+            currPtr = currPtr + currLen;
+            require(currPtr <= endPtr, "RLPReader: NUM_ITEMS_DECODED_LENGTH_MISMATCH");
+            count++;
+
             currPtr = currPtr + _itemLength(currPtr); // skip over an item
             count++;
         }
@@ -399,7 +504,7 @@ library RLPReader {
  *
  * @dev Library for verifing merkle patricia proofs.
  */
-pragma solidity ^0.6.6;
+pragma solidity 0.6.6;
 
 
 library MerklePatriciaProof {
@@ -496,8 +601,6 @@ library MerklePatriciaProof {
                 return false;
             }
         }
-
-        return false;
     }
 
     function _nibblesToTraverse(
@@ -528,7 +631,7 @@ library MerklePatriciaProof {
 
     // bytes b must be hp encoded
     function _getNibbleArray(bytes memory b)
-        private
+        internal
         pure
         returns (bytes memory)
     {
@@ -567,7 +670,7 @@ library MerklePatriciaProof {
 
 // File: contracts/lib/Merkle.sol
 
-pragma solidity ^0.6.6;
+pragma solidity 0.6.6;
 
 library Merkle {
     function checkMembership(
@@ -607,7 +710,7 @@ library Merkle {
 
 // File: contracts/root/TokenPredicates/ITokenPredicate.sol
 
-pragma solidity ^0.6.6;
+pragma solidity 0.6.6;
 
 
 /// @title Token predicate interface for all pos portal predicates
@@ -646,7 +749,7 @@ interface ITokenPredicate {
 
 // File: contracts/common/Initializable.sol
 
-pragma solidity ^0.6.6;
+pragma solidity 0.6.6;
 
 contract Initializable {
     bool inited = false;
@@ -1296,7 +1399,7 @@ abstract contract AccessControl is Context {
 
 // File: contracts/common/AccessControlMixin.sol
 
-pragma solidity ^0.6.6;
+pragma solidity 0.6.6;
 
 
 contract AccessControlMixin is AccessControl {
@@ -1316,7 +1419,8 @@ contract AccessControlMixin is AccessControl {
 
 // File: contracts/root/RootChainManager/RootChainManager.sol
 
-pragma solidity ^0.6.6;
+pragma solidity 0.6.6;
+
 
 
 
@@ -1331,6 +1435,7 @@ contract RootChainManager is IRootChainManager, Initializable, AccessControlMixi
     using RLPReader for bytes;
     using RLPReader for RLPReader.RLPItem;
     using Merkle for bytes32;
+    using SafeMath for uint256;
 
     // maybe DEPOSIT and MAP_TOKEN can be reduced to bytes4
     bytes32 public constant DEPOSIT = keccak256("DEPOSIT");
@@ -1567,7 +1672,10 @@ contract RootChainManager is IRootChainManager, Initializable, AccessControlMixi
         bytes32 exitHash = keccak256(
             abi.encodePacked(
                 inputDataRLPList[2].toUint(), // blockNumber
-                inputDataRLPList[8].toUint(), // branchMask
+                // first 2 nibbles are dropped while generating nibble array
+                // this allows branch masks that are valid but bypass exitHash check (changing first 2 nibbles only)
+                // so converting to nibble array and then hashing it
+                MerklePatriciaProof._getNibbleArray(inputDataRLPList[8].toBytes()), // branchMask
                 inputDataRLPList[9].toUint() // receiptLogIndex
             )
         );
@@ -1588,15 +1696,14 @@ contract RootChainManager is IRootChainManager, Initializable, AccessControlMixi
 
         address childToken = RLPReader.toAddress(logRLP.toList()[0]); // log emitter address field
         // log should be emmited only by the child token
+        address rootToken = childToRootToken[childToken];
         require(
-            childToRootToken[childToken] != address(0),
+            rootToken != address(0),
             "RootChainManager: TOKEN_NOT_MAPPED"
         );
 
         address predicateAddress = typeToPredicate[
-            tokenToType[
-                childToRootToken[childToken]
-            ]
+            tokenToType[rootToken]
         ];
 
         // branch mask can be maximum 32 bits
@@ -1656,7 +1763,7 @@ contract RootChainManager is IRootChainManager, Initializable, AccessControlMixi
                 abi.encodePacked(blockNumber, blockTime, txRoot, receiptRoot)
             )
                 .checkMembership(
-                blockNumber - startBlock,
+                blockNumber.sub(startBlock),
                 headerRoot,
                 blockProof
             ),
