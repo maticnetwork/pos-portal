@@ -225,6 +225,23 @@ contract ICheckpointManager {
     mapping(uint256 => HeaderBlock) public headerBlocks;
 }
 
+// File: contracts/root/RootChainManager/RootChainManagerStorage.sol
+
+pragma solidity 0.6.6;
+
+
+
+abstract contract RootChainManagerStorage {
+    mapping(bytes32 => address) public typeToPredicate;
+    mapping(address => address) public rootToChildToken;
+    mapping(address => address) public childToRootToken;
+    mapping(address => bytes32) public tokenToType;
+    mapping(bytes32 => bool) public processedExits;
+    IStateSender internal _stateSender;
+    ICheckpointManager internal _checkpointManager;
+    address internal childChainManagerAddress;
+}
+
 // File: contracts/lib/RLPReader.sol
 
 /*
@@ -1653,9 +1670,13 @@ pragma solidity 0.6.6;
 
 
 
+
+
 contract RootChainManager is
     IRootChainManager,
     Initializable,
+    AccessControl, // included to match old storage layout while upgrading
+    RootChainManagerStorage, // created to match old storage layout while upgrading
     AccessControlMixin,
     NativeMetaTransaction,
     ChainConstants,
@@ -1671,17 +1692,6 @@ contract RootChainManager is
     bytes32 public constant MAP_TOKEN = keccak256("MAP_TOKEN");
     address public constant ETHER_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
     bytes32 public constant MAPPER_ROLE = keccak256("MAPPER_ROLE");
-
-    // maybe typeToPredicate can be reduced to bytes4
-    mapping(bytes32 => address) public typeToPredicate;
-    mapping(address => address) public rootToChildToken;
-    mapping(address => address) public childToRootToken;
-    mapping(address => bytes32) public tokenToType;
-    mapping(bytes32 => bool) public processedExits;
-
-    IStateSender private _stateSender;
-    ICheckpointManager private _checkpointManager;
-    address public childChainManagerAddress;
 
     function _msgSender()
         internal
@@ -1715,6 +1725,22 @@ contract RootChainManager is
         _setupContractId("RootChainManager");
         _setupRole(DEFAULT_ADMIN_ROLE, _owner);
         _setupRole(MAPPER_ROLE, _owner);
+    }
+
+    // adding seperate function setupContractId since initialize is already called with old implementation
+    function setupContractId()
+        external
+        only(DEFAULT_ADMIN_ROLE)
+    {
+        _setupContractId("RootChainManager");
+    }
+
+    // adding seperate function initializeEIP712 since initialize is already called with old implementation
+    function initializeEIP712()
+        external
+        only(DEFAULT_ADMIN_ROLE)
+    {
+        _setDomainSeperator("RootChainManager", ERC712_VERSION);
     }
 
     /**
