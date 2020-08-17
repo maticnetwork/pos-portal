@@ -57,3 +57,12 @@ export function generateFirstWallets({
 
   return result
 }
+
+export const getSignatureParameters = (signature) => {
+  const r = signature.slice(0, 66)
+  const s = '0x'.concat(signature.slice(66, 130))
+  const _v = '0x'.concat(signature.slice(130, 132))
+  let v = parseInt(_v)
+  if (![27, 28].includes(v)) v += 27
+  return { r, s, v }
+}
