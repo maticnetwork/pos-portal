@@ -48,6 +48,8 @@ contract('NativeMetaTransaction', (accounts) => {
     before(async() => {
       contracts = await deployer.deployFreshChildContracts(accounts)
       dummyERC20 = contracts.dummyERC20
+      const DEPOSITOR_ROLE = await dummyERC20.DEPOSITOR_ROLE()
+      await dummyERC20.grantRole(DEPOSITOR_ROLE, accounts[0])
       const depositData = abi.encode(['uint256'], [depositAmount.toString(10)])
       await dummyERC20.deposit(user, depositData)
     })
@@ -95,6 +97,8 @@ contract('NativeMetaTransaction', (accounts) => {
     before(async() => {
       contracts = await deployer.deployFreshChildContracts(accounts)
       dummyERC721 = contracts.dummyERC721
+      const DEPOSITOR_ROLE = await dummyERC721.DEPOSITOR_ROLE()
+      await dummyERC721.grantRole(DEPOSITOR_ROLE, accounts[0])
       const depositData = abi.encode(['uint256'], [tokenId])
       await dummyERC721.deposit(user, depositData)
     })
@@ -144,6 +148,9 @@ contract('NativeMetaTransaction', (accounts) => {
       contracts = await deployer.deployFreshChildContracts(accounts)
       dummyERC721 = contracts.dummyERC721
       dummyERC20 = contracts.dummyERC20
+      const DEPOSITOR_ROLE = await dummyERC20.DEPOSITOR_ROLE()
+      await dummyERC20.grantRole(DEPOSITOR_ROLE, accounts[0])
+      await dummyERC721.grantRole(DEPOSITOR_ROLE, accounts[0])
       const depositData = abi.encode(['uint256'], [tokenId])
       await dummyERC721.deposit(user, depositData)
       await dummyERC20.deposit(user, depositData)
@@ -187,6 +194,8 @@ contract('NativeMetaTransaction', (accounts) => {
     before(async() => {
       contracts = await deployer.deployFreshChildContracts(accounts)
       dummyERC1155 = contracts.dummyERC1155
+      const DEPOSITOR_ROLE = await dummyERC1155.DEPOSITOR_ROLE()
+      await dummyERC1155.grantRole(DEPOSITOR_ROLE, accounts[0])
       await dummyERC1155.deposit(user, depositData)
     })
 
@@ -372,7 +381,6 @@ contract('NativeMetaTransaction', (accounts) => {
 
       it('Should emit correct deposit receiver', () => {
         lockedLog.args.depositReceiver.should.equal(depositForAccount)
-
       })
 
       it('Should emit correct root token', () => {
@@ -404,7 +412,6 @@ contract('NativeMetaTransaction', (accounts) => {
 
       it('Should emit correct deposit receiver', () => {
         depositReceiver.should.equal(depositForAccount)
-
       })
 
       it('Should emit correct root token', () => {
