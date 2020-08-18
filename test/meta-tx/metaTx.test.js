@@ -69,7 +69,7 @@ contract('NativeMetaTransaction', (accounts) => {
         data: getTypedData({
           name,
           version: '1',
-          chainId: '0x' + chainId.toString(16),
+          chainId,
           verifyingContract: dummyERC20.address,
           nonce: '0x' + nonce.toString(16),
           from: user,
@@ -119,7 +119,7 @@ contract('NativeMetaTransaction', (accounts) => {
         data: getTypedData({
           name,
           version: '1',
-          chainId: '0x' + chainId.toString(16),
+          chainId,
           verifyingContract: dummyERC721.address,
           nonce: '0x' + nonce.toString(16),
           from: user,
@@ -167,7 +167,7 @@ contract('NativeMetaTransaction', (accounts) => {
         data: getTypedData({
           name,
           version: '1',
-          chainId: '0x' + chainId.toString(16),
+          chainId,
           verifyingContract: dummyERC721.address,
           nonce: '0x' + nonce.toString(16),
           from: user,
@@ -214,7 +214,7 @@ contract('NativeMetaTransaction', (accounts) => {
         data: getTypedData({
           name,
           version: '1',
-          chainId: '0x' + chainId.toString(16),
+          chainId,
           verifyingContract: dummyERC1155.address,
           nonce: '0x' + nonce.toString(16),
           from: user,
@@ -261,7 +261,7 @@ contract('NativeMetaTransaction', (accounts) => {
         data: getTypedData({
           name,
           version: '1',
-          chainId: '0x' + chainId.toString(16),
+          chainId,
           verifyingContract: dummyMintableERC721.address,
           nonce: '0x' + nonce.toString(16),
           from: user,
@@ -319,7 +319,7 @@ contract('NativeMetaTransaction', (accounts) => {
         data: getTypedData({
           name,
           version: '1',
-          chainId: '0x' + chainId.toString(16),
+          chainId,
           verifyingContract: dummyERC20.address,
           nonce: '0x' + nonce.toString(16),
           from: user,
@@ -346,7 +346,7 @@ contract('NativeMetaTransaction', (accounts) => {
         data: getTypedData({
           name,
           version: '1',
-          chainId: '0x' + chainId.toString(16),
+          chainId,
           verifyingContract: rootChainManager.address,
           nonce: '0x' + nonce.toString(16),
           from: user,

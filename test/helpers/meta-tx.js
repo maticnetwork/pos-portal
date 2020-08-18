@@ -8,11 +8,11 @@ export const getTypedData = ({ name, version, chainId, verifyingContract, nonce,
         name: 'version',
         type: 'string'
       }, {
-        name: 'chainId',
-        type: 'uint256'
-      }, {
         name: 'verifyingContract',
         type: 'address'
+      }, {
+        name: 'salt',
+        type: 'bytes32'
       }],
       MetaTransaction: [{
         name: 'nonce',
@@ -28,8 +28,8 @@ export const getTypedData = ({ name, version, chainId, verifyingContract, nonce,
     domain: {
       name,
       version,
-      chainId,
-      verifyingContract
+      verifyingContract,
+      salt: '0x' + chainId.toString(16).padStart(64, '0')
     },
     primaryType: 'MetaTransaction',
     message: {
