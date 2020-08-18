@@ -11,5 +11,5 @@ abstract contract RootChainManagerStorage {
     mapping(bytes32 => bool) public processedExits;
     IStateSender internal _stateSender;
     ICheckpointManager internal _checkpointManager;
-    address internal childChainManagerAddress;
+    address public childChainManagerAddress;
 }
