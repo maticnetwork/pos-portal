@@ -124,22 +124,26 @@ export function verifyTxProof(proof) {
           pathPtr += 1
           break
         case 2:
-          pathPtr += nibblesToTraverse(
+          // eslint-disable-next-line
+          const traversed = nibblesToTraverse(
             currentNode[0].toString('hex'),
             path,
             pathPtr
           )
-          if (pathPtr === path.length) {
+          if ((traversed + pathPtr) === path.length) {
             // leaf node
             if (currentNode[1].equals(rlp.encode(value))) {
               return true
             } else {
               return false
             }
-          } else {
-            // extension node
-            nodeKey = currentNode[1]
           }
+          // extension node
+          if (traversed === 0) {
+            return false
+          }
+          pathPtr += traversed
+          nodeKey = currentNode[1]
           break
         default:
           console.log('all nodes must be length 17 or 2')
