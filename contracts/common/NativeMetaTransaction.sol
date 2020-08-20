@@ -3,7 +3,7 @@ pragma solidity 0.6.6;
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {EIP712Base} from "./EIP712Base.sol";
 
-contract NetworkAgnostic is EIP712Base {
+contract NativeMetaTransaction is EIP712Base {
     using SafeMath for uint256;
     bytes32 private constant META_TRANSACTION_TYPEHASH = keccak256(
         bytes(
@@ -27,12 +27,6 @@ contract NetworkAgnostic is EIP712Base {
         address from;
         bytes functionSignature;
     }
-
-    constructor(
-        string memory name,
-        string memory version,
-        uint256 chainId
-    ) public EIP712Base(name, version, chainId) {}
 
     function executeMetaTransaction(
         address userAddress,
@@ -97,6 +91,7 @@ contract NetworkAgnostic is EIP712Base {
         bytes32 sigS,
         uint8 sigV
     ) internal view returns (bool) {
+        require(signer != address(0), "NativeMetaTransaction: INVALID_SIGNER");
         return
             signer ==
             ecrecover(
@@ -106,7 +101,4 @@ contract NetworkAgnostic is EIP712Base {
                 sigS
             );
     }
-
-    // To recieve ether in contract
-    receive() external payable {}
 }

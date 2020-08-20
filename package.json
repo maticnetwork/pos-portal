@@ -64,6 +64,7 @@
     "eth-block-tracker": "^4.4.3",
     "eth-gas-reporter": "^0.2.17",
     "eth-json-rpc-filters": "^4.1.1",
+    "eth-sig-util": "^2.5.2",
     "ethereumjs-tx": "^2.1.2",
     "ethereumjs-util": "^7.0.2",
     "ethereumjs-wallet": "0.6.2",

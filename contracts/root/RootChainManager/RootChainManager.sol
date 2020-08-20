@@ -2,6 +2,7 @@ pragma solidity 0.6.6;
 
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {IRootChainManager} from "./IRootChainManager.sol";
+import {RootChainManagerStorage} from "./RootChainManagerStorage.sol";
 import {IStateSender} from "../StateSender/IStateSender.sol";
 import {ICheckpointManager} from "../ICheckpointManager.sol";
 import {RLPReader} from "../../lib/RLPReader.sol";
@@ -9,9 +10,22 @@ import {MerklePatriciaProof} from "../../lib/MerklePatriciaProof.sol";
 import {Merkle} from "../../lib/Merkle.sol";
 import {ITokenPredicate} from "../TokenPredicates/ITokenPredicate.sol";
 import {Initializable} from "../../common/Initializable.sol";
+import {NativeMetaTransaction} from "../../common/NativeMetaTransaction.sol";
+import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 import {AccessControlMixin} from "../../common/AccessControlMixin.sol";
+import {ChainConstants} from "../../ChainConstants.sol";
+import {ContextMixin} from "../../common/ContextMixin.sol";
 
-contract RootChainManager is IRootChainManager, Initializable, AccessControlMixin {
+contract RootChainManager is
+    IRootChainManager,
+    Initializable,
+    AccessControl, // included to match old storage layout while upgrading
+    RootChainManagerStorage, // created to match old storage layout while upgrading
+    AccessControlMixin,
+    NativeMetaTransaction,
+    ChainConstants,
+    ContextMixin
+{
     using RLPReader for bytes;
     using RLPReader for RLPReader.RLPItem;
     using Merkle for bytes32;
@@ -23,16 +37,14 @@ contract RootChainManager is IRootChainManager, Initializable, AccessControlMixi
     address public constant ETHER_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
     bytes32 public constant MAPPER_ROLE = keccak256("MAPPER_ROLE");
 
-    // maybe typeToPredicate can be reduced to bytes4
-    mapping(bytes32 => address) public typeToPredicate;
-    mapping(address => address) public rootToChildToken;
-    mapping(address => address) public childToRootToken;
-    mapping(address => bytes32) public tokenToType;
-    mapping(bytes32 => bool) public processedExits;
-
-    IStateSender private _stateSender;
-    ICheckpointManager private _checkpointManager;
-    address public childChainManagerAddress;
+    function _msgSender()
+        internal
+        override
+        view
+        returns (address payable sender)
+    {
+        return ContextMixin.msgSender();
+    }
 
     /**
      * @notice Deposit ether by directly sending to the contract
@@ -47,10 +59,32 @@ contract RootChainManager is IRootChainManager, Initializable, AccessControlMixi
      * @dev meant to be called once immediately after deployment
      * @param _owner the account that should be granted admin role
      */
-    function initialize(address _owner) external initializer {
+    function initialize(
+        address _owner
+    )
+        external
+        initializer
+    {
+        _initializeEIP712("RootChainManager", ERC712_VERSION);
         _setupContractId("RootChainManager");
         _setupRole(DEFAULT_ADMIN_ROLE, _owner);
         _setupRole(MAPPER_ROLE, _owner);
+    }
+
+    // adding seperate function setupContractId since initialize is already called with old implementation
+    function setupContractId()
+        external
+        only(DEFAULT_ADMIN_ROLE)
+    {
+        _setupContractId("RootChainManager");
+    }
+
+    // adding seperate function initializeEIP712 since initialize is already called with old implementation
+    function initializeEIP712()
+        external
+        only(DEFAULT_ADMIN_ROLE)
+    {
+        _setDomainSeperator("RootChainManager", ERC712_VERSION);
     }
 
     /**

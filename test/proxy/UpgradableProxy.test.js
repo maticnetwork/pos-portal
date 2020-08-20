@@ -6,7 +6,7 @@ const ProxyTestImpl = artifacts.require('ProxyTestImpl')
 const ProxyTestImplStorageLayoutChange = artifacts.require('ProxyTestImplStorageLayoutChange')
 
 contract('UpgradableProxy', function() {
-  const wallets = generateFirstWallets(mnemonics, 10)
+  const wallets = generateFirstWallets({ mnemonics, n: 10 })
 
   async function doDeploy() {
     this.impl = await ProxyTestImpl.new()

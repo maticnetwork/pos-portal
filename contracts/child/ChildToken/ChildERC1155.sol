@@ -3,7 +3,7 @@ pragma solidity 0.6.6;
 import {ERC1155} from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import {AccessControlMixin} from "../../common/AccessControlMixin.sol";
 import {IChildToken} from "./IChildToken.sol";
-import {NetworkAgnostic} from "../../common/NetworkAgnostic.sol";
+import {NativeMetaTransaction} from "../../common/NativeMetaTransaction.sol";
 import {ChainConstants} from "../../ChainConstants.sol";
 import {ContextMixin} from "../../common/ContextMixin.sol";
 
@@ -11,7 +11,7 @@ contract ChildERC1155 is
     ERC1155,
     IChildToken,
     AccessControlMixin,
-    NetworkAgnostic,
+    NativeMetaTransaction,
     ChainConstants,
     ContextMixin
 {
@@ -20,11 +20,11 @@ contract ChildERC1155 is
     constructor(string memory uri_, address childChainManager)
         public
         ERC1155(uri_)
-        NetworkAgnostic(uri_, ERC712_VERSION, ROOT_CHAIN_ID)
     {
         _setupContractId("ChildERC1155");
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
         _setupRole(DEPOSITOR_ROLE, childChainManager);
+        _initializeEIP712(uri_, ERC712_VERSION);
     }
 
     function _msgSender()

@@ -1,39 +1,57 @@
 pragma solidity 0.6.6;
 
+import {Initializable} from "./Initializable.sol";
 
-contract EIP712Base {
+contract EIP712Base is Initializable {
     struct EIP712Domain {
         string name;
         string version;
-        uint256 chainId;
         address verifyingContract;
+        bytes32 salt;
     }
 
     bytes32 internal constant EIP712_DOMAIN_TYPEHASH = keccak256(
         bytes(
-            "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
+            "EIP712Domain(string name,string version,address verifyingContract,bytes32 salt)"
         )
     );
     bytes32 internal domainSeperator;
 
-    constructor(
+    // supposed to be called once while initializing.
+    // one of the contractsa that inherits this contract follows proxy pattern
+    // so it is not possible to do this in a constructor
+    function _initializeEIP712(
         string memory name,
-        string memory version,
-        uint256 _chainId
-    ) public {
+        string memory version
+    )
+        internal
+        initializer
+    {
+        _setDomainSeperator(name, version);
+    }
+
+    function _setDomainSeperator(string memory name, string memory version) internal {
         domainSeperator = keccak256(
             abi.encode(
                 EIP712_DOMAIN_TYPEHASH,
                 keccak256(bytes(name)),
                 keccak256(bytes(version)),
-                _chainId,
-                address(this)
+                address(this),
+                bytes32(getChainId())
             )
         );
     }
 
-    function getDomainSeperator() private view returns (bytes32) {
+    function getDomainSeperator() public view returns (bytes32) {
         return domainSeperator;
+    }
+
+    function getChainId() public pure returns (uint256) {
+        uint256 id;
+        assembly {
+            id := chainid()
+        }
+        return id;
     }
 
     /**

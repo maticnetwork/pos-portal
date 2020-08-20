@@ -3,7 +3,7 @@ pragma solidity 0.6.6;
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {AccessControlMixin} from "../../common/AccessControlMixin.sol";
 import {IChildToken} from "./IChildToken.sol";
-import {NetworkAgnostic} from "../../common/NetworkAgnostic.sol";
+import {NativeMetaTransaction} from "../../common/NativeMetaTransaction.sol";
 import {ChainConstants} from "../../ChainConstants.sol";
 import {ContextMixin} from "../../common/ContextMixin.sol";
 
@@ -12,7 +12,7 @@ contract ChildERC20 is
     ERC20,
     IChildToken,
     AccessControlMixin,
-    NetworkAgnostic,
+    NativeMetaTransaction,
     ChainConstants,
     ContextMixin
 {
@@ -23,11 +23,12 @@ contract ChildERC20 is
         string memory symbol_,
         uint8 decimals_,
         address childChainManager
-    ) public ERC20(name_, symbol_) NetworkAgnostic(name_, ERC712_VERSION, ROOT_CHAIN_ID) {
+    ) public ERC20(name_, symbol_) {
         _setupContractId("ChildERC20");
         _setupDecimals(decimals_);
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
         _setupRole(DEPOSITOR_ROLE, childChainManager);
+        _initializeEIP712(name_, ERC712_VERSION);
     }
 
     function _msgSender()
