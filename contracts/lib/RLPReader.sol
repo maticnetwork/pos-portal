@@ -168,8 +168,7 @@ library RLPReader {
         uint256 currPtr = item.memPtr + _payloadOffset(item.memPtr);
         uint256 endPtr = item.memPtr + item.len;
         while (currPtr < endPtr) {
-            uint256 currLen = _itemLength(currPtr);
-            currPtr = currPtr + currLen; // skip over an item
+            currPtr = currPtr + _itemLength(currPtr); // skip over an item
             require(currPtr <= endPtr, "RLPReader: NUM_ITEMS_DECODED_LENGTH_MISMATCH");
             count++;
         }
