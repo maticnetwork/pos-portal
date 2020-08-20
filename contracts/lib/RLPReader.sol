@@ -109,11 +109,9 @@ library RLPReader {
         uint256 offset = _payloadOffset(item.memPtr);
         uint256 len = item.len - offset;
         uint256 result;
-        uint dataByte0;
         uint256 memPtr = item.memPtr + offset;
         assembly {
             result := mload(memPtr)
-            dataByte0 := byte(0, result)
 
             // shfit to the correct location if neccesary
             if lt(len, 32) {
@@ -171,11 +169,8 @@ library RLPReader {
         uint256 endPtr = item.memPtr + item.len;
         while (currPtr < endPtr) {
             uint256 currLen = _itemLength(currPtr);
-            currPtr = currPtr + currLen;
+            currPtr = currPtr + currLen; // skip over an item
             require(currPtr <= endPtr, "RLPReader: NUM_ITEMS_DECODED_LENGTH_MISMATCH");
-            count++;
-
-            currPtr = currPtr + _itemLength(currPtr); // skip over an item
             count++;
         }
 
