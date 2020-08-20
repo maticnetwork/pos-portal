@@ -20,7 +20,10 @@ export async function build(event) {
     receiptParentNodes: receiptProof.parentNodes,
     tx: getTxBytes(event.tx), // rlp encoded
     txParentNodes: txProof.parentNodes,
-    path: receiptProof.path,
+    path: Buffer.concat([
+      Buffer.from('00', 'hex'),
+      receiptProof.path
+    ]),
     number: event.receipt.blockNumber,
     timestamp: event.block.timestamp,
     transactionsRoot: Buffer.from(event.block.transactionsRoot.slice(2), 'hex'),
