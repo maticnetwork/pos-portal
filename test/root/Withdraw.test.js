@@ -179,7 +179,7 @@ contract('RootChainManager', async(accounts) => {
           bufferToHex(checkpointData.receiptsRoot),
           bufferToHex(checkpointData.receipt),
           bufferToHex(rlp.encode(checkpointData.receiptParentNodes)),
-          bufferToHex(rlp.encode(checkpointData.path)), // branch mask,
+          bufferToHex(checkpointData.path), // branch mask,
           logIndex
         ])
       )
@@ -202,7 +202,7 @@ contract('RootChainManager', async(accounts) => {
           bufferToHex(checkpointData.receiptsRoot),
           bufferToHex(dummyReceipt),
           bufferToHex(rlp.encode(checkpointData.receiptParentNodes)),
-          bufferToHex(rlp.encode(checkpointData.path)), // branch mask,
+          bufferToHex(checkpointData.path), // branch mask,
           logIndex
         ])
       )
@@ -226,7 +226,7 @@ contract('RootChainManager', async(accounts) => {
           bufferToHex(checkpointData.receiptsRoot),
           bufferToHex(dummyReceipt),
           bufferToHex(rlp.encode(checkpointData.receiptParentNodes)),
-          bufferToHex(rlp.encode(checkpointData.path)), // branch mask,
+          bufferToHex(checkpointData.path), // branch mask,
           logIndex
         ])
       )
@@ -248,7 +248,7 @@ contract('RootChainManager', async(accounts) => {
           bufferToHex(checkpointData.receiptsRoot),
           bufferToHex(checkpointData.receipt),
           bufferToHex(rlp.encode(checkpointData.receiptParentNodes)),
-          bufferToHex(rlp.encode(checkpointData.path)), // branch mask,
+          bufferToHex(checkpointData.path), // branch mask,
           logIndex
         ])
       )
@@ -270,7 +270,7 @@ contract('RootChainManager', async(accounts) => {
           bufferToHex(checkpointData.receiptsRoot),
           bufferToHex(checkpointData.receipt),
           bufferToHex(rlp.encode(checkpointData.receiptParentNodes)),
-          bufferToHex(rlp.encode(checkpointData.path)), // branch mask,
+          bufferToHex(checkpointData.path), // branch mask,
           logIndex
         ])
       )
@@ -291,7 +291,7 @@ contract('RootChainManager', async(accounts) => {
           bufferToHex(checkpointData.receiptsRoot),
           bufferToHex(checkpointData.receipt),
           bufferToHex(rlp.encode(checkpointData.receiptParentNodes)),
-          bufferToHex(rlp.encode(checkpointData.path)), // branch mask,
+          bufferToHex(checkpointData.path), // branch mask,
           logIndex
         ])
       )
@@ -315,7 +315,7 @@ contract('RootChainManager', async(accounts) => {
           bufferToHex(checkpointData.receiptsRoot),
           bufferToHex(dummyReceipt),
           bufferToHex(rlp.encode(checkpointData.receiptParentNodes)),
-          bufferToHex(rlp.encode(checkpointData.path)), // branch mask,
+          bufferToHex(checkpointData.path), // branch mask,
           logIndex
         ])
       )
@@ -336,7 +336,7 @@ contract('RootChainManager', async(accounts) => {
           bufferToHex(checkpointData.receiptsRoot),
           bufferToHex(checkpointData.receipt),
           bufferToHex(rlp.encode(checkpointData.receiptParentNodes)),
-          bufferToHex(rlp.encode(checkpointData.path)), // branch mask,
+          bufferToHex(checkpointData.path), // branch mask,
           logIndex
         ])
       )
@@ -357,7 +357,7 @@ contract('RootChainManager', async(accounts) => {
           bufferToHex(checkpointData.receiptsRoot),
           bufferToHex(checkpointData.receipt),
           bufferToHex(rlp.encode(checkpointData.receiptParentNodes)),
-          bufferToHex(rlp.encode(checkpointData.path)), // branch mask,
+          bufferToHex(checkpointData.path), // branch mask,
           logIndex
         ])
       )
@@ -483,7 +483,7 @@ contract('RootChainManager', async(accounts) => {
           bufferToHex(checkpointData.receiptsRoot),
           bufferToHex(checkpointData.receipt),
           bufferToHex(rlp.encode(checkpointData.receiptParentNodes)),
-          bufferToHex(rlp.encode(checkpointData.path)), // branch mask,
+          bufferToHex(checkpointData.path), // branch mask,
           logIndex
         ])
       )
@@ -508,7 +508,7 @@ contract('RootChainManager', async(accounts) => {
           bufferToHex(checkpointData.receiptsRoot),
           bufferToHex(dummyReceipt),
           bufferToHex(rlp.encode(checkpointData.receiptParentNodes)),
-          bufferToHex(rlp.encode(checkpointData.path)), // branch mask,
+          bufferToHex(checkpointData.path), // branch mask,
           logIndex
         ])
       )
@@ -532,7 +532,7 @@ contract('RootChainManager', async(accounts) => {
           bufferToHex(checkpointData.receiptsRoot),
           bufferToHex(dummyReceipt),
           bufferToHex(rlp.encode(checkpointData.receiptParentNodes)),
-          bufferToHex(rlp.encode(checkpointData.path)), // branch mask,
+          bufferToHex(checkpointData.path), // branch mask,
           logIndex
         ])
       )
@@ -554,7 +554,7 @@ contract('RootChainManager', async(accounts) => {
           bufferToHex(checkpointData.receiptsRoot),
           bufferToHex(checkpointData.receipt),
           bufferToHex(rlp.encode(checkpointData.receiptParentNodes)),
-          bufferToHex(rlp.encode(checkpointData.path)), // branch mask,
+          bufferToHex(checkpointData.path), // branch mask,
           logIndex
         ])
       )
@@ -575,7 +575,7 @@ contract('RootChainManager', async(accounts) => {
           bufferToHex(checkpointData.receiptsRoot),
           bufferToHex(checkpointData.receipt),
           bufferToHex(rlp.encode(checkpointData.receiptParentNodes)),
-          bufferToHex(rlp.encode(checkpointData.path)), // branch mask,
+          bufferToHex(checkpointData.path), // branch mask,
           logIndex
         ])
       )
@@ -596,7 +596,7 @@ contract('RootChainManager', async(accounts) => {
           bufferToHex(checkpointData.receiptsRoot),
           bufferToHex(checkpointData.receipt),
           bufferToHex(rlp.encode(checkpointData.receiptParentNodes)),
-          bufferToHex(rlp.encode(checkpointData.path)), // branch mask,
+          bufferToHex(checkpointData.path), // branch mask,
           logIndex
         ])
       )
@@ -617,7 +617,7 @@ contract('RootChainManager', async(accounts) => {
           bufferToHex(checkpointData.receiptsRoot),
           bufferToHex(checkpointData.receipt),
           bufferToHex(rlp.encode(checkpointData.receiptParentNodes)),
-          bufferToHex(rlp.encode(checkpointData.path)), // branch mask,
+          bufferToHex(checkpointData.path), // branch mask,
           logIndex
         ])
       )
@@ -755,7 +755,7 @@ contract('RootChainManager', async(accounts) => {
           bufferToHex(checkpointData.receiptsRoot),
           bufferToHex(checkpointData.receipt),
           bufferToHex(rlp.encode(checkpointData.receiptParentNodes)),
-          bufferToHex(rlp.encode(checkpointData.path)), // branch mask,
+          bufferToHex(checkpointData.path), // branch mask,
           logIndex
         ])
       )
@@ -778,7 +778,7 @@ contract('RootChainManager', async(accounts) => {
           bufferToHex(checkpointData.receiptsRoot),
           bufferToHex(dummyReceipt),
           bufferToHex(rlp.encode(checkpointData.receiptParentNodes)),
-          bufferToHex(rlp.encode(checkpointData.path)), // branch mask,
+          bufferToHex(checkpointData.path), // branch mask,
           logIndex
         ])
       )
@@ -802,7 +802,7 @@ contract('RootChainManager', async(accounts) => {
           bufferToHex(checkpointData.receiptsRoot),
           bufferToHex(dummyReceipt),
           bufferToHex(rlp.encode(checkpointData.receiptParentNodes)),
-          bufferToHex(rlp.encode(checkpointData.path)), // branch mask,
+          bufferToHex(checkpointData.path), // branch mask,
           logIndex
         ])
       )
@@ -824,7 +824,7 @@ contract('RootChainManager', async(accounts) => {
           bufferToHex(checkpointData.receiptsRoot),
           bufferToHex(checkpointData.receipt),
           bufferToHex(rlp.encode(checkpointData.receiptParentNodes)),
-          bufferToHex(rlp.encode(checkpointData.path)), // branch mask,
+          bufferToHex(checkpointData.path), // branch mask,
           logIndex
         ])
       )
@@ -845,7 +845,7 @@ contract('RootChainManager', async(accounts) => {
           bufferToHex(checkpointData.receiptsRoot),
           bufferToHex(checkpointData.receipt),
           bufferToHex(rlp.encode(checkpointData.receiptParentNodes)),
-          bufferToHex(rlp.encode(checkpointData.path)), // branch mask,
+          bufferToHex(checkpointData.path), // branch mask,
           logIndex
         ])
       )
@@ -867,7 +867,7 @@ contract('RootChainManager', async(accounts) => {
           bufferToHex(checkpointData.receiptsRoot),
           bufferToHex(checkpointData.receipt),
           bufferToHex(rlp.encode(checkpointData.receiptParentNodes)),
-          bufferToHex(rlp.encode(checkpointData.path)), // branch mask,
+          bufferToHex(checkpointData.path), // branch mask,
           logIndex
         ])
       )
@@ -888,7 +888,7 @@ contract('RootChainManager', async(accounts) => {
           bufferToHex(checkpointData.receiptsRoot),
           bufferToHex(checkpointData.receipt),
           bufferToHex(rlp.encode(checkpointData.receiptParentNodes)),
-          bufferToHex(rlp.encode(checkpointData.path)), // branch mask,
+          bufferToHex(checkpointData.path), // branch mask,
           logIndex
         ])
       )
@@ -1057,7 +1057,7 @@ contract('RootChainManager', async(accounts) => {
           bufferToHex(checkpointData.receiptsRoot),
           bufferToHex(checkpointData.receipt),
           bufferToHex(rlp.encode(checkpointData.receiptParentNodes)),
-          bufferToHex(rlp.encode(checkpointData.path)), // branch mask,
+          bufferToHex(checkpointData.path), // branch mask,
           logIndex
         ])
       )
@@ -1080,7 +1080,7 @@ contract('RootChainManager', async(accounts) => {
           bufferToHex(checkpointData.receiptsRoot),
           bufferToHex(dummyReceipt),
           bufferToHex(rlp.encode(checkpointData.receiptParentNodes)),
-          bufferToHex(rlp.encode(checkpointData.path)), // branch mask,
+          bufferToHex(checkpointData.path), // branch mask,
           logIndex
         ])
       )
@@ -1104,7 +1104,7 @@ contract('RootChainManager', async(accounts) => {
           bufferToHex(checkpointData.receiptsRoot),
           bufferToHex(dummyReceipt),
           bufferToHex(rlp.encode(checkpointData.receiptParentNodes)),
-          bufferToHex(rlp.encode(checkpointData.path)), // branch mask,
+          bufferToHex(checkpointData.path), // branch mask,
           logIndex
         ])
       )
@@ -1125,7 +1125,7 @@ contract('RootChainManager', async(accounts) => {
           bufferToHex(checkpointData.receiptsRoot),
           bufferToHex(checkpointData.receipt),
           bufferToHex(rlp.encode(checkpointData.receiptParentNodes)),
-          bufferToHex(rlp.encode(checkpointData.path)), // branch mask,
+          bufferToHex(checkpointData.path), // branch mask,
           logIndex
         ])
       )
@@ -1147,7 +1147,7 @@ contract('RootChainManager', async(accounts) => {
           bufferToHex(checkpointData.receiptsRoot),
           bufferToHex(checkpointData.receipt),
           bufferToHex(rlp.encode(checkpointData.receiptParentNodes)),
-          bufferToHex(rlp.encode(checkpointData.path)), // branch mask,
+          bufferToHex(checkpointData.path), // branch mask,
           logIndex
         ])
       )
@@ -1275,7 +1275,7 @@ contract('RootChainManager', async(accounts) => {
           bufferToHex(checkpointData1.receiptsRoot),
           bufferToHex(checkpointData1.receipt),
           bufferToHex(rlp.encode(checkpointData1.receiptParentNodes)),
-          bufferToHex(rlp.encode(checkpointData1.path)), // branch mask,
+          bufferToHex(checkpointData1.path), // branch mask,
           logIndex
         ])
       )
@@ -1355,7 +1355,7 @@ contract('RootChainManager', async(accounts) => {
           bufferToHex(checkpointData2.receiptsRoot),
           bufferToHex(checkpointData2.receipt),
           bufferToHex(rlp.encode(checkpointData2.receiptParentNodes)),
-          bufferToHex(rlp.encode(checkpointData2.path)), // branch mask,
+          bufferToHex(checkpointData2.path), // branch mask,
           logIndex
         ])
       )
