@@ -10,7 +10,7 @@ async function consume() {
     wallet, q, {
       from: config.from,
       gas: 6000000,
-      gasPrice: '45000000000' // 45 gwei
+      gasPrice: config.gasPrice
     },
     `${process.cwd()}/build`,
     0 // blockConfirmation

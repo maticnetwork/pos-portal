@@ -68,6 +68,7 @@ export PROVIDER_URL=
 export ROOT_CHAIN_ID=
 export CHILD_CHAIN_ID=
 export PLASMA_ROOT_CHAIN=
+export GAS_PRICE=
 ```
 
 3. Compile contracts
