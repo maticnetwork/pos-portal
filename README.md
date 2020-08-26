@@ -99,7 +99,7 @@ npm run truffle -- migrate --network mainnetChild --f 3 --to 3
 
 8. Add root chain initializations to queue
 ```bash
-npm run truffle exec moonwalker-migrations/queue-root-initializations.js
+node moonwalker-migrations/queue-root-initializations.js
 ```
 
 9. Process queue (rerun if interrupted)
