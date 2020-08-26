@@ -73,7 +73,7 @@ export PLASMA_ROOT_CHAIN=
 3. Compile contracts
 ```bash
 npm run template:process -- --root-chain-id $ROOT_CHAIN_ID --child-chain-id $CHILD_CHAIN_ID
-npm run truffle:compile
+npm run build
 ```
 
 4. Add root chain contract deployments to queue

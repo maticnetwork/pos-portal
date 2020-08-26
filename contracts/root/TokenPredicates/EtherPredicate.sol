@@ -19,6 +19,11 @@ contract EtherPredicate is ITokenPredicate, AccessControlMixin, Initializable {
         uint256 amount
     );
 
+    event ExitedEther(
+        address indexed exitor,
+        uint256 amount
+    );
+
     constructor() public {}
 
     function initialize(address _owner) external initializer {
@@ -83,6 +88,8 @@ contract EtherPredicate is ITokenPredicate, AccessControlMixin, Initializable {
             address(logTopicRLPList[2].toUint()) == address(0), // topic2 is to address
             "EtherPredicate: INVALID_RECEIVER"
         );
+
+        emit ExitedEther(withdrawer, logRLPList[2].toUint());
 
         payable(withdrawer).transfer(logRLPList[2].toUint());
     }
