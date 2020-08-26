@@ -71,6 +71,7 @@
     "ethers": "^4.0.46",
     "fs": "0.0.1-security",
     "glob": "^7.1.6",
+    "moonwalker": "github:atvanguard/moonwalker#4c4592e2d6c1744fbcd9452cf0f00e9beb236b21",
     "nunjucks": "^3.2.1",
     "solium": "^1.2.5",
     "truffle": "^5.1.21",
