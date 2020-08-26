@@ -86,6 +86,28 @@ module.exports = {
       gas: 7000000,
       gasPrice: 10000000000, // 10 gwei
       skipDryRun: true
+    },
+    mainnetRoot: {
+      provider: () =>
+        new HDWalletProvider(
+          MNEMONIC,
+          `https://mainnet.infura.io/v3/${API_KEY}`
+        ),
+      network_id: 1,
+      gas: 7000000,
+      gasPrice: 10000000000, // 10 gwei
+      skipDryRun: true
+    },
+    mainnetChild: {
+      provider: () =>
+        new HDWalletProvider(
+          MNEMONIC,
+          'https://rpc-mainnet.matic.network'
+        ),
+      network_id: 137,
+      gas: 7000000,
+      gasPrice: 10000000000, // 10 gwei
+      skipDryRun: true
     }
   },
 

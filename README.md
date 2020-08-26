@@ -94,7 +94,7 @@ node moonwalker-migrations/extract-addresses.js
 
 7. Deploy child chain contracts
 ```bash
-npm run truffle -- migrate --network mumbaiChild root --f 3 --to 3
+npm run truffle -- migrate --network mainnetChild --f 3 --to 3
 ```
 
 8. Add root chain initializations to queue
@@ -109,7 +109,7 @@ node moonwalker-migrations/process-queue.js
 
 10. Initialize child chain contracts
 ```bash
-npm run truffle -- migrate --network mumbaiChild root --f 5 --to 5
+npm run truffle -- migrate --network mainnetChild --f 5 --to 5
 ```
 
 11. Register State Sync
