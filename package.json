@@ -1,6 +1,6 @@
 {
   "name": "pos-portal",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Contracts to facilitate transfer of assets between main chain and matic chain using security of matic POS layer",
   "main": "index.js",
   "scripts": {
