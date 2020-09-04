@@ -97,6 +97,14 @@ const contractsToFlatten = [
   {
     path: 'contracts/child/ChildToken',
     fileName: 'MaticWETH.sol'
+  },
+  {
+    path: 'contracts/child/ChildToken/UpgradeableChildERC20',
+    fileName: 'UChildERC20.sol'
+  },
+  {
+    path: 'contracts/child/ChildToken/UpgradeableChildERC20',
+    fileName: 'UChildERC20Proxy.sol'
   }
 ]
 
