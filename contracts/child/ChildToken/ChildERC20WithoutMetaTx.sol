@@ -3,14 +3,12 @@ pragma solidity 0.6.6;
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {AccessControlMixin} from "../../common/AccessControlMixin.sol";
 import {IChildToken} from "./IChildToken.sol";
-import {ContextMixin} from "../../common/ContextMixin.sol";
 
 
 contract ChildERC20WithoutMetaTx is
     ERC20,
     IChildToken,
-    AccessControlMixin,
-    ContextMixin
+    AccessControlMixin
 {
     bytes32 public constant DEPOSITOR_ROLE = keccak256("DEPOSITOR_ROLE");
 
