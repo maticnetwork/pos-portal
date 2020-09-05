@@ -12,6 +12,7 @@ export const deployFreshRootContracts = async(accounts) => {
     erc1155PredicateLogic,
     etherPredicateLogic,
     dummyERC20,
+    DummyERC20WithoutMeta,
     dummyERC721,
     dummyMintableERC721,
     dummyERC1155
@@ -25,6 +26,7 @@ export const deployFreshRootContracts = async(accounts) => {
     contracts.ERC1155Predicate.new(),
     contracts.EtherPredicate.new(),
     contracts.DummyERC20.new('Dummy ERC20', 'DERC20'),
+    contracts.DummyERC20WithoutMeta.new('Dummy ERC20 Without Meta', 'DERC20'),
     contracts.DummyERC721.new('Dummy ERC721', 'DERC721'),
     contracts.DummyMintableERC721.new('Dummy Mintable ERC721', 'DMERC721'),
     contracts.DummyERC1155.new('Dummy ERC1155')
@@ -64,6 +66,7 @@ export const deployFreshRootContracts = async(accounts) => {
     erc1155Predicate,
     etherPredicate,
     dummyERC20,
+    DummyERC20WithoutMeta,
     dummyERC721,
     dummyMintableERC721,
     dummyERC1155
@@ -78,12 +81,14 @@ export const deployFreshChildContracts = async(accounts) => {
 
   const [
     dummyERC20,
+    dummyERC20WithoutMeta,
     dummyERC721,
     dummyMintableERC721,
     dummyERC1155,
     maticWETH
   ] = await Promise.all([
     contracts.ChildERC20.new('Dummy ERC20', 'DERC20', 18, childChainManager.address),
+    contracts.ChildERC20WithoutMetaTx.new('Dummy ERC20 Without Meta', 'DERC20', 18, childChainManager.address),
     contracts.ChildERC721.new('Dummy ERC721', 'DERC721', childChainManager.address),
     contracts.ChildMintableERC721.new('Dummy Mintable ERC721', 'DMERC721', childChainManager.address),
     contracts.ChildERC1155.new('Dummy ERC1155', childChainManager.address),
@@ -93,6 +98,7 @@ export const deployFreshChildContracts = async(accounts) => {
   return {
     childChainManager,
     dummyERC20,
+    dummyERC20WithoutMeta,
     dummyERC721,
     dummyMintableERC721,
     dummyERC1155,
@@ -120,6 +126,9 @@ export const deployInitializedContracts = async(accounts) => {
   await root.rootChainManager.registerPredicate(ERC20Type, root.erc20Predicate.address)
   await root.rootChainManager.mapToken(root.dummyERC20.address, child.dummyERC20.address, ERC20Type)
   await child.childChainManager.mapToken(root.dummyERC20.address, child.dummyERC20.address)
+
+  await root.rootChainManager.mapToken(root.dummyERC20WithoutMeta.address, child.dummyERC20WithoutMeta.address, ERC20Type)
+  await child.childChainManager.mapToken(root.dummyERC20WithoutMeta.address, child.dummyERC20WithoutMeta.address)
 
   const ERC721Type = await root.erc721Predicate.TOKEN_TYPE()
   await root.erc721Predicate.grantRole(MANAGER_ROLE, root.rootChainManager.address)

@@ -116,3 +116,9 @@ npm run truffle -- migrate --network mainnetChild --f 5 --to 5
 - Register RootChainManager and ChildChainManager on StateSender
 - Set stateSenderAddress on RootChainManager
 - Grant STATE_SYNCER_ROLE on ChildChainManager
+
+### For custom contracts
+
+If your contract is extending `NativeMetaTransaction`, please use `_msgSender()` method instead of `msg.sender. 
+
+By extending `NativeMetaTransaction` it will include `executeMetaTransaction` method. And that method will internally call the specified method. So, `msg.sender` will be the contract address instead of the actual sender.

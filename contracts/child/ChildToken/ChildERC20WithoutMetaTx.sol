@@ -3,20 +3,13 @@ pragma solidity 0.6.6;
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {AccessControlMixin} from "../../common/AccessControlMixin.sol";
 import {IChildToken} from "./IChildToken.sol";
-import {NativeMetaTransaction} from "../../common/NativeMetaTransaction.sol";
-import {ChainConstants} from "../../ChainConstants.sol";
 import {ContextMixin} from "../../common/ContextMixin.sol";
 
-//
-// If you are extending NativeMetaTransaction, please use `_msgSender()` method instead of `msg.sender, 
-// as in case of meta transaction, msg.sender will be contract address itself and using it will have unexpected behaviour.
-//
-contract ChildERC20 is
+
+contract ChildERC20WithoutMetaTx is
     ERC20,
     IChildToken,
     AccessControlMixin,
-    NativeMetaTransaction,
-    ChainConstants,
     ContextMixin
 {
     bytes32 public constant DEPOSITOR_ROLE = keccak256("DEPOSITOR_ROLE");
@@ -29,18 +22,7 @@ contract ChildERC20 is
     ) public ERC20(name_, symbol_) {
         _setupContractId("ChildERC20");
         _setupDecimals(decimals_);
-        _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
         _setupRole(DEPOSITOR_ROLE, childChainManager);
-        _initializeEIP712(name_, ERC712_VERSION);
-    }
-
-    function _msgSender()
-        internal
-        override
-        view
-        returns (address payable sender)
-    {
-        return ContextMixin.msgSender();
     }
 
     /**
@@ -66,6 +48,6 @@ contract ChildERC20 is
      * @param amount amount of tokens to withdraw
      */
     function withdraw(uint256 amount) external {
-        _burn(_msgSender(), amount);
+        _burn(msg.sender, amount);
     }
 }
