@@ -780,6 +780,8 @@ contract EIP712Base is Initializable {
         bytes32 salt;
     }
 
+    string constant public ERC712_VERSION = "1";
+
     bytes32 internal constant EIP712_DOMAIN_TYPEHASH = keccak256(
         bytes(
             "EIP712Domain(string name,string version,address verifyingContract,bytes32 salt)"
@@ -791,21 +793,20 @@ contract EIP712Base is Initializable {
     // one of the contractsa that inherits this contract follows proxy pattern
     // so it is not possible to do this in a constructor
     function _initializeEIP712(
-        string memory name,
-        string memory version
+        string memory name
     )
         internal
         initializer
     {
-        _setDomainSeperator(name, version);
+        _setDomainSeperator(name);
     }
 
-    function _setDomainSeperator(string memory name, string memory version) internal {
+    function _setDomainSeperator(string memory name) internal {
         domainSeperator = keccak256(
             abi.encode(
                 EIP712_DOMAIN_TYPEHASH,
                 keccak256(bytes(name)),
-                keccak256(bytes(version)),
+                keccak256(bytes(ERC712_VERSION)),
                 address(this),
                 bytes32(getChainId())
             )
@@ -1605,20 +1606,6 @@ contract AccessControlMixin is AccessControl {
     }
 }
 
-// File: contracts/ChainConstants.sol
-
-pragma solidity 0.6.6;
-
-contract ChainConstants {
-    string constant public ERC712_VERSION = "1";
-
-    uint256 constant public ROOT_CHAIN_ID = 1;
-    bytes constant public ROOT_CHAIN_ID_BYTES = hex"01";
-
-    uint256 constant public CHILD_CHAIN_ID = 137;
-    bytes constant public CHILD_CHAIN_ID_BYTES = hex"89";
-}
-
 // File: contracts/common/ContextMixin.sol
 
 pragma solidity 0.6.6;
@@ -1664,7 +1651,6 @@ pragma solidity 0.6.6;
 
 
 
-
 contract RootChainManager is
     IRootChainManager,
     Initializable,
@@ -1672,7 +1658,6 @@ contract RootChainManager is
     RootChainManagerStorage, // created to match old storage layout while upgrading
     AccessControlMixin,
     NativeMetaTransaction,
-    ChainConstants,
     ContextMixin
 {
     using RLPReader for bytes;
@@ -1714,7 +1699,7 @@ contract RootChainManager is
         external
         initializer
     {
-        _initializeEIP712("RootChainManager", ERC712_VERSION);
+        _initializeEIP712("RootChainManager");
         _setupContractId("RootChainManager");
         _setupRole(DEFAULT_ADMIN_ROLE, _owner);
         _setupRole(MAPPER_ROLE, _owner);
@@ -1733,7 +1718,7 @@ contract RootChainManager is
         external
         only(DEFAULT_ADMIN_ROLE)
     {
-        _setDomainSeperator("RootChainManager", ERC712_VERSION);
+        _setDomainSeperator("RootChainManager");
     }
 
     /**
