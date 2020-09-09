@@ -2,13 +2,11 @@ pragma solidity 0.6.6;
 
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {NativeMetaTransaction} from "../../common/NativeMetaTransaction.sol";
-import {ChainConstants} from "../../ChainConstants.sol";
 import {ContextMixin} from "../../common/ContextMixin.sol";
 
 contract DummyERC20 is
     ERC20,
     NativeMetaTransaction,
-    ChainConstants,
     ContextMixin
 {
     constructor(string memory name_, string memory symbol_)
@@ -17,7 +15,7 @@ contract DummyERC20 is
     {
         uint256 amount = 10**10 * (10**18);
         _mint(_msgSender(), amount);
-        _initializeEIP712(name_, ERC712_VERSION);
+        _initializeEIP712(name_);
     }
 
     function mint(uint256 amount) public {

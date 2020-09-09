@@ -10,6 +10,8 @@ contract EIP712Base is Initializable {
         bytes32 salt;
     }
 
+    string constant public ERC712_VERSION = "1";
+
     bytes32 internal constant EIP712_DOMAIN_TYPEHASH = keccak256(
         bytes(
             "EIP712Domain(string name,string version,address verifyingContract,bytes32 salt)"
@@ -21,21 +23,20 @@ contract EIP712Base is Initializable {
     // one of the contractsa that inherits this contract follows proxy pattern
     // so it is not possible to do this in a constructor
     function _initializeEIP712(
-        string memory name,
-        string memory version
+        string memory name
     )
         internal
         initializer
     {
-        _setDomainSeperator(name, version);
+        _setDomainSeperator(name);
     }
 
-    function _setDomainSeperator(string memory name, string memory version) internal {
+    function _setDomainSeperator(string memory name) internal {
         domainSeperator = keccak256(
             abi.encode(
                 EIP712_DOMAIN_TYPEHASH,
                 keccak256(bytes(name)),
-                keccak256(bytes(version)),
+                keccak256(bytes(ERC712_VERSION)),
                 address(this),
                 bytes32(getChainId())
             )

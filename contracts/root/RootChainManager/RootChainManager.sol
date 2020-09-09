@@ -13,7 +13,6 @@ import {Initializable} from "../../common/Initializable.sol";
 import {NativeMetaTransaction} from "../../common/NativeMetaTransaction.sol";
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 import {AccessControlMixin} from "../../common/AccessControlMixin.sol";
-import {ChainConstants} from "../../ChainConstants.sol";
 import {ContextMixin} from "../../common/ContextMixin.sol";
 
 contract RootChainManager is
@@ -23,7 +22,6 @@ contract RootChainManager is
     RootChainManagerStorage, // created to match old storage layout while upgrading
     AccessControlMixin,
     NativeMetaTransaction,
-    ChainConstants,
     ContextMixin
 {
     using RLPReader for bytes;
@@ -65,7 +63,7 @@ contract RootChainManager is
         external
         initializer
     {
-        _initializeEIP712("RootChainManager", ERC712_VERSION);
+        _initializeEIP712("RootChainManager");
         _setupContractId("RootChainManager");
         _setupRole(DEFAULT_ADMIN_ROLE, _owner);
         _setupRole(MAPPER_ROLE, _owner);
@@ -84,7 +82,7 @@ contract RootChainManager is
         external
         only(DEFAULT_ADMIN_ROLE)
     {
-        _setDomainSeperator("RootChainManager", ERC712_VERSION);
+        _setDomainSeperator("RootChainManager");
     }
 
     /**
