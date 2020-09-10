@@ -2,11 +2,8 @@ import chai from 'chai'
 import chaiAsPromised from 'chai-as-promised'
 import chaiBN from 'chai-bn'
 import BN from 'bn.js'
-import { defaultAbiCoder as abi } from 'ethers/utils/abi-coder'
 
-import * as deployer from '../helpers/deployer'
 import { mockValues } from '../helpers/constants'
-import logDecoder from '../helpers/log-decoder.js'
 import { expectRevert } from '@openzeppelin/test-helpers'
 import contracts from '../helpers/contracts'
 chai
@@ -16,7 +13,7 @@ chai
 
 const should = chai.should()
 
-contract.only('UChildERC20', (accounts) => {
+contract('UChildERC20', (accounts) => {
   describe('Only admin should be able to change name', () => {
     const cinnamon = 'Cinnamon'
     const staranise = 'Star anise'
