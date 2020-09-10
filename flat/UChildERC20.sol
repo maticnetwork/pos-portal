@@ -1527,6 +1527,10 @@ contract UChildERC20 is
         return ContextMixin.msgSender();
     }
 
+    function changeName(string calldata name_) external only(DEFAULT_ADMIN_ROLE) {
+        setName(name_);
+    }
+
     /**
      * @notice called when token is deposited on root chain
      * @dev Should be callable only by ChildChainManager
