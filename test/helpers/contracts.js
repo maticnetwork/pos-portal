@@ -25,6 +25,9 @@ const DummyERC1155 = artifacts.require('DummyERC1155')
 const ChildChainManager = artifacts.require('ChildChainManager')
 const ChildChainManagerProxy = artifacts.require('ChildChainManagerProxy')
 const ChildERC20 = artifacts.require('ChildERC20')
+const UChildERC20 = artifacts.require('UChildERC20')
+const UChildERC20Proxy = artifacts.require('UChildERC20Proxy')
+const TestUChildERC20 = artifacts.require('TestUChildERC20')
 const ChildERC721 = artifacts.require('ChildERC721')
 const ChildMintableERC721 = artifacts.require('ChildMintableERC721')
 const ChildERC1155 = artifacts.require('ChildERC1155')
@@ -68,6 +71,9 @@ setWeb3(DummyERC1155, rootWeb3)
 setWeb3(ChildChainManager, childWeb3)
 setWeb3(ChildChainManagerProxy, childWeb3)
 setWeb3(ChildERC20, childWeb3)
+setWeb3(UChildERC20, childWeb3)
+setWeb3(UChildERC20Proxy, childWeb3)
+setWeb3(TestUChildERC20, childWeb3)
 setWeb3(ChildERC721, childWeb3)
 setWeb3(ChildMintableERC721, childWeb3)
 setWeb3(ChildERC1155, childWeb3)
@@ -95,6 +101,9 @@ export default {
   ChildChainManager,
   ChildChainManagerProxy,
   ChildERC20,
+  UChildERC20,
+  UChildERC20Proxy,
+  TestUChildERC20,
   ChildERC721,
   ChildMintableERC721,
   ChildERC1155,

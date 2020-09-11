@@ -1,14 +1,14 @@
 pragma solidity 0.6.6;
 
-import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import {AccessControlMixin} from "../../common/AccessControlMixin.sol";
-import {IChildToken} from "./IChildToken.sol";
-import {NativeMetaTransaction} from "../../common/NativeMetaTransaction.sol";
-import {ChainConstants} from "../../ChainConstants.sol";
-import {ContextMixin} from "../../common/ContextMixin.sol";
+import {ERC20} from "./ERC20.sol";
+import {AccessControlMixin} from "../../../common/AccessControlMixin.sol";
+import {IChildToken} from "../IChildToken.sol";
+import {NativeMetaTransaction} from "../../../common/NativeMetaTransaction.sol";
+import {ChainConstants} from "../../../ChainConstants.sol";
+import {ContextMixin} from "../../../common/ContextMixin.sol";
 
 
-contract ChildERC20 is
+contract UChildERC20 is
     ERC20,
     IChildToken,
     AccessControlMixin,
@@ -18,17 +18,28 @@ contract ChildERC20 is
 {
     bytes32 public constant DEPOSITOR_ROLE = keccak256("DEPOSITOR_ROLE");
 
-    constructor(
-        string memory name_,
-        string memory symbol_,
+    constructor() public ERC20("", "") {}
+
+    /**
+     * @notice Initialize the contract after it has been proxified
+     * @dev meant to be called once immediately after deployment
+     */
+    function initialize(
+        string calldata name_,
+        string calldata symbol_,
         uint8 decimals_,
         address childChainManager
-    ) public ERC20(name_, symbol_) {
-        _setupContractId("ChildERC20");
-        _setupDecimals(decimals_);
-        _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
-        _setupRole(DEPOSITOR_ROLE, childChainManager);
-        _initializeEIP712(name_, ERC712_VERSION);
+    )
+        external
+        initializer
+    {
+      setName(name_);
+      setSymbol(symbol_);
+      setDecimals(decimals_);
+      _setupContractId(string(abi.encodePacked("Child", symbol_)));
+      _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
+      _setupRole(DEPOSITOR_ROLE, childChainManager);
+      _initializeEIP712(name_, ERC712_VERSION);
     }
 
     // This is to support Native meta transactions
@@ -40,6 +51,10 @@ contract ChildERC20 is
         returns (address payable sender)
     {
         return ContextMixin.msgSender();
+    }
+
+    function changeName(string calldata name_) external only(DEFAULT_ADMIN_ROLE) {
+        setName(name_);
     }
 
     /**

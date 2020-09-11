@@ -412,7 +412,7 @@ library Address {
     }
 }
 
-// File: @openzeppelin/contracts/token/ERC20/ERC20.sol
+// File: contracts/child/ChildToken/UpgradeableChildERC20/ERC20.sol
 
 // SPDX-License-Identifier: MIT
 
@@ -423,7 +423,15 @@ pragma solidity ^0.6.0;
 
 
 /**
- * @dev Implementation of the {IERC20} interface.
+ * Modified openzeppelin implemtation to add setters for name, symbol and decimals.
+ * This was needed because the variables cannot be set in constructor as the contract is upgradeable.
+ */
+
+/**
+ * @dev openzeppelin Implementation of the {IERC20} interface.
+ *
+ * Modified to add setters for name, symbol and decimals. This was needed
+ * because
  *
  * This implementation is agnostic to the way tokens are created. This means
  * that a supply mechanism has to be added in a derived contract using {_mint}.
@@ -482,12 +490,20 @@ contract ERC20 is Context, IERC20 {
         return _name;
     }
 
+    function setName(string memory newName) internal {
+      _name = newName;
+    }
+
     /**
      * @dev Returns the symbol of the token, usually a shorter version of the
      * name.
      */
     function symbol() public view returns (string memory) {
         return _symbol;
+    }
+
+    function setSymbol(string memory newSymbol) internal {
+      _symbol = newSymbol;
     }
 
     /**
@@ -505,6 +521,10 @@ contract ERC20 is Context, IERC20 {
      */
     function decimals() public view returns (uint8) {
         return _decimals;
+    }
+
+    function setDecimals(uint8 newDecimals) internal {
+      _decimals = newDecimals;
     }
 
     /**
@@ -1451,7 +1471,7 @@ abstract contract ContextMixin {
     }
 }
 
-// File: contracts/child/ChildToken/ChildERC20.sol
+// File: contracts/child/ChildToken/UpgradeableChildERC20/UChildERC20.sol
 
 pragma solidity 0.6.6;
 
@@ -1462,7 +1482,7 @@ pragma solidity 0.6.6;
 
 
 
-contract ChildERC20 is
+contract UChildERC20 is
     ERC20,
     IChildToken,
     AccessControlMixin,
@@ -1472,17 +1492,28 @@ contract ChildERC20 is
 {
     bytes32 public constant DEPOSITOR_ROLE = keccak256("DEPOSITOR_ROLE");
 
-    constructor(
-        string memory name_,
-        string memory symbol_,
+    constructor() public ERC20("", "") {}
+
+    /**
+     * @notice Initialize the contract after it has been proxified
+     * @dev meant to be called once immediately after deployment
+     */
+    function initialize(
+        string calldata name_,
+        string calldata symbol_,
         uint8 decimals_,
         address childChainManager
-    ) public ERC20(name_, symbol_) {
-        _setupContractId("ChildERC20");
-        _setupDecimals(decimals_);
-        _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
-        _setupRole(DEPOSITOR_ROLE, childChainManager);
-        _initializeEIP712(name_, ERC712_VERSION);
+    )
+        external
+        initializer
+    {
+      setName(name_);
+      setSymbol(symbol_);
+      setDecimals(decimals_);
+      _setupContractId(string(abi.encodePacked("Child", symbol_)));
+      _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
+      _setupRole(DEPOSITOR_ROLE, childChainManager);
+      _initializeEIP712(name_, ERC712_VERSION);
     }
 
     // This is to support Native meta transactions
@@ -1494,6 +1525,10 @@ contract ChildERC20 is
         returns (address payable sender)
     {
         return ContextMixin.msgSender();
+    }
+
+    function changeName(string calldata name_) external only(DEFAULT_ADMIN_ROLE) {
+        setName(name_);
     }
 
     /**
@@ -1521,13 +1556,4 @@ contract ChildERC20 is
     function withdraw(uint256 amount) external {
         _burn(_msgSender(), amount);
     }
-}
-
-// File: contracts/child/ChildToken/MaticWETH.sol
-
-pragma solidity 0.6.6;
-
-
-contract MaticWETH is ChildERC20 {
-    constructor(address childChainManager) public ChildERC20("Wrapped Ether", "WETH", 18, childChainManager) {}
 }
