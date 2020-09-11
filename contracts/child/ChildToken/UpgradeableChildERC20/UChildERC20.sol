@@ -55,6 +55,7 @@ contract UChildERC20 is
 
     function changeName(string calldata name_) external only(DEFAULT_ADMIN_ROLE) {
         setName(name_);
+        _setDomainSeperator(name_, ERC712_VERSION);
     }
 
     /**
