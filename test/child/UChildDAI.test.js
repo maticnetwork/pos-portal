@@ -40,7 +40,7 @@ contract('UChildDAI', (accounts) => {
 
     it('Contract should be initialized properly', async() => {
       const name = await uChildDAI.name()
-      name.should.equal(cinnamon)
+      name.should.equal(staranise)
       const _symbol = await uChildDAI.symbol()
       _symbol.should.equal(symbol)
       const _decimals = await uChildDAI.decimals()
