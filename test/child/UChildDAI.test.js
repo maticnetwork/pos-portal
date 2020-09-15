@@ -38,6 +38,15 @@ contract('UChildDAI', (accounts) => {
       await uChildDAI.changeName(staranise, { from: admin })
     })
 
+    it('Contract should be initialized properly', async() => {
+      const name = await uChildDAI.name()
+      name.should.equal(cinnamon)
+      const _symbol = await uChildDAI.symbol()
+      _symbol.should.equal(symbol)
+      const _decimals = await uChildDAI.decimals()
+      _decimals.should.equal(decimals)
+    })
+
     it(`Admin should be able to permit jill to spend jack's tokens using offline signature`, async() => {
       const name = await uChildDAI.name()
       const chainId = await uChildDAI.getChainId()
