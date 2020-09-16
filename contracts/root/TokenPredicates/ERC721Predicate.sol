@@ -15,11 +15,20 @@ contract ERC721Predicate is ITokenPredicate, AccessControlMixin, Initializable, 
     bytes32 public constant TOKEN_TYPE = keccak256("ERC721");
     bytes32 public constant TRANSFER_EVENT_SIG = 0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef;
 
+    // limit batching of tokens due to gas limit restrictions
+    uint256 public constant BATCH_LIMIT = 20;
+
     event LockedERC721(
         address indexed depositor,
         address indexed depositReceiver,
         address indexed rootToken,
         uint256 tokenId
+    );
+    event LockedERC721Batch(
+        address indexed depositor,
+        address indexed depositReceiver,
+        address indexed rootToken,
+        uint256[] tokenIds
     );
 
     constructor() public {}
@@ -63,9 +72,22 @@ contract ERC721Predicate is ITokenPredicate, AccessControlMixin, Initializable, 
         override
         only(MANAGER_ROLE)
     {
-        uint256 tokenId = abi.decode(depositData, (uint256));
-        emit LockedERC721(depositor, depositReceiver, rootToken, tokenId);
-        IERC721(rootToken).safeTransferFrom(depositor, address(this), tokenId);
+        // deposit single
+        if (depositData.length == 32) {
+            uint256 tokenId = abi.decode(depositData, (uint256));
+            emit LockedERC721(depositor, depositReceiver, rootToken, tokenId);
+            IERC721(rootToken).safeTransferFrom(depositor, address(this), tokenId);
+
+        // deposit batch
+        } else {
+            uint256[] memory tokenIds = abi.decode(depositData, (uint256[]));
+            emit LockedERC721Batch(depositor, depositReceiver, rootToken, tokenIds);
+            uint256 length = tokenIds.length;
+            require(length <= BATCH_LIMIT, "ERC721Predicate: EXCEEDS_BATCH_LIMIT");
+            for (uint256 i; i < length; i++) {
+                IERC721(rootToken).safeTransferFrom(depositor, address(this), tokenIds[i]);
+            }
+        }
     }
 
     /**

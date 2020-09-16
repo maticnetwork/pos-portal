@@ -641,6 +641,148 @@ contract('RootChainManager', async(accounts) => {
     })
   })
 
+  describe('Batch deposit ERC721', async() => {
+    const tokenId1 = mockValues.numbers[4]
+    const tokenId2 = mockValues.numbers[5]
+    const tokenId3 = mockValues.numbers[6]
+    const depositForAccount = mockValues.addresses[0]
+    let contracts
+    let dummyERC721
+    let rootChainManager
+    let depositTx
+    let lockedLog
+    let stateSyncedlog
+
+    before(async() => {
+      contracts = await deployer.deployInitializedContracts(accounts)
+      dummyERC721 = contracts.root.dummyERC721
+      rootChainManager = contracts.root.rootChainManager
+      await dummyERC721.mint(tokenId1)
+      await dummyERC721.mint(tokenId2)
+      await dummyERC721.mint(tokenId3)
+    })
+
+    it('Depositor should have the tokens', async() => {
+      {
+        const owner = await dummyERC721.ownerOf(tokenId1)
+        owner.should.equal(accounts[0])
+      }
+      {
+        const owner = await dummyERC721.ownerOf(tokenId2)
+        owner.should.equal(accounts[0])
+      }
+      {
+        const owner = await dummyERC721.ownerOf(tokenId3)
+        owner.should.equal(accounts[0])
+      }
+    })
+
+    it('Depositor should be able to approve and deposit', async() => {
+      await dummyERC721.setApprovalForAll(contracts.root.erc721Predicate.address, true)
+      const depositData = abi.encode(
+        ['uint256[]'],
+        [
+          [tokenId1.toString(), tokenId2.toString(), tokenId3.toString()]
+        ]
+      )
+      depositTx = await rootChainManager.depositFor(depositForAccount, dummyERC721.address, depositData)
+      should.exist(depositTx)
+    })
+
+    it('Should emit LockedERC721Batch log', () => {
+      const logs = logDecoder.decodeLogs(depositTx.receipt.rawLogs)
+      lockedLog = logs.find(l => l.event === 'LockedERC721Batch')
+      should.exist(lockedLog)
+    })
+
+    describe('Correct values should be emitted in LockedERC721Batch log', () => {
+      it('Event should be emitted by correct contract', () => {
+        lockedLog.address.should.equal(
+          contracts.root.erc721Predicate.address.toLowerCase()
+        )
+      })
+
+      it('Should emit proper depositor', () => {
+        lockedLog.args.depositor.should.equal(accounts[0])
+      })
+
+      it('Should emit proper token ids', () => {
+        const lockedLogTokenIds = lockedLog.args.tokenIds.map(t => t.toNumber())
+        lockedLogTokenIds.should.include(tokenId1)
+        lockedLogTokenIds.should.include(tokenId2)
+        lockedLogTokenIds.should.include(tokenId3)
+      })
+
+      it('Should emit proper deposit receiver', () => {
+        lockedLog.args.depositReceiver.should.equal(depositForAccount)
+      })
+
+      it('Should emit proper root token', () => {
+        lockedLog.args.rootToken.should.equal(dummyERC721.address)
+      })
+    })
+
+    it('Should Emit StateSynced log', () => {
+      const logs = logDecoder.decodeLogs(depositTx.receipt.rawLogs)
+      stateSyncedlog = logs.find(l => l.event === 'StateSynced')
+      should.exist(stateSyncedlog)
+    })
+
+    describe('Correct values should be emitted in StateSynced log', () => {
+      let depositReceiver, rootToken, depositData
+      before(() => {
+        const [, syncData] = abi.decode(['bytes32', 'bytes'], stateSyncedlog.args.data)
+        const data = abi.decode(['address', 'address', 'bytes'], syncData)
+        depositReceiver = data[0]
+        rootToken = data[1]
+        depositData = data[2]
+      })
+
+      it('Event should be emitted by correct contract', () => {
+        stateSyncedlog.address.should.equal(
+          contracts.root.dummyStateSender.address.toLowerCase()
+        )
+      })
+
+      it('Should emit proper deposit receiver', () => {
+        depositReceiver.should.equal(depositForAccount)
+      })
+
+      it('Should emit proper root token', () => {
+        rootToken.should.equal(dummyERC721.address)
+      })
+
+      it('Should emit proper token ids', () => {
+        const [tokenIds] = abi.decode(['uint256[]'], depositData)
+        const tokenIdNumbers = tokenIds.map(t => t.toNumber())
+        tokenIdNumbers.should.include(tokenId1)
+        tokenIdNumbers.should.include(tokenId2)
+        tokenIdNumbers.should.include(tokenId3)
+      })
+
+      it('Should emit proper contract address', () => {
+        stateSyncedlog.args.contractAddress.should.equal(
+          contracts.child.childChainManager.address
+        )
+      })
+    })
+
+    it('Tokens should be transfered to correct contract', async() => {
+      {
+        const owner = await dummyERC721.ownerOf(tokenId1)
+        owner.should.equal(contracts.root.erc721Predicate.address)
+      }
+      {
+        const owner = await dummyERC721.ownerOf(tokenId2)
+        owner.should.equal(contracts.root.erc721Predicate.address)
+      }
+      {
+        const owner = await dummyERC721.ownerOf(tokenId3)
+        owner.should.equal(contracts.root.erc721Predicate.address)
+      }
+    })
+  })
+
   describe('Deposit ERC721 for zero address', async() => {
     const depositTokenId = mockValues.numbers[4]
     const depositForAccount = mockValues.zeroAddress

@@ -2168,8 +2168,19 @@ contract ChildERC721 is
         override
         only(DEPOSITOR_ROLE)
     {
-        uint256 tokenId = abi.decode(depositData, (uint256));
-        _mint(user, tokenId);
+        // deposit single
+        if (depositData.length == 32) {
+            uint256 tokenId = abi.decode(depositData, (uint256));
+            _mint(user, tokenId);
+
+        // deposit batch
+        } else {
+            uint256[] memory tokenIds = abi.decode(depositData, (uint256[]));
+            uint256 length = tokenIds.length;
+            for (uint256 i; i < length; i++) {
+                _mint(user, tokenIds[i]);
+            }
+        }
     }
 
     /**
