@@ -1,13 +1,23 @@
 pragma solidity ^0.6.6;
 
 
-import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
-import {IStateSender} from "./root/StateSender/IStateSender.sol";
-import {RLPReader} from "./lib/RLPReader.sol";
-import {MerklePatriciaProof} from "./lib/MerklePatriciaProof.sol";
-import {ICheckpointManager} from "./root/RootChainManager/ICheckpointManager.sol";
+import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 
-contract MessageTunnel is AccessControl {
+import {AccessControlMixin} from "../common/AccessControlMixin.sol";
+import {IStateSender} from "../root/StateSender/IStateSender.sol";
+import {RLPReader} from "../lib/RLPReader.sol";
+import {MerklePatriciaProof} from "../lib/MerklePatriciaProof.sol";
+import {ICheckpointManager} from "../root/ICheckpointManager.sol";
+import {RLPReader} from "../lib/RLPReader.sol";
+import {MerklePatriciaProof} from "../lib/MerklePatriciaProof.sol";
+import {Merkle} from "../lib/Merkle.sol";
+
+abstract contract BaseRootTunnel is AccessControlMixin {
+    using RLPReader for bytes;
+    using RLPReader for RLPReader.RLPItem;
+    using Merkle for bytes32;
+    using SafeMath for uint256;
+
     bytes32 public constant SENDER_MANAGER_ROLE = keccak256("SENDER_MANAGER_ROLE");
     bytes32 public constant RECEIVER_MANAGER_ROLE = keccak256("RECEIVER_MANAGER_ROLE");
   
@@ -23,7 +33,7 @@ contract MessageTunnel is AccessControl {
     // storage to avoid duplicate exits
     mapping(bytes32 => bool) public processedExits;
 
-    constructor() {
+    constructor() public {
       _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
@@ -67,7 +77,7 @@ contract MessageTunnel is AccessControl {
   
     // send message from L1 to L2
     function sendMessage(bytes calldata data) external only(SENDER_MANAGER_ROLE) {
-        stateSender.syncState(childTunnelContract, data);
+        stateSender.syncState(childTunnel, data);
     }
 
     // receive message from L2 to L1
@@ -87,7 +97,7 @@ contract MessageTunnel is AccessControl {
      *  8 - branchMask - 32 bits denoting the path of receipt in merkle tree
      *  9 - receiptLogIndex - Log Index to read from the receipt
      */
-    function receiveMessage(bytes calldata inputData) public override only(RECEIVER_MANAGER_ROLE) {
+    function receiveMessage(bytes memory inputData) public only(RECEIVER_MANAGER_ROLE) {
         RLPReader.RLPItem[] memory inputDataRLPList = inputData
             .toRlpItem()
             .toList();
@@ -118,9 +128,11 @@ contract MessageTunnel is AccessControl {
             .toList()[
                 inputDataRLPList[9].toUint() // receiptLogIndex
             ];
+
+        RLPReader.RLPItem[] memory logRLPList = logRLP.toList();
         
         // check child tunnel
-        require(childTunnel == RLPReader.toAddress(logRLP.toList()[0]), "INVALID_CHILD_TUNNEL");
+        require(childTunnel == RLPReader.toAddress(logRLPList[0]), "INVALID_CHILD_TUNNEL");
 
         // verify receipt inclusion
         require(
@@ -143,25 +155,16 @@ contract MessageTunnel is AccessControl {
             inputDataRLPList[1].toBytes() // blockProof
         );
 
-        RLPReader.RLPItem[] memory logRLPList = log.toRlpItem().toList();
         RLPReader.RLPItem[] memory logTopicRLPList = logRLPList[1].toList(); // topics
 
         require(
             bytes32(logTopicRLPList[0].toUint()) == SEND_MESSAGE_EVENT_SIG, // topic0 is event sig
             "INVALID_SIGNATURE"
         );
-        require(
-            withdrawer == address(logTopicRLPList[1].toUint()), // topic1 is from address
-            "INVALID_SENDER"
-        );
-        require(
-            address(logTopicRLPList[2].toUint()) == address(0), // topic2 is to address
-            "INVALID_RECEIVER"
-        );
         
         // received message data
         bytes memory receivedData = logRLPList[2].toBytes();
-        _processMessage(receivedData);
+        processMessage(receivedData);
     }
 
     function _checkBlockMembershipInCheckpoint(
@@ -178,7 +181,7 @@ contract MessageTunnel is AccessControl {
             ,
             uint256 createdAt,
 
-        ) = _checkpointManager.headerBlocks(headerNumber);
+        ) = checkpointManager.headerBlocks(headerNumber);
 
         require(
             keccak256(
@@ -195,7 +198,5 @@ contract MessageTunnel is AccessControl {
     }
 
     // process message
-    function _processMessage(bytes memory message) internal {
-
-    }
+    function processMessage(bytes memory message) virtual internal;
 }
