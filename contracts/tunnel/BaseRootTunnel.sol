@@ -164,7 +164,8 @@ abstract contract BaseRootTunnel is AccessControlMixin {
         
         // received message data
         bytes memory receivedData = logRLPList[2].toBytes();
-        processMessage(receivedData);
+        (bytes memory message) = abi.decode(receivedData, (bytes)); // event decodes params again, so decoding bytes to get message
+        processMessage(message);
     }
 
     function _checkBlockMembershipInCheckpoint(

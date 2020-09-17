@@ -13,6 +13,10 @@ abstract contract BaseChildTunnel is AccessControlMixin {
     // MessageTunnel on L1 will get data from this event
     event SendMessage(bytes);
 
+    constructor() public {
+      _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
+    }
+
     // This method will be called by Matic chain internally, without transaction. 
     // It's called `system-call`.
     // It won't generate any event log since it's not a transaction based state change.

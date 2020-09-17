@@ -14,7 +14,8 @@ export const deployFreshRootContracts = async(accounts) => {
     dummyERC20,
     dummyERC721,
     dummyMintableERC721,
-    dummyERC1155
+    dummyERC1155,
+    testRootTunnel,
   ] = await Promise.all([
     contracts.MockCheckpointManager.new(),
     contracts.RootChainManager.new(),
@@ -27,7 +28,8 @@ export const deployFreshRootContracts = async(accounts) => {
     contracts.DummyERC20.new('Dummy ERC20', 'DERC20'),
     contracts.DummyERC721.new('Dummy ERC721', 'DERC721'),
     contracts.DummyMintableERC721.new('Dummy Mintable ERC721', 'DMERC721'),
-    contracts.DummyERC1155.new('Dummy ERC1155')
+    contracts.DummyERC1155.new('Dummy ERC1155'),
+    contracts.TestRootTunnel.new()
   ])
 
   const rootChainManagerProxy = await contracts.RootChainManagerProxy.new('0x0000000000000000000000000000000000000000')
@@ -66,7 +68,8 @@ export const deployFreshRootContracts = async(accounts) => {
     dummyERC20,
     dummyERC721,
     dummyMintableERC721,
-    dummyERC1155
+    dummyERC1155,
+    testRootTunnel
   }
 }
 
@@ -81,13 +84,15 @@ export const deployFreshChildContracts = async(accounts) => {
     dummyERC721,
     dummyMintableERC721,
     dummyERC1155,
-    maticWETH
+    maticWETH,
+    testChildTunnel
   ] = await Promise.all([
     contracts.ChildERC20.new('Dummy ERC20', 'DERC20', 18, childChainManager.address),
     contracts.ChildERC721.new('Dummy ERC721', 'DERC721', childChainManager.address),
     contracts.ChildMintableERC721.new('Dummy Mintable ERC721', 'DMERC721', childChainManager.address),
     contracts.ChildERC1155.new('Dummy ERC1155', childChainManager.address),
-    contracts.MaticWETH.new(childChainManager.address)
+    contracts.MaticWETH.new(childChainManager.address),
+    contracts.TestChildTunnel.new()
   ])
 
   return {
@@ -96,7 +101,8 @@ export const deployFreshChildContracts = async(accounts) => {
     dummyERC721,
     dummyMintableERC721,
     dummyERC1155,
-    maticWETH
+    maticWETH,
+    testChildTunnel
   }
 }
 
@@ -147,6 +153,11 @@ export const deployInitializedContracts = async(accounts) => {
   await root.rootChainManager.registerPredicate(EtherType, root.etherPredicate.address)
   await root.rootChainManager.mapToken(etherAddress, child.maticWETH.address, EtherType)
   await child.childChainManager.mapToken(etherAddress, child.maticWETH.address)
+
+  // tunnel setup
+  await root.testRootTunnel.setCheckpointManager(root.checkpointManager.address)
+  await root.testRootTunnel.setStateSender(root.dummyStateSender.address)
+  await root.testRootTunnel.setChildTunnel(child.testChildTunnel.address)
 
   return { root, child }
 }
