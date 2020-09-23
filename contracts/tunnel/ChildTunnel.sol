@@ -4,7 +4,7 @@ import {BaseChildTunnel} from "./BaseChildTunnel.sol";
 
 
 contract ChildTunnel is BaseChildTunnel {
-    function processMessage(bytes memory message) override internal {
+    function _processMessageFromRoot(bytes memory message) internal override {
       // implement your core logic here
     }
 }

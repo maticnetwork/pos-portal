@@ -8,7 +8,7 @@ contract TestChildTunnel is BaseChildTunnel {
     bytes32 public constant TYPE1 = keccak256("TYPE1");
     bytes32 public constant TYPE2 = keccak256("TYPE2");
 
-    function processMessage(bytes memory message) override internal {
+    function _processMessageFromRoot(bytes memory message) internal override {
         (bytes32 syncType, uint256 n) = abi.decode(
             message,
             (bytes32, uint256)

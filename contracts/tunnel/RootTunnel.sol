@@ -4,7 +4,7 @@ import {BaseRootTunnel} from "./BaseRootTunnel.sol";
 
 
 contract RootTunnel is BaseRootTunnel {
-    function processMessage(bytes memory message) override internal {
+    function _processMessageFromChild(bytes memory message) internal override {
       // implement your core logic here
     }
 }
