@@ -36,12 +36,6 @@ contract('Tunnel', async(accounts) => {
 
     const STATE_SYNCER_ROLE = await testChildTunnel.STATE_SYNCER_ROLE()
     await testChildTunnel.grantRole(STATE_SYNCER_ROLE, accounts[0])
-
-    const CHILD_SENDER_ROLE = await testChildTunnel.CHILD_SENDER_ROLE()
-    await testChildTunnel.grantRole(CHILD_SENDER_ROLE, accounts[0])
-
-    const RECEIVER_MANAGER_ROLE = await testRootTunnel.RECEIVER_MANAGER_ROLE()
-    await testRootTunnel.grantRole(RECEIVER_MANAGER_ROLE, accounts[0])
   })
 
   it('should receive message on L2 with type1', async() => {

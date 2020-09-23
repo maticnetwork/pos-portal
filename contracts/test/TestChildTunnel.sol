@@ -20,4 +20,8 @@ contract TestChildTunnel is BaseChildTunnel {
             number = number - n; // sub
         }
     }
+
+    function sendMessage(bytes calldata message) external {
+        _sendMessageToRoot(message);
+    }
 }
