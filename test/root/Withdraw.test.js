@@ -23,6 +23,7 @@ chai
 const should = chai.should()
 
 const ERC721_TRANSFER_EVENT_SIG = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef'
+const ERC721_WITHDRAW_BATCH_EVENT_SIG = '0xf871896b17e9cb7a64941c62c188a4f5c621b86800e3d15452ece01ce56073df'
 const STATE_SYNCED_EVENT_SIG = '0x103fed9db65eac19c4d870f49ab7520fe03b99f1838e5996caf47e9e43308392'
 
 // submit checkpoint
@@ -644,6 +645,167 @@ contract('RootChainManager', async(accounts) => {
       newContractBalance.should.be.a.bignumber.that.equals(
         contractBalance.sub(withdrawAmount)
       )
+    })
+  })
+
+  describe.only('Withdraw batch ERC721', async() => {
+    const tokenId1 = mockValues.numbers[4]
+    const tokenId2 = mockValues.numbers[5]
+    const tokenId3 = mockValues.numbers[8]
+    const user = accounts[0]
+    const depositData = abi.encode(
+      ['uint256[]'],
+      [
+        [tokenId1.toString(), tokenId2.toString(), tokenId3.toString()]
+      ]
+    )
+    let contracts
+    let rootToken
+    let childToken
+    let rootChainManager
+    let checkpointManager
+    let erc721Predicate
+    let withdrawTx
+    let checkpointData
+    let headerNumber
+    let exitTx
+
+    before(async() => {
+      contracts = await deployer.deployInitializedContracts(accounts)
+      rootToken = contracts.root.dummyERC721
+      childToken = contracts.child.dummyERC721
+      rootChainManager = contracts.root.rootChainManager
+      checkpointManager = contracts.root.checkpointManager
+      erc721Predicate = contracts.root.erc721Predicate
+      await rootToken.mint(tokenId1)
+      await rootToken.mint(tokenId2)
+      await rootToken.mint(tokenId3)
+    })
+
+    it('User should own tokens on root chain', async() => {
+      {
+        const owner = await rootToken.ownerOf(tokenId1)
+        owner.should.equal(user)
+      }
+      {
+        const owner = await rootToken.ownerOf(tokenId2)
+        owner.should.equal(user)
+      }
+      {
+        const owner = await rootToken.ownerOf(tokenId3)
+        owner.should.equal(user)
+      }
+    })
+
+    it('Tokens should not exist on child chain', async() => {
+      await expectRevert(childToken.ownerOf(tokenId1), 'ERC721: owner query for nonexistent token')
+      await expectRevert(childToken.ownerOf(tokenId2), 'ERC721: owner query for nonexistent token')
+      await expectRevert(childToken.ownerOf(tokenId3), 'ERC721: owner query for nonexistent token')
+    })
+
+    it('User should be able to approve and deposit', async() => {
+      await rootToken.setApprovalForAll(erc721Predicate.address, true)
+      const depositTx = await rootChainManager.depositFor(user, rootToken.address, depositData)
+      should.exist(depositTx)
+      const syncTx = await syncState({ tx: depositTx, contracts })
+      should.exist(syncTx)
+    })
+
+    it('Predicate should own tokens on root chain', async() => {
+      {
+        const owner = await rootToken.ownerOf(tokenId1)
+        owner.should.equal(erc721Predicate.address)
+      }
+      {
+        const owner = await rootToken.ownerOf(tokenId2)
+        owner.should.equal(erc721Predicate.address)
+      }
+      {
+        const owner = await rootToken.ownerOf(tokenId3)
+        owner.should.equal(erc721Predicate.address)
+      }
+    })
+
+    it('User should own tokens on child chain', async() => {
+      {
+        const owner = await childToken.ownerOf(tokenId1)
+        owner.should.equal(user)
+      }
+      {
+        const owner = await childToken.ownerOf(tokenId2)
+        owner.should.equal(user)
+      }
+      {
+        const owner = await childToken.ownerOf(tokenId3)
+        owner.should.equal(user)
+      }
+    })
+
+    it('User should be able to start withdraw', async() => {
+      withdrawTx = await childToken.withdrawBatch([tokenId1, tokenId2, tokenId3])
+      should.exist(withdrawTx)
+    })
+
+    it('Should submit checkpoint', async() => {
+      // submit checkpoint including burn (withdraw) tx
+      checkpointData = await submitCheckpoint(checkpointManager, withdrawTx.receipt)
+      should.exist(checkpointData)
+    })
+
+    it('Should match checkpoint details', async() => {
+      const root = bufferToHex(checkpointData.header.root)
+      should.exist(root)
+
+      // fetch latest header number
+      headerNumber = await checkpointManager.currentCheckpointNumber()
+      headerNumber.should.be.bignumber.gt('0')
+
+      // fetch header block details and validate
+      const headerData = await checkpointManager.headerBlocks(headerNumber)
+      root.should.equal(headerData.root)
+    })
+
+    it('User should be able to exit', async() => {
+      const logIndex = withdrawTx.receipt.rawLogs
+        .findIndex(log => log.topics[0].toLowerCase() === ERC721_WITHDRAW_BATCH_EVENT_SIG.toLowerCase())
+      const data = bufferToHex(
+        rlp.encode([
+          headerNumber,
+          bufferToHex(Buffer.concat(checkpointData.proof)),
+          checkpointData.number,
+          checkpointData.timestamp,
+          bufferToHex(checkpointData.transactionsRoot),
+          bufferToHex(checkpointData.receiptsRoot),
+          bufferToHex(checkpointData.receipt),
+          bufferToHex(rlp.encode(checkpointData.receiptParentNodes)),
+          bufferToHex(checkpointData.path), // branch mask,
+          logIndex
+        ])
+      )
+      // start exit
+      exitTx = await contracts.root.rootChainManager.exit(data, { from: user })
+      should.exist(exitTx)
+    })
+
+    it('User should own tokens on root chain', async() => {
+      {
+        const owner = await rootToken.ownerOf(tokenId1)
+        owner.should.equal(user)
+      }
+      {
+        const owner = await rootToken.ownerOf(tokenId2)
+        owner.should.equal(user)
+      }
+      {
+        const owner = await rootToken.ownerOf(tokenId3)
+        owner.should.equal(user)
+      }
+    })
+
+    it('Tokens should not exist on child chain', async() => {
+      await expectRevert(childToken.ownerOf(tokenId1), 'ERC721: owner query for nonexistent token')
+      await expectRevert(childToken.ownerOf(tokenId2), 'ERC721: owner query for nonexistent token')
+      await expectRevert(childToken.ownerOf(tokenId3), 'ERC721: owner query for nonexistent token')
     })
   })
 
