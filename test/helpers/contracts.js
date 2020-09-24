@@ -21,6 +21,7 @@ const DummyERC20 = artifacts.require('DummyERC20')
 const DummyERC721 = artifacts.require('DummyERC721')
 const DummyMintableERC721 = artifacts.require('DummyMintableERC721')
 const DummyERC1155 = artifacts.require('DummyERC1155')
+const TestRootTunnel = artifacts.require('TestRootTunnel')
 
 const ChildChainManager = artifacts.require('ChildChainManager')
 const ChildChainManagerProxy = artifacts.require('ChildChainManagerProxy')
@@ -33,6 +34,7 @@ const ChildERC721 = artifacts.require('ChildERC721')
 const ChildMintableERC721 = artifacts.require('ChildMintableERC721')
 const ChildERC1155 = artifacts.require('ChildERC1155')
 const MaticWETH = artifacts.require('MaticWETH')
+const TestChildTunnel = artifacts.require('TestChildTunnel')
 
 const rootProvider = new Web3.providers.HttpProvider(rootRPC)
 const childProvider = new Web3.providers.HttpProvider(childRPC)
@@ -67,6 +69,7 @@ setWeb3(DummyERC20, rootWeb3)
 setWeb3(DummyERC721, rootWeb3)
 setWeb3(DummyMintableERC721, rootWeb3)
 setWeb3(DummyERC1155, rootWeb3)
+setWeb3(TestRootTunnel, rootWeb3)
 
 // contracts on child chain
 setWeb3(ChildChainManager, childWeb3)
@@ -80,6 +83,7 @@ setWeb3(ChildERC721, childWeb3)
 setWeb3(ChildMintableERC721, childWeb3)
 setWeb3(ChildERC1155, childWeb3)
 setWeb3(MaticWETH, childWeb3)
+setWeb3(TestChildTunnel, childWeb3)
 
 export default {
   MockCheckpointManager,
@@ -100,6 +104,8 @@ export default {
   DummyERC721,
   DummyMintableERC721,
   DummyERC1155,
+  TestRootTunnel,
+
   ChildChainManager,
   ChildChainManagerProxy,
   ChildERC20,
@@ -110,5 +116,6 @@ export default {
   ChildERC721,
   ChildMintableERC721,
   ChildERC1155,
-  MaticWETH
+  MaticWETH,
+  TestChildTunnel
 }
