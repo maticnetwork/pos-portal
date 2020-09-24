@@ -648,7 +648,7 @@ contract('RootChainManager', async(accounts) => {
     })
   })
 
-  describe.only('Withdraw batch ERC721', async() => {
+  describe('Withdraw batch ERC721', async() => {
     const tokenId1 = mockValues.numbers[4]
     const tokenId2 = mockValues.numbers[5]
     const tokenId3 = mockValues.numbers[8]
