@@ -79,7 +79,7 @@ contract('Tunnel', async(accounts) => {
     root.should.equal(headerData.root)
   })
 
-  it('should start exit', async() => {
+  it('should be able to call receive message', async() => {
     const logIndex = 0
     const data = bufferToHex(
       rlp.encode([
@@ -101,12 +101,12 @@ contract('Tunnel', async(accounts) => {
     should.exist(receivedTx)
   })
 
-  it('should set state after exit', async() => {
+  it('should set state receiving message', async() => {
     const number = await contracts.root.testRootTunnel.receivedNumber()
     number.should.be.bignumber.that.equals('3')
   })
 
-  it('should fail after starting exit again', async() => {
+  it('should fail while receiveing same message again', async() => {
     const logIndex = 0
     const data = bufferToHex(
       rlp.encode([
