@@ -10,7 +10,7 @@ import * as deployer from '../helpers/deployer'
 import { mockValues } from '../helpers/constants'
 import { childWeb3 } from '../helpers/contracts'
 import logDecoder from '../helpers/log-decoder'
-import { build as buildCheckpoint } from '../helpers/checkpoint'
+import { submitCheckpoint } from '../helpers/checkpoint'
 import { getFakeReceiptBytes, getDiffEncodedReceipt } from '../helpers/proofs'
 import { constructERC1155DepositData } from '../helpers/utils'
 
@@ -25,32 +25,6 @@ const should = chai.should()
 const ERC721_TRANSFER_EVENT_SIG = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef'
 const ERC721_WITHDRAW_BATCH_EVENT_SIG = '0xf871896b17e9cb7a64941c62c188a4f5c621b86800e3d15452ece01ce56073df'
 const STATE_SYNCED_EVENT_SIG = '0x103fed9db65eac19c4d870f49ab7520fe03b99f1838e5996caf47e9e43308392'
-
-// submit checkpoint
-const submitCheckpoint = async(checkpointManager, receiptObj) => {
-  const tx = await childWeb3.eth.getTransaction(receiptObj.transactionHash)
-  const receipt = await childWeb3.eth.getTransactionReceipt(
-    receiptObj.transactionHash
-  )
-  const block = await childWeb3.eth.getBlock(
-    receipt.blockHash,
-    true /* returnTransactionObjects */
-  )
-  const event = {
-    tx,
-    receipt,
-    block
-  }
-  // build checkpoint
-  const checkpointData = await buildCheckpoint(event)
-  const root = bufferToHex(checkpointData.header.root)
-
-  // submit checkpoint including burn (withdraw) tx
-  await checkpointManager.setCheckpoint(root, block.number, block.number)
-
-  // return checkpoint data
-  return checkpointData
-}
 
 const toHex = (buf) => {
   buf = buf.toString('hex')
