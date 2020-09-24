@@ -14,7 +14,7 @@ abstract contract BaseChildTunnel is AccessControlMixin {
 
     constructor() internal {
       _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
-      _setupRole(STATE_SYNCER_ROLE, msg.sender);
+      _setupRole(STATE_SYNCER_ROLE, 0x0000000000000000000000000000000000001001);
       _setupContractId("ChildTunnel");
     }
 

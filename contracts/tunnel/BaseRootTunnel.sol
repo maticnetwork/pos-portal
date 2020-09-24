@@ -18,7 +18,7 @@ abstract contract BaseRootTunnel is AccessControlMixin {
     using Merkle for bytes32;
     using SafeMath for uint256;
 
-    // keccak256(SendMessage(bytes))
+    // keccak256(MessageSent(bytes))
     bytes32 public constant SEND_MESSAGE_EVENT_SIG = 0x8c5261668696ce22758910d05bab8f186d6eb247ceac2af2e82c7dc17669b036;
 
     // state sender contract
