@@ -87,8 +87,6 @@ interface IChildChainManager {
     event TokenMapped(address indexed rootToken, address indexed childToken);
 
     function mapToken(address rootToken, address childToken) external;
-
-    function onStateReceive(uint256 id, bytes calldata data) external;
 }
 
 // File: contracts/child/ChildToken/IChildToken.sol
@@ -769,6 +767,14 @@ contract AccessControlMixin is AccessControl {
     }
 }
 
+// File: contracts/child/IStateReceiver.sol
+
+pragma solidity 0.6.6;
+
+interface IStateReceiver {
+    function onStateReceive(uint256 id, bytes calldata data) external;
+}
+
 // File: contracts/child/ChildChainManager/ChildChainManager.sol
 
 pragma solidity 0.6.6;
@@ -778,7 +784,13 @@ pragma solidity 0.6.6;
 
 
 
-contract ChildChainManager is IChildChainManager, Initializable, AccessControlMixin {
+
+contract ChildChainManager is
+    IChildChainManager,
+    Initializable,
+    AccessControlMixin,
+    IStateReceiver
+{
     bytes32 public constant DEPOSIT = keccak256("DEPOSIT");
     bytes32 public constant MAP_TOKEN = keccak256("MAP_TOKEN");
     bytes32 public constant MAPPER_ROLE = keccak256("MAPPER_ROLE");

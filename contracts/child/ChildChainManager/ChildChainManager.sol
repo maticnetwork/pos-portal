@@ -5,8 +5,14 @@ import {IChildChainManager} from "./IChildChainManager.sol";
 import {IChildToken} from "../ChildToken/IChildToken.sol";
 import {Initializable} from "../../common/Initializable.sol";
 import {AccessControlMixin} from "../../common/AccessControlMixin.sol";
+import {IStateReceiver} from "../IStateReceiver.sol";
 
-contract ChildChainManager is IChildChainManager, Initializable, AccessControlMixin {
+contract ChildChainManager is
+    IChildChainManager,
+    Initializable,
+    AccessControlMixin,
+    IStateReceiver
+{
     bytes32 public constant DEPOSIT = keccak256("DEPOSIT");
     bytes32 public constant MAP_TOKEN = keccak256("MAP_TOKEN");
     bytes32 public constant MAPPER_ROLE = keccak256("MAPPER_ROLE");
