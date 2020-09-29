@@ -196,3 +196,71 @@ export const deployInitializedTunnelContracts = async() => {
 
   return { root, child }
 }
+
+export const deployPotatoContracts = async(accounts) => {
+  // deploy pos portal contracts
+  const [
+    rootChainManager,
+    stateSender,
+    erc20Predicate,
+    childChainManager
+  ] = await Promise.all([
+    contracts.RootChainManager.new(),
+    contracts.DummyStateSender.new(),
+    contracts.ERC20Predicate.new(),
+    contracts.ChildChainManager.new()
+  ])
+
+  // init pos portal contracts
+  await Promise.all([
+    rootChainManager.initialize(accounts[0]),
+    erc20Predicate.initialize(accounts[0]),
+    childChainManager.initialize(accounts[0])
+  ])
+
+  // read constants
+  const [
+    MANAGER_ROLE,
+    ERC20Type
+  ] = await Promise.all([
+    erc20Predicate.MANAGER_ROLE(),
+    erc20Predicate.TOKEN_TYPE()
+  ])
+
+  // set values on pos portal contracts
+  await Promise.all([
+    rootChainManager.setStateSender(stateSender.address),
+    rootChainManager.setChildChainManagerAddress(childChainManager.address),
+    erc20Predicate.grantRole(MANAGER_ROLE, rootChainManager.address),
+    rootChainManager.registerPredicate(ERC20Type, erc20Predicate.address)
+  ])
+
+  // deploy potato contracts
+  const rootPotatoToken = await contracts.RootPotatoToken.new()
+  const childPotatoToken = await contracts.ChildPotatoToken.new(childChainManager.address)
+  const childPotatoFarm = await contracts.ChildPotatoFarm.new(childPotatoToken.address)
+  const childPotatoMigrator = await contracts.ChildPotatoMigrator.new(childPotatoToken.address, childPotatoFarm.address)
+  const rootPotatoMigrator = await contracts.RootPotatoMigrator.new(
+    stateSender.address,
+    rootPotatoToken.address,
+    rootChainManager.address,
+    erc20Predicate.address,
+    childPotatoMigrator.address
+  )
+
+  // map potato tokens
+  await rootChainManager.mapToken(rootPotatoToken.address, childPotatoToken.address, ERC20Type)
+  await childChainManager.mapToken(rootPotatoToken.address, childPotatoToken.address)
+
+  return {
+    rootChainManager,
+    stateSender,
+    erc20Predicate,
+    childChainManager,
+    rootPotatoMigrator,
+    rootPotatoToken,
+    childPotatoFarm,
+    childPotatoMigrator,
+    childPotatoToken
+  }
+}
