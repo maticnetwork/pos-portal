@@ -30,7 +30,7 @@ contract('Tunnel', async(accounts) => {
   let receivedTx
 
   before(async() => {
-    contracts = await deployer.deployInitializedContracts(accounts)
+    contracts = await deployer.deployInitializedTunnelContracts(accounts)
     testRootTunnel = contracts.root.testRootTunnel
     testChildTunnel = contracts.child.testChildTunnel
 
