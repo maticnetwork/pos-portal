@@ -35,6 +35,7 @@ const ChildMintableERC721 = artifacts.require('ChildMintableERC721')
 const ChildERC1155 = artifacts.require('ChildERC1155')
 const MaticWETH = artifacts.require('MaticWETH')
 const TestChildTunnel = artifacts.require('TestChildTunnel')
+const IStateReceiver = artifacts.require('IStateReceiver')
 
 const rootProvider = new Web3.providers.HttpProvider(rootRPC)
 const childProvider = new Web3.providers.HttpProvider(childRPC)
@@ -84,6 +85,7 @@ setWeb3(ChildMintableERC721, childWeb3)
 setWeb3(ChildERC1155, childWeb3)
 setWeb3(MaticWETH, childWeb3)
 setWeb3(TestChildTunnel, childWeb3)
+setWeb3(IStateReceiver, childWeb3)
 
 export default {
   MockCheckpointManager,
@@ -117,5 +119,6 @@ export default {
   ChildMintableERC721,
   ChildERC1155,
   MaticWETH,
-  TestChildTunnel
+  TestChildTunnel,
+  IStateReceiver
 }
