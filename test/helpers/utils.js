@@ -71,11 +71,15 @@ export const getSignatureParameters = (signature) => {
 }
 
 export const syncState = async({ tx }) => {
-  const evt = tx.receipt.rawLogs.find(l => l.topics[0] === STATE_SYNCED_EVENT_SIG)
-  const [contractAddress] = abi.decode(['address'], evt.topics[2])
-  const stateReceiverContract = await contracts.IStateReceiver.at(contractAddress)
-  const [syncData] = abi.decode(['bytes'], evt.data)
-  const syncId = evt.topics[1]
-  const stateReceiveTx = await stateReceiverContract.onStateReceive(syncId, syncData)
-  return stateReceiveTx
+  const evtList = tx.receipt.rawLogs.filter(l => l.topics[0] === STATE_SYNCED_EVENT_SIG)
+  const stateReceiveTxList = []
+  for (const evt of evtList) {
+    const [contractAddress] = abi.decode(['address'], evt.topics[2])
+    const stateReceiverContract = await contracts.IStateReceiver.at(contractAddress)
+    const [syncData] = abi.decode(['bytes'], evt.data)
+    const syncId = evt.topics[1]
+    const stateReceiveTx = await stateReceiverContract.onStateReceive(syncId, syncData)
+    stateReceiveTxList.push(stateReceiveTx)
+  }
+  return stateReceiveTxList
 }
