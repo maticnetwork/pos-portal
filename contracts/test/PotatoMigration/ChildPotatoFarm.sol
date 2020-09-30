@@ -2,6 +2,7 @@ pragma solidity 0.6.6;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
+// This is where potatoes are planted to earn harvest
 contract ChildPotatoFarm {
   IERC20 potato;
   mapping(address => uint) public plantedAmount;
