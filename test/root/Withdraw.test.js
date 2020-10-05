@@ -12,7 +12,7 @@ import { childWeb3 } from '../helpers/contracts'
 import logDecoder from '../helpers/log-decoder'
 import { submitCheckpoint } from '../helpers/checkpoint'
 import { getFakeReceiptBytes, getDiffEncodedReceipt } from '../helpers/proofs'
-import { constructERC1155DepositData } from '../helpers/utils'
+import { constructERC1155DepositData, syncState } from '../helpers/utils'
 
 // Enable and inject BN dependency
 chai
@@ -24,7 +24,6 @@ const should = chai.should()
 
 const ERC721_TRANSFER_EVENT_SIG = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef'
 const ERC721_WITHDRAW_BATCH_EVENT_SIG = '0xf871896b17e9cb7a64941c62c188a4f5c621b86800e3d15452ece01ce56073df'
-const STATE_SYNCED_EVENT_SIG = '0x103fed9db65eac19c4d870f49ab7520fe03b99f1838e5996caf47e9e43308392'
 
 const toHex = (buf) => {
   buf = buf.toString('hex')
@@ -36,14 +35,6 @@ function pad(n, width, z) {
   z = z || '0'
   n = n + ''
   return n.length >= width ? n : new Array(width - n.length + 1).join(z) + n
-}
-
-const syncState = async({ tx, contracts }) => {
-  const evt = tx.receipt.rawLogs.find(l => l.topics[0] === STATE_SYNCED_EVENT_SIG)
-  const [syncData] = abi.decode(['bytes'], evt.data)
-  const syncId = evt.topics[1]
-  const stateReceiveTx = await contracts.child.childChainManager.onStateReceive(syncId, syncData)
-  return stateReceiveTx
 }
 
 contract('RootChainManager', async(accounts) => {
@@ -77,7 +68,7 @@ contract('RootChainManager', async(accounts) => {
       const depositTx = await rootChainManager.depositFor(depositReceiver, dummyERC20.address, depositData)
       should.exist(depositTx)
       totalDepositedAmount = totalDepositedAmount.add(depositAmount)
-      const syncTx = await syncState({ tx: depositTx, contracts })
+      const syncTx = await syncState({ tx: depositTx })
       should.exist(syncTx)
     })
 
@@ -88,7 +79,7 @@ contract('RootChainManager', async(accounts) => {
       const depositTx = await rootChainManager.depositFor(accounts[2], dummyERC20.address, depositData, { from: accounts[2] })
       should.exist(depositTx)
       totalDepositedAmount = totalDepositedAmount.add(depositAmount)
-      const syncTx = await syncState({ tx: depositTx, contracts })
+      const syncTx = await syncState({ tx: depositTx })
       should.exist(syncTx)
     })
 
@@ -392,7 +383,7 @@ contract('RootChainManager', async(accounts) => {
       await dummyERC721.approve(contracts.root.erc721Predicate.address, depositTokenId)
       const depositTx = await rootChainManager.depositFor(depositReceiver, dummyERC721.address, depositData)
       should.exist(depositTx)
-      const syncTx = await syncState({ tx: depositTx, contracts })
+      const syncTx = await syncState({ tx: depositTx })
       should.exist(syncTx)
     })
 
@@ -681,7 +672,7 @@ contract('RootChainManager', async(accounts) => {
       await rootToken.setApprovalForAll(erc721Predicate.address, true)
       const depositTx = await rootChainManager.depositFor(user, rootToken.address, depositData)
       should.exist(depositTx)
-      const syncTx = await syncState({ tx: depositTx, contracts })
+      const syncTx = await syncState({ tx: depositTx })
       should.exist(syncTx)
     })
 
@@ -825,7 +816,7 @@ contract('RootChainManager', async(accounts) => {
       await dummyERC1155.setApprovalForAll(contracts.root.erc1155Predicate.address, true)
       const depositTx = await rootChainManager.depositFor(depositReceiver, dummyERC1155.address, depositData)
       should.exist(depositTx)
-      const syncTx = await syncState({ tx: depositTx, contracts })
+      const syncTx = await syncState({ tx: depositTx })
       should.exist(syncTx)
     })
 
@@ -1106,7 +1097,7 @@ contract('RootChainManager', async(accounts) => {
       await dummyERC1155.setApprovalForAll(contracts.root.erc1155Predicate.address, true)
       const depositTx = await rootChainManager.depositFor(depositReceiver, dummyERC1155.address, depositData)
       should.exist(depositTx)
-      const syncTx = await syncState({ tx: depositTx, contracts })
+      const syncTx = await syncState({ tx: depositTx })
       should.exist(syncTx)
     })
 
@@ -1429,7 +1420,7 @@ contract('RootChainManager', async(accounts) => {
       const depositData = abi.encode(['uint256'], [tokenId.toString()])
       const depositTx = await rootChainManager.depositFor(alice, rootMintableERC721.address, depositData, { from: alice })
       should.exist(depositTx)
-      const syncTx = await syncState({ tx: depositTx, contracts })
+      const syncTx = await syncState({ tx: depositTx })
       should.exist(syncTx)
     })
 
@@ -1515,7 +1506,7 @@ contract('RootChainManager', async(accounts) => {
       const depositData = abi.encode(['uint256'], [tokenId.toString()])
       const depositTx = await rootChainManager.depositFor(daniel, rootMintableERC721.address, depositData, { from: charlie })
       should.exist(depositTx)
-      const syncTx = await syncState({ tx: depositTx, contracts })
+      const syncTx = await syncState({ tx: depositTx })
       should.exist(syncTx)
     })
 

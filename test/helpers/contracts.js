@@ -22,6 +22,8 @@ const DummyERC721 = artifacts.require('DummyERC721')
 const DummyMintableERC721 = artifacts.require('DummyMintableERC721')
 const DummyERC1155 = artifacts.require('DummyERC1155')
 const TestRootTunnel = artifacts.require('TestRootTunnel')
+const RootPotatoMigrator = artifacts.require('RootPotatoMigrator')
+const RootPotatoToken = artifacts.require('RootPotatoToken')
 
 const ChildChainManager = artifacts.require('ChildChainManager')
 const ChildChainManagerProxy = artifacts.require('ChildChainManagerProxy')
@@ -35,6 +37,10 @@ const ChildMintableERC721 = artifacts.require('ChildMintableERC721')
 const ChildERC1155 = artifacts.require('ChildERC1155')
 const MaticWETH = artifacts.require('MaticWETH')
 const TestChildTunnel = artifacts.require('TestChildTunnel')
+const IStateReceiver = artifacts.require('IStateReceiver')
+const ChildPotatoFarm = artifacts.require('ChildPotatoFarm')
+const ChildPotatoMigrator = artifacts.require('ChildPotatoMigrator')
+const ChildPotatoToken = artifacts.require('ChildPotatoToken')
 
 const rootProvider = new Web3.providers.HttpProvider(rootRPC)
 const childProvider = new Web3.providers.HttpProvider(childRPC)
@@ -70,6 +76,8 @@ setWeb3(DummyERC721, rootWeb3)
 setWeb3(DummyMintableERC721, rootWeb3)
 setWeb3(DummyERC1155, rootWeb3)
 setWeb3(TestRootTunnel, rootWeb3)
+setWeb3(RootPotatoMigrator, rootWeb3)
+setWeb3(RootPotatoToken, rootWeb3)
 
 // contracts on child chain
 setWeb3(ChildChainManager, childWeb3)
@@ -84,6 +92,10 @@ setWeb3(ChildMintableERC721, childWeb3)
 setWeb3(ChildERC1155, childWeb3)
 setWeb3(MaticWETH, childWeb3)
 setWeb3(TestChildTunnel, childWeb3)
+setWeb3(IStateReceiver, childWeb3)
+setWeb3(ChildPotatoFarm, childWeb3)
+setWeb3(ChildPotatoMigrator, childWeb3)
+setWeb3(ChildPotatoToken, childWeb3)
 
 export default {
   MockCheckpointManager,
@@ -105,6 +117,8 @@ export default {
   DummyMintableERC721,
   DummyERC1155,
   TestRootTunnel,
+  RootPotatoMigrator,
+  RootPotatoToken,
 
   ChildChainManager,
   ChildChainManagerProxy,
@@ -117,5 +131,9 @@ export default {
   ChildMintableERC721,
   ChildERC1155,
   MaticWETH,
-  TestChildTunnel
+  TestChildTunnel,
+  IStateReceiver,
+  ChildPotatoFarm,
+  ChildPotatoMigrator,
+  ChildPotatoToken
 }

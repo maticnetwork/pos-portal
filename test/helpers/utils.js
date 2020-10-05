@@ -3,6 +3,9 @@ import { defaultAbiCoder as abi } from 'ethers/utils/abi-coder'
 import bip39 from 'bip39'
 import hdkey from 'ethereumjs-wallet/hdkey'
 import packageJSON from '../../package.json'
+import contracts from './contracts'
+
+const STATE_SYNCED_EVENT_SIG = '0x103fed9db65eac19c4d870f49ab7520fe03b99f1838e5996caf47e9e43308392'
 
 export const encodeStateSyncerData = (user, rootToken, amount) => {
   return '0x' +
@@ -65,4 +68,18 @@ export const getSignatureParameters = (signature) => {
   let v = parseInt(_v)
   if (![27, 28].includes(v)) v += 27
   return { r, s, v }
+}
+
+export const syncState = async({ tx }) => {
+  const evtList = tx.receipt.rawLogs.filter(l => l.topics[0] === STATE_SYNCED_EVENT_SIG)
+  const stateReceiveTxList = []
+  for (const evt of evtList) {
+    const [contractAddress] = abi.decode(['address'], evt.topics[2])
+    const stateReceiverContract = await contracts.IStateReceiver.at(contractAddress)
+    const [syncData] = abi.decode(['bytes'], evt.data)
+    const syncId = evt.topics[1]
+    const stateReceiveTx = await stateReceiverContract.onStateReceive(syncId, syncData)
+    stateReceiveTxList.push(stateReceiveTx)
+  }
+  return stateReceiveTxList
 }
