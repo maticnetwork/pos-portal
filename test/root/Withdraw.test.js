@@ -10,9 +10,9 @@ import * as deployer from '../helpers/deployer'
 import { mockValues } from '../helpers/constants'
 import { childWeb3 } from '../helpers/contracts'
 import logDecoder from '../helpers/log-decoder'
-import { build as buildCheckpoint } from '../helpers/checkpoint'
+import { submitCheckpoint } from '../helpers/checkpoint'
 import { getFakeReceiptBytes, getDiffEncodedReceipt } from '../helpers/proofs'
-import { constructERC1155DepositData } from '../helpers/utils'
+import { constructERC1155DepositData, syncState } from '../helpers/utils'
 
 // Enable and inject BN dependency
 chai
@@ -23,33 +23,7 @@ chai
 const should = chai.should()
 
 const ERC721_TRANSFER_EVENT_SIG = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef'
-const STATE_SYNCED_EVENT_SIG = '0x103fed9db65eac19c4d870f49ab7520fe03b99f1838e5996caf47e9e43308392'
-
-// submit checkpoint
-const submitCheckpoint = async(checkpointManager, receiptObj) => {
-  const tx = await childWeb3.eth.getTransaction(receiptObj.transactionHash)
-  const receipt = await childWeb3.eth.getTransactionReceipt(
-    receiptObj.transactionHash
-  )
-  const block = await childWeb3.eth.getBlock(
-    receipt.blockHash,
-    true /* returnTransactionObjects */
-  )
-  const event = {
-    tx,
-    receipt,
-    block
-  }
-  // build checkpoint
-  const checkpointData = await buildCheckpoint(event)
-  const root = bufferToHex(checkpointData.header.root)
-
-  // submit checkpoint including burn (withdraw) tx
-  await checkpointManager.setCheckpoint(root, block.number, block.number)
-
-  // return checkpoint data
-  return checkpointData
-}
+const ERC721_WITHDRAW_BATCH_EVENT_SIG = '0xf871896b17e9cb7a64941c62c188a4f5c621b86800e3d15452ece01ce56073df'
 
 const toHex = (buf) => {
   buf = buf.toString('hex')
@@ -61,14 +35,6 @@ function pad(n, width, z) {
   z = z || '0'
   n = n + ''
   return n.length >= width ? n : new Array(width - n.length + 1).join(z) + n
-}
-
-const syncState = async({ tx, contracts }) => {
-  const evt = tx.receipt.rawLogs.find(l => l.topics[0] === STATE_SYNCED_EVENT_SIG)
-  const [syncData] = abi.decode(['bytes'], evt.data)
-  const syncId = evt.topics[1]
-  const stateReceiveTx = await contracts.child.childChainManager.onStateReceive(syncId, syncData)
-  return stateReceiveTx
 }
 
 contract('RootChainManager', async(accounts) => {
@@ -102,7 +68,7 @@ contract('RootChainManager', async(accounts) => {
       const depositTx = await rootChainManager.depositFor(depositReceiver, dummyERC20.address, depositData)
       should.exist(depositTx)
       totalDepositedAmount = totalDepositedAmount.add(depositAmount)
-      const syncTx = await syncState({ tx: depositTx, contracts })
+      const syncTx = await syncState({ tx: depositTx })
       should.exist(syncTx)
     })
 
@@ -113,7 +79,7 @@ contract('RootChainManager', async(accounts) => {
       const depositTx = await rootChainManager.depositFor(accounts[2], dummyERC20.address, depositData, { from: accounts[2] })
       should.exist(depositTx)
       totalDepositedAmount = totalDepositedAmount.add(depositAmount)
-      const syncTx = await syncState({ tx: depositTx, contracts })
+      const syncTx = await syncState({ tx: depositTx })
       should.exist(syncTx)
     })
 
@@ -417,7 +383,7 @@ contract('RootChainManager', async(accounts) => {
       await dummyERC721.approve(contracts.root.erc721Predicate.address, depositTokenId)
       const depositTx = await rootChainManager.depositFor(depositReceiver, dummyERC721.address, depositData)
       should.exist(depositTx)
-      const syncTx = await syncState({ tx: depositTx, contracts })
+      const syncTx = await syncState({ tx: depositTx })
       should.exist(syncTx)
     })
 
@@ -647,6 +613,167 @@ contract('RootChainManager', async(accounts) => {
     })
   })
 
+  describe('Withdraw batch ERC721', async() => {
+    const tokenId1 = mockValues.numbers[4]
+    const tokenId2 = mockValues.numbers[5]
+    const tokenId3 = mockValues.numbers[8]
+    const user = accounts[0]
+    const depositData = abi.encode(
+      ['uint256[]'],
+      [
+        [tokenId1.toString(), tokenId2.toString(), tokenId3.toString()]
+      ]
+    )
+    let contracts
+    let rootToken
+    let childToken
+    let rootChainManager
+    let checkpointManager
+    let erc721Predicate
+    let withdrawTx
+    let checkpointData
+    let headerNumber
+    let exitTx
+
+    before(async() => {
+      contracts = await deployer.deployInitializedContracts(accounts)
+      rootToken = contracts.root.dummyERC721
+      childToken = contracts.child.dummyERC721
+      rootChainManager = contracts.root.rootChainManager
+      checkpointManager = contracts.root.checkpointManager
+      erc721Predicate = contracts.root.erc721Predicate
+      await rootToken.mint(tokenId1)
+      await rootToken.mint(tokenId2)
+      await rootToken.mint(tokenId3)
+    })
+
+    it('User should own tokens on root chain', async() => {
+      {
+        const owner = await rootToken.ownerOf(tokenId1)
+        owner.should.equal(user)
+      }
+      {
+        const owner = await rootToken.ownerOf(tokenId2)
+        owner.should.equal(user)
+      }
+      {
+        const owner = await rootToken.ownerOf(tokenId3)
+        owner.should.equal(user)
+      }
+    })
+
+    it('Tokens should not exist on child chain', async() => {
+      await expectRevert(childToken.ownerOf(tokenId1), 'ERC721: owner query for nonexistent token')
+      await expectRevert(childToken.ownerOf(tokenId2), 'ERC721: owner query for nonexistent token')
+      await expectRevert(childToken.ownerOf(tokenId3), 'ERC721: owner query for nonexistent token')
+    })
+
+    it('User should be able to approve and deposit', async() => {
+      await rootToken.setApprovalForAll(erc721Predicate.address, true)
+      const depositTx = await rootChainManager.depositFor(user, rootToken.address, depositData)
+      should.exist(depositTx)
+      const syncTx = await syncState({ tx: depositTx })
+      should.exist(syncTx)
+    })
+
+    it('Predicate should own tokens on root chain', async() => {
+      {
+        const owner = await rootToken.ownerOf(tokenId1)
+        owner.should.equal(erc721Predicate.address)
+      }
+      {
+        const owner = await rootToken.ownerOf(tokenId2)
+        owner.should.equal(erc721Predicate.address)
+      }
+      {
+        const owner = await rootToken.ownerOf(tokenId3)
+        owner.should.equal(erc721Predicate.address)
+      }
+    })
+
+    it('User should own tokens on child chain', async() => {
+      {
+        const owner = await childToken.ownerOf(tokenId1)
+        owner.should.equal(user)
+      }
+      {
+        const owner = await childToken.ownerOf(tokenId2)
+        owner.should.equal(user)
+      }
+      {
+        const owner = await childToken.ownerOf(tokenId3)
+        owner.should.equal(user)
+      }
+    })
+
+    it('User should be able to start withdraw', async() => {
+      withdrawTx = await childToken.withdrawBatch([tokenId1, tokenId2, tokenId3])
+      should.exist(withdrawTx)
+    })
+
+    it('Should submit checkpoint', async() => {
+      // submit checkpoint including burn (withdraw) tx
+      checkpointData = await submitCheckpoint(checkpointManager, withdrawTx.receipt)
+      should.exist(checkpointData)
+    })
+
+    it('Should match checkpoint details', async() => {
+      const root = bufferToHex(checkpointData.header.root)
+      should.exist(root)
+
+      // fetch latest header number
+      headerNumber = await checkpointManager.currentCheckpointNumber()
+      headerNumber.should.be.bignumber.gt('0')
+
+      // fetch header block details and validate
+      const headerData = await checkpointManager.headerBlocks(headerNumber)
+      root.should.equal(headerData.root)
+    })
+
+    it('User should be able to exit', async() => {
+      const logIndex = withdrawTx.receipt.rawLogs
+        .findIndex(log => log.topics[0].toLowerCase() === ERC721_WITHDRAW_BATCH_EVENT_SIG.toLowerCase())
+      const data = bufferToHex(
+        rlp.encode([
+          headerNumber,
+          bufferToHex(Buffer.concat(checkpointData.proof)),
+          checkpointData.number,
+          checkpointData.timestamp,
+          bufferToHex(checkpointData.transactionsRoot),
+          bufferToHex(checkpointData.receiptsRoot),
+          bufferToHex(checkpointData.receipt),
+          bufferToHex(rlp.encode(checkpointData.receiptParentNodes)),
+          bufferToHex(checkpointData.path), // branch mask,
+          logIndex
+        ])
+      )
+      // start exit
+      exitTx = await contracts.root.rootChainManager.exit(data, { from: user })
+      should.exist(exitTx)
+    })
+
+    it('User should own tokens on root chain', async() => {
+      {
+        const owner = await rootToken.ownerOf(tokenId1)
+        owner.should.equal(user)
+      }
+      {
+        const owner = await rootToken.ownerOf(tokenId2)
+        owner.should.equal(user)
+      }
+      {
+        const owner = await rootToken.ownerOf(tokenId3)
+        owner.should.equal(user)
+      }
+    })
+
+    it('Tokens should not exist on child chain', async() => {
+      await expectRevert(childToken.ownerOf(tokenId1), 'ERC721: owner query for nonexistent token')
+      await expectRevert(childToken.ownerOf(tokenId2), 'ERC721: owner query for nonexistent token')
+      await expectRevert(childToken.ownerOf(tokenId3), 'ERC721: owner query for nonexistent token')
+    })
+  })
+
   describe('Withdraw single ERC1155', async() => {
     const tokenId = mockValues.numbers[8]
     const depositAmount = mockValues.amounts[1]
@@ -689,7 +816,7 @@ contract('RootChainManager', async(accounts) => {
       await dummyERC1155.setApprovalForAll(contracts.root.erc1155Predicate.address, true)
       const depositTx = await rootChainManager.depositFor(depositReceiver, dummyERC1155.address, depositData)
       should.exist(depositTx)
-      const syncTx = await syncState({ tx: depositTx, contracts })
+      const syncTx = await syncState({ tx: depositTx })
       should.exist(syncTx)
     })
 
@@ -970,7 +1097,7 @@ contract('RootChainManager', async(accounts) => {
       await dummyERC1155.setApprovalForAll(contracts.root.erc1155Predicate.address, true)
       const depositTx = await rootChainManager.depositFor(depositReceiver, dummyERC1155.address, depositData)
       should.exist(depositTx)
-      const syncTx = await syncState({ tx: depositTx, contracts })
+      const syncTx = await syncState({ tx: depositTx })
       should.exist(syncTx)
     })
 
@@ -1293,7 +1420,7 @@ contract('RootChainManager', async(accounts) => {
       const depositData = abi.encode(['uint256'], [tokenId.toString()])
       const depositTx = await rootChainManager.depositFor(alice, rootMintableERC721.address, depositData, { from: alice })
       should.exist(depositTx)
-      const syncTx = await syncState({ tx: depositTx, contracts })
+      const syncTx = await syncState({ tx: depositTx })
       should.exist(syncTx)
     })
 
@@ -1379,7 +1506,7 @@ contract('RootChainManager', async(accounts) => {
       const depositData = abi.encode(['uint256'], [tokenId.toString()])
       const depositTx = await rootChainManager.depositFor(daniel, rootMintableERC721.address, depositData, { from: charlie })
       should.exist(depositTx)
-      const syncTx = await syncState({ tx: depositTx, contracts })
+      const syncTx = await syncState({ tx: depositTx })
       should.exist(syncTx)
     })
 

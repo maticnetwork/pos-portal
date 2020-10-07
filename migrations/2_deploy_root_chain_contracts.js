@@ -23,43 +23,13 @@ const DummyERC20 = artifacts.require('DummyERC20')
 const DummyERC721 = artifacts.require('DummyERC721')
 const DummyMintableERC721 = artifacts.require('DummyMintableERC721')
 const DummyERC1155 = artifacts.require('DummyERC1155')
+const TestRootTunnel = artifacts.require('TestRootTunnel')
+const TestChildTunnel = artifacts.require('TestChildTunnel')
 
 const utils = require('./utils')
 
-const libDeps = [
-  {
-    lib: Merkle,
-    contracts: [RootChainManager]
-  },
-  {
-    lib: MerklePatriciaProof,
-    contracts: [RootChainManager]
-  },
-  {
-    lib: RLPReader,
-    contracts: [
-      RootChainManager,
-      ERC20Predicate,
-      ERC721Predicate,
-      ERC1155Predicate
-    ]
-  },
-  {
-    lib: SafeERC20,
-    contracts: [ERC20Predicate]
-  },
-  {
-    lib: SafeMath,
-    contracts: [RootChainManager]
-  }
-]
-
 module.exports = async(deployer, network, accounts) => {
-  console.log('linking libs...')
-  await bluebird.map(libDeps, async e => {
-    await deployer.deploy(e.lib)
-    deployer.link(e.lib, e.contracts)
-  })
+  await deployer
 
   console.log('deploying contracts...')
   const rootChainManager = await deployer.deploy(RootChainManager)

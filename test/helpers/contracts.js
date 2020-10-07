@@ -21,14 +21,26 @@ const DummyERC20 = artifacts.require('DummyERC20')
 const DummyERC721 = artifacts.require('DummyERC721')
 const DummyMintableERC721 = artifacts.require('DummyMintableERC721')
 const DummyERC1155 = artifacts.require('DummyERC1155')
+const TestRootTunnel = artifacts.require('TestRootTunnel')
+const RootPotatoMigrator = artifacts.require('RootPotatoMigrator')
+const RootPotatoToken = artifacts.require('RootPotatoToken')
 
 const ChildChainManager = artifacts.require('ChildChainManager')
 const ChildChainManagerProxy = artifacts.require('ChildChainManagerProxy')
 const ChildERC20 = artifacts.require('ChildERC20')
+const UChildERC20 = artifacts.require('UChildERC20')
+const UChildERC20Proxy = artifacts.require('UChildERC20Proxy')
+const TestUChildERC20 = artifacts.require('TestUChildERC20')
+const UChildDAI = artifacts.require('UChildDAI')
 const ChildERC721 = artifacts.require('ChildERC721')
 const ChildMintableERC721 = artifacts.require('ChildMintableERC721')
 const ChildERC1155 = artifacts.require('ChildERC1155')
 const MaticWETH = artifacts.require('MaticWETH')
+const TestChildTunnel = artifacts.require('TestChildTunnel')
+const IStateReceiver = artifacts.require('IStateReceiver')
+const ChildPotatoFarm = artifacts.require('ChildPotatoFarm')
+const ChildPotatoMigrator = artifacts.require('ChildPotatoMigrator')
+const ChildPotatoToken = artifacts.require('ChildPotatoToken')
 
 const rootProvider = new Web3.providers.HttpProvider(rootRPC)
 const childProvider = new Web3.providers.HttpProvider(childRPC)
@@ -63,15 +75,27 @@ setWeb3(DummyERC20, rootWeb3)
 setWeb3(DummyERC721, rootWeb3)
 setWeb3(DummyMintableERC721, rootWeb3)
 setWeb3(DummyERC1155, rootWeb3)
+setWeb3(TestRootTunnel, rootWeb3)
+setWeb3(RootPotatoMigrator, rootWeb3)
+setWeb3(RootPotatoToken, rootWeb3)
 
 // contracts on child chain
 setWeb3(ChildChainManager, childWeb3)
 setWeb3(ChildChainManagerProxy, childWeb3)
 setWeb3(ChildERC20, childWeb3)
+setWeb3(UChildERC20, childWeb3)
+setWeb3(UChildERC20Proxy, childWeb3)
+setWeb3(TestUChildERC20, childWeb3)
+setWeb3(UChildDAI, childWeb3)
 setWeb3(ChildERC721, childWeb3)
 setWeb3(ChildMintableERC721, childWeb3)
 setWeb3(ChildERC1155, childWeb3)
 setWeb3(MaticWETH, childWeb3)
+setWeb3(TestChildTunnel, childWeb3)
+setWeb3(IStateReceiver, childWeb3)
+setWeb3(ChildPotatoFarm, childWeb3)
+setWeb3(ChildPotatoMigrator, childWeb3)
+setWeb3(ChildPotatoToken, childWeb3)
 
 export default {
   MockCheckpointManager,
@@ -92,11 +116,24 @@ export default {
   DummyERC721,
   DummyMintableERC721,
   DummyERC1155,
+  TestRootTunnel,
+  RootPotatoMigrator,
+  RootPotatoToken,
+
   ChildChainManager,
   ChildChainManagerProxy,
   ChildERC20,
+  UChildERC20,
+  UChildERC20Proxy,
+  TestUChildERC20,
+  UChildDAI,
   ChildERC721,
   ChildMintableERC721,
   ChildERC1155,
-  MaticWETH
+  MaticWETH,
+  TestChildTunnel,
+  IStateReceiver,
+  ChildPotatoFarm,
+  ChildPotatoMigrator,
+  ChildPotatoToken
 }

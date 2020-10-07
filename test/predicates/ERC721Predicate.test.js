@@ -90,6 +90,107 @@ contract('ERC721Predicate', (accounts) => {
     })
   })
 
+  describe('batch lockTokens', () => {
+    const tokenId1 = mockValues.numbers[2]
+    const tokenId2 = mockValues.numbers[6]
+    const tokenId3 = mockValues.numbers[9]
+    const depositReceiver = mockValues.addresses[7]
+    const depositor = accounts[1]
+    let dummyERC721
+    let erc721Predicate
+    let lockTokensTx
+    let lockedLog
+
+    before(async() => {
+      const contracts = await deployer.deployFreshRootContracts(accounts)
+      dummyERC721 = contracts.dummyERC721
+      erc721Predicate = contracts.erc721Predicate
+      await dummyERC721.mint(tokenId1, { from: depositor })
+      await dummyERC721.mint(tokenId2, { from: depositor })
+      await dummyERC721.mint(tokenId3, { from: depositor })
+      await dummyERC721.setApprovalForAll(erc721Predicate.address, true, { from: depositor })
+    })
+
+    it('Depositor should have token', async() => {
+      {
+        const owner = await dummyERC721.ownerOf(tokenId1)
+        owner.should.equal(depositor)
+      }
+      {
+        const owner = await dummyERC721.ownerOf(tokenId2)
+        owner.should.equal(depositor)
+      }
+      {
+        const owner = await dummyERC721.ownerOf(tokenId3)
+        owner.should.equal(depositor)
+      }
+    })
+
+    it('Depositor should have approved token transfer', async() => {
+      const approved = await dummyERC721.isApprovedForAll(depositor, erc721Predicate.address)
+      approved.should.equal(true)
+    })
+
+    it('Should be able to receive lockTokens tx', async() => {
+      const depositData = abi.encode(
+        ['uint256[]'],
+        [
+          [tokenId1.toString(), tokenId2.toString(), tokenId3.toString()]
+        ]
+      )
+      lockTokensTx = await erc721Predicate.lockTokens(depositor, depositReceiver, dummyERC721.address, depositData)
+      should.exist(lockTokensTx)
+    })
+
+    it('Should emit LockedERC721Batch log', () => {
+      const logs = logDecoder.decodeLogs(lockTokensTx.receipt.rawLogs)
+      lockedLog = logs.find(l => l.event === 'LockedERC721Batch')
+      should.exist(lockedLog)
+    })
+
+    describe('Correct values should be emitted in LockedERC721Batch log', () => {
+      it('Event should be emitted by correct contract', () => {
+        lockedLog.address.should.equal(
+          erc721Predicate.address.toLowerCase()
+        )
+      })
+
+      it('Should emit proper depositor', () => {
+        lockedLog.args.depositor.should.equal(depositor)
+      })
+
+      it('Should emit correct tokenIds', () => {
+        const lockedLogTokenIds = lockedLog.args.tokenIds.map(t => t.toNumber())
+        lockedLogTokenIds.should.include(tokenId1)
+        lockedLogTokenIds.should.include(tokenId2)
+        lockedLogTokenIds.should.include(tokenId3)
+      })
+
+      it('Should emit correct deposit receiver', () => {
+        lockedLog.args.depositReceiver.should.equal(depositReceiver)
+      })
+
+      it('Should emit correct root token', () => {
+        lockedLog.args.rootToken.should.equal(dummyERC721.address)
+      })
+    })
+
+    it('token should be transferred to correct contract', async() => {
+      {
+        const owner = await dummyERC721.ownerOf(tokenId1)
+        owner.should.equal(erc721Predicate.address)
+      }
+      {
+        const owner = await dummyERC721.ownerOf(tokenId2)
+        owner.should.equal(erc721Predicate.address)
+      }
+      {
+        const owner = await dummyERC721.ownerOf(tokenId3)
+        owner.should.equal(erc721Predicate.address)
+      }
+    })
+  })
+
   describe('lockTokens called by non manager', () => {
     const tokenId = mockValues.numbers[5]
     const depositor = accounts[1]
