@@ -243,7 +243,6 @@ contract('ERC20Predicate', (accounts) => {
     })
   })
 
-
   describe('exitTokens called using normal transfer log instead of burn', () => {
     const withdrawAmount = mockValues.amounts[2]
     const depositAmount = withdrawAmount.add(mockValues.amounts[3])

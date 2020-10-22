@@ -260,7 +260,6 @@ contract('ERC721Predicate', (accounts) => {
     let erc721Predicate
     let exitTokensTx
 
-
     before(async() => {
       const contracts = await deployer.deployFreshRootContracts(accounts)
       dummyERC721 = contracts.dummyERC721

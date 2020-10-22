@@ -315,7 +315,7 @@ contract('ERC1155Predicate', (accounts) => {
     let oldAccountBalanceA
     let oldAccountBalanceB
     let oldContractBalanceA
-    let oldContractBalanceB    
+    let oldContractBalanceB
 
     before(async() => {
       const contracts = await deployer.deployFreshRootContracts(accounts)
@@ -371,7 +371,6 @@ contract('ERC1155Predicate', (accounts) => {
       )
     })
   })
-
 
   describe('exitTokens with incorrect burn transaction signature', () => {
     const withdrawAmount = mockValues.amounts[9]
