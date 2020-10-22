@@ -181,6 +181,9 @@ contract('ERC20Predicate', (accounts) => {
     const exitCaller = mockValues.addresses[3]
     let dummyERC20
     let erc20Predicate
+    let oldAccountBalance
+    let oldContractBalance
+    let exitTokensTx
 
     before(async() => {
       const contracts = await deployer.deployFreshRootContracts(accounts)
@@ -189,6 +192,8 @@ contract('ERC20Predicate', (accounts) => {
       await dummyERC20.approve(erc20Predicate.address, depositAmount)
       const depositData = abi.encode(['uint256'], [depositAmount.toString()])
       await erc20Predicate.lockTokens(accounts[0], withdrawer, dummyERC20.address, depositData)
+      oldAccountBalance = await dummyERC20.balanceOf(withdrawer)
+      oldContractBalance = await dummyERC20.balanceOf(erc20Predicate.address)
     })
 
     it('Should be able to receive exitTokens tx', async() => {
