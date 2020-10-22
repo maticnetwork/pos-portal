@@ -1037,11 +1037,12 @@ contract EtherPredicate is ITokenPredicate, AccessControlMixin, Initializable {
      * @notice Validates log signature, from and to address
      * then sends the correct amount to withdrawer
      * callable only by manager
+     * @param sender Address
      * @param withdrawer Address who wants to withdraw tokens
      * @param log Valid ERC20 burn log from child chain
      */
     function exitTokens(
-        address withdrawer,
+        address,
         address,
         bytes memory log
     )
@@ -1056,10 +1057,9 @@ contract EtherPredicate is ITokenPredicate, AccessControlMixin, Initializable {
             bytes32(logTopicRLPList[0].toUint()) == TRANSFER_EVENT_SIG, // topic0 is event sig
             "EtherPredicate: INVALID_SIGNATURE"
         );
-        require(
-            withdrawer == address(logTopicRLPList[1].toUint()), // topic1 is from address
-            "EtherPredicate: INVALID_SENDER"
-        );
+
+        address withdrawer = address(logTopicRLPList[1].toUint()); // topic1 is from address
+
         require(
             address(logTopicRLPList[2].toUint()) == address(0), // topic2 is to address
             "EtherPredicate: INVALID_RECEIVER"

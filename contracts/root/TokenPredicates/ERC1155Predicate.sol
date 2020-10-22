@@ -104,12 +104,11 @@ contract ERC1155Predicate is ITokenPredicate, ERC1155Receiver, AccessControlMixi
      * @notice Validates log signature, from and to address
      * then sends the correct tokenId, amount to withdrawer
      * callable only by manager
-     * @param withdrawer Address who wants to withdraw tokens
      * @param rootToken Token which gets withdrawn
      * @param log Valid ERC1155 TransferSingle burn or TransferBatch burn log from child chain
      */
     function exitTokens(
-        address withdrawer,
+        address,
         address rootToken,
         bytes memory log
     )
@@ -121,10 +120,8 @@ contract ERC1155Predicate is ITokenPredicate, ERC1155Receiver, AccessControlMixi
         RLPReader.RLPItem[] memory logTopicRLPList = logRLPList[1].toList(); // topics
         bytes memory logData = logRLPList[2].toBytes();
 
-        require(
-            withdrawer == address(logTopicRLPList[2].toUint()), // topic2 is from address
-            "ERC1155Predicate: INVALID_SENDER"
-        );
+        address withdrawer = address(logTopicRLPList[2].toUint()); // topic2 is from address
+
         require(
             address(logTopicRLPList[3].toUint()) == address(0), // topic3 is to address
             "ERC1155Predicate: INVALID_RECEIVER"
