@@ -154,6 +154,49 @@ contract('EtherPredicate', (accounts) => {
     })
   })
 
+  describe('exitTokens called by different user', () => {
+    const withdrawAmount = mockValues.amounts[2]
+    const depositAmount = withdrawAmount.add(mockValues.amounts[3])
+    const withdrawer = mockValues.addresses[8]
+    const exitCaller = mockValues.addresses[3]
+    let exitTokensTx
+    let etherPredicate
+    let oldAccountBalance
+    let oldContractBalance
+
+    before(async() => {
+      const contracts = await deployer.deployFreshRootContracts(accounts)
+      etherPredicate = contracts.etherPredicate
+      await etherPredicate.send(depositAmount)
+      oldAccountBalance = new BN(await web3.eth.getBalance(withdrawer))
+      oldContractBalance = new BN(await web3.eth.getBalance(etherPredicate.address))
+    })
+
+    it('Should be able to receive exitTokens tx', async() => {
+      const burnLog = getERC20TransferLog({
+        from: withdrawer,
+        to: mockValues.zeroAddress,
+        amount: withdrawAmount
+      })
+      exitTokensTx = await etherPredicate.exitTokens(exitCaller, etherAddress, burnLog)
+      should.exist(exitTokensTx)
+    })
+
+    it('Withdraw amount should be deducted from contract', async() => {
+      const newContractBalance = new BN(await web3.eth.getBalance(etherPredicate.address))
+      newContractBalance.should.be.a.bignumber.that.equals(
+        oldContractBalance.sub(withdrawAmount)
+      )
+    })
+
+    it('Withdraw amount should be credited to correct address', async() => {
+      const newAccountBalance = new BN(await web3.eth.getBalance(withdrawer))
+      newAccountBalance.should.be.a.bignumber.that.equals(
+        oldAccountBalance.add(withdrawAmount)
+      )
+    })
+  })
+
   describe('exitTokens with incorrect burn transaction signature', () => {
     const withdrawAmount = mockValues.amounts[2]
     const depositAmount = withdrawAmount.add(mockValues.amounts[3])
@@ -174,29 +217,6 @@ contract('EtherPredicate', (accounts) => {
         amount: withdrawAmount
       })
       await expectRevert(etherPredicate.exitTokens(withdrawer, etherAddress, burnLog), 'EtherPredicate: INVALID_SIGNATURE')
-    })
-  })
-
-  describe('exitTokens called by different user', () => {
-    const withdrawAmount = mockValues.amounts[2]
-    const depositAmount = withdrawAmount.add(mockValues.amounts[3])
-    const withdrawer = mockValues.addresses[8]
-    const exitCaller = mockValues.addresses[3]
-    let etherPredicate
-
-    before(async() => {
-      const contracts = await deployer.deployFreshRootContracts(accounts)
-      etherPredicate = contracts.etherPredicate
-      await etherPredicate.send(depositAmount)
-    })
-
-    it('Should revert with correct reason', async() => {
-      const burnLog = getERC20TransferLog({
-        from: withdrawer,
-        to: mockValues.zeroAddress,
-        amount: withdrawAmount
-      })
-      await expectRevert(etherPredicate.exitTokens(exitCaller, etherAddress, burnLog), 'EtherPredicate: INVALID_SENDER')
     })
   })
 
