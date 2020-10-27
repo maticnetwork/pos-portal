@@ -57,12 +57,11 @@ contract ERC20Predicate is ITokenPredicate, AccessControlMixin, Initializable {
      * @notice Validates log signature, from and to address
      * then sends the correct amount to withdrawer
      * callable only by manager
-     * @param withdrawer Address who wants to withdraw tokens
      * @param rootToken Token which gets withdrawn
      * @param log Valid ERC20 burn log from child chain
      */
     function exitTokens(
-        address withdrawer,
+        address,
         address rootToken,
         bytes memory log
     )
@@ -77,10 +76,9 @@ contract ERC20Predicate is ITokenPredicate, AccessControlMixin, Initializable {
             bytes32(logTopicRLPList[0].toUint()) == TRANSFER_EVENT_SIG, // topic0 is event sig
             "ERC20Predicate: INVALID_SIGNATURE"
         );
-        require(
-            withdrawer == address(logTopicRLPList[1].toUint()), // topic1 is from address
-            "ERC20Predicate: INVALID_SENDER"
-        );
+
+        address withdrawer = address(logTopicRLPList[1].toUint()); // topic1 is from address
+
         require(
             address(logTopicRLPList[2].toUint()) == address(0), // topic2 is to address
             "ERC20Predicate: INVALID_RECEIVER"

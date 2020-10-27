@@ -2131,6 +2131,8 @@ contract ChildMintableERC721 is
         _initializeEIP712(name_);
     }
 
+    // This is to support Native meta transactions
+    // never use msg.sender directly, use _msgSender() instead
     function _msgSender()
         internal
         override

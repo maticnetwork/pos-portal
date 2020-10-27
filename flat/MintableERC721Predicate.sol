@@ -1153,12 +1153,12 @@ interface ITokenPredicate {
      * @notice Validates and processes exit while withdraw process
      * @dev Validates exit log emitted on sidechain. Reverts if validation fails.
      * @dev Processes withdraw based on custom logic. Example: transfer ERC20/ERC721, mint ERC721 if mintable withdraw
-     * @param withdrawer Address who wants to withdraw tokens
+     * @param sender Address
      * @param rootToken Token which gets withdrawn
      * @param logRLPList Valid sidechain log for data like amount, token id etc.
      */
     function exitTokens(
-        address withdrawer,
+        address sender,
         address rootToken,
         bytes calldata logRLPList
     ) external;
@@ -1258,12 +1258,11 @@ contract MintableERC721Predicate is ITokenPredicate, AccessControlMixin, Initial
      * if token exits then transfers it to withdrawer
      * if token doesn't exit then it is minted
      * callable only by manager
-     * @param withdrawer Address who wants to withdraw token
      * @param rootToken Token which gets withdrawn
      * @param log Valid ERC721 burn log from child chain
      */
     function exitTokens(
-        address withdrawer,
+        address,
         address rootToken,
         bytes memory log
     )
@@ -1278,10 +1277,9 @@ contract MintableERC721Predicate is ITokenPredicate, AccessControlMixin, Initial
             bytes32(logTopicRLPList[0].toUint()) == TRANSFER_EVENT_SIG, // topic0 is event sig
             "MintableERC721Predicate: INVALID_SIGNATURE"
         );
-        require(
-            withdrawer == address(logTopicRLPList[1].toUint()), // topic1 is from address
-            "MintableERC721Predicate: INVALID_SENDER"
-        );
+
+        address withdrawer = address(logTopicRLPList[1].toUint()); // topic1 is from address
+
         require(
             address(logTopicRLPList[2].toUint()) == address(0), // topic2 is to address
             "MintableERC721Predicate: INVALID_RECEIVER"
