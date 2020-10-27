@@ -4,7 +4,6 @@ import {ERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import {AccessControlMixin} from "../../common/AccessControlMixin.sol";
 import {IChildToken} from "./IChildToken.sol";
 import {NativeMetaTransaction} from "../../common/NativeMetaTransaction.sol";
-import {ChainConstants} from "../../ChainConstants.sol";
 import {ContextMixin} from "../../common/ContextMixin.sol";
 
 contract ChildERC721 is
@@ -12,7 +11,6 @@ contract ChildERC721 is
     IChildToken,
     AccessControlMixin,
     NativeMetaTransaction,
-    ChainConstants,
     ContextMixin
 {
     bytes32 public constant DEPOSITOR_ROLE = keccak256("DEPOSITOR_ROLE");
@@ -33,7 +31,7 @@ contract ChildERC721 is
         _setupContractId("ChildERC721");
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
         _setupRole(DEPOSITOR_ROLE, childChainManager);
-        _initializeEIP712(name_, ERC712_VERSION);
+        _initializeEIP712(name_);
     }
 
     // This is to support Native meta transactions

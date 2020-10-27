@@ -1261,6 +1261,8 @@ contract EIP712Base is Initializable {
         bytes32 salt;
     }
 
+    string constant public ERC712_VERSION = "1";
+
     bytes32 internal constant EIP712_DOMAIN_TYPEHASH = keccak256(
         bytes(
             "EIP712Domain(string name,string version,address verifyingContract,bytes32 salt)"
@@ -1272,21 +1274,20 @@ contract EIP712Base is Initializable {
     // one of the contractsa that inherits this contract follows proxy pattern
     // so it is not possible to do this in a constructor
     function _initializeEIP712(
-        string memory name,
-        string memory version
+        string memory name
     )
         internal
         initializer
     {
-        _setDomainSeperator(name, version);
+        _setDomainSeperator(name);
     }
 
-    function _setDomainSeperator(string memory name, string memory version) internal {
+    function _setDomainSeperator(string memory name) internal {
         domainSeperator = keccak256(
             abi.encode(
                 EIP712_DOMAIN_TYPEHASH,
                 keccak256(bytes(name)),
-                keccak256(bytes(version)),
+                keccak256(bytes(ERC712_VERSION)),
                 address(this),
                 bytes32(getChainId())
             )
@@ -1430,20 +1431,6 @@ contract NativeMetaTransaction is EIP712Base {
     }
 }
 
-// File: contracts/ChainConstants.sol
-
-pragma solidity 0.6.6;
-
-contract ChainConstants {
-    string constant public ERC712_VERSION = "1";
-
-    uint256 constant public ROOT_CHAIN_ID = 1;
-    bytes constant public ROOT_CHAIN_ID_BYTES = hex"01";
-
-    uint256 constant public CHILD_CHAIN_ID = 137;
-    bytes constant public CHILD_CHAIN_ID_BYTES = hex"89";
-}
-
 // File: contracts/common/ContextMixin.sol
 
 pragma solidity 0.6.6;
@@ -1481,13 +1468,11 @@ pragma solidity 0.6.6;
 
 
 
-
 contract UChildERC20 is
     ERC20,
     IChildToken,
     AccessControlMixin,
     NativeMetaTransaction,
-    ChainConstants,
     ContextMixin
 {
     bytes32 public constant DEPOSITOR_ROLE = keccak256("DEPOSITOR_ROLE");
@@ -1507,13 +1492,13 @@ contract UChildERC20 is
         external
         initializer
     {
-      setName(name_);
-      setSymbol(symbol_);
-      setDecimals(decimals_);
-      _setupContractId(string(abi.encodePacked("Child", symbol_)));
-      _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
-      _setupRole(DEPOSITOR_ROLE, childChainManager);
-      _initializeEIP712(name_, ERC712_VERSION);
+        setName(name_);
+        setSymbol(symbol_);
+        setDecimals(decimals_);
+        _setupContractId(string(abi.encodePacked("Child", symbol_)));
+        _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
+        _setupRole(DEPOSITOR_ROLE, childChainManager);
+        _initializeEIP712(name_);
     }
 
     // This is to support Native meta transactions
@@ -1529,7 +1514,7 @@ contract UChildERC20 is
 
     function changeName(string calldata name_) external only(DEFAULT_ADMIN_ROLE) {
         setName(name_);
-        _setDomainSeperator(name_, ERC712_VERSION);
+        _setDomainSeperator(name_);
     }
 
     /**

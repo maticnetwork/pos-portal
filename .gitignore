@@ -8,8 +8,6 @@ build
 # Committing flattened contracts so they can be loaded in remix easily
 # flat
 
-contracts/ChainConstants.sol
-
 test-blockchain/genesis.json
 test-blockchain/geth
 test-blockchain/history
