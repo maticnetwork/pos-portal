@@ -186,6 +186,12 @@ interface IRootChainManager {
         bytes32 tokenType
     ) external;
 
+    function remapToken(
+        address rootToken,
+        address childToken,
+        bytes32 tokenType
+    ) external;
+
     function depositEtherFor(address user) external payable;
 
     function depositFor(
@@ -1801,6 +1807,48 @@ contract RootChainManager is
         address childToken,
         bytes32 tokenType
     ) external override only(MAPPER_ROLE) {
+        // explicit check if token is already mapped to avoid accidental remaps
+        require(
+            rootToChildToken[rootToken] == address(0) &&
+            childToRootToken[childToken] == address(0),
+            "RootChainManager: ALREADY_MAPPED"
+        );
+        _mapToken(rootToken, childToken, tokenType);
+    }
+
+    /**
+     * @notice Remap a token that has already been mapped, properly cleans up old mapping
+     * Callable only by mappers
+     * @param rootToken address of token on root chain
+     * @param childToken address of token on child chain
+     * @param tokenType bytes32 unique identifier for the token type
+     */
+    function remapToken(
+        address rootToken,
+        address childToken,
+        bytes32 tokenType
+    ) external override only(MAPPER_ROLE) {
+        // cleanup old mapping
+        address oldChildToken = rootToChildToken[rootToken];
+        address oldRootToken = childToRootToken[childToken];
+
+        if (rootToChildToken[oldRootToken] != address(0)) {
+            rootToChildToken[oldRootToken] = address(0);
+            tokenToType[oldRootToken] = bytes32(0);
+        }
+
+        if (childToRootToken[oldChildToken] != address(0)) {
+            childToRootToken[oldChildToken] = address(0);
+        }
+
+        _mapToken(rootToken, childToken, tokenType);
+    }
+
+    function _mapToken(
+        address rootToken,
+        address childToken,
+        bytes32 tokenType
+    ) private {
         require(
             typeToPredicate[tokenType] != address(0x0),
             "RootChainManager: TOKEN_TYPE_NOT_SUPPORTED"

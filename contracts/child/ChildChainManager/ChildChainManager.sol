@@ -87,8 +87,20 @@ contract ChildChainManager is
     }
 
     function _mapToken(address rootToken, address childToken) private {
+        address oldChildToken = rootToChildToken[rootToken];
+        address oldRootToken = childToRootToken[childToken];
+
+        if (rootToChildToken[oldRootToken] != address(0)) {
+            rootToChildToken[oldRootToken] = address(0);
+        }
+
+        if (childToRootToken[oldChildToken] != address(0)) {
+            childToRootToken[oldChildToken] = address(0);
+        }
+
         rootToChildToken[rootToken] = childToken;
         childToRootToken[childToken] = rootToken;
+
         emit TokenMapped(rootToken, childToken);
     }
 }
