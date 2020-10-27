@@ -252,6 +252,40 @@ contract('ERC721Predicate', (accounts) => {
     })
   })
 
+  describe('exitTokens called by different user', () => {
+    const tokenId = mockValues.numbers[5]
+    const withdrawer = mockValues.addresses[8]
+    const exitCaller = mockValues.addresses[3]
+    let dummyERC721
+    let erc721Predicate
+    let exitTokensTx
+
+    before(async() => {
+      const contracts = await deployer.deployFreshRootContracts(accounts)
+      dummyERC721 = contracts.dummyERC721
+      erc721Predicate = contracts.erc721Predicate
+      await dummyERC721.mint(tokenId)
+      await dummyERC721.approve(erc721Predicate.address, tokenId)
+      const depositData = abi.encode(['uint256'], [tokenId])
+      await erc721Predicate.lockTokens(accounts[0], withdrawer, dummyERC721.address, depositData)
+    })
+
+    it('Should be able to receive exitTokens tx', async() => {
+      const burnLog = getERC721TransferLog({
+        from: withdrawer,
+        to: mockValues.zeroAddress,
+        tokenId
+      })
+      exitTokensTx = await erc721Predicate.exitTokens(exitCaller, dummyERC721.address, burnLog)
+      should.exist(exitTokensTx)
+    })
+
+    it('Token should be transferred to withdrawer', async() => {
+      const owner = await dummyERC721.ownerOf(tokenId)
+      owner.should.equal(withdrawer)
+    })
+  })
+
   describe('exitTokens with incorrect burn transaction signature', () => {
     const tokenId = mockValues.numbers[5]
     const withdrawer = mockValues.addresses[8]
@@ -276,33 +310,6 @@ contract('ERC721Predicate', (accounts) => {
         tokenId
       })
       await expectRevert(erc721Predicate.exitTokens(withdrawer, dummyERC721.address, burnLog), 'ERC721Predicate: INVALID_SIGNATURE')
-    })
-  })
-
-  describe('exitTokens called by different user', () => {
-    const tokenId = mockValues.numbers[5]
-    const withdrawer = mockValues.addresses[8]
-    const exitCaller = mockValues.addresses[3]
-    let dummyERC721
-    let erc721Predicate
-
-    before(async() => {
-      const contracts = await deployer.deployFreshRootContracts(accounts)
-      dummyERC721 = contracts.dummyERC721
-      erc721Predicate = contracts.erc721Predicate
-      await dummyERC721.mint(tokenId)
-      await dummyERC721.approve(erc721Predicate.address, tokenId)
-      const depositData = abi.encode(['uint256'], [tokenId])
-      await erc721Predicate.lockTokens(accounts[0], withdrawer, dummyERC721.address, depositData)
-    })
-
-    it('Should revert with correct reason', async() => {
-      const burnLog = getERC721TransferLog({
-        from: withdrawer,
-        to: mockValues.zeroAddress,
-        tokenId
-      })
-      await expectRevert(erc721Predicate.exitTokens(exitCaller, dummyERC721.address, burnLog), 'ERC721Predicate: INVALID_SENDER')
     })
   })
 

@@ -95,12 +95,11 @@ contract ERC721Predicate is ITokenPredicate, AccessControlMixin, Initializable, 
      * @notice Validates log signature, from and to address
      * then sends the correct tokenId to withdrawer
      * callable only by manager
-     * @param withdrawer Address who wants to withdraw token
      * @param rootToken Token which gets withdrawn
      * @param log Valid ERC721 burn log from child chain
      */
     function exitTokens(
-        address withdrawer,
+        address,
         address rootToken,
         bytes memory log
     )
@@ -110,12 +109,9 @@ contract ERC721Predicate is ITokenPredicate, AccessControlMixin, Initializable, 
     {
         RLPReader.RLPItem[] memory logRLPList = log.toRlpItem().toList();
         RLPReader.RLPItem[] memory logTopicRLPList = logRLPList[1].toList(); // topics
+        address withdrawer = address(logTopicRLPList[1].toUint()); // topic1 is from address
 
         if (bytes32(logTopicRLPList[0].toUint()) == TRANSFER_EVENT_SIG) { // topic0 is event sig
-            require(
-                withdrawer == address(logTopicRLPList[1].toUint()), // topic1 is from address
-                "ERC721Predicate: INVALID_SENDER"
-            );
             require(
                 address(logTopicRLPList[2].toUint()) == address(0), // topic2 is to address
                 "ERC721Predicate: INVALID_RECEIVER"
@@ -128,10 +124,6 @@ contract ERC721Predicate is ITokenPredicate, AccessControlMixin, Initializable, 
             );
 
         } else if (bytes32(logTopicRLPList[0].toUint()) == WITHDRAW_BATCH_EVENT_SIG) { // topic0 is event sig
-            require(
-                withdrawer == address(logTopicRLPList[1].toUint()), // topic1 is user address
-                "ERC721Predicate: INVALID_SENDER"
-            );
             bytes memory logData = logRLPList[2].toBytes();
             (uint256[] memory tokenIds) = abi.decode(logData, (uint256[])); // data is tokenId list
             uint256 length = tokenIds.length;
