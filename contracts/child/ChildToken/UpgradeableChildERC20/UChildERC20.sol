@@ -4,7 +4,6 @@ import {ERC20} from "./ERC20.sol";
 import {AccessControlMixin} from "../../../common/AccessControlMixin.sol";
 import {IChildToken} from "../IChildToken.sol";
 import {NativeMetaTransaction} from "../../../common/NativeMetaTransaction.sol";
-import {ChainConstants} from "../../../ChainConstants.sol";
 import {ContextMixin} from "../../../common/ContextMixin.sol";
 
 
@@ -13,7 +12,6 @@ contract UChildERC20 is
     IChildToken,
     AccessControlMixin,
     NativeMetaTransaction,
-    ChainConstants,
     ContextMixin
 {
     bytes32 public constant DEPOSITOR_ROLE = keccak256("DEPOSITOR_ROLE");
@@ -33,13 +31,13 @@ contract UChildERC20 is
         external
         initializer
     {
-      setName(name_);
-      setSymbol(symbol_);
-      setDecimals(decimals_);
-      _setupContractId(string(abi.encodePacked("Child", symbol_)));
-      _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
-      _setupRole(DEPOSITOR_ROLE, childChainManager);
-      _initializeEIP712(name_, ERC712_VERSION);
+        setName(name_);
+        setSymbol(symbol_);
+        setDecimals(decimals_);
+        _setupContractId(string(abi.encodePacked("Child", symbol_)));
+        _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
+        _setupRole(DEPOSITOR_ROLE, childChainManager);
+        _initializeEIP712(name_);
     }
 
     // This is to support Native meta transactions
@@ -55,7 +53,7 @@ contract UChildERC20 is
 
     function changeName(string calldata name_) external only(DEFAULT_ADMIN_ROLE) {
         setName(name_);
-        _setDomainSeperator(name_, ERC712_VERSION);
+        _setDomainSeperator(name_);
     }
 
     /**
