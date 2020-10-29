@@ -30,6 +30,8 @@ contract ChildChainManager is
 
     /**
      * @notice Map a token to enable its movement via the PoS Portal, callable only by mappers
+     * Normally mapping should happen automatically using state sync
+     * This function should be used only while initial deployment when state sync is not registrered or if it fails
      * @param rootToken address of token on root chain
      * @param childToken address of token on child chain
      */
@@ -87,8 +89,20 @@ contract ChildChainManager is
     }
 
     function _mapToken(address rootToken, address childToken) private {
+        address oldChildToken = rootToChildToken[rootToken];
+        address oldRootToken = childToRootToken[childToken];
+
+        if (rootToChildToken[oldRootToken] != address(0)) {
+            rootToChildToken[oldRootToken] = address(0);
+        }
+
+        if (childToRootToken[oldChildToken] != address(0)) {
+            childToRootToken[oldChildToken] = address(0);
+        }
+
         rootToChildToken[rootToken] = childToken;
         childToRootToken[childToken] = rootToken;
+
         emit TokenMapped(rootToken, childToken);
     }
 }

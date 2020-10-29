@@ -71,13 +71,22 @@ contract('RootChainManager', async(accounts) => {
         'RootChainManager: INSUFFICIENT_PERMISSIONS'
       )
     })
+  })
 
-    describe('Token Mapping', () => {
+  describe('Token Mapping', async() => {
+    describe('Map fresh token', () => {
+      let contracts
+      // first set of mock values
       const mockParent = mockValues.addresses[3]
       const mockChild = mockValues.addresses[4]
       const mockType = mockValues.bytes32[3]
+      // second set of mock values
+      // need to use new values for repeat interaction since tx reverts for same addresses
+      const spockParent = mockValues.addresses[5]
+      const spockChild = mockValues.addresses[6]
 
       before(async() => {
+        contracts = await deployer.deployFreshRootContracts(accounts)
         await contracts.rootChainManager.setStateSender(contracts.dummyStateSender.address)
 
         const mockChildChainManagerAddress = mockValues.addresses[1]
@@ -94,8 +103,6 @@ contract('RootChainManager', async(accounts) => {
       it('Should set correct rootToChildToken map', async() => {
         const childTokenAddress = await contracts.rootChainManager.rootToChildToken(mockParent)
         childTokenAddress.should.equal(mockChild)
-        const parentTokenAddress = await contracts.rootChainManager.childToRootToken(mockChild)
-        parentTokenAddress.should.equal(mockParent)
       })
 
       it('Should set correct childToRootToken map', async() => {
@@ -105,7 +112,7 @@ contract('RootChainManager', async(accounts) => {
 
       it('Should fail while mapping token from non mapper account', async() => {
         await expectRevert(
-          contracts.rootChainManager.mapToken(mockParent, mockChild, mockType, { from: accounts[4] }),
+          contracts.rootChainManager.mapToken(spockParent, spockChild, mockType, { from: accounts[4] }),
           'RootChainManager: INSUFFICIENT_PERMISSIONS'
         )
       })
@@ -113,9 +120,125 @@ contract('RootChainManager', async(accounts) => {
       it('Should fail while mapping token using non existant predicate', async() => {
         const mockType = mockValues.bytes32[0]
         await expectRevert(
-          contracts.rootChainManager.mapToken(mockParent, mockChild, mockType),
+          contracts.rootChainManager.mapToken(spockParent, spockChild, mockType),
           'RootChainManager: TOKEN_TYPE_NOT_SUPPORTED'
         )
+      })
+    })
+
+    // Keep same child token, change mapped parent token
+    describe('Tomato has Vegetable as parent, remap to have Fruit as parent', async() => {
+      let contracts
+      const vegetable = mockValues.addresses[3]
+      const fruit = mockValues.addresses[4]
+      const tomato = mockValues.addresses[5]
+      const tokenType = mockValues.bytes32[3]
+
+      before(async() => {
+        contracts = await deployer.deployFreshRootContracts(accounts)
+        await contracts.rootChainManager.setStateSender(contracts.dummyStateSender.address)
+
+        const childChainManagerAddress = mockValues.addresses[1]
+        await contracts.rootChainManager.setChildChainManagerAddress(childChainManagerAddress)
+
+        const predicate = mockValues.addresses[2]
+        await contracts.rootChainManager.registerPredicate(tokenType, predicate)
+
+        await contracts.rootChainManager.mapToken(vegetable, tomato, tokenType)
+      })
+
+      it('Should have Tomato as child of Vegetable', async() => {
+        const childTokenAddress = await contracts.rootChainManager.rootToChildToken(vegetable)
+        childTokenAddress.should.equal(tomato)
+      })
+
+      it('Should have Vegetable as parent of Tomato', async() => {
+        const parentTokenAddress = await contracts.rootChainManager.childToRootToken(tomato)
+        parentTokenAddress.should.equal(vegetable)
+      })
+
+      it('Should fail to noramlly map Tomato as child of Fruit', async() => {
+        await expectRevert(
+          contracts.rootChainManager.mapToken(fruit, tomato, tokenType),
+          'RootChainManager: ALREADY_MAPPED'
+        )
+      })
+
+      it('Should be able to explicitly remap Tomato as child of Fruit', async() => {
+        await contracts.rootChainManager.remapToken(fruit, tomato, tokenType)
+      })
+
+      it('Should have Tomato as child of Fruit', async() => {
+        const childTokenAddress = await contracts.rootChainManager.rootToChildToken(fruit)
+        childTokenAddress.should.equal(tomato)
+      })
+
+      it('Should have Fruit as parent of Tomato', async() => {
+        const parentTokenAddress = await contracts.rootChainManager.childToRootToken(tomato)
+        parentTokenAddress.should.equal(fruit)
+      })
+
+      it('Vegetable should not have any child', async() => {
+        const parentTokenAddress = await contracts.rootChainManager.rootToChildToken(vegetable)
+        parentTokenAddress.should.equal(mockValues.zeroAddress)
+      })
+    })
+
+    // Keep same parent token, change mapped child token
+    describe('Chimp has Baboon as child, remap to have Man as child', async() => {
+      let contracts
+      const chimp = mockValues.addresses[3]
+      const baboon = mockValues.addresses[4]
+      const man = mockValues.addresses[5]
+      const tokenType = mockValues.bytes32[3]
+
+      before(async() => {
+        contracts = await deployer.deployFreshRootContracts(accounts)
+        await contracts.rootChainManager.setStateSender(contracts.dummyStateSender.address)
+
+        const childChainManagerAddress = mockValues.addresses[1]
+        await contracts.rootChainManager.setChildChainManagerAddress(childChainManagerAddress)
+
+        const predicate = mockValues.addresses[2]
+        await contracts.rootChainManager.registerPredicate(tokenType, predicate)
+
+        await contracts.rootChainManager.mapToken(chimp, baboon, tokenType)
+      })
+
+      it('Should have Baboon as child of Chimp', async() => {
+        const childTokenAddress = await contracts.rootChainManager.rootToChildToken(chimp)
+        childTokenAddress.should.equal(baboon)
+      })
+
+      it('Should have Chimp as parent of Baboon', async() => {
+        const parentTokenAddress = await contracts.rootChainManager.childToRootToken(baboon)
+        parentTokenAddress.should.equal(chimp)
+      })
+
+      it('Should fail to noramlly map Chimp to Man', async() => {
+        await expectRevert(
+          contracts.rootChainManager.mapToken(chimp, man, tokenType),
+          'RootChainManager: ALREADY_MAPPED'
+        )
+      })
+
+      it('Should be able to explicitly remap Chimp to Man', async() => {
+        await contracts.rootChainManager.remapToken(chimp, man, tokenType)
+      })
+
+      it('Should have Man as child of Chimp', async() => {
+        const childTokenAddress = await contracts.rootChainManager.rootToChildToken(chimp)
+        childTokenAddress.should.equal(man)
+      })
+
+      it('Should have Chimp as parent of Man', async() => {
+        const parentTokenAddress = await contracts.rootChainManager.childToRootToken(man)
+        parentTokenAddress.should.equal(chimp)
+      })
+
+      it('Baboon should not have any parent', async() => {
+        const parentTokenAddress = await contracts.rootChainManager.childToRootToken(baboon)
+        parentTokenAddress.should.equal(mockValues.zeroAddress)
       })
     })
   })

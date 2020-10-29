@@ -21,6 +21,12 @@ interface IRootChainManager {
         bytes32 tokenType
     ) external;
 
+    function remapToken(
+        address rootToken,
+        address childToken,
+        bytes32 tokenType
+    ) external;
+
     function depositEtherFor(address user) external payable;
 
     function depositFor(

@@ -90,6 +90,100 @@ contract('ChildChainManager', async(accounts) => {
     })
   })
 
+  describe('Tomato has Vegetable as parent, remap to have Fruit as parent', () => {
+    const syncId = mockValues.numbers[8]
+    const tokenType = mockValues.bytes32[3]
+    const vegetable = mockValues.addresses[3]
+    const fruit = mockValues.addresses[4]
+    const tomato = mockValues.addresses[5]
+    const syncData = abi.encode(['address', 'address', 'bytes32'], [fruit, tomato, tokenType])
+    let contracts
+    let syncState
+
+    before(async() => {
+      contracts = await deployer.deployFreshChildContracts(accounts)
+      const syncType = await contracts.childChainManager.MAP_TOKEN()
+      syncState = abi.encode(['bytes32', 'bytes'], [syncType, syncData])
+      await contracts.childChainManager.mapToken(vegetable, tomato)
+    })
+
+    it('Should have Tomato as child of Vegetable', async() => {
+      const childTokenAddress = await contracts.childChainManager.rootToChildToken(vegetable)
+      childTokenAddress.should.equal(tomato)
+    })
+
+    it('Should have Vegetable as parent of Tomato', async() => {
+      const parentTokenAddress = await contracts.childChainManager.childToRootToken(tomato)
+      parentTokenAddress.should.equal(vegetable)
+    })
+
+    it('Should be able to remap Tomato as child of Fruit on receiveing state', async() => {
+      await contracts.childChainManager.onStateReceive(syncId, syncState)
+    })
+
+    it('Should have Tomato as child of Fruit', async() => {
+      const childTokenAddress = await contracts.childChainManager.rootToChildToken(fruit)
+      childTokenAddress.should.equal(tomato)
+    })
+
+    it('Should have Fruit as parent of Tomato', async() => {
+      const parentTokenAddress = await contracts.childChainManager.childToRootToken(tomato)
+      parentTokenAddress.should.equal(fruit)
+    })
+
+    it('Vegetable should not have any child', async() => {
+      const parentTokenAddress = await contracts.childChainManager.rootToChildToken(vegetable)
+      parentTokenAddress.should.equal(mockValues.zeroAddress)
+    })
+  })
+
+  describe('Chimp has Baboon as child, remap to have Man as child', () => {
+    const syncId = mockValues.numbers[8]
+    const tokenType = mockValues.bytes32[3]
+    const baboon = mockValues.addresses[3]
+    const chimp = mockValues.addresses[4]
+    const man = mockValues.addresses[5]
+    const syncData = abi.encode(['address', 'address', 'bytes32'], [chimp, man, tokenType])
+    let contracts
+    let syncState
+
+    before(async() => {
+      contracts = await deployer.deployFreshChildContracts(accounts)
+      const syncType = await contracts.childChainManager.MAP_TOKEN()
+      syncState = abi.encode(['bytes32', 'bytes'], [syncType, syncData])
+      await contracts.childChainManager.mapToken(chimp, baboon)
+    })
+
+    it('Should have Baboon as child of Chimp', async() => {
+      const childTokenAddress = await contracts.childChainManager.rootToChildToken(chimp)
+      childTokenAddress.should.equal(baboon)
+    })
+
+    it('Should have Chimp as parent of Baboon', async() => {
+      const parentTokenAddress = await contracts.childChainManager.childToRootToken(baboon)
+      parentTokenAddress.should.equal(chimp)
+    })
+
+    it('Should be able to remap Man as child of Chimp on receiveing state', async() => {
+      await contracts.childChainManager.onStateReceive(syncId, syncState)
+    })
+
+    it('Should have Man as child of Chimp', async() => {
+      const childTokenAddress = await contracts.childChainManager.rootToChildToken(chimp)
+      childTokenAddress.should.equal(man)
+    })
+
+    it('Should have Chimp as parent of Man', async() => {
+      const parentTokenAddress = await contracts.childChainManager.childToRootToken(man)
+      parentTokenAddress.should.equal(chimp)
+    })
+
+    it('Baboon should not have any parent', async() => {
+      const parentTokenAddress = await contracts.childChainManager.childToRootToken(baboon)
+      parentTokenAddress.should.equal(mockValues.zeroAddress)
+    })
+  })
+
   describe('Receive state from non state syncer account', () => {
     const syncId = mockValues.numbers[8]
     const mockTokenType = mockValues.bytes32[3]
