@@ -118,3 +118,9 @@ npm run truffle -- migrate --network mainnetChild --f 5 --to 5
 - Register RootChainManager and ChildChainManager on StateSender
 - Set stateSenderAddress on RootChainManager
 - Grant STATE_SYNCER_ROLE on ChildChainManager
+
+### Command scripts (Management scripts)
+
+```bash
+npm run truffle exec scripts/update-implementation.js -- --network <network-name> <new-address>
+```
