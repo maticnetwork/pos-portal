@@ -2,6 +2,7 @@ pragma solidity 0.6.6;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IChildChainManager} from "./IChildChainManager.sol";
+import {ChildChainManagerStorage} from "./ChildChainManagerStorage.sol";
 import {IChildToken} from "../ChildToken/IChildToken.sol";
 import {Initializable} from "../../common/Initializable.sol";
 import {AccessControlMixin} from "../../common/AccessControlMixin.sol";
@@ -10,6 +11,11 @@ import {IStateReceiver} from "../IStateReceiver.sol";
 contract ChildChainManager is
     IChildChainManager,
     Initializable,
+    // created ChildChainManagerStorage to match old storage layout while upgrading
+    // AccessControlMixin mixin adds a string to storage
+    // so created ChildChainManagerStorage and moved variables there
+    // this way new string gets added after the variables that existed before it
+    ChildChainManagerStorage,
     AccessControlMixin,
     IStateReceiver
 {
@@ -18,14 +24,19 @@ contract ChildChainManager is
     bytes32 public constant MAPPER_ROLE = keccak256("MAPPER_ROLE");
     bytes32 public constant STATE_SYNCER_ROLE = keccak256("STATE_SYNCER_ROLE");
 
-    mapping(address => address) public rootToChildToken;
-    mapping(address => address) public childToRootToken;
-
     function initialize(address _owner) external initializer {
         _setupContractId("ChildChainManager");
         _setupRole(DEFAULT_ADMIN_ROLE, _owner);
         _setupRole(MAPPER_ROLE, _owner);
         _setupRole(STATE_SYNCER_ROLE, _owner);
+    }
+
+    // adding seperate function setupContractId since initialize is already called with old implementation
+    function setupContractId()
+        external
+        only(DEFAULT_ADMIN_ROLE)
+    {
+        _setupContractId("ChildChainManager");
     }
 
     /**

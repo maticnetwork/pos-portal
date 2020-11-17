@@ -89,6 +89,15 @@ interface IChildChainManager {
     function mapToken(address rootToken, address childToken) external;
 }
 
+// File: contracts/child/ChildChainManager/ChildChainManagerStorage.sol
+
+pragma solidity 0.6.6;
+
+contract ChildChainManagerStorage {
+    mapping(address => address) public rootToChildToken;
+    mapping(address => address) public childToRootToken;
+}
+
 // File: contracts/child/ChildToken/IChildToken.sol
 
 pragma solidity 0.6.6;
@@ -785,9 +794,15 @@ pragma solidity 0.6.6;
 
 
 
+
 contract ChildChainManager is
     IChildChainManager,
     Initializable,
+    // created ChildChainManagerStorage to match old storage layout while upgrading
+    // AccessControlMixin mixin adds a string to storage
+    // so created ChildChainManagerStorage and moved variables there
+    // this way new string gets added after the variables that existed before it
+    ChildChainManagerStorage,
     AccessControlMixin,
     IStateReceiver
 {
@@ -796,14 +811,19 @@ contract ChildChainManager is
     bytes32 public constant MAPPER_ROLE = keccak256("MAPPER_ROLE");
     bytes32 public constant STATE_SYNCER_ROLE = keccak256("STATE_SYNCER_ROLE");
 
-    mapping(address => address) public rootToChildToken;
-    mapping(address => address) public childToRootToken;
-
     function initialize(address _owner) external initializer {
         _setupContractId("ChildChainManager");
         _setupRole(DEFAULT_ADMIN_ROLE, _owner);
         _setupRole(MAPPER_ROLE, _owner);
         _setupRole(STATE_SYNCER_ROLE, _owner);
+    }
+
+    // adding seperate function setupContractId since initialize is already called with old implementation
+    function setupContractId()
+        external
+        only(DEFAULT_ADMIN_ROLE)
+    {
+        _setupContractId("ChildChainManager");
     }
 
     /**
