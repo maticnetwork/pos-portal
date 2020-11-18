@@ -9,7 +9,7 @@
     "bor": "cd test-blockchain && bash run-docker.sh",
     "bor:clean": "cd test-blockchain && bash stop-docker.sh",
     "truffle": "truffle",
-    "build": "truffle compile && node generate-artifacts.js && node flatten-contracts.js",
+    "build": "truffle compile && npm run artifacts && npm run flatten",
     "migrate:2": "truffle migrate --network root --f 2 --to 2",
     "migrate:3": "truffle migrate --network child --f 3 --to 3",
     "migrate:4": "truffle migrate --network root --f 4 --to 4",
@@ -21,8 +21,8 @@
     "lint:sol:fix": "solium -d contracts/ --fix",
     "lint:sol": "solium -d contracts/",
     "debug": "truffle debug",
-    "artifacts": "node generate-artifacts.js",
-    "flatten": "node flatten-contracts.js",
+    "artifacts": "node scripts/generate-artifacts.js",
+    "flatten": "node scripts/flatten-contracts.js",
     "test:ci": "scripts/run-test.sh"
   },
   "repository": {
