@@ -2,12 +2,10 @@ const UpgradableProxy = artifacts.require('UpgradableProxy')
 const AccessControl = artifacts.require('AccessControl')
 
 const contractList = [
-  /**
-   * contract address list
-   * '0x8829EC24A1BcaCdcF4a3CBDE3A4498172e9FCDcE',
-   * '0x8829EC24A1BcaCdcF4a3CBDE3A4498172e9FCDcE',
-   * '0x8829EC24A1BcaCdcF4a3CBDE3A4498172e9FCDcE',
-   */
+  // contract address list
+  // '',
+  // '',
+  // ''
 ]
 
 const newOwner = '' // new owner
