@@ -1,20 +1,24 @@
 pragma solidity 0.6.6;
 
 import {IMintableERC20} from "../RootToken/IMintableERC20.sol";
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {AccessControlMixin} from "../../common/AccessControlMixin.sol";
 import {RLPReader} from "../../lib/RLPReader.sol";
 import {ITokenPredicate} from "./ITokenPredicate.sol";
 import {Initializable} from "../../common/Initializable.sol";
 
-contract MintableERC20Predicate is ITokenPredicate, AccessControlMixin, Initializable {
+contract MintableERC20Predicate is
+    ITokenPredicate,
+    AccessControlMixin,
+    Initializable
+{
     using RLPReader for bytes;
     using RLPReader for RLPReader.RLPItem;
-    using SafeMath for uint256;
 
     bytes32 public constant MANAGER_ROLE = keccak256("MANAGER_ROLE");
     bytes32 public constant TOKEN_TYPE = keccak256("MintableERC20");
-    bytes32 public constant TRANSFER_EVENT_SIG = keccak256("Transfer(address,address,uint256)");
+    bytes32 public constant TRANSFER_EVENT_SIG = keccak256(
+        "Transfer(address,address,uint256)"
+    );
 
     event LockedMintableERC20(
         address indexed depositor,
@@ -43,15 +47,15 @@ contract MintableERC20Predicate is ITokenPredicate, AccessControlMixin, Initiali
         address depositReceiver,
         address rootToken,
         bytes calldata depositData
-    )
-        external
-        override
-        only(MANAGER_ROLE)
-    {
+    ) external override only(MANAGER_ROLE) {
         uint256 amount = abi.decode(depositData, (uint256));
 
         emit LockedMintableERC20(depositor, depositReceiver, rootToken, amount);
-        IMintableERC20(rootToken).transferFrom(depositor, address(this), amount);
+        IMintableERC20(rootToken).transferFrom(
+            depositor,
+            address(this),
+            amount
+        );
     }
 
     /**
@@ -65,11 +69,7 @@ contract MintableERC20Predicate is ITokenPredicate, AccessControlMixin, Initiali
         address,
         address rootToken,
         bytes memory log
-    )
-        public
-        override
-        only(MANAGER_ROLE)
-    {
+    ) public override only(MANAGER_ROLE) {
         RLPReader.RLPItem[] memory logRLPList = log.toRlpItem().toList();
         RLPReader.RLPItem[] memory logTopicRLPList = logRLPList[1].toList(); // topics
 
@@ -86,6 +86,8 @@ contract MintableERC20Predicate is ITokenPredicate, AccessControlMixin, Initiali
         );
 
         IMintableERC20 token = IMintableERC20(rootToken);
+
+        uint256 tokenBalance = token.balanceOf(address(this));
         uint256 amount = logRLPList[2].toUint();
 
         // Checking whether MintableERC20Predicate has enough balance
@@ -93,10 +95,10 @@ contract MintableERC20Predicate is ITokenPredicate, AccessControlMixin, Initiali
         //
         // If no, it'll mint those extra tokens & transfer `amount`
         // to withdrawer
-        if (token.balanceOf(address(this)) < amount) {
-            token.mint(address(this), amount.sub(token.balanceOf(address(this)));
+        if (tokenBalance < amount) {
+            token.mint(address(this), amount - tokenBalance);
         }
-        
+
         token.transfer(withdrawer, amount);
     }
 }
