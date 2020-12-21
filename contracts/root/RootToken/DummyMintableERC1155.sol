@@ -27,16 +27,16 @@ contract DummyMintableERC1155 is
         address account,
         uint256 id,
         uint256 amount,
-        bytes memory data
+        bytes calldata data
     ) external override only(PREDICATE_ROLE) {
         _mint(account, id, amount, data);
     }
 
     function mintBatch(
         address to,
-        uint256[] memory ids,
-        uint256[] memory amounts,
-        bytes memory data
+        uint256[] calldata ids,
+        uint256[] calldata amounts,
+        bytes calldata data
     ) external override only(PREDICATE_ROLE) {
         _mintBatch(to, ids, amounts, data);
     }
