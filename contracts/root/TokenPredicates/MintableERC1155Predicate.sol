@@ -115,7 +115,7 @@ contract MintableERC1155Predicate is
     function makeArrayWithAddress(address addr, uint256 size)
         internal
         pure
-        returns (uint256[] memory)
+        returns (address[] memory)
     {
         require(
             addr != address(0),
