@@ -1832,7 +1832,7 @@ contract ChildMintableERC1155 is
         uint256 id,
         uint256 amount,
         bytes calldata data
-    ) external override only(DEFAULT_ADMIN_ROLE) {
+    ) external only(DEFAULT_ADMIN_ROLE) {
         _mint(account, id, amount, data);
     }
 
@@ -1846,7 +1846,7 @@ contract ChildMintableERC1155 is
         uint256[] calldata ids,
         uint256[] calldata amounts,
         bytes calldata data
-    ) external override only(DEFAULT_ADMIN_ROLE) {
+    ) external only(DEFAULT_ADMIN_ROLE) {
         _mintBatch(to, ids, amounts, data);
     }
 }
