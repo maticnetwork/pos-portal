@@ -20,6 +20,15 @@ const contractsToFlatten = [
   },
   {
     path: 'contracts/root/TokenPredicates',
+    fileName: 'MintableERC20Predicate.sol'
+  },
+
+  {
+    path: 'contracts/root/TokenPredicates',
+    fileName: 'MintableERC20PredicateProxy.sol'
+  },
+  {
+    path: 'contracts/root/TokenPredicates',
     fileName: 'ERC721Predicate.sol'
   },
   {
@@ -44,6 +53,14 @@ const contractsToFlatten = [
   },
   {
     path: 'contracts/root/TokenPredicates',
+    fileName: 'MintableERC1155Predicate.sol'
+  },
+  {
+    path: 'contracts/root/TokenPredicates',
+    fileName: 'MintableERC1155PredicateProxy.sol'
+  },
+  {
+    path: 'contracts/root/TokenPredicates',
     fileName: 'EtherPredicate.sol'
   },
   {
@@ -60,6 +77,10 @@ const contractsToFlatten = [
   },
   {
     path: 'contracts/root/RootToken',
+    fileName: 'DummyMintableERC20.sol'
+  },
+  {
+    path: 'contracts/root/RootToken',
     fileName: 'DummyERC721.sol'
   },
   {
@@ -69,6 +90,10 @@ const contractsToFlatten = [
   {
     path: 'contracts/root/RootToken',
     fileName: 'DummyERC1155.sol'
+  },
+  {
+    path: 'contracts/root/RootToken',
+    fileName: 'DummyMintableERC1155.sol'
   },
   {
     path: 'contracts/child/ChildChainManager',
@@ -84,6 +109,10 @@ const contractsToFlatten = [
   },
   {
     path: 'contracts/child/ChildToken',
+    fileName: 'ChildMintableERC20.sol'
+  },
+  {
+    path: 'contracts/child/ChildToken',
     fileName: 'ChildERC721.sol'
   },
   {
@@ -93,6 +122,10 @@ const contractsToFlatten = [
   {
     path: 'contracts/child/ChildToken',
     fileName: 'ChildERC1155.sol'
+  },
+  {
+    path: 'contracts/child/ChildToken',
+    fileName: 'ChildMintableERC1155.sol'
   },
   {
     path: 'contracts/child/ChildToken',
@@ -108,7 +141,7 @@ const contractsToFlatten = [
   }
 ]
 
-contractsToFlatten.forEach(async(c) => {
+contractsToFlatten.forEach(async (c) => {
   const source = `./${c.path}/${c.fileName}`
   const dest = `./flat/${c.fileName}`
   const flat = await flatten([source])
