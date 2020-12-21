@@ -122,7 +122,7 @@ contract MintableERC1155Predicate is
             "MintableERC1155Predicate: Invalid address"
         );
         require(
-            count > 0,
+            size > 0,
             "MintableERC1155Predicate: Invalid resulting array length"
         );
 
