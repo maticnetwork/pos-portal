@@ -12,7 +12,7 @@ interface IMintableERC1155 is IERC1155 {
      * @param amount amount of token being minted
      * @param data extra byte data to be accompanied with minted tokens
      */
-    function mint(address account, uint256 id, uint256 amount, bytes memory data) external;
+    function mint(address account, uint256 id, uint256 amount, bytes calldata data) external;
 
     /**
      * @notice Batched version of singular token minting, where
@@ -25,5 +25,5 @@ interface IMintableERC1155 is IERC1155 {
      * @param amounts amount of each token being minted
      * @param data extra byte data to be accompanied with minted tokens
      */
-    function mintBatch(address to, uint256[] memory ids, uint256[] memory amounts, bytes memory data) external;
+    function mintBatch(address to, uint256[] calldata ids, uint256[] calldata amounts, bytes calldata data) external;
 }
