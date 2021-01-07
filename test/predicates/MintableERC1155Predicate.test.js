@@ -46,6 +46,7 @@ contract('MintableERC1155Predicate', (accounts) => {
             await dummyMintableERC1155.grantRole(PREDICATE_ROLE, mintableERC1155Predicate.address)
 
             const burnLog = getERC1155TransferBatchLog({
+                operator: depositor,
                 from: depositor,
                 to: mockValues.zeroAddress,
                 tokenIds: [tokenIdA, tokenIdB],
@@ -173,6 +174,7 @@ contract('MintableERC1155Predicate', (accounts) => {
             await dummyMintableERC1155.grantRole(PREDICATE_ROLE, mintableERC1155Predicate.address)
 
             const burnLog = getERC1155TransferBatchLog({
+                operator: depositor,
                 from: depositor,
                 to: mockValues.zeroAddress,
                 tokenIds: [tokenId],
@@ -211,6 +213,7 @@ contract('MintableERC1155Predicate', (accounts) => {
             await dummyMintableERC1155.grantRole(PREDICATE_ROLE, mintableERC1155Predicate.address)
 
             const burnLog = getERC1155TransferBatchLog({
+                operator: depositor,
                 from: depositor,
                 to: mockValues.zeroAddress,
                 tokenIds: [tokenId],
@@ -284,6 +287,7 @@ contract('MintableERC1155Predicate', (accounts) => {
             await dummyMintableERC1155.grantRole(PREDICATE_ROLE, mintableERC1155Predicate.address)
 
             const burnLog = getERC1155TransferBatchLog({
+                operator: depositor,
                 from: depositor,
                 to: mockValues.zeroAddress,
                 tokenIds: [tokenIdA, tokenIdB],
@@ -377,6 +381,7 @@ contract('MintableERC1155Predicate', (accounts) => {
             await dummyMintableERC1155.grantRole(PREDICATE_ROLE, mintableERC1155Predicate.address)
 
             const burnLog = getERC1155TransferBatchLog({
+                operator: depositor,
                 from: depositor,
                 to: mockValues.zeroAddress,
                 tokenIds: [tokenIdA, tokenIdB],
@@ -455,6 +460,7 @@ contract('MintableERC1155Predicate', (accounts) => {
             await dummyMintableERC1155.grantRole(PREDICATE_ROLE, mintableERC1155Predicate.address)
 
             const burnLog = getERC1155TransferBatchLog({
+                operator: depositor,
                 from: depositor,
                 to: mockValues.zeroAddress,
                 tokenIds: [tokenId],
@@ -499,6 +505,7 @@ contract('MintableERC1155Predicate', (accounts) => {
             await dummyMintableERC1155.grantRole(PREDICATE_ROLE, mintableERC1155Predicate.address)
 
             const burnLog = getERC1155TransferBatchLog({
+                operator: depositor,
                 from: depositor,
                 to: mockValues.zeroAddress,
                 tokenIds: [tokenId],
@@ -542,6 +549,7 @@ contract('MintableERC1155Predicate', (accounts) => {
             await dummyMintableERC1155.grantRole(PREDICATE_ROLE, mintableERC1155Predicate.address)
 
             const burnLog = getERC1155TransferBatchLog({
+                operator: depositor,
                 from: depositor,
                 to: mockValues.zeroAddress,
                 tokenIds: [tokenId],
