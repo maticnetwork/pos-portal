@@ -141,7 +141,7 @@ contract('MintableERC20Predicate', (accounts) => {
             await mintableERC20Predicate.exitTokens(depositor, dummyMintableERC20.address, burnLog)
             await dummyMintableERC20.approve(mintableERC20Predicate.address, depositAmount, { from: depositor })
 
-            await dummyERC20.approve(erc20Predicate.address, depositAmount, { from: depositor })
+            await dummyMintableERC20.approve(mintableERC20Predicate.address, depositAmount, { from: depositor })
         })
 
         it('Should revert with correct reason', async () => {
