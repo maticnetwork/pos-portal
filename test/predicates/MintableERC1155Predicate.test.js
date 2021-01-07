@@ -291,7 +291,7 @@ contract('MintableERC1155Predicate', (accounts) => {
                 from: depositor,
                 to: mockValues.zeroAddress,
                 tokenIds: [tokenIdA, tokenIdB],
-                amounts: [depositAmountA, depositAmountB]
+                amounts: [amountA, amountB]
             })
 
             await mintableERC1155Predicate.exitTokens(depositor, dummyMintableERC1155.address, burnLog)
