@@ -87,6 +87,7 @@ interface IChildChainManager {
     event TokenMapped(address indexed rootToken, address indexed childToken);
 
     function mapToken(address rootToken, address childToken) external;
+    function cleanMapToken(address rootToken, address childToken) external;
 }
 
 // File: contracts/child/ChildToken/IChildToken.sol
@@ -880,6 +881,21 @@ contract ChildChainManager is
 
         rootToChildToken[rootToken] = childToken;
         childToRootToken[childToken] = rootToken;
+
+        emit TokenMapped(rootToken, childToken);
+    }
+
+    /**
+     * @notice Clean polluted token mapping
+     * @param rootToken address of token on root chain. Since rename token was introduced later stage, 
+     * clean method is used to clean pollulated mapping
+     */
+    function cleanMapToken(
+        address rootToken,
+        address childToken
+    ) external override only(MAPPER_ROLE) {
+        rootToChildToken[rootToken] = address(0);
+        childToRootToken[childToken] = address(0);
 
         emit TokenMapped(rootToken, childToken);
     }

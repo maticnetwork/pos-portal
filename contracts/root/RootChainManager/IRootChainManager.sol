@@ -21,6 +21,11 @@ interface IRootChainManager {
         bytes32 tokenType
     ) external;
 
+    function cleanMapToken(
+        address rootToken,
+        address childToken
+    ) external;
+
     function remapToken(
         address rootToken,
         address childToken,
