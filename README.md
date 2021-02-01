@@ -124,3 +124,10 @@ npm run truffle -- migrate --network mainnetChild --f 5 --to 5
 ```bash
 npm run truffle exec scripts/update-implementation.js -- --network <network-name> <new-address>
 ```
+
+### Transfer proxy ownership and admin role
+Set list of contract addresses and new owner address in `6_change_owners.js` migration script  
+Set `MNEMONIC` and `API_KEY` as env variables
+```bash
+npm run change-owners -- --network <network-name>
+```

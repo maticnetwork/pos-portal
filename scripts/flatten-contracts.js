@@ -105,10 +105,26 @@ const contractsToFlatten = [
   {
     path: 'contracts/child/ChildToken/UpgradeableChildERC20',
     fileName: 'UChildERC20Proxy.sol'
+  },
+  {
+    path: 'contracts/tunnel',
+    fileName: 'BaseRootTunnel.sol'
+  },
+  {
+    path: 'contracts/tunnel',
+    fileName: 'BaseChildTunnel.sol'
+  },
+  {
+    path: 'contracts/tunnel',
+    fileName: 'RootTunnel.sol'
+  },
+  {
+    path: 'contracts/tunnel',
+    fileName: 'ChildTunnel.sol'
   }
 ]
 
-contractsToFlatten.forEach(async(c) => {
+contractsToFlatten.forEach(async (c) => {
   const source = `./${c.path}/${c.fileName}`
   const dest = `./flat/${c.fileName}`
   const flat = await flatten([source])
