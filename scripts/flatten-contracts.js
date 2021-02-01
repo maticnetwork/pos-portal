@@ -138,6 +138,22 @@ const contractsToFlatten = [
   {
     path: 'contracts/child/ChildToken/UpgradeableChildERC20',
     fileName: 'UChildERC20Proxy.sol'
+  },
+  {
+    path: 'contracts/tunnel',
+    fileName: 'BaseRootTunnel.sol'
+  },
+  {
+    path: 'contracts/tunnel',
+    fileName: 'BaseChildTunnel.sol'
+  },
+  {
+    path: 'contracts/tunnel',
+    fileName: 'RootTunnel.sol'
+  },
+  {
+    path: 'contracts/tunnel',
+    fileName: 'ChildTunnel.sol'
   }
 ]
 

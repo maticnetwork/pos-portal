@@ -15,7 +15,11 @@ const artifactsToGenerate = [
   'DummyMintableERC721.json',
   'DummyMintableERC1155.json',
   'MaticWETH.json',
-  'RootChainManager.json'
+  'RootChainManager.json',
+  'BaseRootTunnel.json',
+  'BaseChildTunnel.json',
+  'RootTunnel.json',
+  'ChildTunnel.json'
 ]
 
 artifactsToGenerate.forEach(a => {
