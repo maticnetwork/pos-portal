@@ -186,6 +186,11 @@ interface IRootChainManager {
         bytes32 tokenType
     ) external;
 
+    function cleanMapToken(
+        address rootToken,
+        address childToken
+    ) external;
+
     function remapToken(
         address rootToken,
         address childToken,
@@ -1814,6 +1819,22 @@ contract RootChainManager is
             "RootChainManager: ALREADY_MAPPED"
         );
         _mapToken(rootToken, childToken, tokenType);
+    }
+
+    /**
+     * @notice Clean polluted token mapping
+     * @param rootToken address of token on root chain. Since rename token was introduced later stage, 
+     * clean method is used to clean pollulated mapping
+     */
+    function cleanMapToken(
+        address rootToken,
+        address childToken
+    ) external override only(MAPPER_ROLE) {
+        rootToChildToken[rootToken] = address(0);
+        childToRootToken[childToken] = address(0);
+        tokenToType[rootToken] = bytes32(0);
+
+        emit TokenMapped(rootToken, childToken, tokenToType[rootToken]);
     }
 
     /**
