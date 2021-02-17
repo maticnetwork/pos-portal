@@ -8,7 +8,7 @@ import { expectRevert } from '@openzeppelin/test-helpers'
 import * as deployer from '../helpers/deployer'
 import { mockValues } from '../helpers/constants'
 import logDecoder from '../helpers/log-decoder.js'
-import { getERC721TransferLog } from '../helpers/logs'
+import { getERC721TransferLog, getERC721TransferWithMetadataLog } from '../helpers/logs'
 
 // Enable and inject BN dependency
 chai
@@ -255,6 +255,42 @@ contract('MintableERC721Predicate', (accounts) => {
     it('Token should be transfered to bob', async() => {
       const owner = await dummyMintableERC721.ownerOf(tokenId)
       owner.should.equal(bob)
+    })
+  })
+
+  describe('exitTokens with `TransferWithMetadata` event signature', () => {
+    const tokenId = mockValues.numbers[5]
+    const withdrawer = mockValues.addresses[8]
+    let dummyMintableERC721
+    let mintableERC721Predicate
+
+    before(async() => {
+      const contracts = await deployer.deployFreshRootContracts(accounts)
+      dummyMintableERC721 = contracts.dummyMintableERC721
+      mintableERC721Predicate = contracts.mintableERC721Predicate
+      const PREDICATE_ROLE = await dummyMintableERC721.PREDICATE_ROLE()
+      await dummyMintableERC721.grantRole(PREDICATE_ROLE, mintableERC721Predicate.address)
+    })
+
+    it('Transaction should go through', async() => {
+      const burnLog = getERC721TransferWithMetadataLog({
+        from: withdrawer,
+        to: mockValues.zeroAddress,
+        tokenId,
+        uri: `https://nfts.matic.network?id=${tokenId}`
+      })
+      let exitTx = await mintableERC721Predicate.exitTokens(withdrawer, dummyMintableERC721.address, burnLog)
+      should.exist(exitTx)
+    })
+
+    it('Token should be transfered to withdrawer', async() => {
+      const owner = await dummyMintableERC721.ownerOf(tokenId)
+      owner.should.equal(withdrawer)
+    })
+
+    it('Token metadata should be set', async() => {
+      const uri = await dummyMintableERC721.tokenURI(tokenId)
+      uri.should.equal(`https://nfts.matic.network?id=${tokenId}`)
     })
   })
 
