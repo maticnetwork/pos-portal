@@ -1,5 +1,8 @@
 import { RLP } from 'ethers/utils'
-import { AbiCoder, hexlify } from 'ethers/utils'
+import { AbiCoder } from 'ethers/utils'
+
+const Web3 = require('web3')
+const web3 = new Web3()
 
 
 import {
@@ -61,7 +64,7 @@ export const getERC721TransferWithMetadataLog = ({
       to,
       '0x' + tokenId.toString(16)
     ],
-    hexlify(uri)
+    web3.utils.toHex(uri)
   ])
 }
 
