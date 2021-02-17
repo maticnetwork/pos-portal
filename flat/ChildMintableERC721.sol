@@ -2120,6 +2120,8 @@ contract ChildMintableERC721 is
     bytes32 public constant DEPOSITOR_ROLE = keccak256("DEPOSITOR_ROLE");
     mapping (uint256 => bool) public withdrawnTokens;
 
+    event TransferWithMetadata(address indexed from, address indexed to, uint256 indexed tokenId, string uri);
+
     constructor(
         string memory name_,
         string memory symbol_,
@@ -2172,6 +2174,27 @@ contract ChildMintableERC721 is
         require(_msgSender() == ownerOf(tokenId), "ChildMintableERC721: INVALID_TOKEN_OWNER");
         withdrawnTokens[tokenId] = true;
         _burn(tokenId);
+    }
+
+    /**
+     * @notice called when user wants to withdraw token back to root chain with token URI
+     * @dev Should handle withraw by burning user's token.
+     * Should set `withdrawnTokens` mapping to `true` for the tokenId being withdrawn
+     * This transaction will be verified when exiting on root chain
+     *
+     * Also emits event `TransferWithMetadata` which will have non-indexed
+     * field `string uri`, to be used when exiting token on root chain
+     * @param tokenId tokenId to withdraw
+     */
+    function withdrawWithMetadata(uint256 tokenId) external {
+
+        require(_msgSender() == ownerOf(tokenId), "ChildMintableERC721: INVALID_TOKEN_OWNER");
+        withdrawnTokens[tokenId] = true;
+
+        emit TransferWithMetadata(ownerOf(tokenId), address(0), tokenId, tokenURI(tokenId));
+
+        _burn(tokenId);
+
     }
 
     /**
