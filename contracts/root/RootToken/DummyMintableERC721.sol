@@ -41,6 +41,16 @@ contract DummyMintableERC721 is
     }
 
     /**
+     * @dev See {IMintableERC721-mint}.
+     */
+    function mint(address user, uint256 tokenId, string memory uri) external override only(PREDICATE_ROLE) {
+        _mint(user, tokenId);
+
+        // Attempting to set uri to newly minted token
+        _setTokenURI(tokenId, uri);
+    }
+
+    /**
      * @dev See {IMintableERC721-exists}.
      */
     function exists(uint256 tokenId) external view override returns (bool) {

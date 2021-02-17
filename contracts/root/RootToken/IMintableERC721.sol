@@ -26,7 +26,7 @@ interface IMintableERC721 is IERC721 {
      * Note : If you're interested in taking token metadata from L2 to L1 during exit, you must
      * implement this method
      */
-    function mint(address user, uint256 tokenId, string uri) external;
+    function mint(address user, uint256 tokenId, string memory uri) external;
 
     /**
      * @notice check if token already exists, return true if it does exist
