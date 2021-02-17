@@ -17,6 +17,8 @@ contract MintableERC721Predicate is ITokenPredicate, AccessControlMixin, Initial
     bytes32 public constant TOKEN_TYPE = 0xd4392723c111fcb98b073fe55873efb447bcd23cd3e49ec9ea2581930cd01ddc;
     // keccak("Transfer(address,address,uint256)")
     bytes32 public constant TRANSFER_EVENT_SIG = 0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef;
+    // keccak("TransferWithMetadata(address,address,uint256,string)")
+    bytes32 public constant TRANSFER_WITH_METADATA_EVENT_SIG = 0xf3c6803764de9a0fc1c2acb6a71f53407c5e2b9a3e04973e6586da23d64ecaa5;
 
     event LockedMintableERC721(
         address indexed depositor,
