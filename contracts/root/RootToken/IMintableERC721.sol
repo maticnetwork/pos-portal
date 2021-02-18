@@ -29,6 +29,18 @@ interface IMintableERC721 is IERC721 {
     function mint(address user, uint256 tokenId, string calldata uri) external;
 
     /**
+     * @notice To be called when exiting token with metadata from L2
+     *
+     * @dev This method needs to be implemented in root chain contract
+     * and to be invoked by predicate contract when exiting token
+     * with extra metadata
+     *
+     * Decoding of `data` is completely upto implementor, just need to take care
+     * of how it was encoded in L2, using method `ChildMintableERC721.encodeTokenMetadata`
+     */
+    function _setTokenMetadata(bytes memory data) internal;
+
+    /**
      * @notice check if token already exists, return true if it does exist
      * @dev this check will be used by the predicate to determine if the token needs to be minted or transfered
      * @param tokenId tokenId being checked
