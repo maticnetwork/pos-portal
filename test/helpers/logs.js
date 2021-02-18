@@ -54,7 +54,7 @@ export const getERC721TransferWithMetadataLog = ({
   from,
   to,
   tokenId,
-  uri
+  metaData
 }) => {
   return RLP.encode([
     '0x0',
@@ -64,7 +64,7 @@ export const getERC721TransferWithMetadataLog = ({
       to,
       '0x' + tokenId.toString(16)
     ],
-    web3.utils.toHex(uri)
+    metaData
   ])
 }
 
