@@ -1123,15 +1123,27 @@ interface IMintableERC721 is IERC721 {
      * Make sure minting is only done either by this function/ 👆
      * @param user user address for whom token is being minted
      * @param tokenId tokenId being minted
-     * @param uri associate uri of token, by calling internal function `_setTokenURI`
-     *
-     * Here : https://github.com/OpenZeppelin/openzeppelin-contracts/blob/ee6348a7a0b08f82344f2b61e903788aa9dcf36c/contracts/token/ERC721/ERC721.sol#L371-L374
-     * Setting URI is fully root token implementor's responsibility
+     * @param metaData Associated token metadata, to be decoded & set using `setTokenMetadata`
      *
      * Note : If you're interested in taking token metadata from L2 to L1 during exit, you must
      * implement this method
      */
-    function mint(address user, uint256 tokenId, string calldata uri) external;
+    function mint(address user, uint256 tokenId, bytes calldata metaData) external;
+
+    /**
+     * @notice To be called when exiting token with metadata from L2
+     *
+     * @dev This method needs to be implemented in root chain contract
+     * and to be invoked by predicate contract when exiting token
+     * with extra metadata
+     *
+     * Decoding of `data` is completely upto implementor, just need to take care
+     * of how it was encoded in L2, using method `ChildMintableERC721.encodeTokenMetadata`
+     *
+     * @param tokenId Token for which metadata being set
+     * @param data Associated token metadata, to be decoded & set here
+     */
+    function setTokenMetadata(uint256 tokenId, bytes calldata data) external;
 
     /**
      * @notice check if token already exists, return true if it does exist
@@ -1325,7 +1337,7 @@ contract MintableERC721Predicate is ITokenPredicate, AccessControlMixin, Initial
             // event signature proof, which is defined under first `if` clause
             //
             // If you've called `withdrawWithMetadata`, you should submit
-            // proof of event signature `TransferWithMetadata(address,address,uint256,string)`
+            // proof of event signature `TransferWithMetadata(address,address,uint256,bytes)`
 
             address withdrawer = address(logTopicRLPList[1].toUint()); // topic1 is from address
 
@@ -1346,7 +1358,7 @@ contract MintableERC721Predicate is ITokenPredicate, AccessControlMixin, Initial
             } else {
                 // Minting with metadata received from L2 i.e. emitted
                 // by event `TransferWithMetadata` during burning
-                token.mint(withdrawer, tokenId, string(logRLPList[2].toBytes()));
+                token.mint(withdrawer, tokenId, logRLPList[2].toBytes());
             }
 
         } else {

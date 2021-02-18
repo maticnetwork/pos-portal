@@ -2120,7 +2120,7 @@ contract ChildMintableERC721 is
     bytes32 public constant DEPOSITOR_ROLE = keccak256("DEPOSITOR_ROLE");
     mapping (uint256 => bool) public withdrawnTokens;
 
-    event TransferWithMetadata(address indexed from, address indexed to, uint256 indexed tokenId, string uri);
+    event TransferWithMetadata(address indexed from, address indexed to, uint256 indexed tokenId, bytes metaData);
 
     constructor(
         string memory name_,
@@ -2182,18 +2182,36 @@ contract ChildMintableERC721 is
      * Should set `withdrawnTokens` mapping to `true` for the tokenId being withdrawn
      * This transaction will be verified when exiting on root chain
      *
-     * Also emits event `TransferWithMetadata` which will have non-indexed
-     * field `string uri`, to be used when exiting token on root chain
+     * Before calling this function, you may want calling `encodeTokenMetadata`
+     * and get metadata to be transferred from L2 to L1 during exit
+     *
      * @param tokenId tokenId to withdraw
+     * @param metaData Metadata which client wants to take along with it, generally return value of `encodeTokenMetadata`
      */
-    function withdrawWithMetadata(uint256 tokenId) external {
+    function withdrawWithMetadata(uint256 tokenId, bytes calldata metaData) external {
 
         require(_msgSender() == ownerOf(tokenId), "ChildMintableERC721: INVALID_TOKEN_OWNER");
         withdrawnTokens[tokenId] = true;
 
-        emit TransferWithMetadata(ownerOf(tokenId), address(0), tokenId, tokenURI(tokenId));
+        emit TransferWithMetadata(ownerOf(tokenId), address(0), tokenId, metaData);
 
         _burn(tokenId);
+
+    }
+
+    /**
+     * @notice This method is supposed to be called by client when withdrawing token with metadata
+     * and pass return value of this function as second paramter of `withdrawWithMetadata` method
+     *
+     * It can be overridden by clients to encode data in a different form, which needs to
+     * be decoded back by them correctly during exiting
+     *
+     * @param tokenId Token for which URI to be fetched
+     * @param extraData Arbitrary byte data which can be encoded along with token metadata
+     */
+    function encodeTokenMetadata(uint256 tokenId, bytes calldata extraData) external virtual returns (bytes memory) {
+
+        return abi.encode(name(), symbol(), tokenURI(tokenId), extraData);
 
     }
 
