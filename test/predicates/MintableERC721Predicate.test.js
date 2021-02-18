@@ -288,10 +288,6 @@ contract('MintableERC721Predicate', (accounts) => {
       owner.should.equal(withdrawer)
     })
 
-    it('Token metadata should be set', async() => {
-      const uri = await dummyMintableERC721.tokenURI(tokenId)
-      uri.should.equal(`https://nfts.matic.network?id=${tokenId}`)
-    })
   })
 
   describe('exitTokens with incorrect burn transaction signature', () => {
