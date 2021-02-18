@@ -128,7 +128,7 @@ contract MintableERC721Predicate is ITokenPredicate, AccessControlMixin, Initial
             // event signature proof, which is defined under first `if` clause
             //
             // If you've called `withdrawWithMetadata`, you should submit
-            // proof of event signature `TransferWithMetadata(address,address,uint256,string)`
+            // proof of event signature `TransferWithMetadata(address,address,uint256,bytes)`
 
             address withdrawer = address(logTopicRLPList[1].toUint()); // topic1 is from address
 
@@ -149,7 +149,7 @@ contract MintableERC721Predicate is ITokenPredicate, AccessControlMixin, Initial
             } else {
                 // Minting with metadata received from L2 i.e. emitted
                 // by event `TransferWithMetadata` during burning
-                token.mint(withdrawer, tokenId, string(logRLPList[2].toBytes()));
+                token.mint(withdrawer, tokenId, logRLPList[2].toBytes());
             }
 
         } else {
