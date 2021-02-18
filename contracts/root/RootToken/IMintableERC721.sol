@@ -18,7 +18,7 @@ interface IMintableERC721 is IERC721 {
      * Make sure minting is only done either by this function/ 👆
      * @param user user address for whom token is being minted
      * @param tokenId tokenId being minted
-     * @param metaData Associated token metadata, to be decoded & set using `_setTokenMetadata`
+     * @param metaData Associated token metadata, to be decoded & set using `setTokenMetadata`
      *
      * Note : If you're interested in taking token metadata from L2 to L1 during exit, you must
      * implement this method
@@ -38,7 +38,7 @@ interface IMintableERC721 is IERC721 {
      * @param tokenId Token for which metadata being set
      * @param data Associated token metadata, to be decoded & set here
      */
-    function _setTokenMetadata(uint256 tokenId, bytes memory data) internal;
+    function setTokenMetadata(uint256 tokenId, bytes calldata data) external;
 
     /**
      * @notice check if token already exists, return true if it does exist

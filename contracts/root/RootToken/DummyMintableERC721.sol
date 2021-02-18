@@ -49,7 +49,7 @@ contract DummyMintableERC721 is
     function mint(address user, uint256 tokenId, bytes calldata metaData) external override only(PREDICATE_ROLE) {
         _mint(user, tokenId);
 
-        _setTokenMetadata(tokenId, metaData);
+        this.setTokenMetadata(tokenId, metaData);
     }
 
     /**
@@ -58,7 +58,7 @@ contract DummyMintableERC721 is
      * If you're attempting to bring metadata associated with token
      * from L2 to L1, you must implement this method
      */
-    function _setTokenMetadata(uint256 tokenId, bytes calldata data) internal override {
+    function setTokenMetadata(uint256 tokenId, bytes calldata data) external override {
         // This function should decode metadata obtained from L2
         // and attempt to set it for this `tokenId`
     }
