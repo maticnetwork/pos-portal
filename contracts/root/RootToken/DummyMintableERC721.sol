@@ -42,13 +42,27 @@ contract DummyMintableERC721 is
 
     /**
      * @dev See {IMintableERC721-mint}.
+     * 
+     * If you're attempting to bring metadata associated with token
+     * from L2 to L1, you must implement this method
      */
-    function mint(address user, uint256 tokenId, string calldata uri) external override only(PREDICATE_ROLE) {
+    function mint(address user, uint256 tokenId, bytes calldata metaData) external override only(PREDICATE_ROLE) {
         _mint(user, tokenId);
 
-        // Attempting to set uri to newly minted token
-        _setTokenURI(tokenId, uri);
+        _setTokenMetadata(tokenId, metaData);
     }
+
+    /**
+     * @dev Read more @ {IMintableERC721-_setTokenMetadata}
+     *
+     * If you're attempting to bring metadata associated with token
+     * from L2 to L1, you must implement this method
+     */
+    function _setTokenMetadata(uint256 tokenId, bytes calldata data) internal override {
+        // This function should decode metadata obtained from L2
+        // and attempt to set it for this `tokenId`
+    }
+
 
     /**
      * @dev See {IMintableERC721-exists}.
