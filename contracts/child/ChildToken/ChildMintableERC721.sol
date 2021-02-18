@@ -85,7 +85,7 @@ contract ChildMintableERC721 is
      * @param tokenId tokenId to withdraw
      * @param metaData Metadata which client wants to take along with it, generally return value of `encodeTokenMetadata`
      */
-    function withdrawWithMetadata(uint256 tokenId, bytes memory metaData) external {
+    function withdrawWithMetadata(uint256 tokenId, bytes calldata metaData) external {
 
         require(_msgSender() == ownerOf(tokenId), "ChildMintableERC721: INVALID_TOKEN_OWNER");
         withdrawnTokens[tokenId] = true;

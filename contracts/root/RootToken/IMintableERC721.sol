@@ -36,7 +36,7 @@ interface IMintableERC721 is IERC721 {
      * of how it was encoded in L2, using method `ChildMintableERC721.encodeTokenMetadata`
      *
      * @param tokenId Token for which metadata being set
-     * @param metaData Associated token metadata, to be decoded & set here
+     * @param data Associated token metadata, to be decoded & set here
      */
     function _setTokenMetadata(uint256 tokenId, bytes memory data) internal;
 
