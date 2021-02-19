@@ -91,7 +91,7 @@ contract ChildMintableERC721 is
         withdrawnTokens[tokenId] = true;
 
         // Encoding metadata associated with tokenId & emitting event
-        emit TransferWithMetadata(ownerOf(tokenId), address(0), tokenId, encodeTokenMetadata(tokenId));
+        emit TransferWithMetadata(ownerOf(tokenId), address(0), tokenId, this.encodeTokenMetadata(tokenId));
 
         // Attempting to delete entry from extra data associative array
         delete(extraData[tokenId]);
@@ -109,7 +109,7 @@ contract ChildMintableERC721 is
      *
      * @param tokenId Token for which URI to be fetched
      */
-    function encodeTokenMetadata(uint256 tokenId) external virtual returns (bytes memory) {
+    function encodeTokenMetadata(uint256 tokenId) external view virtual returns (bytes memory) {
 
         return abi.encode(name(), symbol(), tokenURI(tokenId), extraData[tokenId]);
 
