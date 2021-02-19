@@ -56,11 +56,19 @@ contract DummyMintableERC721 is
      * @dev Read more @ {IMintableERC721-_setTokenMetadata}
      *
      * If you're attempting to bring metadata associated with token
-     * from L2 to L1, you must implement this method
+     * from L2 to L1, you must implement this method, to be invoked
+     * when minting token back on L1, during exit
      */
-    function setTokenMetadata(uint256 tokenId, bytes calldata data) external override {
+    function setTokenMetadata(uint256 tokenId, bytes calldata data) external override only(PREDICATE_ROLE) {
         // This function should decode metadata obtained from L2
         // and attempt to set it for this `tokenId`
+        //
+        // Following is just a default implementation, feel
+        // free to define your own encoding/ decoding scheme
+        // for L2 -> L1 token metadata transfer
+        string memory uri = abi.decode(data, (string))
+
+        this._setTokenURI(tokenId, uri);
     }
 
 
