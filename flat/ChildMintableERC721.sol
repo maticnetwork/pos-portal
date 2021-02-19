@@ -2119,6 +2119,7 @@ contract ChildMintableERC721 is
 {
     bytes32 public constant DEPOSITOR_ROLE = keccak256("DEPOSITOR_ROLE");
     mapping (uint256 => bool) public withdrawnTokens;
+    mapping(uint256 => bytes) public extraData;
 
     event TransferWithMetadata(address indexed from, address indexed to, uint256 indexed tokenId, bytes metaData);
 
@@ -2186,14 +2187,17 @@ contract ChildMintableERC721 is
      * and get metadata to be transferred from L2 to L1 during exit
      *
      * @param tokenId tokenId to withdraw
-     * @param metaData Metadata which client wants to take along with it, generally return value of `encodeTokenMetadata`
      */
-    function withdrawWithMetadata(uint256 tokenId, bytes calldata metaData) external {
+    function withdrawWithMetadata(uint256 tokenId) external {
 
         require(_msgSender() == ownerOf(tokenId), "ChildMintableERC721: INVALID_TOKEN_OWNER");
         withdrawnTokens[tokenId] = true;
 
-        emit TransferWithMetadata(ownerOf(tokenId), address(0), tokenId, metaData);
+        // Encoding metadata associated with tokenId & emitting event
+        emit TransferWithMetadata(ownerOf(tokenId), address(0), tokenId, this.encodeTokenMetadata(tokenId));
+
+        // Attempting to delete entry from extra data associative array
+        delete(extraData[tokenId]);
 
         _burn(tokenId);
 
@@ -2207,12 +2211,25 @@ contract ChildMintableERC721 is
      * be decoded back by them correctly during exiting
      *
      * @param tokenId Token for which URI to be fetched
-     * @param extraData Arbitrary byte data which can be encoded along with token metadata
      */
-    function encodeTokenMetadata(uint256 tokenId, bytes calldata extraData) external virtual returns (bytes memory) {
+    function encodeTokenMetadata(uint256 tokenId) external view virtual returns (bytes memory) {
 
-        return abi.encode(name(), symbol(), tokenURI(tokenId), extraData);
+        return abi.encode(name(), symbol(), tokenURI(tokenId), extraData[tokenId]);
 
+    }
+
+    /**
+     * @notice Attempt to associate extra data with tokenId, which will be queried
+     * in `encodeTokenMetadata`, to be eventually emitted using event `TransferWithMetadata`
+     *
+     * How this piece of arbitrary metadata to be encoded/ decoded, is completely
+     * upto developer
+     *
+     * @param tokenId Associate byte encoded metadata with this tokenId
+     * @param data Byte encoded data which is to be associated
+     */
+    function setExtraData(uint256 tokenId, bytes calldata data) external virtual only(DEFAULT_ADMIN_ROLE) {
+        extraData[tokenId] = data;
     }
 
     /**
