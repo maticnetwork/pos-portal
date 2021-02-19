@@ -66,9 +66,9 @@ contract DummyMintableERC721 is
         // Following is just a default implementation, feel
         // free to define your own encoding/ decoding scheme
         // for L2 -> L1 token metadata transfer
-        string memory uri = abi.decode(data, (string))
+        string memory uri = abi.decode(data, (string));
 
-        this._setTokenURI(tokenId, uri);
+        _setTokenURI(tokenId, uri);
     }
 
 
