@@ -2210,7 +2210,10 @@ contract ChildMintableERC721 is
      */
     function encodeTokenMetadata(uint256 tokenId) external view virtual returns (bytes memory) {
 
-        return abi.encode(name(), symbol(), tokenURI(tokenId));
+        // You're always free to change this default implementation
+        // and pack more data in byte array which can be decoded back
+        // in L1
+        return abi.encode(tokenURI(tokenId));
 
     }
 
