@@ -2093,21 +2093,6 @@ interface IMintableERC721 is IERC721 {
     function mint(address user, uint256 tokenId, bytes calldata metaData) external;
 
     /**
-     * @notice To be called when exiting token with metadata from L2
-     *
-     * @dev This method needs to be implemented in root chain contract
-     * and to be invoked by predicate contract when exiting token
-     * with extra metadata
-     *
-     * Decoding of `data` is completely upto implementor, just need to take care
-     * of how it was encoded in L2, using method `ChildMintableERC721.encodeTokenMetadata`
-     *
-     * @param tokenId Token for which metadata being set
-     * @param data Associated token metadata, to be decoded & set here
-     */
-    function setTokenMetadata(uint256 tokenId, bytes calldata data) external;
-
-    /**
      * @notice check if token already exists, return true if it does exist
      * @dev this check will be used by the predicate to determine if the token needs to be minted or transfered
      * @param tokenId tokenId being checked
@@ -2186,25 +2171,11 @@ contract DummyMintableERC721 is
     }
 
     /**
-     * @dev See {IMintableERC721-mint}.
-     * 
-     * If you're attempting to bring metadata associated with token
-     * from L2 to L1, you must implement this method
-     */
-    function mint(address user, uint256 tokenId, bytes calldata metaData) external override only(PREDICATE_ROLE) {
-        _mint(user, tokenId);
-
-        this.setTokenMetadata(tokenId, metaData);
-    }
-
-    /**
-     * @dev Read more @ {IMintableERC721-_setTokenMetadata}
-     *
      * If you're attempting to bring metadata associated with token
      * from L2 to L1, you must implement this method, to be invoked
      * when minting token back on L1, during exit
      */
-    function setTokenMetadata(uint256 tokenId, bytes calldata data) external override only(PREDICATE_ROLE) {
+    function setTokenMetadata(uint256 tokenId, bytes memory data) internal virtual {
         // This function should decode metadata obtained from L2
         // and attempt to set it for this `tokenId`
         //
@@ -2214,6 +2185,18 @@ contract DummyMintableERC721 is
         string memory uri = abi.decode(data, (string));
 
         _setTokenURI(tokenId, uri);
+    }
+
+    /**
+     * @dev See {IMintableERC721-mint}.
+     * 
+     * If you're attempting to bring metadata associated with token
+     * from L2 to L1, you must implement this method
+     */
+    function mint(address user, uint256 tokenId, bytes calldata metaData) external override only(PREDICATE_ROLE) {
+        _mint(user, tokenId);
+
+        setTokenMetadata(tokenId, metaData);
     }
 
 
