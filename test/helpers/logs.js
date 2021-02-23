@@ -1,10 +1,10 @@
 import { RLP } from 'ethers/utils'
 import { AbiCoder } from 'ethers/utils'
 
-
 import {
   erc20TransferEventSig,
   erc721TransferEventSig,
+  erc721TransferWithMetadataEventSig,
   erc1155TransferSingleEventSig,
   erc1155TransferBatchEventSig
 } from './constants'
@@ -42,6 +42,25 @@ export const getERC721TransferLog = ({
       to,
       '0x' + tokenId.toString(16)
     ]
+  ])
+}
+
+export const getERC721TransferWithMetadataLog = ({
+  overrideSig,
+  from,
+  to,
+  tokenId,
+  metaData
+}) => {
+  return RLP.encode([
+    '0x0',
+    [
+      overrideSig ||   erc721TransferWithMetadataEventSig,
+      from,
+      to,
+      '0x' + tokenId.toString(16)
+    ],
+    abi.encode(['string'], [metaData]) // ABI encoded metadata, because that's how dummy root token expects it
   ])
 }
 

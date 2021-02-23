@@ -1118,6 +1118,19 @@ interface IMintableERC721 is IERC721 {
     function mint(address user, uint256 tokenId) external;
 
     /**
+     * @notice called by predicate contract to mint tokens while withdrawing with metadata from L2
+     * @dev Should be callable only by MintableERC721Predicate
+     * Make sure minting is only done either by this function/ 👆
+     * @param user user address for whom token is being minted
+     * @param tokenId tokenId being minted
+     * @param metaData Associated token metadata, to be decoded & set using `setTokenMetadata`
+     *
+     * Note : If you're interested in taking token metadata from L2 to L1 during exit, you must
+     * implement this method
+     */
+    function mint(address user, uint256 tokenId, bytes calldata metaData) external;
+
+    /**
      * @notice check if token already exists, return true if it does exist
      * @dev this check will be used by the predicate to determine if the token needs to be minted or transfered
      * @param tokenId tokenId being checked
@@ -1198,6 +1211,8 @@ contract MintableERC721Predicate is ITokenPredicate, AccessControlMixin, Initial
     bytes32 public constant TOKEN_TYPE = 0xd4392723c111fcb98b073fe55873efb447bcd23cd3e49ec9ea2581930cd01ddc;
     // keccak("Transfer(address,address,uint256)")
     bytes32 public constant TRANSFER_EVENT_SIG = 0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef;
+    // keccak("TransferWithMetadata(address,address,uint256,string)")
+    bytes32 public constant TRANSFER_WITH_METADATA_EVENT_SIG = 0xf3c6803764de9a0fc1c2acb6a71f53407c5e2b9a3e04973e6586da23d64ecaa5;
 
     event LockedMintableERC721(
         address indexed depositor,
@@ -1273,28 +1288,69 @@ contract MintableERC721Predicate is ITokenPredicate, AccessControlMixin, Initial
         RLPReader.RLPItem[] memory logRLPList = log.toRlpItem().toList();
         RLPReader.RLPItem[] memory logTopicRLPList = logRLPList[1].toList(); // topics
 
-        require(
-            bytes32(logTopicRLPList[0].toUint()) == TRANSFER_EVENT_SIG, // topic0 is event sig
-            "MintableERC721Predicate: INVALID_SIGNATURE"
-        );
+        // If it's a simple exit ( with out metadata coming from L2 to L1 )
+        if(bytes32(logTopicRLPList[0].toUint()) == TRANSFER_EVENT_SIG) {
 
-        address withdrawer = address(logTopicRLPList[1].toUint()); // topic1 is from address
+            address withdrawer = address(logTopicRLPList[1].toUint()); // topic1 is from address
 
-        require(
-            address(logTopicRLPList[2].toUint()) == address(0), // topic2 is to address
-            "MintableERC721Predicate: INVALID_RECEIVER"
-        );
+            require(
+                address(logTopicRLPList[2].toUint()) == address(0), // topic2 is to address
+                "MintableERC721Predicate: INVALID_RECEIVER"
+            );
 
-        IMintableERC721 token = IMintableERC721(rootToken);
-        uint256 tokenId = logTopicRLPList[3].toUint(); // topic3 is tokenId field
-        if (token.exists(tokenId)) {
-          token.safeTransferFrom(
-              address(this),
-              withdrawer,
-              tokenId
-          );
+            IMintableERC721 token = IMintableERC721(rootToken);
+
+            uint256 tokenId = logTopicRLPList[3].toUint(); // topic3 is tokenId field
+            if (token.exists(tokenId)) {
+                token.safeTransferFrom(
+                    address(this),
+                    withdrawer,
+                    tokenId
+                );
+            } else {
+                token.mint(withdrawer, tokenId);
+            }
+
+        } else if (bytes32(logTopicRLPList[0].toUint()) == TRANSFER_WITH_METADATA_EVENT_SIG) { 
+            // If this is NFT exit with metadata i.e. URI 👆
+            //
+            // Note: If your token is only minted in L2, you can exit
+            // it with metadata. But if it was minted on L1, it'll be
+            // simply transferred to withdrawer address. And in that case,
+            // it's lot better to exit with `Transfer(address,address,uint256)`
+            // i.e. calling `withdraw` method on L2 contract
+            // event signature proof, which is defined under first `if` clause
+            //
+            // If you've called `withdrawWithMetadata`, you should submit
+            // proof of event signature `TransferWithMetadata(address,address,uint256,bytes)`
+
+            address withdrawer = address(logTopicRLPList[1].toUint()); // topic1 is from address
+
+            require(
+                address(logTopicRLPList[2].toUint()) == address(0), // topic2 is to address
+                "MintableERC721Predicate: INVALID_RECEIVER"
+            );
+
+            IMintableERC721 token = IMintableERC721(rootToken);
+
+            uint256 tokenId = logTopicRLPList[3].toUint(); // topic3 is tokenId field
+            if (token.exists(tokenId)) {
+                token.safeTransferFrom(
+                    address(this),
+                    withdrawer,
+                    tokenId
+                );
+            } else {
+                // Minting with metadata received from L2 i.e. emitted
+                // by event `TransferWithMetadata` during burning
+                token.mint(withdrawer, tokenId, logRLPList[2].toBytes());
+            }
+
         } else {
-          token.mint(withdrawer, tokenId);
+            // Attempting to exit with some event signature from L2, which is
+            // not ( yet ) supported by L1 exit manager
+            revert("MintableERC721Predicate: INVALID_SIGNATURE");
         }
+        
     }
 }

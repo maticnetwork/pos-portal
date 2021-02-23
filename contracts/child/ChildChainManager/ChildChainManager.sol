@@ -7,6 +7,7 @@ import {Initializable} from "../../common/Initializable.sol";
 import {AccessControlMixin} from "../../common/AccessControlMixin.sol";
 import {IStateReceiver} from "../IStateReceiver.sol";
 
+
 contract ChildChainManager is
     IChildChainManager,
     Initializable,
@@ -76,16 +77,19 @@ contract ChildChainManager is
         }
     }
 
-    function _syncDeposit(bytes memory syncData) private {
-        (address user, address rootToken, bytes memory depositData) = abi
-            .decode(syncData, (address, address, bytes));
-        address childTokenAddress = rootToChildToken[rootToken];
-        require(
-            childTokenAddress != address(0x0),
-            "ChildChainManager: TOKEN_NOT_MAPPED"
-        );
-        IChildToken childTokenContract = IChildToken(childTokenAddress);
-        childTokenContract.deposit(user, depositData);
+    /**
+     * @notice Clean polluted token mapping
+     * @param rootToken address of token on root chain. Since rename token was introduced later stage,
+     * clean method is used to clean pollulated mapping
+     */
+    function cleanMapToken(
+        address rootToken,
+        address childToken
+    ) external override only(MAPPER_ROLE) {
+        rootToChildToken[rootToken] = address(0);
+        childToRootToken[childToken] = address(0);
+
+        emit TokenMapped(rootToken, childToken);
     }
 
     function _mapToken(address rootToken, address childToken) private {
@@ -106,18 +110,15 @@ contract ChildChainManager is
         emit TokenMapped(rootToken, childToken);
     }
 
-    /**
-     * @notice Clean polluted token mapping
-     * @param rootToken address of token on root chain. Since rename token was introduced later stage, 
-     * clean method is used to clean pollulated mapping
-     */
-    function cleanMapToken(
-        address rootToken,
-        address childToken
-    ) external override only(MAPPER_ROLE) {
-        rootToChildToken[rootToken] = address(0);
-        childToRootToken[childToken] = address(0);
-
-        emit TokenMapped(rootToken, childToken);
+    function _syncDeposit(bytes memory syncData) private {
+        (address user, address rootToken, bytes memory depositData) = abi
+            .decode(syncData, (address, address, bytes));
+        address childTokenAddress = rootToChildToken[rootToken];
+        require(
+            childTokenAddress != address(0x0),
+            "ChildChainManager: TOKEN_NOT_MAPPED"
+        );
+        IChildToken childTokenContract = IChildToken(childTokenAddress);
+        childTokenContract.deposit(user, depositData);
     }
 }

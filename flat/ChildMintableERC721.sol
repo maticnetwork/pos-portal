@@ -2120,6 +2120,8 @@ contract ChildMintableERC721 is
     bytes32 public constant DEPOSITOR_ROLE = keccak256("DEPOSITOR_ROLE");
     mapping (uint256 => bool) public withdrawnTokens;
 
+    event TransferWithMetadata(address indexed from, address indexed to, uint256 indexed tokenId, bytes metaData);
+
     constructor(
         string memory name_,
         string memory symbol_,
@@ -2172,6 +2174,47 @@ contract ChildMintableERC721 is
         require(_msgSender() == ownerOf(tokenId), "ChildMintableERC721: INVALID_TOKEN_OWNER");
         withdrawnTokens[tokenId] = true;
         _burn(tokenId);
+    }
+
+    /**
+     * @notice called when user wants to withdraw token back to root chain with token URI
+     * @dev Should handle withraw by burning user's token.
+     * Should set `withdrawnTokens` mapping to `true` for the tokenId being withdrawn
+     * This transaction will be verified when exiting on root chain
+     *
+     * Before calling this function, you may want calling `encodeTokenMetadata`
+     * and get metadata to be transferred from L2 to L1 during exit
+     *
+     * @param tokenId tokenId to withdraw
+     */
+    function withdrawWithMetadata(uint256 tokenId) external {
+
+        require(_msgSender() == ownerOf(tokenId), "ChildMintableERC721: INVALID_TOKEN_OWNER");
+        withdrawnTokens[tokenId] = true;
+
+        // Encoding metadata associated with tokenId & emitting event
+        emit TransferWithMetadata(ownerOf(tokenId), address(0), tokenId, this.encodeTokenMetadata(tokenId));
+
+        _burn(tokenId);
+
+    }
+
+    /**
+     * @notice This method is supposed to be called by client when withdrawing token with metadata
+     * and pass return value of this function as second paramter of `withdrawWithMetadata` method
+     *
+     * It can be overridden by clients to encode data in a different form, which needs to
+     * be decoded back by them correctly during exiting
+     *
+     * @param tokenId Token for which URI to be fetched
+     */
+    function encodeTokenMetadata(uint256 tokenId) external view virtual returns (bytes memory) {
+
+        // You're always free to change this default implementation
+        // and pack more data in byte array which can be decoded back
+        // in L1
+        return abi.encode(tokenURI(tokenId));
+
     }
 
     /**
