@@ -1,10 +1,6 @@
 import { RLP } from 'ethers/utils'
 import { AbiCoder } from 'ethers/utils'
 
-const Web3 = require('web3')
-const web3 = new Web3()
-
-
 import {
   erc20TransferEventSig,
   erc721TransferEventSig,
@@ -64,7 +60,7 @@ export const getERC721TransferWithMetadataLog = ({
       to,
       '0x' + tokenId.toString(16)
     ],
-    metaData
+    abi.encode(['string'], [metaData]) // ABI encoded metadata, because that's how dummy root token expects it
   ])
 }
 

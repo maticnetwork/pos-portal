@@ -277,7 +277,7 @@ contract('MintableERC721Predicate', (accounts) => {
         from: withdrawer,
         to: mockValues.zeroAddress,
         tokenId,
-        metaData: mockValues.bytes32[0] // Just an arbitrary byte array, assuming it's encoded form of whole token metadata
+        metaData: 'https://nft.matic.network'
       })
       let exitTx = await mintableERC721Predicate.exitTokens(withdrawer, dummyMintableERC721.address, burnLog)
       should.exist(exitTx)
