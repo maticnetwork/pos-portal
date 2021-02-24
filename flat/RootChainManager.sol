@@ -1934,12 +1934,13 @@ contract RootChainManager is
         address rootToken,
         bytes memory depositData
     ) private {
+        bytes32 tokenType = tokenToType[rootToken];
         require(
             rootToChildToken[rootToken] != address(0x0) &&
-               tokenToType[rootToken] != 0,
+               tokenType != 0,
             "RootChainManager: TOKEN_NOT_MAPPED"
         );
-        address predicateAddress = typeToPredicate[tokenToType[rootToken]];
+        address predicateAddress = typeToPredicate[tokenType];
         require(
             predicateAddress != address(0),
             "RootChainManager: INVALID_TOKEN_TYPE"
@@ -2054,7 +2055,7 @@ contract RootChainManager is
 
         ITokenPredicate(predicateAddress).exitTokens(
             _msgSender(),
-            childToRootToken[childToken],
+            rootToken,
             logRLP.toRlpBytes()
         );
     }
