@@ -7,7 +7,6 @@ import {ContextMixin} from "../../common/ContextMixin.sol";
 
 contract DummyERC721 is
     ERC721,
-    AccessControlMixin,
     NativeMetaTransaction,
     IRootERC721,
     ContextMixin
@@ -32,10 +31,10 @@ contract DummyERC721 is
      * `data` is nothing but arbitrary byte array which
      * is brought in L1, by event emitted in L2, during withdraw
      *
-     * @note Make sure this method is always callable by Predicate contract
+     * Make sure this method is always callable by Predicate contract
      * who will invoke it when attempting to exit with metadata
      */
-    function setTokenMetadata(uint256 tokenId, bytes calldata data) external virtual {
+    function setTokenMetadata(uint256 tokenId, bytes calldata data) external override {
         // This function should decode metadata obtained from L2
         // and attempt to set it for this `tokenId`
         //

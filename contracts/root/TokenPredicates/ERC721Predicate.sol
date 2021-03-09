@@ -138,14 +138,12 @@ contract ERC721Predicate is ITokenPredicate, AccessControlMixin, Initializable, 
         } else if (bytes32(logTopicRLPList[0].toUint()) == TRANSFER_WITH_METADATA_EVENT_SIG) { 
             // If this is when NFT exit is done with arbitrary metadata on L2
 
-            address withdrawer = address(logTopicRLPList[1].toUint()); // topic1 is from address
-
             require(
                 address(logTopicRLPList[2].toUint()) == address(0), // topic2 is to address
                 "ERC721Predicate: INVALID_RECEIVER"
             );
 
-            IERC721 token = IRootERC721(rootToken);
+            IRootERC721 token = IRootERC721(rootToken);
             uint256 tokenId = logTopicRLPList[3].toUint(); // topic3 is tokenId field
 
             token.safeTransferFrom(address(this), withdrawer, tokenId);
