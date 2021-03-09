@@ -27,6 +27,13 @@ contract MintableERC721Predicate is ITokenPredicate, AccessControlMixin, Initial
         uint256 tokenId
     );
 
+    event LockedMintableERC721Batch(
+        address indexed depositor,
+        address indexed depositReceiver,
+        address indexed rootToken,
+        uint256[] tokenIds
+    );
+
     constructor() public {}
 
     function initialize(address _owner) external initializer {
@@ -52,11 +59,11 @@ contract MintableERC721Predicate is ITokenPredicate, AccessControlMixin, Initial
     }
 
     /**
-     * @notice Lock ERC721 tokens for deposit, callable only by manager
+     * @notice Lock ERC721 token(s) for deposit, callable only by manager
      * @param depositor Address who wants to deposit token
      * @param depositReceiver Address (address) who wants to receive token on child chain
      * @param rootToken Token which gets deposited
-     * @param depositData ABI encoded tokenId
+     * @param depositData ABI encoded tokenId(s). It's possible to deposit batch of tokens.
      */
     function lockTokens(
         address depositor,
@@ -68,9 +75,43 @@ contract MintableERC721Predicate is ITokenPredicate, AccessControlMixin, Initial
         override
         only(MANAGER_ROLE)
     {
-        uint256 tokenId = abi.decode(depositData, (uint256));
-        emit LockedMintableERC721(depositor, depositReceiver, rootToken, tokenId);
-        IMintableERC721(rootToken).safeTransferFrom(depositor, address(this), tokenId);
+
+        // Locking single ERC721 token
+        if (depositData.length == 32) {
+
+            uint256 tokenId = abi.decode(depositData, (uint256));
+
+            // Emitting event that single token is getting locked in predicate
+            emit LockedMintableERC721(depositor, depositReceiver, rootToken, tokenId);
+
+            // Transferring token to this address, which will be
+            // released when attempted to be unlocked
+            IERC721(rootToken).safeTransferFrom(depositor, address(this), tokenId);
+
+        } else {
+            // Locking a set a ERC721 token(s)
+
+            uint256[] memory tokenIds = abi.decode(depositData, (uint256[]));
+
+            // Emitting event that a set of ERC721 tokens are getting lockec
+            // in this predicate contract
+            emit LockedMintableERC721Batch(depositor, depositReceiver, rootToken, tokenIds);
+
+            // These many tokens are attempted to be deposited
+            // by user
+            uint256 length = tokenIds.length;
+            require(length <= BATCH_LIMIT, "MintableERC721Predicate: EXCEEDS_BATCH_LIMIT");
+
+            // Iteratively trying to transfer ERC721 token
+            // to this predicate address
+            for (uint256 i; i < length; i++) {
+
+                IERC721(rootToken).safeTransferFrom(depositor, address(this), tokenIds[i]);
+
+            }
+
+        }
+
     }
 
     /**
