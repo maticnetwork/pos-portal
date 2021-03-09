@@ -1,6 +1,6 @@
 pragma solidity 0.6.6;
 
-import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import {IRootERC721} from "../RootToken/IRootERC721.sol";
 import {IERC721Receiver} from "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import {RLPReader} from "../../lib/RLPReader.sol";
 import {ITokenPredicate} from "./ITokenPredicate.sol";
@@ -13,8 +13,12 @@ contract ERC721Predicate is ITokenPredicate, AccessControlMixin, Initializable, 
 
     bytes32 public constant MANAGER_ROLE = keccak256("MANAGER_ROLE");
     bytes32 public constant TOKEN_TYPE = keccak256("ERC721");
+    // keccak256("Transfer(address,address,uint256)")
     bytes32 public constant TRANSFER_EVENT_SIG = 0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef;
+    // keccak256("WithdrawnBatch(address,uint256[])")
     bytes32 public constant WITHDRAW_BATCH_EVENT_SIG = 0xf871896b17e9cb7a64941c62c188a4f5c621b86800e3d15452ece01ce56073df;
+    // keccak256("TransferWithMetadata(address,address,uint256,bytes)")
+    bytes32 public constant TRANSFER_WITH_METADATA_EVENT_SIG = 0xf94915c6d1fd521cee85359239227480c7e8776d7caf1fc3bacad5c269b66a14;
 
     // limit batching of tokens due to gas limit restrictions
     uint256 public constant BATCH_LIMIT = 20;
@@ -77,7 +81,7 @@ contract ERC721Predicate is ITokenPredicate, AccessControlMixin, Initializable, 
         if (depositData.length == 32) {
             uint256 tokenId = abi.decode(depositData, (uint256));
             emit LockedERC721(depositor, depositReceiver, rootToken, tokenId);
-            IERC721(rootToken).safeTransferFrom(depositor, address(this), tokenId);
+            IRootERC721(rootToken).safeTransferFrom(depositor, address(this), tokenId);
 
         // deposit batch
         } else {
@@ -86,7 +90,7 @@ contract ERC721Predicate is ITokenPredicate, AccessControlMixin, Initializable, 
             uint256 length = tokenIds.length;
             require(length <= BATCH_LIMIT, "ERC721Predicate: EXCEEDS_BATCH_LIMIT");
             for (uint256 i; i < length; i++) {
-                IERC721(rootToken).safeTransferFrom(depositor, address(this), tokenIds[i]);
+                IRootERC721(rootToken).safeTransferFrom(depositor, address(this), tokenIds[i]);
             }
         }
     }
@@ -117,7 +121,7 @@ contract ERC721Predicate is ITokenPredicate, AccessControlMixin, Initializable, 
                 "ERC721Predicate: INVALID_RECEIVER"
             );
 
-            IERC721(rootToken).safeTransferFrom(
+            IRootERC721(rootToken).safeTransferFrom(
                 address(this),
                 withdrawer,
                 logTopicRLPList[3].toUint() // topic3 is tokenId field
@@ -128,8 +132,30 @@ contract ERC721Predicate is ITokenPredicate, AccessControlMixin, Initializable, 
             (uint256[] memory tokenIds) = abi.decode(logData, (uint256[])); // data is tokenId list
             uint256 length = tokenIds.length;
             for (uint256 i; i < length; i++) {
-                IERC721(rootToken).safeTransferFrom(address(this), withdrawer, tokenIds[i]);
+                IRootERC721(rootToken).safeTransferFrom(address(this), withdrawer, tokenIds[i]);
             }
+
+        } else if (bytes32(logTopicRLPList[0].toUint()) == TRANSFER_WITH_METADATA_EVENT_SIG) { 
+            // If this is when NFT exit is done with arbitrary metadata on L2
+
+            address withdrawer = address(logTopicRLPList[1].toUint()); // topic1 is from address
+
+            require(
+                address(logTopicRLPList[2].toUint()) == address(0), // topic2 is to address
+                "ERC721Predicate: INVALID_RECEIVER"
+            );
+
+            IERC721 token = IRootERC721(rootToken);
+            uint256 tokenId = logTopicRLPList[3].toUint(); // topic3 is tokenId field
+
+            token.safeTransferFrom(address(this), withdrawer, tokenId);
+            // This function will be invoked for passing arbitrary
+            // metadata, obtained from event emitted in L2, to
+            // L1 ERC721, so that it can decode & do further processing
+            //
+            // @note Make sure you've implemented this method
+            // if you're interested in exiting with metadata
+            token.setTokenMetadata(tokenId, logRLPList[2].toBytes());
 
         } else {
             revert("ERC721Predicate: INVALID_SIGNATURE");
