@@ -21,8 +21,9 @@ contract MintableERC721Predicate is ITokenPredicate, AccessControlMixin, Initial
     bytes32 public constant WITHDRAW_BATCH_EVENT_SIG = 0xf871896b17e9cb7a64941c62c188a4f5c621b86800e3d15452ece01ce56073df;
     // keccak256("TransferWithMetadata(address,address,uint256,bytes)")
     bytes32 public constant TRANSFER_WITH_METADATA_EVENT_SIG = 0xf94915c6d1fd521cee85359239227480c7e8776d7caf1fc3bacad5c269b66a14;
-    // keccak256("WithdrawBatchWithMetadata(address,address,uint256[],bytes[])")
-    bytes32 public constant WITHDRAW_BATCH_WITH_METADATA_EVENT_SIG = 0x4f83879b5380fb2113c27cb03563cd911fe5f79f11b4ce5c470b40070c2acd86;
+
+    // limit batching of tokens due to gas limit restrictions
+    uint256 public constant BATCH_LIMIT = 20;
 
     event LockedMintableERC721(
         address indexed depositor,
@@ -90,7 +91,7 @@ contract MintableERC721Predicate is ITokenPredicate, AccessControlMixin, Initial
 
             // Transferring token to this address, which will be
             // released when attempted to be unlocked
-            IERC721(rootToken).safeTransferFrom(depositor, address(this), tokenId);
+            IMintableERC721(rootToken).safeTransferFrom(depositor, address(this), tokenId);
 
         } else {
             // Locking a set a ERC721 token(s)
@@ -110,7 +111,7 @@ contract MintableERC721Predicate is ITokenPredicate, AccessControlMixin, Initial
             // to this predicate address
             for (uint256 i; i < length; i++) {
 
-                IERC721(rootToken).safeTransferFrom(depositor, address(this), tokenIds[i]);
+                IMintableERC721(rootToken).safeTransferFrom(depositor, address(this), tokenIds[i]);
 
             }
 
@@ -235,56 +236,6 @@ contract MintableERC721Predicate is ITokenPredicate, AccessControlMixin, Initial
                 // Minting with metadata received from L2 i.e. emitted
                 // by event `TransferWithMetadata` during burning
                 token.mint(withdrawer, tokenId, logRLPList[2].toBytes());
-            }
-
-        } else if (bytes32(logTopicRLPList[0].toUint()) == WITHDRAW_BATCH_WITH_METADATA_EVENT_SIG) {
-            // If this is batch NFT exit with all respective metadata 👆
-            //
-            // Note: This is nothing but batch version of previous
-            // block of code
-
-            address withdrawer = address(logTopicRLPList[1].toUint()); // topic1 is from address
-
-            require(
-                address(logTopicRLPList[2].toUint()) == address(0), // topic2 is to address
-                "MintableERC721Predicate: INVALID_RECEIVER"
-            );
-
-            IMintableERC721 token = IMintableERC721(rootToken);
-
-            // RLP encoded tokenId, token metadata list ( in ordered form )
-            bytes memory logData = logRLPList[2].toBytes();
-
-            (uint256[] memory tokenIds, bytes[] memory metaData) = abi.decode(logData, (uint256[], bytes[]));
-            require(tokenIds.length == metaData.length, "MintableERC721Predicate: TokenId & Metadata Length Mismatch");
-
-            uint256 length = tokenIds.length;
-
-            for (uint256 i; i < length; i++) {
-
-                uint256 tokenId = tokenIds[i];
-
-                // Check if token exists or not
-                //
-                // If does, transfer token to withdrawer
-                if (token.exists(tokenId)) {
-
-                    token.safeTransferFrom(
-                        address(this),
-                        withdrawer,
-                        tokenId
-                    );
-
-                } else {
-
-                    // If token was minted on L2
-                    // we'll mint it here, on L1, during
-                    // exiting from L2, while setting its
-                    // metadata passed from L2
-                    token.mint(withdrawer, tokenId, metadata[i]);
-
-                }
-
             }
 
         } else {
