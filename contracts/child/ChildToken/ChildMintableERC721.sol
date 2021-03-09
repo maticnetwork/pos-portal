@@ -17,15 +17,12 @@ contract ChildMintableERC721 is
     bytes32 public constant DEPOSITOR_ROLE = keccak256("DEPOSITOR_ROLE");
     mapping (uint256 => bool) public withdrawnTokens;
 
-    event TransferWithMetadata(address indexed from, address indexed to, uint256 indexed tokenId, bytes metaData);
-
     // limit batching of tokens due to gas limit restrictions
     uint256 public constant BATCH_LIMIT = 20;
 
-    event WithdrawnBatch(
-        address indexed user,
-        uint256[] tokenIds
-    );
+    event WithdrawnBatch(address indexed user, uint256[] tokenIds);
+    event TransferWithMetadata(address indexed from, address indexed to, uint256 indexed tokenId, bytes metaData);
+    event WithdrawBatchWithMetadata(address indexed from, address indexed to, uint256[] tokenIds, bytes[] metaData);
 
     constructor(
         string memory name_,
@@ -130,9 +127,6 @@ contract ChildMintableERC721 is
      * Should set `withdrawnTokens` mapping to `true` for the tokenId being withdrawn
      * This transaction will be verified when exiting on root chain
      *
-     * Before calling this function, you may want calling `encodeTokenMetadata`
-     * and get metadata to be transferred from L2 to L1 during exit
-     *
      * @param tokenId tokenId to withdraw
      */
     function withdrawWithMetadata(uint256 tokenId) external {
@@ -144,6 +138,52 @@ contract ChildMintableERC721 is
         emit TransferWithMetadata(ownerOf(tokenId), address(0), tokenId, this.encodeTokenMetadata(tokenId));
 
         _burn(tokenId);
+
+    }
+
+    /**
+     * @notice called when user wants to withdraw tokens i.e. a batch of tokens, back to root chain with all respective metaData
+     * @dev Should handle withraw by burning user's token.
+     * Should set `withdrawnTokens` mapping to `true` for the tokenId being withdrawn
+     * This transaction will be verified when exiting on root chain
+     *
+     * @param tokenId tokenId to withdraw
+     */
+    function withdrawBatchWithMetadata(uint256 calldata tokenIds) external {
+
+        uint256 length = tokenIds.length;
+        require(length <= BATCH_LIMIT, "ChildMintableERC721: EXCEEDS_BATCH_LIMIT");
+
+        // During iteratively burning tokens, attempting
+        // to store respective metadata
+        //
+        // To be emitted with event, which will be
+        // verified on L1 & used for setting token metadata
+        // when exiting from L2 to L1
+        uint256[length] memory metaData;
+
+        // Iteratively burn ERC721 tokens, for performing
+        // batch withdraw
+        for (uint256 i; i < length; i++) {
+
+            uint256 tokenId = tokenIds[i];
+
+            require(_msgSender() == ownerOf(tokenId), string(abi.encodePacked("ChildMintableERC721: INVALID_TOKEN_OWNER ", tokenId)));
+            // Marking token has been withdrawn
+            withdrawnTokens[tokenId] = true;
+
+            // Storing metadata of respective token
+            // in ordered fashion
+            metaData[i] = this.encodeTokenMetadata(tokenId);
+            // Then burning token
+            _burn(tokenId);
+
+        }
+
+        // At last emit this event, which will be used
+        // in MintableERC721 predicate contract on L1
+        // while verifying burn proof
+        emit WithdrawBatchWithMetadata(_msgSender(), address(0), tokenIds, metaData);
 
     }
 
