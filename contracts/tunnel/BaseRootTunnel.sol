@@ -9,7 +9,6 @@ import {RLPReader} from "../lib/RLPReader.sol";
 import {MerklePatriciaProof} from "../lib/MerklePatriciaProof.sol";
 import {ICheckpointManager} from "../root/ICheckpointManager.sol";
 import {RLPReader} from "../lib/RLPReader.sol";
-import {MerklePatriciaProof} from "../lib/MerklePatriciaProof.sol";
 import {Merkle} from "../lib/Merkle.sol";
 
 abstract contract BaseRootTunnel is AccessControlMixin {
