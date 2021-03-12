@@ -1329,7 +1329,6 @@ pragma solidity ^0.6.6;
 
 
 
-
 abstract contract BaseRootTunnel is AccessControlMixin {
     using RLPReader for bytes;
     using RLPReader for RLPReader.RLPItem;

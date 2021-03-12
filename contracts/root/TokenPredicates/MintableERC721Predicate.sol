@@ -15,16 +15,28 @@ contract MintableERC721Predicate is ITokenPredicate, AccessControlMixin, Initial
     bytes32 public constant MANAGER_ROLE = 0x241ecf16d79d0f8dbfb92cbc07fe17840425976cf0667f022fe9877caa831b08;
     // keccak256("MintableERC721")
     bytes32 public constant TOKEN_TYPE = 0xd4392723c111fcb98b073fe55873efb447bcd23cd3e49ec9ea2581930cd01ddc;
-    // keccak("Transfer(address,address,uint256)")
+    // keccak256("Transfer(address,address,uint256)")
     bytes32 public constant TRANSFER_EVENT_SIG = 0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef;
-    // keccak("TransferWithMetadata(address,address,uint256,string)")
-    bytes32 public constant TRANSFER_WITH_METADATA_EVENT_SIG = 0xf3c6803764de9a0fc1c2acb6a71f53407c5e2b9a3e04973e6586da23d64ecaa5;
+    // keccak256("WithdrawnBatch(address,uint256[])")
+    bytes32 public constant WITHDRAW_BATCH_EVENT_SIG = 0xf871896b17e9cb7a64941c62c188a4f5c621b86800e3d15452ece01ce56073df;
+    // keccak256("TransferWithMetadata(address,address,uint256,bytes)")
+    bytes32 public constant TRANSFER_WITH_METADATA_EVENT_SIG = 0xf94915c6d1fd521cee85359239227480c7e8776d7caf1fc3bacad5c269b66a14;
+
+    // limit batching of tokens due to gas limit restrictions
+    uint256 public constant BATCH_LIMIT = 20;
 
     event LockedMintableERC721(
         address indexed depositor,
         address indexed depositReceiver,
         address indexed rootToken,
         uint256 tokenId
+    );
+
+    event LockedMintableERC721Batch(
+        address indexed depositor,
+        address indexed depositReceiver,
+        address indexed rootToken,
+        uint256[] tokenIds
     );
 
     constructor() public {}
@@ -52,11 +64,11 @@ contract MintableERC721Predicate is ITokenPredicate, AccessControlMixin, Initial
     }
 
     /**
-     * @notice Lock ERC721 tokens for deposit, callable only by manager
+     * @notice Lock ERC721 token(s) for deposit, callable only by manager
      * @param depositor Address who wants to deposit token
      * @param depositReceiver Address (address) who wants to receive token on child chain
      * @param rootToken Token which gets deposited
-     * @param depositData ABI encoded tokenId
+     * @param depositData ABI encoded tokenId(s). It's possible to deposit batch of tokens.
      */
     function lockTokens(
         address depositor,
@@ -68,9 +80,43 @@ contract MintableERC721Predicate is ITokenPredicate, AccessControlMixin, Initial
         override
         only(MANAGER_ROLE)
     {
-        uint256 tokenId = abi.decode(depositData, (uint256));
-        emit LockedMintableERC721(depositor, depositReceiver, rootToken, tokenId);
-        IMintableERC721(rootToken).safeTransferFrom(depositor, address(this), tokenId);
+
+        // Locking single ERC721 token
+        if (depositData.length == 32) {
+
+            uint256 tokenId = abi.decode(depositData, (uint256));
+
+            // Emitting event that single token is getting locked in predicate
+            emit LockedMintableERC721(depositor, depositReceiver, rootToken, tokenId);
+
+            // Transferring token to this address, which will be
+            // released when attempted to be unlocked
+            IMintableERC721(rootToken).safeTransferFrom(depositor, address(this), tokenId);
+
+        } else {
+            // Locking a set a ERC721 token(s)
+
+            uint256[] memory tokenIds = abi.decode(depositData, (uint256[]));
+
+            // Emitting event that a set of ERC721 tokens are getting lockec
+            // in this predicate contract
+            emit LockedMintableERC721Batch(depositor, depositReceiver, rootToken, tokenIds);
+
+            // These many tokens are attempted to be deposited
+            // by user
+            uint256 length = tokenIds.length;
+            require(length <= BATCH_LIMIT, "MintableERC721Predicate: EXCEEDS_BATCH_LIMIT");
+
+            // Iteratively trying to transfer ERC721 token
+            // to this predicate address
+            for (uint256 i; i < length; i++) {
+
+                IMintableERC721(rootToken).safeTransferFrom(depositor, address(this), tokenIds[i]);
+
+            }
+
+        }
+
     }
 
     /**
@@ -115,6 +161,46 @@ contract MintableERC721Predicate is ITokenPredicate, AccessControlMixin, Initial
                 );
             } else {
                 token.mint(withdrawer, tokenId);
+            }
+
+        } else if (bytes32(logTopicRLPList[0].toUint()) == WITHDRAW_BATCH_EVENT_SIG) { // topic0 is event sig
+            // If it's a simple batch exit, where a set of
+            // ERC721s were burnt in child chain with event signature
+            // looking like `WithdrawnBatch(address indexed user, uint256[] tokenIds);`
+            //
+            // @note This doesn't allow transfer of metadata cross chain
+            // For that check below `else if` block
+
+            address withdrawer = address(logTopicRLPList[1].toUint()); // topic1 is from address
+
+            // RLP encoded tokenId list
+            bytes memory logData = logRLPList[2].toBytes();
+
+            (uint256[] memory tokenIds) = abi.decode(logData, (uint256[]));
+            uint256 length = tokenIds.length;
+
+            IMintableERC721 token = IMintableERC721(rootToken);
+
+            for (uint256 i; i < length; i++) {
+
+                uint256 tokenId = tokenIds[i];
+
+                // Check if token exists or not
+                //
+                // If does, transfer token to withdrawer
+                if (token.exists(tokenId)) {
+                    token.safeTransferFrom(
+                        address(this),
+                        withdrawer,
+                        tokenId
+                    );
+                } else {
+                    // If token was minted on L2
+                    // we'll mint it here, on L1, during
+                    // exiting from L2
+                    token.mint(withdrawer, tokenId);
+                }
+
             }
 
         } else if (bytes32(logTopicRLPList[0].toUint()) == TRANSFER_WITH_METADATA_EVENT_SIG) { 
