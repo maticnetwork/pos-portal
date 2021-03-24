@@ -21,7 +21,7 @@ contract ChildBurnableERC20 is
         string memory symbol_,
         uint8 decimals_,
         address childChainManager
-    ) public ERC20(name_, symbol_) {
+    ) public BaseERC20(name_, symbol_) {
         _setupContractId("ChildBurnableERC20");
         _setupDecimals(decimals_);
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
