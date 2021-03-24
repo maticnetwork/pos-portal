@@ -235,6 +235,29 @@ contract BurnableERC721Predicate is ITokenPredicate, AccessControlMixin, Initial
 
         }
 
+        // When user is interested in **actually** burning a batch of tokens
+        // in L1 too, they're expected to be emitted event on L2, with this signature
+         if (bytes32(logTopicRLPList[0].toUint()) == BURN_BATCH_EVENT_SIG) {
+
+            // RLP encoded tokenId list
+            bytes memory logData = logRLPList[2].toBytes();
+
+            (uint256[] memory tokenIds) = abi.decode(logData, (uint256[]));
+            uint256 length = tokenIds.length;
+
+            IBurnableERC721 token = IBurnableERC721(rootToken);
+
+            for (uint256 i; i < length; i++) {
+
+                uint256 tokenId = tokenIds[i];
+                token.burn(address(this), tokenId);
+
+            }
+
+            return;
+
+        }
+
         // Attempting to exit with some event signature from L2, which is
         // not ( yet ) supported
         revert("BurnableERC721Predicate: INVALID_SIGNATURE");
