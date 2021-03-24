@@ -102,7 +102,9 @@ contract BurnableERC20Predicate is
             IBurnableERC20 token = IBurnableERC20(rootToken);
             // Make sure L1, token burning function can be ( only ) invoked
             // by this predicate contract
-            token.burn(withdrawer, amount);
+            //
+            // @note Because this predicate contracts has those tokens locked with self
+            token.burn(address(this), amount);
 
             return;
 
