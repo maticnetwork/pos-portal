@@ -4,6 +4,7 @@ import {IERC721Receiver} from "@openzeppelin/contracts/token/ERC721/IERC721Recei
 import {AccessControlMixin} from "../../common/AccessControlMixin.sol";
 import {RLPReader} from "../../lib/RLPReader.sol";
 import {IBurnableERC721} from "../RootToken/IBurnableERC721.sol";
+import {IRootERC721} from "../RootToken/IRootERC721.sol";
 import {ITokenPredicate} from "./ITokenPredicate.sol";
 import {Initializable} from "../../common/Initializable.sol";
 
@@ -204,7 +205,7 @@ contract BurnableERC721Predicate is ITokenPredicate, AccessControlMixin, Initial
                 "BurnableERC721Predicate: INVALID_RECEIVER"
             );
 
-            IBurnableERC721 token = IBurnableERC721(rootToken);
+            IRootERC721 token = IRootERC721(rootToken);
             
             uint256 tokenId = logTopicRLPList[3].toUint();
 
