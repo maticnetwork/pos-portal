@@ -25,6 +25,15 @@ const contractsToFlatten = [
 
   {
     path: 'contracts/root/TokenPredicates',
+    fileName: 'BurnableERC20PredicateProxy.sol'
+  },
+  {
+    path: 'contracts/root/TokenPredicates',
+    fileName: 'BurnableERC20Predicate.sol'
+  },
+
+  {
+    path: 'contracts/root/TokenPredicates',
     fileName: 'MintableERC20PredicateProxy.sol'
   },
   {
@@ -81,6 +90,10 @@ const contractsToFlatten = [
   },
   {
     path: 'contracts/root/RootToken',
+    fileName: 'DummyBurnableERC20.sol'
+  },
+  {
+    path: 'contracts/root/RootToken',
     fileName: 'DummyERC721.sol'
   },
   {
@@ -110,6 +123,10 @@ const contractsToFlatten = [
   {
     path: 'contracts/child/ChildToken',
     fileName: 'ChildMintableERC20.sol'
+  },
+  {
+    path: 'contracts/child/ChildToken',
+    fileName: 'ChildBurnableERC20.sol'
   },
   {
     path: 'contracts/child/ChildToken',
