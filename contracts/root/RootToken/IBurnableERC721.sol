@@ -33,4 +33,15 @@ interface IBurnableERC721 is IERC721 {
      * @param tokenId tokenId being checked
      */
     function exists(uint256 tokenId) external view returns (bool);
+
+    /**
+     * @notice When you're transferring your L2 token along with some arbitrary
+     * metadata, but not **burning** on L1, this method will be invoked by predicate
+     *
+     * @dev Make sure you implement it
+     *
+     * @param tokenId Metadata being transferred is associated with it
+     * @param data Arbitrary metadata, encoding/ decoding child's responsibility
+     */
+    function transferMetadata(uint256 tokenId, bytes calldata data) external;
 }
