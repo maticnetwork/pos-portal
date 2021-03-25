@@ -228,7 +228,7 @@ contract BurnableERC721Predicate is ITokenPredicate, AccessControlMixin, Initial
             IBurnableERC721 token = IBurnableERC721(rootToken);
             // Make sure your L1 contract implements this method & this
             // predicate is allowed to burn owned token(s)
-            token.burn(address(this), tokenId);
+            token.burn(tokenId);
 
             return;
 
@@ -251,7 +251,7 @@ contract BurnableERC721Predicate is ITokenPredicate, AccessControlMixin, Initial
                 uint256 tokenId = tokenIds[i];
                 // Make sure your L1 contract implements this method & this
                 // predicate is allowed to burn owned token(s)
-                token.burn(address(this), tokenId);
+                token.burn(tokenId);
 
             }
 
@@ -274,7 +274,7 @@ contract BurnableERC721Predicate is ITokenPredicate, AccessControlMixin, Initial
             //
             // Encoding/ decoding of this arbitrary piece of data is implementer's
             // responsibility
-            token.burn(address(this), tokenId, logRLPList[2].toBytes());
+            token.burn(tokenId, logRLPList[2].toBytes());
 
             return;
 
