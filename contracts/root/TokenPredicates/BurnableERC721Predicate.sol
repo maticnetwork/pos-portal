@@ -4,7 +4,6 @@ import {IERC721Receiver} from "@openzeppelin/contracts/token/ERC721/IERC721Recei
 import {AccessControlMixin} from "../../common/AccessControlMixin.sol";
 import {RLPReader} from "../../lib/RLPReader.sol";
 import {IBurnableERC721} from "../RootToken/IBurnableERC721.sol";
-import {IRootERC721} from "../RootToken/IRootERC721.sol";
 import {ITokenPredicate} from "./ITokenPredicate.sol";
 import {Initializable} from "../../common/Initializable.sol";
 
@@ -205,8 +204,7 @@ contract BurnableERC721Predicate is ITokenPredicate, AccessControlMixin, Initial
                 "BurnableERC721Predicate: INVALID_RECEIVER"
             );
 
-            IRootERC721 token = IRootERC721(rootToken);
-            
+            IBurnableERC721 token = IBurnableERC721(rootToken);
             uint256 tokenId = logTopicRLPList[3].toUint();
 
             token.safeTransferFrom(address(this), withdrawer, tokenId);
@@ -216,7 +214,7 @@ contract BurnableERC721Predicate is ITokenPredicate, AccessControlMixin, Initial
             //
             // @note Make sure you've implemented this method in your L1 contract
             // if you're interested in exiting with metadata
-            token.setTokenMetadata(tokenId, logRLPList[2].toBytes());
+            token.transferMetadata(tokenId, logRLPList[2].toBytes());
 
             return;
 
