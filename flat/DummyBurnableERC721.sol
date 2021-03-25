@@ -1868,14 +1868,6 @@ contract AccessControlMixin is AccessControl {
     }
 }
 
-// File: contracts/child/ChildToken/IChildToken.sol
-
-pragma solidity 0.6.6;
-
-interface IChildToken {
-    function deposit(address user, bytes calldata depositData) external;
-}
-
 // File: contracts/common/Initializable.sol
 
 pragma solidity 0.6.6;
@@ -2073,6 +2065,52 @@ contract NativeMetaTransaction is EIP712Base {
     }
 }
 
+// File: contracts/root/RootToken/IBurnableERC721.sol
+
+pragma solidity 0.6.6;
+
+interface IBurnableERC721 is IERC721 {
+    /**
+     * @notice called by predicate contract to **actually** burn token on L1
+     * @dev Should be callable only by BurnableERC721Predicate
+     *
+     * @param tokenId token being burnt
+     */
+    function burn(uint256 tokenId) external;
+
+    /**
+     * @notice called by predicate contract to **actually** burn token on L1, 
+     * while brining arbitrary data from L2
+     *
+     * @dev Should be callable only by MintableERC721Predicate
+     *
+     * @param tokenId token being burnt
+     * @param metaData associated token metadata, to be decoded & set using `setTokenMetadata`
+     *
+     * Note : If you're interested in taking token metadata from L2 to L1 during exit, you must
+     * implement this method
+     */
+    function burn(uint256 tokenId, bytes calldata metaData) external;
+
+    /**
+     * @notice check if token already exists, return true if it does exist
+     * @dev this check will be used by the predicate to determine if token can be burnt or not
+     * @param tokenId tokenId being checked
+     */
+    function exists(uint256 tokenId) external view returns (bool);
+
+    /**
+     * @notice When you're transferring your L2 token along with some arbitrary
+     * metadata, but not **burning** on L1, this method will be invoked by predicate
+     *
+     * @dev Make sure you implement it
+     *
+     * @param tokenId Metadata being transferred is associated with it
+     * @param data Arbitrary metadata, encoding/ decoding child's responsibility
+     */
+    function transferMetadata(uint256 tokenId, bytes calldata data) external;
+}
+
 // File: contracts/common/ContextMixin.sol
 
 pragma solidity 0.6.6;
@@ -2100,7 +2138,7 @@ abstract contract ContextMixin {
     }
 }
 
-// File: contracts/child/ChildToken/ChildMintableERC721.sol
+// File: contracts/root/RootToken/DummyBurnableERC721.sol
 
 pragma solidity 0.6.6;
 
@@ -2109,36 +2147,24 @@ pragma solidity 0.6.6;
 
 
 
-
-contract ChildMintableERC721 is
+contract DummyBurnableERC721 is
     ERC721,
-    IChildToken,
     AccessControlMixin,
     NativeMetaTransaction,
+    IBurnableERC721,
     ContextMixin
 {
-    bytes32 public constant DEPOSITOR_ROLE = keccak256("DEPOSITOR_ROLE");
-    mapping (uint256 => bool) public withdrawnTokens;
-
-    // limit batching of tokens due to gas limit restrictions
-    uint256 public constant BATCH_LIMIT = 20;
-
-    event WithdrawnBatch(address indexed user, uint256[] tokenIds);
-    event TransferWithMetadata(address indexed from, address indexed to, uint256 indexed tokenId, bytes metaData);
-
-    constructor(
-        string memory name_,
-        string memory symbol_,
-        address childChainManager
-    ) public ERC721(name_, symbol_) {
-        _setupContractId("ChildMintableERC721");
+    bytes32 public constant PREDICATE_ROLE = keccak256("PREDICATE_ROLE");
+    constructor(string memory name_, string memory symbol_)
+        public
+        ERC721(name_, symbol_)
+    {
+        _setupContractId("DummyBurnableERC721");
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
-        _setupRole(DEPOSITOR_ROLE, childChainManager);
+        _setupRole(PREDICATE_ROLE, _msgSender());
         _initializeEIP712(name_);
     }
 
-    // This is to support Native meta transactions
-    // never use msg.sender directly, use _msgSender() instead
     function _msgSender()
         internal
         override
@@ -2149,127 +2175,58 @@ contract ChildMintableERC721 is
     }
 
     /**
-     * @notice called when token is deposited on root chain
-     * @dev Should be callable only by ChildChainManager
-     * Should handle deposit by minting the required tokenId(s) for user
-     * Should set `withdrawnTokens` mapping to `false` for the tokenId being deposited
-     * Minting can also be done by other functions
-     * @param user user address for whom deposit is being done
-     * @param depositData abi encoded tokenIds. Batch deposit also supported.
+     * @dev See {IBurnableERC721-mint}.
      */
-    function deposit(address user, bytes calldata depositData)
-        external
-        override
-        only(DEPOSITOR_ROLE)
-    {
-
-        // deposit single
-        if (depositData.length == 32) {
-            uint256 tokenId = abi.decode(depositData, (uint256));
-            withdrawnTokens[tokenId] = false;
-            _mint(user, tokenId);
-
-        // deposit batch
-        } else {
-            uint256[] memory tokenIds = abi.decode(depositData, (uint256[]));
-            uint256 length = tokenIds.length;
-            for (uint256 i; i < length; i++) {
-                withdrawnTokens[tokenIds[i]] = false;
-                _mint(user, tokenIds[i]);
-            }
-        }
-
-    }
-
-    /**
-     * @notice called when user wants to withdraw token back to root chain
-     * @dev Should handle withraw by burning user's token.
-     * Should set `withdrawnTokens` mapping to `true` for the tokenId being withdrawn
-     * This transaction will be verified when exiting on root chain
-     * @param tokenId tokenId to withdraw
-     */
-    function withdraw(uint256 tokenId) external {
-        require(_msgSender() == ownerOf(tokenId), "ChildMintableERC721: INVALID_TOKEN_OWNER");
-        withdrawnTokens[tokenId] = true;
+    function burn(uint256 tokenId) external override only(PREDICATE_ROLE) {
         _burn(tokenId);
     }
 
-    /**
-     * @notice called when user wants to withdraw multiple tokens back to root chain
-     * @dev Should burn user's tokens. This transaction will be verified when exiting on root chain
-     * @param tokenIds tokenId list to withdraw
-     */
-    function withdrawBatch(uint256[] calldata tokenIds) external {
+    function transferMetadata(uint256 tokenId, bytes calldata data) external override only(PREDICATE_ROLE) {
+        // This function should decode metadata obtained from L2
+        // and attempt to set it for this `tokenId`
+        //
+        // Following is just a default implementation, feel
+        // free to define your own encoding/ decoding scheme
+        // for L2 -> L1 token metadata transfer
+        string memory uri = abi.decode(data, (string));
 
-        uint256 length = tokenIds.length;
-        require(length <= BATCH_LIMIT, "ChildMintableERC721: EXCEEDS_BATCH_LIMIT");
-
-        // Iteratively burn ERC721 tokens, for performing
-        // batch withdraw
-        for (uint256 i; i < length; i++) {
-
-            uint256 tokenId = tokenIds[i];
-
-            require(_msgSender() == ownerOf(tokenId), string(abi.encodePacked("ChildMintableERC721: INVALID_TOKEN_OWNER ", tokenId)));
-            withdrawnTokens[tokenId] = true;
-            _burn(tokenId);
-
-        }
-
-        // At last emit this event, which will be used
-        // in MintableERC721 predicate contract on L1
-        // while verifying burn proof
-        emit WithdrawnBatch(_msgSender(), tokenIds);
-
+        _setTokenURI(tokenId, uri);
     }
 
     /**
-     * @notice called when user wants to withdraw token back to root chain with token URI
-     * @dev Should handle withraw by burning user's token.
-     * Should set `withdrawnTokens` mapping to `true` for the tokenId being withdrawn
-     * This transaction will be verified when exiting on root chain
-     *
-     * @param tokenId tokenId to withdraw
+     * If you're attempting to bring metadata associated with token
+     * from L2 to L1, you must implement this method, to be invoked
+     * when burning token on L1, during exit
      */
-    function withdrawWithMetadata(uint256 tokenId) external {
+    function setTokenMetadata(uint256 tokenId, bytes memory data) internal virtual {
+        // This function should decode metadata obtained from L2
+        // and attempt to set it for this `tokenId`
+        //
+        // Following is just a default implementation, feel
+        // free to define your own encoding/ decoding scheme
+        // for L2 -> L1 token metadata transfer
+        string memory uri = abi.decode(data, (string));
 
-        require(_msgSender() == ownerOf(tokenId), "ChildMintableERC721: INVALID_TOKEN_OWNER");
-        withdrawnTokens[tokenId] = true;
+        _setTokenURI(tokenId, uri);
+    }
 
-        // Encoding metadata associated with tokenId & emitting event
-        emit TransferWithMetadata(ownerOf(tokenId), address(0), tokenId, this.encodeTokenMetadata(tokenId));
-
+    /**
+     * @dev See {IBurnableERC721-mint}.
+     * 
+     * If you're attempting to bring metadata associated with token
+     * from L2 to L1, you must implement this method
+     */
+    function burn(uint256 tokenId, bytes calldata metaData) external override only(PREDICATE_ROLE) {
         _burn(tokenId);
 
+        setTokenMetadata(tokenId, metaData);
     }
 
-    /**
-     * @notice This method will be invoked when you're attempting to withdraw with arbitrary metadata
-     *
-     * It can be overridden by clients to encode data in a different form, which needs to
-     * be decoded back by them correctly during exiting
-     *
-     * @param tokenId Token for which URI to be fetched
-     */
-    function encodeTokenMetadata(uint256 tokenId) external view virtual returns (bytes memory) {
-
-        // You're always free to change this default implementation
-        // and pack more data in byte array which can be decoded back
-        // in L1
-        return abi.encode(tokenURI(tokenId));
-
-    }
 
     /**
-     * @notice Example function to handle minting tokens on matic chain
-     * @dev Minting can be done as per requirement,
-     * This implementation allows only admin to mint tokens but it can be changed as per requirement
-     * Should verify if token is withdrawn by checking `withdrawnTokens` mapping
-     * @param user user for whom tokens are being minted
-     * @param tokenId tokenId to mint
+     * @dev See {IBurnableERC721-exists}.
      */
-    function mint(address user, uint256 tokenId) public only(DEFAULT_ADMIN_ROLE) {
-        require(!withdrawnTokens[tokenId], "ChildMintableERC721: TOKEN_EXISTS_ON_ROOT_CHAIN");
-        _mint(user, tokenId);
+    function exists(uint256 tokenId) external view override returns (bool) {
+        return _exists(tokenId);
     }
 }

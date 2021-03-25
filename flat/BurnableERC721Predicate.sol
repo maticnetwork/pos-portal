@@ -1,101 +1,27 @@
 
-// File: @openzeppelin/contracts/token/ERC20/IERC20.sol
+// File: @openzeppelin/contracts/token/ERC721/IERC721Receiver.sol
 
 // SPDX-License-Identifier: MIT
 
 pragma solidity ^0.6.0;
 
 /**
- * @dev Interface of the ERC20 standard as defined in the EIP.
+ * @title ERC721 token receiver interface
+ * @dev Interface for any contract that wants to support safeTransfers
+ * from ERC721 asset contracts.
  */
-interface IERC20 {
+interface IERC721Receiver {
     /**
-     * @dev Returns the amount of tokens in existence.
+     * @dev Whenever an {IERC721} `tokenId` token is transferred to this contract via {IERC721-safeTransferFrom}
+     * by `operator` from `from`, this function is called.
+     *
+     * It must return its Solidity selector to confirm the token transfer.
+     * If any other value is returned or the interface is not implemented by the recipient, the transfer will be reverted.
+     *
+     * The selector can be obtained in Solidity with `IERC721.onERC721Received.selector`.
      */
-    function totalSupply() external view returns (uint256);
-
-    /**
-     * @dev Returns the amount of tokens owned by `account`.
-     */
-    function balanceOf(address account) external view returns (uint256);
-
-    /**
-     * @dev Moves `amount` tokens from the caller's account to `recipient`.
-     *
-     * Returns a boolean value indicating whether the operation succeeded.
-     *
-     * Emits a {Transfer} event.
-     */
-    function transfer(address recipient, uint256 amount) external returns (bool);
-
-    /**
-     * @dev Returns the remaining number of tokens that `spender` will be
-     * allowed to spend on behalf of `owner` through {transferFrom}. This is
-     * zero by default.
-     *
-     * This value changes when {approve} or {transferFrom} are called.
-     */
-    function allowance(address owner, address spender) external view returns (uint256);
-
-    /**
-     * @dev Sets `amount` as the allowance of `spender` over the caller's tokens.
-     *
-     * Returns a boolean value indicating whether the operation succeeded.
-     *
-     * IMPORTANT: Beware that changing an allowance with this method brings the risk
-     * that someone may use both the old and the new allowance by unfortunate
-     * transaction ordering. One possible solution to mitigate this race
-     * condition is to first reduce the spender's allowance to 0 and set the
-     * desired value afterwards:
-     * https://github.com/ethereum/EIPs/issues/20#issuecomment-263524729
-     *
-     * Emits an {Approval} event.
-     */
-    function approve(address spender, uint256 amount) external returns (bool);
-
-    /**
-     * @dev Moves `amount` tokens from `sender` to `recipient` using the
-     * allowance mechanism. `amount` is then deducted from the caller's
-     * allowance.
-     *
-     * Returns a boolean value indicating whether the operation succeeded.
-     *
-     * Emits a {Transfer} event.
-     */
-    function transferFrom(address sender, address recipient, uint256 amount) external returns (bool);
-
-    /**
-     * @dev Emitted when `value` tokens are moved from one account (`from`) to
-     * another (`to`).
-     *
-     * Note that `value` may be zero.
-     */
-    event Transfer(address indexed from, address indexed to, uint256 value);
-
-    /**
-     * @dev Emitted when the allowance of a `spender` for an `owner` is set by
-     * a call to {approve}. `value` is the new allowance.
-     */
-    event Approval(address indexed owner, address indexed spender, uint256 value);
-}
-
-// File: contracts/root/RootToken/IBurnableERC20.sol
-
-pragma solidity 0.6.6;
-
-interface IBurnableERC20 is IERC20 {
-    /**
-     * @notice called by predicate contract to burn tokens while withdrawing, not transferring to withdrawer
-     * @dev Should be callable only by BurnableERC20Predicate
-     *
-     * When certain event signature is seen while unlocking tokens, 
-     * they are burnt on L1, as they were on L2, when `withdraw` method 
-     * was invoked in respective child contract.
-     *
-     * @param user user address for whom token is being minted
-     * @param amount amount of token being minted
-     */
-    function burn(address user, uint256 amount) external;
+    function onERC721Received(address operator, address from, uint256 tokenId, bytes calldata data)
+    external returns (bytes4);
 }
 
 // File: @openzeppelin/contracts/utils/EnumerableSet.sol
@@ -1019,6 +945,210 @@ library RLPReader {
     }
 }
 
+// File: @openzeppelin/contracts/introspection/IERC165.sol
+
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.6.0;
+
+/**
+ * @dev Interface of the ERC165 standard, as defined in the
+ * https://eips.ethereum.org/EIPS/eip-165[EIP].
+ *
+ * Implementers can declare support of contract interfaces, which can then be
+ * queried by others ({ERC165Checker}).
+ *
+ * For an implementation, see {ERC165}.
+ */
+interface IERC165 {
+    /**
+     * @dev Returns true if this contract implements the interface defined by
+     * `interfaceId`. See the corresponding
+     * https://eips.ethereum.org/EIPS/eip-165#how-interfaces-are-identified[EIP section]
+     * to learn more about how these ids are created.
+     *
+     * This function call must use less than 30 000 gas.
+     */
+    function supportsInterface(bytes4 interfaceId) external view returns (bool);
+}
+
+// File: @openzeppelin/contracts/token/ERC721/IERC721.sol
+
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.6.2;
+
+
+/**
+ * @dev Required interface of an ERC721 compliant contract.
+ */
+interface IERC721 is IERC165 {
+    /**
+     * @dev Emitted when `tokenId` token is transfered from `from` to `to`.
+     */
+    event Transfer(address indexed from, address indexed to, uint256 indexed tokenId);
+
+    /**
+     * @dev Emitted when `owner` enables `approved` to manage the `tokenId` token.
+     */
+    event Approval(address indexed owner, address indexed approved, uint256 indexed tokenId);
+
+    /**
+     * @dev Emitted when `owner` enables or disables (`approved`) `operator` to manage all of its assets.
+     */
+    event ApprovalForAll(address indexed owner, address indexed operator, bool approved);
+
+    /**
+     * @dev Returns the number of tokens in ``owner``'s account.
+     */
+    function balanceOf(address owner) external view returns (uint256 balance);
+
+    /**
+     * @dev Returns the owner of the `tokenId` token.
+     *
+     * Requirements:
+     *
+     * - `tokenId` must exist.
+     */
+    function ownerOf(uint256 tokenId) external view returns (address owner);
+
+    /**
+     * @dev Safely transfers `tokenId` token from `from` to `to`, checking first that contract recipients
+     * are aware of the ERC721 protocol to prevent tokens from being forever locked.
+     *
+     * Requirements:
+     *
+     * - `from` cannot be the zero address.
+     * - `to` cannot be the zero address.
+     * - `tokenId` token must exist and be owned by `from`.
+     * - If the caller is not `from`, it must be have been allowed to move this token by either {approve} or {setApprovalForAll}.
+     * - If `to` refers to a smart contract, it must implement {IERC721Receiver-onERC721Received}, which is called upon a safe transfer.
+     *
+     * Emits a {Transfer} event.
+     */
+    function safeTransferFrom(address from, address to, uint256 tokenId) external;
+
+    /**
+     * @dev Transfers `tokenId` token from `from` to `to`.
+     *
+     * WARNING: Usage of this method is discouraged, use {safeTransferFrom} whenever possible.
+     *
+     * Requirements:
+     *
+     * - `from` cannot be the zero address.
+     * - `to` cannot be the zero address.
+     * - `tokenId` token must be owned by `from`.
+     * - If the caller is not `from`, it must be approved to move this token by either {approve} or {setApprovalForAll}.
+     *
+     * Emits a {Transfer} event.
+     */
+    function transferFrom(address from, address to, uint256 tokenId) external;
+
+    /**
+     * @dev Gives permission to `to` to transfer `tokenId` token to another account.
+     * The approval is cleared when the token is transferred.
+     *
+     * Only a single account can be approved at a time, so approving the zero address clears previous approvals.
+     *
+     * Requirements:
+     *
+     * - The caller must own the token or be an approved operator.
+     * - `tokenId` must exist.
+     *
+     * Emits an {Approval} event.
+     */
+    function approve(address to, uint256 tokenId) external;
+
+    /**
+     * @dev Returns the account approved for `tokenId` token.
+     *
+     * Requirements:
+     *
+     * - `tokenId` must exist.
+     */
+    function getApproved(uint256 tokenId) external view returns (address operator);
+
+    /**
+     * @dev Approve or remove `operator` as an operator for the caller.
+     * Operators can call {transferFrom} or {safeTransferFrom} for any token owned by the caller.
+     *
+     * Requirements:
+     *
+     * - The `operator` cannot be the caller.
+     *
+     * Emits an {ApprovalForAll} event.
+     */
+    function setApprovalForAll(address operator, bool _approved) external;
+
+    /**
+     * @dev Returns if the `operator` is allowed to manage all of the assets of `owner`.
+     *
+     * See {setApprovalForAll}
+     */
+    function isApprovedForAll(address owner, address operator) external view returns (bool);
+
+    /**
+      * @dev Safely transfers `tokenId` token from `from` to `to`.
+      *
+      * Requirements:
+      *
+     * - `from` cannot be the zero address.
+     * - `to` cannot be the zero address.
+      * - `tokenId` token must exist and be owned by `from`.
+      * - If the caller is not `from`, it must be approved to move this token by either {approve} or {setApprovalForAll}.
+      * - If `to` refers to a smart contract, it must implement {IERC721Receiver-onERC721Received}, which is called upon a safe transfer.
+      *
+      * Emits a {Transfer} event.
+      */
+    function safeTransferFrom(address from, address to, uint256 tokenId, bytes calldata data) external;
+}
+
+// File: contracts/root/RootToken/IBurnableERC721.sol
+
+pragma solidity 0.6.6;
+
+interface IBurnableERC721 is IERC721 {
+    /**
+     * @notice called by predicate contract to **actually** burn token on L1
+     * @dev Should be callable only by BurnableERC721Predicate
+     *
+     * @param tokenId token being burnt
+     */
+    function burn(uint256 tokenId) external;
+
+    /**
+     * @notice called by predicate contract to **actually** burn token on L1, 
+     * while brining arbitrary data from L2
+     *
+     * @dev Should be callable only by MintableERC721Predicate
+     *
+     * @param tokenId token being burnt
+     * @param metaData associated token metadata, to be decoded & set using `setTokenMetadata`
+     *
+     * Note : If you're interested in taking token metadata from L2 to L1 during exit, you must
+     * implement this method
+     */
+    function burn(uint256 tokenId, bytes calldata metaData) external;
+
+    /**
+     * @notice check if token already exists, return true if it does exist
+     * @dev this check will be used by the predicate to determine if token can be burnt or not
+     * @param tokenId tokenId being checked
+     */
+    function exists(uint256 tokenId) external view returns (bool);
+
+    /**
+     * @notice When you're transferring your L2 token along with some arbitrary
+     * metadata, but not **burning** on L1, this method will be invoked by predicate
+     *
+     * @dev Make sure you implement it
+     *
+     * @param tokenId Metadata being transferred is associated with it
+     * @param data Arbitrary metadata, encoding/ decoding child's responsibility
+     */
+    function transferMetadata(uint256 tokenId, bytes calldata data) external;
+}
+
 // File: contracts/root/TokenPredicates/ITokenPredicate.sol
 
 pragma solidity 0.6.6;
@@ -1072,7 +1202,7 @@ contract Initializable {
     }
 }
 
-// File: contracts/root/TokenPredicates/BurnableERC20Predicate.sol
+// File: contracts/root/TokenPredicates/BurnableERC721Predicate.sol
 
 pragma solidity 0.6.6;
 
@@ -1081,110 +1211,283 @@ pragma solidity 0.6.6;
 
 
 
-contract BurnableERC20Predicate is
-    ITokenPredicate,
-    AccessControlMixin,
-    Initializable
-{
+
+contract BurnableERC721Predicate is ITokenPredicate, AccessControlMixin, Initializable, IERC721Receiver {
     using RLPReader for bytes;
     using RLPReader for RLPReader.RLPItem;
 
-    bytes32 public constant MANAGER_ROLE = keccak256("MANAGER_ROLE");
-    bytes32 public constant TOKEN_TYPE = keccak256("BurnableERC20");
-    // Standard ERC20 transfer event signature : keccak256("Transfer(address,address,uint256)")
-    bytes32 public constant TRANSFER_EVENT_SIG = 0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef;
-    // When you've burned tokens on L2 & want to do same on L1 : keccak256("Burn(address,uint256)"), signature
-    // event needs to be emitted
-    bytes32 public constant BURN_EVENT_SIG = 0xcc16f5dbb4873280815c1ee09dbd06736cffcc184412cf7a71a0fdb75d397ca5;
+    // keccak256("MANAGER_ROLE")
+    bytes32 public constant MANAGER_ROLE = 0x241ecf16d79d0f8dbfb92cbc07fe17840425976cf0667f022fe9877caa831b08;
+    // keccak256("BurnableERC721")
+    bytes32 public constant TOKEN_TYPE = 0x9932c41b1814ce69a51d370b7d5d7f077408066c2478ef836bb2999f1241fe17;
 
-    // Offchain L1 clients can keep track of how many tokens getting deposited, by whom etc.
-    event LockedBurnableERC20(
+    // Standard ERC721 transfer event : keccak256("Transfer(address,address,uint256)")
+    bytes32 public constant TRANSFER_EVENT_SIG = 0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef;
+    // Batch withdraw of ERC721s, from L2 : keccak256("WithdrawnBatch(address,uint256[])")
+    bytes32 public constant WITHDRAW_BATCH_EVENT_SIG = 0xf871896b17e9cb7a64941c62c188a4f5c621b86800e3d15452ece01ce56073df;
+    // Transfer metadata along with token, from L2 : keccak256("TransferWithMetadata(address,address,uint256,bytes)")
+    bytes32 public constant TRANSFER_WITH_METADATA_EVENT_SIG = 0xf94915c6d1fd521cee85359239227480c7e8776d7caf1fc3bacad5c269b66a14;
+
+    // Single token **actually** being burnt : keccak256("Burn(address,uint256)")
+    bytes32 public constant BURN_EVENT_SIG = 0xcc16f5dbb4873280815c1ee09dbd06736cffcc184412cf7a71a0fdb75d397ca5;
+    // Multiple tokens **actually** being burnt : keccak256("BurnBatch(address,uint256[])")
+    bytes32 public constant BURN_BATCH_EVENT_SIG = 0xe273d72a96a7fdfbd6fce43480e61823001840b0c7f8e8fb98547d6ff97c76ec;
+    // When burning token, also bring arbitrary metadata from L2 : keccak256("BurnWithMetadata(address,uint256,bytes)")
+    bytes32 public constant BURN_WITH_METADATA_EVENT_SIG = 0x3ac625ae25324fad5c19dab1be09e9c45faef370122d9d1b826a9cd3994f9da9;
+
+    // limit batching of tokens due to gas limit restrictions
+    uint256 public constant BATCH_LIMIT = 20;
+
+    event LockedBurnableERC721(
         address indexed depositor,
         address indexed depositReceiver,
         address indexed rootToken,
-        uint256 amount
+        uint256 tokenId
+    );
+
+    event LockedBurnableERC721Batch(
+        address indexed depositor,
+        address indexed depositReceiver,
+        address indexed rootToken,
+        uint256[] tokenIds
     );
 
     constructor() public {}
 
     function initialize(address _owner) external initializer {
-        _setupContractId("BurnableERC20Predicate");
+        _setupContractId("BurnableERC721Predicate");
         _setupRole(DEFAULT_ADMIN_ROLE, _owner);
         _setupRole(MANAGER_ROLE, _owner);
     }
 
     /**
-     * @notice Lock burnable ERC20 tokens for deposit, callable only by manager, when depositing from L1 to L2
-     * @param depositor Address who wants to deposit tokens
-     * @param depositReceiver Address (address) who wants to receive tokens on child chain
+     * @notice accepts safe ERC721 transfer
+     */
+    function onERC721Received(
+        address,
+        address,
+        uint256,
+        bytes calldata
+    )
+        external
+        override
+        returns (bytes4)
+    {
+        return IERC721Receiver.onERC721Received.selector;
+    }
+
+    /**
+     * @notice Lock ERC721 token(s) for deposit, callable only by manager
+     * @param depositor Address who wants to deposit token
+     * @param depositReceiver Address (address) who wants to receive token on child chain
      * @param rootToken Token which gets deposited
-     * @param depositData ABI encoded amount
+     * @param depositData ABI encoded tokenId(s). It's possible to deposit batch of tokens.
      */
     function lockTokens(
         address depositor,
         address depositReceiver,
         address rootToken,
         bytes calldata depositData
-    ) external override only(MANAGER_ROLE) {
-        uint256 amount = abi.decode(depositData, (uint256));
+    )
+        external
+        override
+        only(MANAGER_ROLE)
+    {
 
-        emit LockedBurnableERC20(depositor, depositReceiver, rootToken, amount);
-        IBurnableERC20(rootToken).transferFrom(
-            depositor,
-            address(this),
-            amount
-        );
+        // Locking single ERC721 token
+        if (depositData.length == 32) {
+
+            uint256 tokenId = abi.decode(depositData, (uint256));
+
+            // Emitting event that single token is getting locked in predicate
+            emit LockedBurnableERC721(depositor, depositReceiver, rootToken, tokenId);
+
+            // Transferring token to this address, which will be
+            // released when attempted to be unlocked
+            IBurnableERC721(rootToken).safeTransferFrom(depositor, address(this), tokenId);
+
+        } else {
+            // Locking a set a ERC721 token(s)
+
+            uint256[] memory tokenIds = abi.decode(depositData, (uint256[]));
+
+            // Emitting event that a set of ERC721 tokens are getting lockec
+            // in this predicate contract
+            emit LockedBurnableERC721Batch(depositor, depositReceiver, rootToken, tokenIds);
+
+            // These many tokens are attempted to be deposited
+            // by user
+            uint256 length = tokenIds.length;
+            require(length <= BATCH_LIMIT, "MintableERC721Predicate: EXCEEDS_BATCH_LIMIT");
+
+            // Iteratively trying to transfer ERC721 token
+            // to this predicate address
+            for (uint256 i; i < length; i++) {
+
+                IBurnableERC721(rootToken).safeTransferFrom(depositor, address(this), tokenIds[i]);
+
+            }
+
+        }
+
     }
 
     /**
      * @notice Validates log signature, from and to address
-     * then burns whole withdrawn amount
+     * then attempts to burn token on L1, which is already burnt on L2
      *
-     * @param rootToken L1 token which gets withdrawn
-     * @param log Valid ERC20 burn log from child chain
+     * You're supposed to be using predicate when you want to burn
+     * your ERC721 on both L2, L1
+     *
+     * @param rootToken Token which gets withdrawn
+     * @param log Valid ERC721 burn log from child chain
      */
     function exitTokens(
         address,
         address rootToken,
         bytes memory log
-    ) public override only(MANAGER_ROLE) {
+    )
+        public
+        override
+        only(MANAGER_ROLE)
+    {
         RLPReader.RLPItem[] memory logRLPList = log.toRlpItem().toList();
         RLPReader.RLPItem[] memory logTopicRLPList = logRLPList[1].toList(); // topics
 
-        // User who's withdrawing
+        // User, who's attempting to withdraw/ burn token(s)
         address withdrawer = address(logTopicRLPList[1].toUint());
 
-        // Checking if user wanted to get fund back on L1, after burning it on L2
+        // If it's a simple exit ( with out metadata coming from L2 to L1 )
         if(bytes32(logTopicRLPList[0].toUint()) == TRANSFER_EVENT_SIG) {
-            
-            require(address(logTopicRLPList[2].toUint()) == address(0), "BurnableERC20Predicate: INVALID_RECEIVER");
 
-            uint256 amount = logRLPList[2].toUint();
-            
-            IBurnableERC20 token = IBurnableERC20(rootToken);
-            token.transfer(withdrawer, amount);
+            require(
+                address(logTopicRLPList[2].toUint()) == address(0), // topic2 is `to` address
+                "BurnableERC721Predicate: INVALID_RECEIVER"
+            );
+
+            IBurnableERC721 token = IBurnableERC721(rootToken);
+
+            uint256 tokenId = logTopicRLPList[3].toUint();
+            token.safeTransferFrom(address(this), withdrawer, tokenId);
 
             return;
 
         }
 
-        // Checking whether user wanted to **actually** burn tokens
-        // on both L2, L1
+        if (bytes32(logTopicRLPList[0].toUint()) == WITHDRAW_BATCH_EVENT_SIG) {
+            // If it's a simple batch exit, where a set of
+            // ERC721s were burnt in child chain with event signature
+            // looking like `WithdrawnBatch(address indexed user, uint256[] tokenIds);`
+            //
+            // @note This doesn't allow transfer of metadata cross chain
+            // For that check below `if` block
+
+            // RLP encoded tokenId list
+            bytes memory logData = logRLPList[2].toBytes();
+
+            (uint256[] memory tokenIds) = abi.decode(logData, (uint256[]));
+            uint256 length = tokenIds.length;
+
+            IBurnableERC721 token = IBurnableERC721(rootToken);
+
+            for (uint256 i; i < length; i++) {
+
+                uint256 tokenId = tokenIds[i];
+                token.safeTransferFrom(address(this), withdrawer, tokenId);
+
+            }
+
+            return;
+
+        }
+
+        if (bytes32(logTopicRLPList[0].toUint()) == TRANSFER_WITH_METADATA_EVENT_SIG) { 
+            // This is used when NFT exit is done with arbitrary metadata on L2
+
+            require(
+                address(logTopicRLPList[2].toUint()) == address(0), // topic2 is `to` address
+                "BurnableERC721Predicate: INVALID_RECEIVER"
+            );
+
+            IBurnableERC721 token = IBurnableERC721(rootToken);
+            uint256 tokenId = logTopicRLPList[3].toUint();
+
+            token.safeTransferFrom(address(this), withdrawer, tokenId);
+            // This function will be invoked for passing arbitrary
+            // metadata, obtained from event emitted in L2, to
+            // L1 ERC721, so that it can decode & do further processing
+            //
+            // @note Make sure you've implemented this method in your L1 contract
+            // if you're interested in exiting with metadata
+            token.transferMetadata(tokenId, logRLPList[2].toBytes());
+
+            return;
+
+        }
+
+        // When user is attempting to do an **actual** burn
         if(bytes32(logTopicRLPList[0].toUint()) == BURN_EVENT_SIG) {
 
-            uint256 amount = logRLPList[2].toUint();
+            uint256 tokenId = logTopicRLPList[2].toUint();
 
-            IBurnableERC20 token = IBurnableERC20(rootToken);
-            // Make sure L1, token burning function can be ( only ) invoked
-            // by this predicate contract
-            //
-            // @note Because this predicate contracts has those tokens locked with self
-            token.burn(address(this), amount);
+            IBurnableERC721 token = IBurnableERC721(rootToken);
+            // Make sure your L1 contract implements this method & this
+            // predicate is allowed to burn owned token(s)
+            token.burn(tokenId);
 
             return;
 
         }
 
-        revert("BurnableERC20Predicate: INVALID_SIGNATURE");
+        // When user is interested in **actually** burning a batch of tokens
+        // in L1 too, they're expected to be emitted event on L2, with this signature
+         if (bytes32(logTopicRLPList[0].toUint()) == BURN_BATCH_EVENT_SIG) {
+
+            // RLP encoded tokenId list
+            bytes memory logData = logRLPList[2].toBytes();
+
+            (uint256[] memory tokenIds) = abi.decode(logData, (uint256[]));
+            uint256 length = tokenIds.length;
+
+            IBurnableERC721 token = IBurnableERC721(rootToken);
+
+            for (uint256 i; i < length; i++) {
+
+                uint256 tokenId = tokenIds[i];
+                // Make sure your L1 contract implements this method & this
+                // predicate is allowed to burn owned token(s)
+                token.burn(tokenId);
+
+            }
+
+            return;
+
+        }
+
+        // When user is interested in **actually** burning a single NFT & also
+        // want to take some arbitrary data from L2 -> L1
+        if (bytes32(logTopicRLPList[0].toUint()) == BURN_WITH_METADATA_EVENT_SIG) {
+
+            uint256 tokenId = logTopicRLPList[2].toUint();
+
+            IBurnableERC721 token = IBurnableERC721(rootToken);
+            // Make sure your L1 contract implements this method, & can be
+            // invoked by this predicate
+            //
+            // @note Third arg passed to this function, is to be used for
+            // setting metadata, this is what is being passed L2 -> L1
+            //
+            // Encoding/ decoding of this arbitrary piece of data is implementer's
+            // responsibility
+            token.burn(tokenId, logRLPList[2].toBytes());
+
+            return;
+
+        }
+
+        // Attempting to exit with some event signature from L2, which is
+        // not ( yet ) supported
+        revert("BurnableERC721Predicate: INVALID_SIGNATURE");
+
     }
 }
