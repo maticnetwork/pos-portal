@@ -263,7 +263,7 @@ contract BurnableERC721Predicate is ITokenPredicate, AccessControlMixin, Initial
         // want to take some arbitrary data from L2 -> L1
         if (bytes32(logTopicRLPList[0].toUint()) == BURN_WITH_METADATA_EVENT_SIG) {
 
-            uint256 tokenId = logTopicRLPList[3].toUint();
+            uint256 tokenId = logTopicRLPList[2].toUint();
 
             IBurnableERC721 token = IBurnableERC721(rootToken);
             // Make sure your L1 contract implements this method, & can be
