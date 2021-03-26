@@ -90,6 +90,31 @@ contract ChildBurnableERC1155 is
         _burnBatch(_msgSender(), ids, amounts);
     }
 
+    /**
+     * Consider using this method, when you want to withdraw with some arbitrary metadata
+     */
+    function withdrawSingleWithMetadata(uint256 id, uint256 amount) external {
+        
+        emit TransferSingleWithMetadata(_msgSender(), _msgSender(), address(0), id, amount, encodeMetadata(_msgSender(), id, amount));
+
+        _burn(_msgSender(), id, amount);
+
+    }
+
+    /**
+     * Consider using this method, when you want to withdraw a batch of tokens, with some arbitrary metadata
+     */
+    function withdrawBatchWithMetadata(uint256[] calldata ids, uint256[] calldata amounts) external {
+        
+        emit TransferBatchWithMetadata(_msgSender(), _msgSender(), address(0), ids, amounts, encodeMetadata(_msgSender(), ids, amounts));
+
+        _burnBatch(_msgSender(), ids, amounts);
+
+    }
+
+    /**
+     * Consider using this method, when you want to **burn** on both L2, L1
+     */
     function burnSingle(address user, uint256 id, uint256 amount) external only(DEFAULT_ADMIN_ROLE) {
 
         _burn(user, id, amount);
@@ -97,6 +122,9 @@ contract ChildBurnableERC1155 is
 
     }
 
+    /**
+     * Consider using this method, when you want to **burn** a batch of tokens, on both L2, L1
+     */
     function burnBatch(address user, uint256[] calldata ids, uint256[] calldata amounts) external only(DEFAULT_ADMIN_ROLE) {
 
         _burnBatch(user, ids, amounts);
@@ -104,6 +132,10 @@ contract ChildBurnableERC1155 is
 
     }
 
+    /**
+     * Consider using this method, when you want to **burn** on both L2, L1, while
+     * taking some data cross-chain
+     */
     function burnSingleWithMetadata(address user, uint256 id, uint256 amount) external only(DEFAULT_ADMIN_ROLE) {
 
         emit BurnSingleWithMetadata(_msgSender(), user, id, amount, encodeMetadata(user, id, amount));
@@ -112,6 +144,10 @@ contract ChildBurnableERC1155 is
 
     }
 
+    /**
+     * Consider using this method, when you want to **burn** a batch of tokens, on both L2, L1, while
+     * taking some data cross-chain
+     */
     function burnBatchWithMetadata(address user, uint256[] calldata ids, uint256[] calldata amounts) external only(DEFAULT_ADMIN_ROLE) {
 
         emit BurnBatchWithMetadata(_msgSender(), user, ids, amounts, encodeMetadata(user, ids, amounts));
@@ -120,6 +156,10 @@ contract ChildBurnableERC1155 is
 
     }
 
+    /**
+     * Make sure you implement this method, if you're planning to bring some data
+     * cross-chain
+     */
     function encodeMetadata(address user, uint256 id, uint256 amount) internal pure virtual returns(bytes memory) {
 
         // Feel free to override this method, for implementing some meaningful
@@ -128,6 +168,9 @@ contract ChildBurnableERC1155 is
 
     }
 
+    /**
+     * Same as above method, only difference is that it's to be invoked when doing batch transfer/ burning
+     */
     function encodeMetadata(address user, uint256[] memory ids, uint256[] memory amounts) internal pure virtual returns(bytes memory) {
 
         // Feel free to override this method, for implementing some meaningful
