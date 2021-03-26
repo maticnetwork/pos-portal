@@ -53,6 +53,31 @@ contract DummyBurnableERC1155 is
 
     }
 
+    function _beforeTokenTransfer(
+        address operator,
+        address from,
+        address to,
+        uint256[] memory ids,
+        uint256[] memory amounts,
+        bytes memory data
+    )
+        internal
+        override
+    {
+
+        if(from != address(0) && to != address(0) && data.length > 0) {
+            // do something interesting with data that you
+            // received
+            //
+            // This hook is being made available for you so that when
+            // some one attempts to exit tokens from L2 ( not a burn )
+            // along with some arbitrary metadata, you can catch that
+            // and perform any thing you need to perform on that piece of data
+            // in this block
+        }
+
+    }
+
     function _msgSender()
         internal
         override
