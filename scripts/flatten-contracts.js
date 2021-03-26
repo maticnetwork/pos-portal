@@ -127,6 +127,10 @@ const contractsToFlatten = [
     fileName: 'DummyMintableERC1155.sol'
   },
   {
+    path: 'contracts/root/RootToken',
+    fileName: 'DummyBurnableERC1155.sol'
+  },
+  {
     path: 'contracts/child/ChildChainManager',
     fileName: 'ChildChainManager.sol'
   },
@@ -165,6 +169,10 @@ const contractsToFlatten = [
   {
     path: 'contracts/child/ChildToken',
     fileName: 'ChildMintableERC1155.sol'
+  },
+  {
+    path: 'contracts/child/ChildToken',
+    fileName: 'ChildBurnableERC1155.sol'
   },
   {
     path: 'contracts/child/ChildToken',
