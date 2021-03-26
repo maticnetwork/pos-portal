@@ -23,10 +23,16 @@ contract MintableERC1155Predicate is
     bytes32 public constant TRANSFER_SINGLE_EVENT_SIG = 0xc3d58168c5ae7397731d063d5bbf3d657854427343f4c083240f7aacaa2d0f62;
     // When a batch of ERC1155(s) exiting normally : keccak256("TransferBatch(address,address,address,uint256[],uint256[])")
     bytes32 public constant TRANSFER_BATCH_EVENT_SIG = 0x4a39dc06d4c0dbc64b70af90fd698a233a518aa5d07e595d983b8c0526c8f7fb;
+
     // If you're interested in **actually** burning tokens : keccak256("BurnSingle(address,address,uint256,uint256)")
     bytes32 public constant BURN_SINGLE_EVENT_SIG = 0x995c922928fc04a31c6446db7f51f402ddb95ac41fa3dca51c98ff1fe7300531;
     // If you're willing to **actually** burn a batch of tokens : keccak256("BurnBatch(address,address,uint256[],uint256[])")
     bytes32 public constant BURN_BATCH_EVENT_SIG = 0xf6d51a8d20e8b0143ca41399aa93b2a480cb0b95e39847e4ebd3144b2db8775d;
+
+    // When you want to burn token, along with bringing some metadata : keccak256("BurnSingle(address,address,uint256,uint256,bytes)")
+    bytes32 public constant BURN_SINGLE_WITH_METADATA_EVENT_SIG = 0xabbc88934860c7a7c4114cf6375eedca683979b2242cdf59b05c96de64a45f4e;
+    // When you want to burn a batch of tokens, along with bringing some metadata from L2 : keccak256("BurnBatch(address,address,uint256[],uint256[],bytes)")
+    bytes32 public constant BURN_BATCH_WITH_METADATA_EVENT_SIG = 0x5e07af1c52a259687f9ec17241e0946faba05aadac634d021d6ab9ea7931efc5;
 
     event LockedBatchBurnableERC1155(
         address indexed depositor,
@@ -108,7 +114,7 @@ contract MintableERC1155Predicate is
 
     /**
      * @notice Validates log signature, from and to address
-     * then sends the correct tokenId, amount to withdrawer
+     * then sends the correct tokenId, amount to withdrawer/ burns token, as instructed
      * callable only by manager
      * @param rootToken Token which gets withdrawn
      * @param log Valid ERC1155 TransferSingle burn or TransferBatch burn log from child chain
@@ -201,6 +207,44 @@ contract MintableERC1155Predicate is
                 ids,
                 amounts,
                 bytes("")
+            );
+
+            return;
+
+        }
+
+        if (bytes32(logTopicRLPList[0].toUint()) == BURN_SINGLE_WITH_METADATA_EVENT_SIG) {
+
+            (uint256 id, uint256 amount, bytes memory data) = abi.decode(
+                logData,
+                (uint256, uint256, bytes)
+            );
+
+            IBurnableERC1155 token = IBurnableERC1155(rootToken);
+            token.burn(
+                address(this),
+                id,
+                amount,
+                data
+            );
+
+            return;
+
+        }
+
+        if (bytes32(logTopicRLPList[0].toUint()) == BURN_BATCH_WITH_METADATA_EVENT_SIG) {
+            
+            (uint256[] memory ids, uint256[] memory amounts, bytes memory data) = abi.decode(
+                logData,
+                (uint256[], uint256[], bytes)
+            );
+
+            IBurnableERC1155 token = IBurnableERC1155(rootToken);
+            token.burnBatch(
+                address(this),
+                ids,
+                amounts,
+                data
             );
 
             return;
