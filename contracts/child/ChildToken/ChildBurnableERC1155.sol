@@ -97,10 +97,42 @@ contract ChildBurnableERC1155 is
 
     }
 
-    function burnBatch(address user, uint256 id, uint256 amount) external only(DEFAULT_ADMIN_ROLE) {
+    function burnBatch(address user, uint256[] calldata ids, uint256[] calldata amounts) external only(DEFAULT_ADMIN_ROLE) {
 
         _burnBatch(user, ids, amounts);
         emit BurnBatch(_msgSender(), user, ids, amounts);
+
+    }
+
+    function burnSingleWithMetadata(address user, uint256 id, uint256 amount) external only(DEFAULT_ADMIN_ROLE) {
+
+        emit BurnSingleWithMetadata(_msgSender(), user, id, amount, encodeMetadata(user, id, amount));
+        
+        _burn(user, id, amount);
+
+    }
+
+    function burnBatchWithMetadata(address user, uint256[] calldata ids, uint256[] calldata amounts) external only(DEFAULT_ADMIN_ROLE) {
+
+        emit BurnBatchWithMetadata(_msgSender(), user, ids, amounts, encodeMetadata(user, ids, amounts));
+
+        _burnBatch(user, ids, amounts);
+
+    }
+
+    function encodeMetadata(address user, uint256 id, uint256 amount) internal pure virtual returns(bytes memory) {
+
+        // Feel free to override this method, for implementing some meaningful
+        // encoding method
+        return abi.encode(user, id, amount);
+
+    }
+
+    function encodeMetadata(address user, uint256[] memory ids, uint256[] memory amounts) internal pure virtual returns(bytes memory) {
+
+        // Feel free to override this method, for implementing some meaningful
+        // encoding method
+        return abi.encode(user, ids, amounts);
 
     }
 
