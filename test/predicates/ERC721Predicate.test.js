@@ -262,6 +262,10 @@ contract('ERC721Predicate', (accounts) => {
       const contracts = await deployer.deployFreshRootContracts(accounts)
       dummyERC721 = contracts.dummyERC721
       erc721Predicate = contracts.erc721Predicate
+
+      const PREDICATE_ROLE = await dummyERC721.PREDICATE_ROLE()
+      await dummyERC721.grantRole(PREDICATE_ROLE, erc721Predicate.address)
+
       await dummyERC721.mint(tokenId)
       await dummyERC721.approve(erc721Predicate.address, tokenId)
       const depositData = abi.encode(['uint256'], [tokenId])
