@@ -1,20 +1,26 @@
 pragma solidity 0.6.6;
 
 import {ERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import {AccessControlMixin} from "../../common/AccessControlMixin.sol";
 import {NativeMetaTransaction} from "../../common/NativeMetaTransaction.sol";
 import {IRootERC721} from "./IRootERC721.sol";
 import {ContextMixin} from "../../common/ContextMixin.sol";
 
 contract DummyERC721 is
     ERC721,
+    AccessControlMixin,
     NativeMetaTransaction,
     IRootERC721,
     ContextMixin
 {
+    bytes32 public constant PREDICATE_ROLE = keccak256("PREDICATE_ROLE");
     constructor(string memory name_, string memory symbol_)
         public
         ERC721(name_, symbol_)
     {
+        _setupContractId("DummyERC721");
+        _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
+        _setupRole(PREDICATE_ROLE, _msgSender());
         _initializeEIP712(name_);
     }
 
@@ -34,7 +40,7 @@ contract DummyERC721 is
      * Make sure this method is always callable by Predicate contract
      * who will invoke it when attempting to exit with metadata
      */
-    function setTokenMetadata(uint256 tokenId, bytes calldata data) external override {
+    function setTokenMetadata(uint256 tokenId, bytes calldata data) external override only(PREDICATE_ROLE) {
         // This function should decode metadata obtained from L2
         // and attempt to set it for this `tokenId`
         //
