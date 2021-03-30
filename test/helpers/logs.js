@@ -55,7 +55,7 @@ export const getERC721TransferWithMetadataLog = ({
   return RLP.encode([
     '0x0',
     [
-      overrideSig ||   erc721TransferWithMetadataEventSig,
+      overrideSig || erc721TransferWithMetadataEventSig,
       from,
       to,
       '0x' + tokenId.toString(16)

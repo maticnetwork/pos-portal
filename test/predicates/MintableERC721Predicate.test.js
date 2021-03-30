@@ -263,6 +263,7 @@ contract('MintableERC721Predicate', (accounts) => {
     const withdrawer = mockValues.addresses[8]
     let dummyMintableERC721
     let mintableERC721Predicate
+    let exitTokensTx
 
     before(async () => {
       const contracts = await deployer.deployFreshRootContracts(accounts)
@@ -276,12 +277,12 @@ contract('MintableERC721Predicate', (accounts) => {
       const burnLog = getERC721TransferWithMetadataLog({
         from: withdrawer,
         to: mockValues.zeroAddress,
-        tokenId,
+        tokenId: tokenId,
         metaData: 'https://nft.matic.network'
       })
 
-      let exitTx = await mintableERC721Predicate.exitTokens(withdrawer, dummyMintableERC721.address, burnLog)
-      should.exist(exitTx)
+      exitTokensTx = await mintableERC721Predicate.exitTokens(withdrawer, dummyMintableERC721.address, burnLog)
+      should.exist(exitTokensTx)
     })
 
     it('Token should be transfered to withdrawer', async () => {
