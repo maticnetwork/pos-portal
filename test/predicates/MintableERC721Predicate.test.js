@@ -9,7 +9,6 @@ import * as deployer from '../helpers/deployer'
 import { mockValues } from '../helpers/constants'
 import logDecoder from '../helpers/log-decoder.js'
 import { getERC721TransferLog, getERC721TransferWithMetadataLog } from '../helpers/logs'
-import { it } from 'ethers/wordlists'
 
 // Enable and inject BN dependency
 chai
@@ -280,6 +279,7 @@ contract('MintableERC721Predicate', (accounts) => {
         tokenId,
         metaData: 'https://nft.matic.network'
       })
+
       let exitTx = await mintableERC721Predicate.exitTokens(withdrawer, dummyMintableERC721.address, burnLog)
       should.exist(exitTx)
     })
