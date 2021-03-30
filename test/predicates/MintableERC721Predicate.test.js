@@ -9,6 +9,7 @@ import * as deployer from '../helpers/deployer'
 import { mockValues } from '../helpers/constants'
 import logDecoder from '../helpers/log-decoder.js'
 import { getERC721TransferLog, getERC721TransferWithMetadataLog } from '../helpers/logs'
+import { it } from 'ethers/wordlists'
 
 // Enable and inject BN dependency
 chai
@@ -29,7 +30,7 @@ contract('MintableERC721Predicate', (accounts) => {
     let lockTokensTx
     let lockedLog
 
-    before(async() => {
+    before(async () => {
       const contracts = await deployer.deployFreshRootContracts(accounts)
       dummyMintableERC721 = contracts.dummyMintableERC721
       mintableERC721Predicate = contracts.mintableERC721Predicate
@@ -47,17 +48,17 @@ contract('MintableERC721Predicate', (accounts) => {
       await dummyMintableERC721.approve(mintableERC721Predicate.address, tokenId, { from: depositor })
     })
 
-    it('Depositor should have token', async() => {
+    it('Depositor should have token', async () => {
       const owner = await dummyMintableERC721.ownerOf(tokenId)
       owner.should.equal(depositor)
     })
 
-    it('Depositor should have approved token transfer', async() => {
+    it('Depositor should have approved token transfer', async () => {
       const approved = await dummyMintableERC721.getApproved(tokenId)
       approved.should.equal(mintableERC721Predicate.address)
     })
 
-    it('Should be able to receive lockTokens tx', async() => {
+    it('Should be able to receive lockTokens tx', async () => {
       const depositData = abi.encode(['uint256'], [tokenId])
       lockTokensTx = await mintableERC721Predicate.lockTokens(depositor, depositReceiver, dummyMintableERC721.address, depositData)
       should.exist(lockTokensTx)
@@ -94,7 +95,7 @@ contract('MintableERC721Predicate', (accounts) => {
       })
     })
 
-    it('token should be transferred to correct contract', async() => {
+    it('token should be transferred to correct contract', async () => {
       const owner = await dummyMintableERC721.ownerOf(tokenId)
       owner.should.equal(mintableERC721Predicate.address)
     })
@@ -108,7 +109,7 @@ contract('MintableERC721Predicate', (accounts) => {
     let dummyMintableERC721
     let mintableERC721Predicate
 
-    before(async() => {
+    before(async () => {
       const contracts = await deployer.deployFreshRootContracts(accounts)
       dummyMintableERC721 = contracts.dummyMintableERC721
       mintableERC721Predicate = contracts.mintableERC721Predicate
@@ -126,7 +127,7 @@ contract('MintableERC721Predicate', (accounts) => {
       await dummyMintableERC721.approve(mintableERC721Predicate.address, tokenId, { from: depositor })
     })
 
-    it('Should revert with correct reason', async() => {
+    it('Should revert with correct reason', async () => {
       await expectRevert(
         mintableERC721Predicate.lockTokens(depositor, depositReceiver, dummyMintableERC721.address, depositData, { from: depositor }),
         'MintableERC721Predicate: INSUFFICIENT_PERMISSIONS')
@@ -142,7 +143,7 @@ contract('MintableERC721Predicate', (accounts) => {
     let mintableERC721Predicate
     let exitTokensTx
 
-    before(async() => {
+    before(async () => {
       const contracts = await deployer.deployFreshRootContracts(accounts)
       dummyMintableERC721 = contracts.dummyMintableERC721
       mintableERC721Predicate = contracts.mintableERC721Predicate
@@ -150,11 +151,11 @@ contract('MintableERC721Predicate', (accounts) => {
       await dummyMintableERC721.grantRole(PREDICATE_ROLE, mintableERC721Predicate.address)
     })
 
-    it('Token should not exist', async() => {
+    it('Token should not exist', async () => {
       await expectRevert(dummyMintableERC721.ownerOf(tokenId), 'revert ERC721: owner query for nonexistent token')
     })
 
-    it('alice should be able to send exitTokens tx', async() => {
+    it('alice should be able to send exitTokens tx', async () => {
       const burnLog = getERC721TransferLog({
         from: alice,
         to: mockValues.zeroAddress,
@@ -164,24 +165,24 @@ contract('MintableERC721Predicate', (accounts) => {
       should.exist(exitTokensTx)
     })
 
-    it('Token should be minted for alice', async() => {
+    it('Token should be minted for alice', async () => {
       const owner = await dummyMintableERC721.ownerOf(tokenId)
       owner.should.equal(alice)
     })
 
-    it('alice should be able to deposit token back', async() => {
+    it('alice should be able to deposit token back', async () => {
       await dummyMintableERC721.approve(mintableERC721Predicate.address, tokenId, { from: alice })
       const depositData = abi.encode(['uint256'], [tokenId])
       const lockTokensTx = await mintableERC721Predicate.lockTokens(alice, alice, dummyMintableERC721.address, depositData)
       should.exist(lockTokensTx)
     })
 
-    it('Token should be transfered to mintableERC721Predicate', async() => {
+    it('Token should be transfered to mintableERC721Predicate', async () => {
       const owner = await dummyMintableERC721.ownerOf(tokenId)
       owner.should.equal(mintableERC721Predicate.address)
     })
 
-    it('bob should be able to send exitTokens tx', async() => {
+    it('bob should be able to send exitTokens tx', async () => {
       const burnLog = getERC721TransferLog({
         from: bob,
         to: mockValues.zeroAddress,
@@ -191,7 +192,7 @@ contract('MintableERC721Predicate', (accounts) => {
       should.exist(exitTokensTx)
     })
 
-    it('Token should be transfered to bob', async() => {
+    it('Token should be transfered to bob', async () => {
       const owner = await dummyMintableERC721.ownerOf(tokenId)
       owner.should.equal(bob)
     })
@@ -207,7 +208,7 @@ contract('MintableERC721Predicate', (accounts) => {
     let mintableERC721Predicate
     let exitTokensTx
 
-    before(async() => {
+    before(async () => {
       const contracts = await deployer.deployFreshRootContracts(accounts)
       dummyMintableERC721 = contracts.dummyMintableERC721
       mintableERC721Predicate = contracts.mintableERC721Predicate
@@ -215,7 +216,7 @@ contract('MintableERC721Predicate', (accounts) => {
       await dummyMintableERC721.grantRole(PREDICATE_ROLE, mintableERC721Predicate.address)
     })
 
-    it('exitCaller should be able to send exitTokens tx', async() => {
+    it('exitCaller should be able to send exitTokens tx', async () => {
       const burnLog = getERC721TransferLog({
         from: alice,
         to: mockValues.zeroAddress,
@@ -225,24 +226,24 @@ contract('MintableERC721Predicate', (accounts) => {
       should.exist(exitTokensTx)
     })
 
-    it('Token should be minted for alice', async() => {
+    it('Token should be minted for alice', async () => {
       const owner = await dummyMintableERC721.ownerOf(tokenId)
       owner.should.equal(alice)
     })
 
-    it('alice should be able to deposit token back', async() => {
+    it('alice should be able to deposit token back', async () => {
       await dummyMintableERC721.approve(mintableERC721Predicate.address, tokenId, { from: alice })
       const depositData = abi.encode(['uint256'], [tokenId])
       const lockTokensTx = await mintableERC721Predicate.lockTokens(alice, alice, dummyMintableERC721.address, depositData)
       should.exist(lockTokensTx)
     })
 
-    it('Token should be transfered to mintableERC721Predicate', async() => {
+    it('Token should be transfered to mintableERC721Predicate', async () => {
       const owner = await dummyMintableERC721.ownerOf(tokenId)
       owner.should.equal(mintableERC721Predicate.address)
     })
 
-    it('exitCaller should be able to send exitTokens tx', async() => {
+    it('exitCaller should be able to send exitTokens tx', async () => {
       const burnLog = getERC721TransferLog({
         from: bob,
         to: mockValues.zeroAddress,
@@ -252,7 +253,7 @@ contract('MintableERC721Predicate', (accounts) => {
       should.exist(exitTokensTx)
     })
 
-    it('Token should be transfered to bob', async() => {
+    it('Token should be transfered to bob', async () => {
       const owner = await dummyMintableERC721.ownerOf(tokenId)
       owner.should.equal(bob)
     })
@@ -264,7 +265,7 @@ contract('MintableERC721Predicate', (accounts) => {
     let dummyMintableERC721
     let mintableERC721Predicate
 
-    before(async() => {
+    before(async () => {
       const contracts = await deployer.deployFreshRootContracts(accounts)
       dummyMintableERC721 = contracts.dummyMintableERC721
       mintableERC721Predicate = contracts.mintableERC721Predicate
@@ -272,7 +273,7 @@ contract('MintableERC721Predicate', (accounts) => {
       await dummyMintableERC721.grantRole(PREDICATE_ROLE, mintableERC721Predicate.address)
     })
 
-    it('Transaction should go through', async() => {
+    it('Transaction should go through', async () => {
       const burnLog = getERC721TransferWithMetadataLog({
         from: withdrawer,
         to: mockValues.zeroAddress,
@@ -283,9 +284,16 @@ contract('MintableERC721Predicate', (accounts) => {
       should.exist(exitTx)
     })
 
-    it('Token should be transfered to withdrawer', async() => {
+    it('Token should be transfered to withdrawer', async () => {
       const owner = await dummyMintableERC721.ownerOf(tokenId)
       owner.should.equal(withdrawer)
+    })
+
+    it('Token URI should match with transferred metadata', async _ => {
+
+      const metadata = await dummyMintableERC721.tokenURI(tokenId)
+      metadata.should.equal('https://nft.matic.network')
+
     })
 
   })
@@ -296,7 +304,7 @@ contract('MintableERC721Predicate', (accounts) => {
     let dummyMintableERC721
     let mintableERC721Predicate
 
-    before(async() => {
+    before(async () => {
       const contracts = await deployer.deployFreshRootContracts(accounts)
       dummyMintableERC721 = contracts.dummyMintableERC721
       mintableERC721Predicate = contracts.mintableERC721Predicate
@@ -304,7 +312,7 @@ contract('MintableERC721Predicate', (accounts) => {
       await dummyMintableERC721.grantRole(PREDICATE_ROLE, mintableERC721Predicate.address)
     })
 
-    it('Should revert with correct reason', async() => {
+    it('Should revert with correct reason', async () => {
       const burnLog = getERC721TransferLog({
         overrideSig: mockValues.bytes32[2],
         from: withdrawer,
@@ -321,7 +329,7 @@ contract('MintableERC721Predicate', (accounts) => {
     let dummyMintableERC721
     let mintableERC721Predicate
 
-    before(async() => {
+    before(async () => {
       const contracts = await deployer.deployFreshRootContracts(accounts)
       dummyMintableERC721 = contracts.dummyMintableERC721
       mintableERC721Predicate = contracts.mintableERC721Predicate
@@ -329,7 +337,7 @@ contract('MintableERC721Predicate', (accounts) => {
       await dummyMintableERC721.grantRole(PREDICATE_ROLE, mintableERC721Predicate.address)
     })
 
-    it('Should revert with correct reason', async() => {
+    it('Should revert with correct reason', async () => {
       const burnLog = getERC721TransferLog({
         from: withdrawer,
         to: mockValues.addresses[8],
@@ -345,7 +353,7 @@ contract('MintableERC721Predicate', (accounts) => {
     let dummyMintableERC721
     let mintableERC721Predicate
 
-    before(async() => {
+    before(async () => {
       const contracts = await deployer.deployFreshRootContracts(accounts)
       dummyMintableERC721 = contracts.dummyMintableERC721
       mintableERC721Predicate = contracts.mintableERC721Predicate
@@ -353,7 +361,7 @@ contract('MintableERC721Predicate', (accounts) => {
       await dummyMintableERC721.grantRole(PREDICATE_ROLE, mintableERC721Predicate.address)
     })
 
-    it('Should revert with correct reason', async() => {
+    it('Should revert with correct reason', async () => {
       const burnLog = getERC721TransferLog({
         from: withdrawer,
         to: mockValues.addresses[8],
