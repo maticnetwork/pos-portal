@@ -1429,7 +1429,10 @@ contract MintableERC721Predicate is ITokenPredicate, AccessControlMixin, Initial
             } else {
                 // Minting with metadata received from L2 i.e. emitted
                 // by event `TransferWithMetadata` during burning
-                token.mint(withdrawer, tokenId, logRLPList[2].toBytes());
+                bytes memory serialised = logRLPList[2].toBytes();
+                bytes memory metadata = abi.decode(serialised, (bytes));
+                
+                token.mint(withdrawer, tokenId, metadata);
             }
 
         } else {
