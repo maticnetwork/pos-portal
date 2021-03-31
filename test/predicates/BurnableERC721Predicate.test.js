@@ -275,4 +275,38 @@ contract('BurnableERC721Predicate', (accounts) => {
         })
     })
 
+    describe('exitTokens with normal Transfer event log, not burn log', () => {
+        const tokenId = mockValues.numbers[5]
+        const withdrawer = mockValues.addresses[8]
+
+        let dummyBurnableERC721
+        let burnableERC721Predicate
+
+        before(async () => {
+            const contracts = await deployer.deployFreshRootContracts(accounts)
+
+            dummyBurnableERC721 = contracts.dummyERC721
+            burnableERC721Predicate = contracts.erc721Predicate
+
+            const PREDICATE_ROLE = await dummyBurnableERC721.PREDICATE_ROLE()
+            await dummyBurnableERC721.grantRole(PREDICATE_ROLE, burnableERC721Predicate.address)
+
+            await dummyBurnableERC721.mint(tokenId)
+            await dummyBurnableERC721.approve(burnableERC721Predicate.address, tokenId)
+
+            const depositData = abi.encode(['uint256'], [tokenId])
+            await burnableERC721Predicate.lockTokens(accounts[0], withdrawer, dummyBurnableERC721.address, depositData)
+        })
+
+        it('Should revert with correct reason', async () => {
+            const burnLog = getERC721TransferLog({
+                from: withdrawer,
+                to: mockValues.addresses[8],
+                tokenId
+            })
+
+            await expectRevert(burnableERC721Predicate.exitTokens(withdrawer, dummyBurnableERC721.address, burnLog), 'BurnableERC721Predicate: INVALID_RECEIVER')
+        })
+    })
+
 })
