@@ -293,6 +293,9 @@ contract('BurnableERC20Predicate', (accounts) => {
             dummyBurnableERC20 = contracts.dummyBurnableERC20
             burnableERC20Predicate = contracts.burnableERC20Predicate
 
+            const PREDICATE_ROLE = await dummyBurnableERC20.PREDICATE_ROLE()
+            await dummyBurnableERC20.grantRole(PREDICATE_ROLE, burnableERC20Predicate.address)
+
             await dummyBurnableERC20.approve(burnableERC20Predicate.address, depositAmount)
             const depositData = abi.encode(['uint256'], [depositAmount.toString()])
             await burnableERC20Predicate.lockTokens(accounts[0], withdrawer, dummyBurnableERC20.address, depositData)
@@ -306,6 +309,41 @@ contract('BurnableERC20Predicate', (accounts) => {
                 amount: withdrawAmount
             })
             await expectRevert(burnableERC20Predicate.exitTokens(withdrawer, dummyBurnableERC20.address, burnLog), 'BurnableERC20Predicate: INVALID_SIGNATURE')
+        })
+    })
+
+    describe('exitTokens called by non manager', () => {
+        const withdrawAmount = mockValues.amounts[2]
+        const depositAmount = withdrawAmount.add(mockValues.amounts[3])
+        const withdrawer = mockValues.addresses[8]
+
+        let dummyBurnableERC20
+        let burnableERC20Predicate
+
+        before(async () => {
+            const contracts = await deployer.deployFreshRootContracts(accounts)
+
+            dummyBurnableERC20 = contracts.dummyBurnableERC20
+            burnableERC20Predicate = contracts.burnableERC20Predicate
+
+            const PREDICATE_ROLE = await dummyBurnableERC20.PREDICATE_ROLE()
+            await dummyBurnableERC20.grantRole(PREDICATE_ROLE, burnableERC20Predicate.address)
+
+            await dummyBurnableERC20.approve(burnableERC20Predicate.address, depositAmount)
+            const depositData = abi.encode(['uint256'], [depositAmount.toString()])
+            await burnableERC20Predicate.lockTokens(accounts[0], withdrawer, dummyBurnableERC20.address, depositData)
+        })
+
+        it('Should revert with correct reason', async () => {
+            const burnLog = getERC20TransferLog({
+                from: withdrawer,
+                to: mockValues.zeroAddress,
+                amount: withdrawAmount
+            })
+
+            await expectRevert(
+                burnableERC20Predicate.exitTokens(withdrawer, dummyBurnableERC20.address, burnLog, { from: accounts[2] }),
+                'BurnableERC20Predicate: INSUFFICIENT_PERMISSIONS')
         })
     })
 })
