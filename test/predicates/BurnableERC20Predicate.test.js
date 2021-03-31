@@ -109,4 +109,31 @@ contract('BurnableERC20Predicate', (accounts) => {
             )
         })
     })
+
+    describe('lockTokens called by non manager', () => {
+        const depositAmount = mockValues.amounts[3]
+        const depositor = accounts[1]
+        const depositReceiver = accounts[2]
+        const depositData = abi.encode(['uint256'], [depositAmount.toString()])
+        let dummyBurnableERC20
+        let burnableERC20Predicate
+
+        before(async () => {
+            const contracts = await deployer.deployFreshRootContracts(accounts)
+            dummyBurnableERC20 = contracts.dummyBurnableERC20
+            burnableERC20Predicate = contracts.burnableERC20Predicate
+
+            const PREDICATE_ROLE = await dummyBurnableERC20.PREDICATE_ROLE()
+            await dummyBurnableERC20.grantRole(PREDICATE_ROLE, burnableERC20Predicate.address)
+
+            await dummyBurnableERC20.transfer(depositor, depositAmount)
+            await dummyBurnableERC20.approve(burnableERC20Predicate.address, depositAmount, { from: depositor })
+        })
+
+        it('Should revert with correct reason', async () => {
+            await expectRevert(
+                burnableERC20Predicate.lockTokens(depositor, depositReceiver, dummyERC20.address, depositData, { from: depositor }),
+                'ERC20Predicate: INSUFFICIENT_PERMISSIONS')
+        })
+    })
 })
