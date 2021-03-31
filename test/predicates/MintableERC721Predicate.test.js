@@ -293,7 +293,7 @@ contract('MintableERC721Predicate', (accounts) => {
       owner.should.equal(withdrawer)
     })
 
-    it('Token URI should match with transferred metadata', async _ => {
+    it('Token URI should match with transferred metadata', async () => {
       const _metaData = await dummyMintableERC721.tokenURI(tokenId)
       _metaData.should.equal(metaData)
     })
