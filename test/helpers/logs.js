@@ -60,7 +60,16 @@ export const getERC721TransferWithMetadataLog = ({
       to,
       '0x' + tokenId.toString(16)
     ],
-    abi.encode(['bytes'], [abi.encode(['string'], [metaData])]) // ABI encoded metadata, because that's how dummy root token expects it
+    // ABI encoded metadata, because that's how dummy root token expects it
+    //
+    // @note Two level serialisation is required because we're emitting
+    // event with `bytes` field, which will be serialised by EVM itself
+    // as `abi.encode(data)`, result into final level of serialised form
+    //
+    // Before that actual metadata we're interested in passing cross
+    // chain needs to be serialised, which is what gets emitted via event
+    // on L2
+    abi.encode(['bytes'], [abi.encode(['string'], [metaData])])
   ])
 }
 

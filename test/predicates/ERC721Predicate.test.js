@@ -252,9 +252,12 @@ contract('ERC721Predicate', (accounts) => {
     })
   })
 
-  describe.only('exitTokens with `TransferWithMetadata` event signature', () => {
+  describe('exitTokens with `TransferWithMetadata` event signature', () => {
+
     const tokenId = mockValues.numbers[5]
     const withdrawer = mockValues.addresses[8]
+    const metaData = 'https://nft.matic.network'
+
     let dummyERC721
     let erc721Predicate
     let exitTokensTx
@@ -282,23 +285,24 @@ contract('ERC721Predicate', (accounts) => {
       const burnLog = getERC721TransferWithMetadataLog({
         from: withdrawer,
         to: mockValues.zeroAddress,
-        tokenId: tokenId,
-        metaData: 'https://nft.matic.network'
+        tokenId,
+        metaData
       })
 
       exitTokensTx = await erc721Predicate.exitTokens(withdrawer, dummyERC721.address, burnLog)
       should.exist(exitTokensTx)
     })
 
-    it('Token URI should match with transferred metadata', async function() {
-      const metadata = await dummyERC721.tokenURI(tokenId)
-      metadata.should.equal('https://nft.matic.network')
-    })
-
     it('Token should be transferred to withdrawer', async () => {
       const owner = await dummyERC721.ownerOf(tokenId)
       owner.should.equal(withdrawer)
     })
+
+    it('Token URI should match with transferred metadata', async function () {
+      const _metaData = await dummyERC721.tokenURI(tokenId)
+      _metaData.should.equal(metaData)
+    })
+
   })
 
   describe('exitTokens called by different user', () => {

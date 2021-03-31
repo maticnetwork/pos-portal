@@ -259,8 +259,11 @@ contract('MintableERC721Predicate', (accounts) => {
   })
 
   describe('exitTokens with `TransferWithMetadata` event signature', () => {
+
     const tokenId = mockValues.numbers[5]
     const withdrawer = mockValues.addresses[8]
+    const metaData = 'https://nft.matic.network'
+
     let dummyMintableERC721
     let mintableERC721Predicate
     let exitTokensTx
@@ -277,8 +280,8 @@ contract('MintableERC721Predicate', (accounts) => {
       const burnLog = getERC721TransferWithMetadataLog({
         from: withdrawer,
         to: mockValues.zeroAddress,
-        tokenId: tokenId,
-        metaData: 'https://nft.matic.network'
+        tokenId,
+        metaData
       })
 
       exitTokensTx = await mintableERC721Predicate.exitTokens(withdrawer, dummyMintableERC721.address, burnLog)
@@ -291,10 +294,8 @@ contract('MintableERC721Predicate', (accounts) => {
     })
 
     it('Token URI should match with transferred metadata', async _ => {
-
-      const metadata = await dummyMintableERC721.tokenURI(tokenId)
-      metadata.should.equal('https://nft.matic.network')
-
+      const _metaData = await dummyMintableERC721.tokenURI(tokenId)
+      _metaData.should.equal(metaData)
     })
 
   })
