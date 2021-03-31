@@ -136,4 +136,58 @@ contract('BurnableERC20Predicate', (accounts) => {
                 'ERC20Predicate: INSUFFICIENT_PERMISSIONS')
         })
     })
+
+    describe('exitTokens with `Transfer` event log', () => {
+        const withdrawAmount = mockValues.amounts[2]
+        const depositAmount = withdrawAmount.add(mockValues.amounts[3])
+        const withdrawer = mockValues.addresses[8]
+
+        let dummyBurnableERC20
+        let burnableERC20Predicate
+        let oldAccountBalance
+        let oldContractBalance
+        let exitTokensTx
+
+        before(async () => {
+            const contracts = await deployer.deployFreshRootContracts(accounts)
+            
+            dummyBurnableERC20 = contracts.dummyBurnableERC20
+            burnableERC20Predicate = contracts.burnableERC20Predicate
+            
+            await dummyBurnableERC20.approve(burnableERC20Predicate.address, depositAmount)
+            const depositData = abi.encode(['uint256'], [depositAmount.toString()])
+            await burnableERC20Predicate.lockTokens(accounts[0], withdrawer, dummyBurnableERC20.address, depositData)
+            
+            oldAccountBalance = await dummyBurnableERC20.balanceOf(withdrawer)
+            oldContractBalance = await dummyBurnableERC20.balanceOf(burnableERC20Predicate.address)
+        })
+
+        it('Predicate should have balance', () => {
+            oldContractBalance.should.be.a.bignumber.greaterThan(withdrawAmount)
+        })
+
+        it('Should be able to receive exitTokens tx', async () => {
+            const burnLog = getERC20TransferLog({
+                from: withdrawer,
+                to: mockValues.zeroAddress,
+                amount: withdrawAmount
+            })
+            exitTokensTx = await burnableERC20Predicate.exitTokens(withdrawer, dummyBurnableERC20.address, burnLog)
+            should.exist(exitTokensTx)
+        })
+
+        it('Withdraw amount should be deducted from contract', async () => {
+            const newContractBalance = await dummyBurnableERC20.balanceOf(burnableERC20Predicate.address)
+            newContractBalance.should.be.a.bignumber.that.equals(
+                oldContractBalance.sub(withdrawAmount)
+            )
+        })
+
+        it('Withdraw amount should be credited to correct address', async () => {
+            const newAccountBalance = await dummyBurnableERC20.balanceOf(withdrawer)
+            newAccountBalance.should.be.a.bignumber.that.equals(
+                oldAccountBalance.add(withdrawAmount)
+            )
+        })
+    })
 })
