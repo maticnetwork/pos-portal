@@ -8,7 +8,7 @@ import { expectRevert } from '@openzeppelin/test-helpers'
 import * as deployer from '../helpers/deployer'
 import { mockValues } from '../helpers/constants'
 import logDecoder from '../helpers/log-decoder.js'
-import { getERC721TransferLog, getERC721BatchWithdraw } from '../helpers/logs'
+import { getERC721TransferLog, getERC721BatchWithdraw, getERC721TransferWithMetadataLog } from '../helpers/logs'
 
 // Enable and inject BN dependency
 chai
@@ -240,8 +240,8 @@ contract('BurnableERC721Predicate', (accounts) => {
         before(async () => {
             const contracts = await deployer.deployFreshRootContracts(accounts)
 
-            dummyBurnableERC721 = contracts.dummyERC721
-            burnableERC721Predicate = contracts.erc721Predicate
+            dummyBurnableERC721 = contracts.dummyBurnableERC721
+            burnableERC721Predicate = contracts.burnableERC721Predicate
 
             const PREDICATE_ROLE = await dummyBurnableERC721.PREDICATE_ROLE()
             await dummyBurnableERC721.grantRole(PREDICATE_ROLE, burnableERC721Predicate.address)
@@ -285,8 +285,8 @@ contract('BurnableERC721Predicate', (accounts) => {
         before(async () => {
             const contracts = await deployer.deployFreshRootContracts(accounts)
 
-            dummyBurnableERC721 = contracts.dummyERC721
-            burnableERC721Predicate = contracts.erc721Predicate
+            dummyBurnableERC721 = contracts.dummyBurnableERC721
+            burnableERC721Predicate = contracts.burnableERC721Predicate
 
             const PREDICATE_ROLE = await dummyBurnableERC721.PREDICATE_ROLE()
             await dummyBurnableERC721.grantRole(PREDICATE_ROLE, burnableERC721Predicate.address)
@@ -322,8 +322,8 @@ contract('BurnableERC721Predicate', (accounts) => {
         before(async () => {
             const contracts = await deployer.deployFreshRootContracts(accounts)
 
-            dummyBurnableERC721 = contracts.dummyERC721
-            burnableERC721Predicate = contracts.erc721Predicate
+            dummyBurnableERC721 = contracts.dummyBurnableERC721
+            burnableERC721Predicate = contracts.burnableERC721Predicate
 
             const PREDICATE_ROLE = await dummyBurnableERC721.PREDICATE_ROLE()
             await dummyBurnableERC721.grantRole(PREDICATE_ROLE, burnableERC721Predicate.address)
@@ -382,6 +382,55 @@ contract('BurnableERC721Predicate', (accounts) => {
                 owner.should.equal(withdrawer)
             }
         })
+    })
+
+    describe('exitTokens with `TransferWithMetadata` event signature', () => {
+        const tokenId = mockValues.numbers[5]
+        const withdrawer = mockValues.addresses[8]
+        const metaData = 'https://nft.matic.network'
+
+        let dummyBurnableERC721
+        let burnableERC721Predicate
+        let exitTokensTx
+
+        before(async () => {
+            const contracts = await deployer.deployFreshRootContracts(accounts)
+
+            dummyBurnableERC721 = contracts.dummyBurnableERC721
+            burnableERC721Predicate = contracts.dummyBurnableERC721
+
+            const PREDICATE_ROLE = await dummyBurnableERC721.PREDICATE_ROLE()
+            await dummyBurnableERC721.grantRole(PREDICATE_ROLE, burnableERC721Predicate.address)
+
+            await dummyBurnableERC721.mint(tokenId)
+            await dummyBurnableERC721.approve(burnableERC721Predicate.address, tokenId)
+
+            const depositData = abi.encode(['uint256'], [tokenId])
+            await burnableERC721Predicate.lockTokens(accounts[0], withdrawer, dummyBurnableERC721.address, depositData)
+        })
+
+        it('Transaction should go through', async () => {
+            const burnLog = getERC721TransferWithMetadataLog({
+                from: withdrawer,
+                to: mockValues.zeroAddress,
+                tokenId,
+                metaData
+            })
+
+            exitTokensTx = await burnableERC721Predicate.exitTokens(withdrawer, dummyBurnableERC721.address, burnLog)
+            should.exist(exitTokensTx)
+        })
+
+        it('Metadata should be set for tokenId', async () => {
+            const uri = await dummyBurnableERC721.tokenURI(tokenId)
+            uri.should.equal(metaData)
+        })
+
+        it('Token should be transfered to withdrawer', async () => {
+            const owner = await dummyBurnableERC721.ownerOf(tokenId)
+            owner.should.equal(withdrawer)
+        })
+
     })
 
 })
