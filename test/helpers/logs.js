@@ -3,6 +3,7 @@ import { AbiCoder } from 'ethers/utils'
 
 import {
   erc20TransferEventSig,
+  erc20BurnEventSig,
   erc721TransferEventSig,
   erc721TransferWithMetadataEventSig,
   erc1155TransferSingleEventSig,
@@ -23,6 +24,21 @@ export const getERC20TransferLog = ({
       overrideSig || erc20TransferEventSig,
       from,
       to
+    ],
+    '0x' + amount.toString(16)
+  ])
+}
+
+export const getERC20BurnLog = ({
+  overrideSig,
+  from,
+  amount
+}) => {
+  return RLP.encode([
+    '0x0',
+    [
+      overrideSig || erc20BurnEventSig,
+      from
     ],
     '0x' + amount.toString(16)
   ])

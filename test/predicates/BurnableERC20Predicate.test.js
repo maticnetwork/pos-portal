@@ -8,7 +8,7 @@ import { expectRevert } from '@openzeppelin/test-helpers'
 import * as deployer from '../helpers/deployer'
 import { mockValues } from '../helpers/constants'
 import logDecoder from '../helpers/log-decoder.js'
-import { getERC20TransferLog } from '../helpers/logs'
+import { getERC20TransferLog, getERC20BurnLog } from '../helpers/logs'
 
 // Enable and inject BN dependency
 chai
@@ -150,14 +150,14 @@ contract('BurnableERC20Predicate', (accounts) => {
 
         before(async () => {
             const contracts = await deployer.deployFreshRootContracts(accounts)
-            
+
             dummyBurnableERC20 = contracts.dummyBurnableERC20
             burnableERC20Predicate = contracts.burnableERC20Predicate
-            
+
             await dummyBurnableERC20.approve(burnableERC20Predicate.address, depositAmount)
             const depositData = abi.encode(['uint256'], [depositAmount.toString()])
             await burnableERC20Predicate.lockTokens(accounts[0], withdrawer, dummyBurnableERC20.address, depositData)
-            
+
             oldAccountBalance = await dummyBurnableERC20.balanceOf(withdrawer)
             oldContractBalance = await dummyBurnableERC20.balanceOf(burnableERC20Predicate.address)
         })
@@ -188,6 +188,94 @@ contract('BurnableERC20Predicate', (accounts) => {
             newAccountBalance.should.be.a.bignumber.that.equals(
                 oldAccountBalance.add(withdrawAmount)
             )
+        })
+    })
+
+    describe('exitTokens with `Burn` event log', () => {
+        const burnAmount = mockValues.amounts[2]
+        const depositAmount = burnAmount.add(mockValues.amounts[3])
+        const withdrawer = mockValues.addresses[8]
+
+        let dummyBurnableERC20
+        let burnableERC20Predicate
+        let oldContractBalance
+        let exitTokensTx
+        let burntLog
+
+        before(async () => {
+            const contracts = await deployer.deployFreshRootContracts(accounts)
+
+            dummyBurnableERC20 = contracts.dummyBurnableERC20
+            burnableERC20Predicate = contracts.burnableERC20Predicate
+
+            const PREDICATE_ROLE = await dummyBurnableERC20.PREDICATE_ROLE()
+            await dummyBurnableERC20.grantRole(PREDICATE_ROLE, burnableERC20Predicate.address)
+
+            await dummyBurnableERC20.approve(burnableERC20Predicate.address, depositAmount)
+            const depositData = abi.encode(['uint256'], [depositAmount.toString()])
+            await burnableERC20Predicate.lockTokens(accounts[0], withdrawer, dummyBurnableERC20.address, depositData)
+
+            oldContractBalance = await dummyBurnableERC20.balanceOf(burnableERC20Predicate.address)
+        })
+
+        it('Predicate should have balance', () => {
+            oldContractBalance.should.be.a.bignumber.greaterThan(burnAmount)
+        })
+
+        it('exitTokens tx must go through', async () => {
+            const burnLog = getERC20BurnLog({
+                from: withdrawer,
+                amount: burnAmount
+            })
+
+            exitTokensTx = await burnableERC20Predicate.exitTokens(withdrawer, dummyBurnableERC20.address, burnLog)
+            should.exist(exitTokensTx)
+        })
+
+        it('Burn amount should be deducted from contract', async () => {
+            const newContractBalance = await dummyBurnableERC20.balanceOf(burnableERC20Predicate.address)
+            newContractBalance.should.be.a.bignumber.that.equals(
+                oldContractBalance.sub(burnAmount)
+            )
+        })
+
+        it('Burn tx must emit Transfer event', async () => {
+
+            const logs = logDecoder.decodeLogs(exitTokensTx.receipt.rawLogs)
+            burntLog = logs.find(l => l.event === 'Transfer')
+            should.exist(burntLog)
+
+        })
+
+        describe('Correct values should be emitted in Transfer event log', () => {
+
+            it('Event should be emitted by correct contract', () => {
+
+                burntLog.address.should.equal(
+                    dummyBurnableERC20.address.toLowerCase()
+                )
+
+            })
+
+            it('Should emit proper from', () => {
+
+                burntLog.args.from.should.equal(burnableERC20Predicate.address)
+
+            })
+
+            it('Should emit correct to', () => {
+
+                burntLog.args.to.should.equal(mockValues.zeroAddress)
+
+            })
+
+            it('Should emit correct amount', () => {
+
+                const burntLogAmount = new BN(burntLog.args.amount.toString())
+                burntLogAmount.should.be.bignumber.that.equals(burnAmount)
+
+            })
+
         })
     })
 })
