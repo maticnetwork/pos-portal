@@ -252,7 +252,7 @@ contract('ERC721Predicate', (accounts) => {
     })
   })
 
-  describe('exitTokens with `TransferWithMetadata` event signature', () => {
+  describe.only('exitTokens with `TransferWithMetadata` event signature', () => {
     const tokenId = mockValues.numbers[5]
     const withdrawer = mockValues.addresses[8]
     let dummyERC721

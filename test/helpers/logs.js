@@ -60,7 +60,7 @@ export const getERC721TransferWithMetadataLog = ({
       to,
       '0x' + tokenId.toString(16)
     ],
-    abi.encode(['string'], [metaData]) // ABI encoded metadata, because that's how dummy root token expects it
+    abi.encode(['bytes'], [abi.encode(['string'], [metaData])]) // ABI encoded metadata, because that's how dummy root token expects it
   ])
 }
 

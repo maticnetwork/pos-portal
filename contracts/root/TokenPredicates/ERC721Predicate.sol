@@ -153,9 +153,8 @@ contract ERC721Predicate is ITokenPredicate, AccessControlMixin, Initializable, 
             //
             // @note Make sure you've implemented this method
             // if you're interested in exiting with metadata
-            bytes memory metadata = logRLPList[2].toBytes();
-            
-            token.setTokenMetadata(tokenId, metadata);
+            bytes memory logData = logRLPList[2].toBytes();
+            token.setTokenMetadata(tokenId, abi.decode(logData, (bytes)));
 
         } else {
             revert("ERC721Predicate: INVALID_SIGNATURE");
