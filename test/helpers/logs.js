@@ -5,6 +5,7 @@ import {
   erc20TransferEventSig,
   erc20BurnEventSig,
   erc721TransferEventSig,
+  erc721BatchWithdrawSig,
   erc721TransferWithMetadataEventSig,
   erc1155TransferSingleEventSig,
   erc1155TransferBatchEventSig
@@ -61,6 +62,26 @@ export const getERC721TransferLog = ({
   ])
 }
 
+export const getERC721BatchWithdraw = ({
+  overrideSig,
+  user,
+  tokenIds
+}) => {
+
+  return RLP.encode([
+    '0x0',
+    [
+      overrideSig || erc721BatchWithdrawSig,
+      user
+    ],
+    abi.encode(
+      ['uint256[]'],
+      [tokenIds.map(t => '0x' + t.toString(16))]
+    )
+  ])
+
+}
+
 export const getERC721TransferWithMetadataLog = ({
   overrideSig,
   from,
@@ -71,7 +92,7 @@ export const getERC721TransferWithMetadataLog = ({
   return RLP.encode([
     '0x0',
     [
-      overrideSig ||   erc721TransferWithMetadataEventSig,
+      overrideSig || erc721TransferWithMetadataEventSig,
       from,
       to,
       '0x' + tokenId.toString(16)
