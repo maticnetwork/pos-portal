@@ -229,4 +229,50 @@ contract('BurnableERC721Predicate', (accounts) => {
         })
     })
 
+    describe('exitTokens with Transfer event log', () => {
+        const tokenId = mockValues.numbers[5]
+        const withdrawer = mockValues.addresses[8]
+
+        let dummyBurnableERC721
+        let burnableERC721Predicate
+        let exitTokensTx
+
+        before(async () => {
+            const contracts = await deployer.deployFreshRootContracts(accounts)
+
+            dummyBurnableERC721 = contracts.dummyERC721
+            burnableERC721Predicate = contracts.erc721Predicate
+
+            const PREDICATE_ROLE = await dummyBurnableERC721.PREDICATE_ROLE()
+            await dummyBurnableERC721.grantRole(PREDICATE_ROLE, burnableERC721Predicate.address)
+
+            await dummyBurnableERC721.mint(tokenId)
+            await dummyBurnableERC721.approve(burnableERC721Predicate.address, tokenId)
+
+            const depositData = abi.encode(['uint256'], [tokenId])
+            await burnableERC721Predicate.lockTokens(accounts[0], withdrawer, dummyBurnableERC721.address, depositData)
+        })
+
+        it('Predicate should have the token', async () => {
+            const owner = await dummyBurnableERC721.ownerOf(tokenId)
+            owner.should.equal(burnableERC721Predicate.address)
+        })
+
+        it('Should be able to receive exitTokens tx', async () => {
+            const burnLog = getERC721TransferLog({
+                from: withdrawer,
+                to: mockValues.zeroAddress,
+                tokenId: tokenId
+            })
+
+            exitTokensTx = await burnableERC721Predicate.exitTokens(withdrawer, dummyBurnableERC721.address, burnLog)
+            should.exist(exitTokensTx)
+        })
+
+        it('Token should be transferred to withdrawer', async () => {
+            const owner = await dummyBurnableERC721.ownerOf(tokenId)
+            owner.should.equal(withdrawer)
+        })
+    })
+
 })
