@@ -290,18 +290,15 @@ contract('ERC721Predicate', (accounts) => {
       should.exist(exitTokensTx)
     })
 
+    it('Token URI should match with transferred metadata', async function() {
+      const metadata = await dummyERC721.tokenURI(tokenId)
+      metadata.should.equal('https://nft.matic.network')
+    })
+
     it('Token should be transferred to withdrawer', async () => {
       const owner = await dummyERC721.ownerOf(tokenId)
       owner.should.equal(withdrawer)
     })
-
-    it('Token URI should match with transferred metadata', async _ => {
-
-      const metadata = await dummyERC721.tokenURI(tokenId)
-      metadata.should.equal('https://nft.matic.network')
-
-    })
-
   })
 
   describe('exitTokens called by different user', () => {

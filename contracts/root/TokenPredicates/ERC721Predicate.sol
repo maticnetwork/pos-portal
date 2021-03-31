@@ -153,9 +153,8 @@ contract ERC721Predicate is ITokenPredicate, AccessControlMixin, Initializable, 
             //
             // @note Make sure you've implemented this method
             // if you're interested in exiting with metadata
-            bytes memory serialised = logRLPList[2].toBytes();
-            bytes memory metadata = abi.decode(serialised, (bytes));
-
+            bytes memory metadata = logRLPList[2].toBytes();
+            
             token.setTokenMetadata(tokenId, metadata);
 
         } else {
