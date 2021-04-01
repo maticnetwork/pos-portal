@@ -14,6 +14,8 @@ contract DummyBurnableERC721 is
     ContextMixin
 {
     bytes32 public constant PREDICATE_ROLE = keccak256("PREDICATE_ROLE");
+    event Metadata(uint256 indexed tokenId, string data);
+
     constructor(string memory name_, string memory symbol_)
         public
         ERC721(name_, symbol_)
@@ -59,14 +61,13 @@ contract DummyBurnableERC721 is
      */
     function setTokenMetadata(uint256 tokenId, bytes memory data) internal virtual {
         // This function should decode metadata obtained from L2
-        // and attempt to set it for this `tokenId`
+        // & do further as per business requirement
         //
         // Following is just a default implementation, feel
         // free to define your own encoding/ decoding scheme
         // for L2 -> L1 token metadata transfer
         string memory uri = abi.decode(data, (string));
-
-        _setTokenURI(tokenId, uri);
+        emit Metadata(tokenId, uri);
     }
 
     /**
