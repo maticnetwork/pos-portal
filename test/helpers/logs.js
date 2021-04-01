@@ -8,6 +8,7 @@ import {
   erc721BatchWithdrawSig,
   erc721TransferWithMetadataEventSig,
   erc721BurnEventSig,
+  erc721BatchBurnEventSig,
   erc1155TransferSingleEventSig,
   erc1155TransferBatchEventSig
 } from './constants'
@@ -115,6 +116,26 @@ export const getERC721BurnLog = ({
       from,
       '0x' + tokenId.toString(16)
     ]
+  ])
+
+}
+
+export const getERC721BatchBurnLog = ({
+  overrideSig,
+  from,
+  tokenIds
+}) => {
+
+  return RLP.encode([
+    '0x0',
+    [
+      overrideSig || erc721BatchBurnEventSig,
+      from
+    ],
+    abi.encode(
+      ['uint256[]'],
+      [tokenIds.map(t => '0x' + t.toString(16))]
+    )
   ])
 
 }
