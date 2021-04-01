@@ -264,17 +264,10 @@ contract BurnableERC721Predicate is ITokenPredicate, AccessControlMixin, Initial
         if (bytes32(logTopicRLPList[0].toUint()) == BURN_WITH_METADATA_EVENT_SIG) {
 
             uint256 tokenId = logTopicRLPList[2].toUint();
+            bytes memory logData = logRLPList[2].toBytes();
 
             IBurnableERC721 token = IBurnableERC721(rootToken);
-            // Make sure your L1 contract implements this method, & can be
-            // invoked by this predicate
-            //
-            // @note Third arg passed to this function, is to be used for
-            // setting metadata, this is what is being passed L2 -> L1
-            //
-            // Encoding/ decoding of this arbitrary piece of data is implementer's
-            // responsibility
-            token.burn(tokenId, logRLPList[2].toBytes());
+            token.burn(tokenId, abi.decode(logData, (bytes)));
 
             return;
 
