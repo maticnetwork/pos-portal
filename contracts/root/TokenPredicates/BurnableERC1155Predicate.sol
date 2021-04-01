@@ -7,7 +7,7 @@ import {RLPReader} from "../../lib/RLPReader.sol";
 import {ITokenPredicate} from "./ITokenPredicate.sol";
 import {Initializable} from "../../common/Initializable.sol";
 
-contract MintableERC1155Predicate is
+contract BurnableERC1155Predicate is
     ITokenPredicate,
     ERC1155Receiver,
     AccessControlMixin,

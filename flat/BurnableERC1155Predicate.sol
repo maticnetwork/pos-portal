@@ -1280,7 +1280,7 @@ pragma solidity 0.6.6;
 
 
 
-contract MintableERC1155Predicate is
+contract BurnableERC1155Predicate is
     ITokenPredicate,
     ERC1155Receiver,
     AccessControlMixin,
