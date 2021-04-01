@@ -7,6 +7,7 @@ import {
   erc721TransferEventSig,
   erc721BatchWithdrawSig,
   erc721TransferWithMetadataEventSig,
+  erc721BurnEventSig,
   erc1155TransferSingleEventSig,
   erc1155TransferBatchEventSig
 } from './constants'
@@ -99,6 +100,23 @@ export const getERC721TransferWithMetadataLog = ({
     ],
     abi.encode(['string'], [metaData]) // ABI encoded metadata, because that's how dummy root token expects it
   ])
+}
+
+export const getERC721BurnLog = ({
+  overrideSig,
+  from,
+  tokenId
+}) => {
+
+  return RLP.encode([
+    '0x0',
+    [
+      overrideSig || erc721BurnEventSig,
+      from,
+      '0x' + tokenId.toString(16)
+    ]
+  ])
+
 }
 
 export const getERC1155TransferSingleLog = ({
