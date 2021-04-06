@@ -1,6 +1,6 @@
 {
   "name": "@maticnetwork/pos-portal",
-  "version": "1.5.0",
+  "version": "1.5.1",
   "description": "Contracts to facilitate transfer of assets between Ethereum Main Network and Matic Network, using security of Matic POS layer",
   "main": "index.js",
   "scripts": {
