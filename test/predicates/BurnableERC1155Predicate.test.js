@@ -50,7 +50,7 @@ contract('BurnableERC1155Predicate', (accounts) => {
             await dummyBurnableERC1155.mint(depositor, tokenIdA, amountA)
             await dummyBurnableERC1155.mint(depositor, tokenIdB, amountB)
 
-            await dummyERC1155.setApprovalForAll(burnableERC1155Predicate.address, true, { from: depositor })
+            await dummyBurnableERC1155.setApprovalForAll(burnableERC1155Predicate.address, true, { from: depositor })
 
             oldAccountBalanceA = await dummyBurnableERC1155.balanceOf(depositor, tokenIdA)
             oldAccountBalanceB = await dummyBurnableERC1155.balanceOf(depositor, tokenIdB)
@@ -149,5 +149,32 @@ contract('BurnableERC1155Predicate', (accounts) => {
             )
         })
     })
+
+    describe('lockTokens called by non manager', () => {
+        const tokenId = mockValues.numbers[5]
+        const amount = mockValues.amounts[9]
+        const depositData = constructERC1155DepositData([tokenId], [amount])
+        const depositor = accounts[1]
+        const depositReceiver = accounts[2]
+        
+        let dummyBurnableERC1155
+        let burnableERC1155Predicate
+    
+        before(async() => {
+          const contracts = await deployer.deployFreshRootContracts(accounts)
+
+          dummyBurnableERC1155 = contracts.dummyBurnableERC1155
+          burnableERC1155Predicate = contracts.burnableERC1155Predicate
+
+          await dummyBurnableERC1155.mint(depositor, tokenId, amount)
+          await dummyBurnableERC1155.setApprovalForAll(burnableERC1155Predicate.address, true, { from: depositor })
+        })
+    
+        it('Should revert with correct reason', async() => {
+          await expectRevert(
+            burnableERC1155Predicate.lockTokens(depositor, depositReceiver, dummyBurnableERC1155.address, depositData, { from: depositor }),
+            'BurnableERC1155Predicate: INSUFFICIENT_PERMISSIONS')
+        })
+      })
 
 })
