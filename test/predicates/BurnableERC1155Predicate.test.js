@@ -14,7 +14,8 @@ import {
     getERC1155TransferBatchWithMetadataLog,
     getERC1155BurnSingleLog,
     getERC1155BurnBatchLog,
-    getERC1155BurnSingleWithMetadataLog
+    getERC1155BurnSingleWithMetadataLog,
+    getERC1155BurnBatchWithMetadataLog
 } from '../helpers/logs'
 import { constructERC1155DepositData } from '../helpers/utils'
 
@@ -670,6 +671,90 @@ contract('BurnableERC1155Predicate', (accounts) => {
         it('Withdraw amount should not be credited back to withdrawer', async () => {
             const newAccountBalance = await dummyBurnableERC1155.balanceOf(withdrawer, tokenId)
             newAccountBalance.should.be.a.bignumber.that.equals(oldAccountBalance)
+        })
+    })
+
+    describe('burnTokens batch, with arbitrary metadata', () => {
+        const withdrawAmountA = mockValues.amounts[9]
+        const withdrawAmountB = mockValues.amounts[8]
+        const depositAmountA = withdrawAmountA.add(mockValues.amounts[3])
+        const depositAmountB = withdrawAmountB.add(mockValues.amounts[4])
+        const tokenIdA = mockValues.numbers[4]
+        const tokenIdB = mockValues.numbers[5]
+        const depositData = constructERC1155DepositData([tokenIdA, tokenIdB], [depositAmountA, depositAmountB])
+        const depositor = accounts[1]
+        const withdrawer = mockValues.addresses[8]
+        const metaData = 'https://erc1155.matic.network'
+
+        let dummyBurnableERC1155
+        let burnableERC1155Predicate
+        let exitTokensTx
+        let oldAccountBalanceA
+        let oldAccountBalanceB
+        let oldContractBalanceA
+        let oldContractBalanceB
+
+        before(async () => {
+            const contracts = await deployer.deployFreshRootContracts(accounts)
+
+            dummyBurnableERC1155 = contracts.dummyBurnableERC1155
+            burnableERC1155Predicate = contracts.burnableERC1155Predicate
+
+            const PREDICATE_ROLE = await dummyBurnableERC1155.PREDICATE_ROLE()
+            await dummyBurnableERC1155.grantRole(PREDICATE_ROLE, burnableERC1155Predicate.address)
+
+            await dummyBurnableERC1155.mint(depositor, tokenIdA, depositAmountA)
+            await dummyBurnableERC1155.mint(depositor, tokenIdB, depositAmountB)
+
+            await dummyBurnableERC1155.setApprovalForAll(burnableERC1155Predicate.address, true, { from: depositor })
+
+            await burnableERC1155Predicate.lockTokens(depositor, mockValues.addresses[2], dummyBurnableERC1155.address, depositData)
+
+            oldAccountBalanceA = await dummyBurnableERC1155.balanceOf(withdrawer, tokenIdA)
+            oldAccountBalanceB = await dummyBurnableERC1155.balanceOf(withdrawer, tokenIdB)
+            oldContractBalanceA = await dummyBurnableERC1155.balanceOf(burnableERC1155Predicate.address, tokenIdA)
+            oldContractBalanceB = await dummyBurnableERC1155.balanceOf(burnableERC1155Predicate.address, tokenIdB)
+        })
+
+        it('Predicate should have the token balances', async () => {
+            withdrawAmountA.should.be.a.bignumber.at.most(oldContractBalanceA)
+            withdrawAmountB.should.be.a.bignumber.at.most(oldContractBalanceB)
+        })
+
+        it('Should be able to receive exitTokens tx', async () => {
+            const burnLog = getERC1155BurnBatchWithMetadataLog({
+                operator: withdrawer,
+                from: withdrawer,
+                tokenIds: [tokenIdA, tokenIdB],
+                amounts: [withdrawAmountA, withdrawAmountB],
+                metaData
+            })
+            exitTokensTx = await burnableERC1155Predicate.exitTokens(withdrawer, dummyBurnableERC1155.address, burnLog)
+            should.exist(exitTokensTx)
+        })
+
+        it('Withdraw amount should be deducted from contract for A', async () => {
+            const newContractBalance = await dummyBurnableERC1155.balanceOf(burnableERC1155Predicate.address, tokenIdA)
+            newContractBalance.should.be.a.bignumber.that.equals(
+                oldContractBalanceA.sub(withdrawAmountA)
+            )
+        })
+
+        it('Withdraw amount should be deducted from contract for B', async () => {
+            const newContractBalance = await dummyBurnableERC1155.balanceOf(burnableERC1155Predicate.address, tokenIdB)
+            newContractBalance.should.be.a.bignumber.that.equals(
+                oldContractBalanceB.sub(withdrawAmountB)
+            )
+        })
+
+        it('Withdraw amount should not be credited back to withdrawer for A', async () => {
+            const newAccountBalance = await dummyBurnableERC1155.balanceOf(withdrawer, tokenIdA)
+            newAccountBalance.should.be.a.bignumber.that.equals(oldAccountBalanceA)
+        })
+
+        it('Withdraw amount should not be credited back to withdrawer for B', async () => {
+            const newAccountBalance = await dummyBurnableERC1155.balanceOf(withdrawer, tokenIdB)
+            newAccountBalance.should.be.a.bignumber.that.equals(oldAccountBalanceB)
         })
     })
 
