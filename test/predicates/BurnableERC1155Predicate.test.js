@@ -26,7 +26,6 @@ chai
     .should()
 
 const should = chai.should()
-const abi = new AbiCoder()
 
 contract('BurnableERC1155Predicate', (accounts) => {
 
