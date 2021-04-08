@@ -197,7 +197,7 @@ export const deployInitializedContracts = async(accounts) => {
 
   const BurnableERC20Type = await root.burnableERC20Predicate.TOKEN_TYPE()
   await root.burnableERC20Predicate.grantRole(MANAGER_ROLE, root.rootChainManager.address)
-  await root.rootChainManager.registerPredicate(MintableERC20Type, root.burnableERC20Predicate.address)
+  await root.rootChainManager.registerPredicate(BurnableERC20Type, root.burnableERC20Predicate.address)
   await root.rootChainManager.mapToken(root.dummyBurnableERC20.address, child.dummyBurnableERC20.address, BurnableERC20Type)
   await child.childChainManager.mapToken(root.dummyBurnableERC20.address, child.dummyBurnableERC20.address)
 
@@ -234,7 +234,7 @@ export const deployInitializedContracts = async(accounts) => {
   const MintableERC1155Type = await root.mintableERC1155Predicate.TOKEN_TYPE()
   await root.mintableERC1155Predicate.grantRole(MANAGER_ROLE, root.rootChainManager.address)
   await root.rootChainManager.registerPredicate(MintableERC1155Type, root.mintableERC1155Predicate.address)
-  await root.rootChainManager.mapToken(root.dummyMintableERC1155.address, child.dummyMintableERC1155.address, MintableERC721Type)
+  await root.rootChainManager.mapToken(root.dummyMintableERC1155.address, child.dummyMintableERC1155.address, MintableERC1155Type)
   await child.childChainManager.mapToken(root.dummyMintableERC1155.address, child.dummyMintableERC1155.address)
 
   await root.dummyMintableERC1155.grantRole(PREDICATE_ROLE, root.mintableERC1155Predicate.address)
@@ -242,7 +242,7 @@ export const deployInitializedContracts = async(accounts) => {
   const BurnableERC1155Type = await root.burnableERC1155Predicate.TOKEN_TYPE()
   await root.burnableERC1155Predicate.grantRole(MANAGER_ROLE, root.rootChainManager.address)
   await root.rootChainManager.registerPredicate(BurnableERC1155Type, root.burnableERC1155Predicate.address)
-  await root.rootChainManager.mapToken(root.dummyBurnableERC1155.address, child.dummyBurnableERC1155.address, BurnableERC721Type)
+  await root.rootChainManager.mapToken(root.dummyBurnableERC1155.address, child.dummyBurnableERC1155.address, BurnableERC1155Type)
   await child.childChainManager.mapToken(root.dummyBurnableERC1155.address, child.dummyBurnableERC1155.address)
 
   await root.dummyBurnableERC1155.grantRole(PREDICATE_ROLE, root.burnableERC1155Predicate.address)
