@@ -35,6 +35,13 @@ contract DummyBurnableERC721 is
         return ContextMixin.msgSender();
     }
 
+     /**
+     * @dev See {IBurnableERC721-mint}.
+     */
+    function mint(address user, uint256 tokenId) external override {
+        _mint(user, tokenId);
+    }
+
     /**
      * @dev See {IBurnableERC721-mint}.
      */
