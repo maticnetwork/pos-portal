@@ -23,6 +23,16 @@ contract DummyBurnableERC1155 is
         _initializeEIP712(uri_);
     }
 
+    // Read <IBurnableERC1155:mint>, carefully
+     function mint(
+        address account,
+        uint256 id,
+        uint256 amount,
+        bytes calldata data
+    ) external override only(PREDICATE_ROLE) {
+        _mint(account, id, amount, data);
+    }
+
     function burn(
         address account,
         uint256 id,
