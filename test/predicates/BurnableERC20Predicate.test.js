@@ -198,9 +198,9 @@ contract('BurnableERC20Predicate', (accounts) => {
 
         let dummyBurnableERC20
         let burnableERC20Predicate
+        let oldAccountBalance
         let oldContractBalance
         let exitTokensTx
-        let burntLog
 
         before(async () => {
             const contracts = await deployer.deployFreshRootContracts(accounts)
@@ -215,6 +215,7 @@ contract('BurnableERC20Predicate', (accounts) => {
             const depositData = abi.encode(['uint256'], [depositAmount.toString()])
             await burnableERC20Predicate.lockTokens(accounts[0], withdrawer, dummyBurnableERC20.address, depositData)
 
+            oldAccountBalance = await dummyBurnableERC20.balanceOf(withdrawer)
             oldContractBalance = await dummyBurnableERC20.balanceOf(burnableERC20Predicate.address)
         })
 
@@ -239,43 +240,9 @@ contract('BurnableERC20Predicate', (accounts) => {
             )
         })
 
-        it('Burn tx must emit Transfer event', async () => {
-
-            const logs = logDecoder.decodeLogs(exitTokensTx.receipt.rawLogs)
-            burntLog = logs.find(l => l.event === 'Transfer')
-            should.exist(burntLog)
-
-        })
-
-        describe('Correct values should be emitted in Transfer event log', () => {
-
-            it('Event should be emitted by correct contract', () => {
-
-                burntLog.address.should.equal(
-                    dummyBurnableERC20.address.toLowerCase()
-                )
-
-            })
-
-            it('Should emit proper from', () => {
-
-                burntLog.args.from.should.equal(burnableERC20Predicate.address)
-
-            })
-
-            it('Should emit correct to', () => {
-
-                burntLog.args.to.should.equal(mockValues.zeroAddress)
-
-            })
-
-            it('Should emit correct amount', () => {
-
-                const burntLogAmount = new BN(burntLog.args.amount.toString())
-                burntLogAmount.should.be.bignumber.that.equals(burnAmount)
-
-            })
-
+        it('Burn amount should not be credited back to withdrawer', async () => {
+            const newAccountBalance = await dummyBurnableERC20.balanceOf(withdrawer)
+            newAccountBalance.should.be.a.bignumber.that.equals(oldAccountBalance)
         })
     })
 
