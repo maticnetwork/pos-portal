@@ -2074,10 +2074,9 @@ interface IBurnableERC721 is IERC721 {
      * @notice called by admin for minting tokens on L1
      * @dev In example implementation you'll find this function not being protected
      * but that's done for ease of test case writing, in practice it might be dangerous
-     * @param user user address for whom token is being minted
      * @param tokenId tokenId being minted
      */
-    function mint(address user, uint256 tokenId) external;
+    function mint(uint256 tokenId) external;
 
     /**
      * @notice called by predicate contract to **actually** burn token on L1
@@ -2188,8 +2187,8 @@ contract DummyBurnableERC721 is
      /**
      * @dev See {IBurnableERC721-mint}.
      */
-    function mint(address user, uint256 tokenId) external override {
-        _mint(user, tokenId);
+    function mint(uint256 tokenId) external override {
+        _mint(_msgSender(), tokenId);
     }
 
     /**

@@ -1030,9 +1030,8 @@ interface IBurnableERC1155 is IERC1155 {
      * @param account user address for whom token is being minted
      * @param id token which is being minted
      * @param amount amount of token being minted
-     * @param data extra byte data to be accompanied with minted tokens
      */
-    function mint(address account, uint256 id, uint256 amount, bytes calldata data) external;
+    function mint(address account, uint256 id, uint256 amount) external;
 
     /**
      * @notice Burns `amount` tokens of token type `id`, which is currently owned by `account`.
@@ -1798,10 +1797,9 @@ contract DummyBurnableERC1155 is
      function mint(
         address account,
         uint256 id,
-        uint256 amount,
-        bytes calldata data
+        uint256 amount
     ) external override only(PREDICATE_ROLE) {
-        _mint(account, id, amount, data);
+        _mint(account, id, amount, bytes(""));
     }
 
     function burn(
