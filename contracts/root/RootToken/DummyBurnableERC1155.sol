@@ -27,10 +27,9 @@ contract DummyBurnableERC1155 is
      function mint(
         address account,
         uint256 id,
-        uint256 amount,
-        bytes calldata data
+        uint256 amount
     ) external override only(PREDICATE_ROLE) {
-        _mint(account, id, amount, data);
+        _mint(account, id, amount, bytes(""));
     }
 
     function burn(

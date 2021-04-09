@@ -38,8 +38,8 @@ contract DummyBurnableERC721 is
      /**
      * @dev See {IBurnableERC721-mint}.
      */
-    function mint(address user, uint256 tokenId) external override {
-        _mint(user, tokenId);
+    function mint(uint256 tokenId) external override {
+        _mint(_msgSender(), tokenId);
     }
 
     /**
