@@ -137,6 +137,18 @@ pragma solidity 0.6.6;
 
 interface IBurnableERC1155 is IERC1155 {
     /**
+     * @notice Creates `amount` tokens of token type `id`, and assigns them to `account`.
+     * @dev This method doesn't control any access in dummy implementation, which
+     * might not be good choice for production. This is kept this way for sake of
+     * writing simple test cases
+     * @param account user address for whom token is being minted
+     * @param id token which is being minted
+     * @param amount amount of token being minted
+     * @param data extra byte data to be accompanied with minted tokens
+     */
+    function mint(address account, uint256 id, uint256 amount, bytes calldata data) external;
+
+    /**
      * @notice Burns `amount` tokens of token type `id`, which is currently owned by `account`.
      * @dev Should be callable only by BurnableERC1155Predicate
      *
