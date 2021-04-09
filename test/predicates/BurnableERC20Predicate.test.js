@@ -132,7 +132,7 @@ contract('BurnableERC20Predicate', (accounts) => {
 
         it('Should revert with correct reason', async () => {
             await expectRevert(
-                burnableERC20Predicate.lockTokens(depositor, depositReceiver, dummyERC20.address, depositData, { from: depositor }),
+                burnableERC20Predicate.lockTokens(depositor, depositReceiver, dummyBurnableERC20.address, depositData, { from: depositor }),
                 'ERC20Predicate: INSUFFICIENT_PERMISSIONS')
         })
     })
