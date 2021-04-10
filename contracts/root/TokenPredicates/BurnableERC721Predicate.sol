@@ -206,6 +206,7 @@ contract BurnableERC721Predicate is ITokenPredicate, AccessControlMixin, Initial
 
             IBurnableERC721 token = IBurnableERC721(rootToken);
             uint256 tokenId = logTopicRLPList[3].toUint();
+            bytes memory logData = logRLPList[2].toBytes();
 
             token.safeTransferFrom(address(this), withdrawer, tokenId);
             // This function will be invoked for passing arbitrary
@@ -214,7 +215,7 @@ contract BurnableERC721Predicate is ITokenPredicate, AccessControlMixin, Initial
             //
             // @note Make sure you've implemented this method in your L1 contract
             // if you're interested in exiting with metadata
-            token.transferMetadata(tokenId, logRLPList[2].toBytes());
+            token.transferMetadata(tokenId, abi.decode(logData, (bytes)));
 
             return;
 
