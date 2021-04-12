@@ -605,11 +605,13 @@ contract('BurnableERC721Predicate', (accounts) => {
             })
 
             it('Should emit proper tokenId', () => {
-                metaDataLog.args.tokenId.should.equal(tokenId)
+                const _tokenId = metaDataLog.args.tokenId.toNumber()
+                _tokenId.should.equal(tokenId)
             })
 
             it('Should emit correct data', () => {
-                metaDataLog.args.data.should.equal(metaData)
+                const _metaData = metaDataLog.args.data.toString()
+                _metaData.should.equal(metaData)
             })
         })
 
