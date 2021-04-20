@@ -20,7 +20,7 @@ const should = chai.should()
 const abi = new AbiCoder()
 
 contract('ERC721Predicate', (accounts) => {
-  describe('lockTokens', () => {
+  describe.only('lockTokens', () => {
     const tokenId = mockValues.numbers[2]
     const depositReceiver = mockValues.addresses[7]
     const depositor = accounts[1]
@@ -33,18 +33,14 @@ contract('ERC721Predicate', (accounts) => {
       const contracts = await deployer.deployFreshRootContracts(accounts)
       dummyERC721 = contracts.dummyERC721
       erc721Predicate = contracts.erc721Predicate
+      // only ADMIN can do it
+      await dummyERC721.updatePredicate(erc721Predicate.address)
       await dummyERC721.mint(tokenId, { from: depositor })
-      await dummyERC721.approve(erc721Predicate.address, tokenId, { from: depositor })
     })
 
     it('Depositor should have token', async () => {
       const owner = await dummyERC721.ownerOf(tokenId)
       owner.should.equal(depositor)
-    })
-
-    it('Depositor should have approved token transfer', async () => {
-      const approved = await dummyERC721.getApproved(tokenId)
-      approved.should.equal(erc721Predicate.address)
     })
 
     it('Should be able to receive lockTokens tx', async () => {
@@ -90,7 +86,7 @@ contract('ERC721Predicate', (accounts) => {
     })
   })
 
-  describe('batch lockTokens', () => {
+  describe.only('batch lockTokens', () => {
     const tokenId1 = mockValues.numbers[2]
     const tokenId2 = mockValues.numbers[6]
     const tokenId3 = mockValues.numbers[9]
@@ -105,10 +101,10 @@ contract('ERC721Predicate', (accounts) => {
       const contracts = await deployer.deployFreshRootContracts(accounts)
       dummyERC721 = contracts.dummyERC721
       erc721Predicate = contracts.erc721Predicate
+      await dummyERC721.updatePredicate(erc721Predicate.address)
       await dummyERC721.mint(tokenId1, { from: depositor })
       await dummyERC721.mint(tokenId2, { from: depositor })
       await dummyERC721.mint(tokenId3, { from: depositor })
-      await dummyERC721.setApprovalForAll(erc721Predicate.address, true, { from: depositor })
     })
 
     it('Depositor should have token', async () => {
@@ -124,11 +120,6 @@ contract('ERC721Predicate', (accounts) => {
         const owner = await dummyERC721.ownerOf(tokenId3)
         owner.should.equal(depositor)
       }
-    })
-
-    it('Depositor should have approved token transfer', async () => {
-      const approved = await dummyERC721.isApprovedForAll(depositor, erc721Predicate.address)
-      approved.should.equal(true)
     })
 
     it('Should be able to receive lockTokens tx', async () => {
@@ -191,7 +182,7 @@ contract('ERC721Predicate', (accounts) => {
     })
   })
 
-  describe('lockTokens called by non manager', () => {
+  describe.only('lockTokens called by non manager', () => {
     const tokenId = mockValues.numbers[5]
     const depositor = accounts[1]
     const depositReceiver = accounts[2]
@@ -203,8 +194,8 @@ contract('ERC721Predicate', (accounts) => {
       const contracts = await deployer.deployFreshRootContracts(accounts)
       dummyERC721 = contracts.dummyERC721
       erc721Predicate = contracts.erc721Predicate
+      await dummyERC721.updatePredicate(erc721Predicate.address)
       await dummyERC721.mint(tokenId, { from: depositor })
-      await dummyERC721.approve(erc721Predicate.address, tokenId, { from: depositor })
     })
 
     it('Should revert with correct reason', async () => {
@@ -214,7 +205,7 @@ contract('ERC721Predicate', (accounts) => {
     })
   })
 
-  describe('exitTokens', () => {
+  describe.only('exitTokens', () => {
     const tokenId = mockValues.numbers[5]
     const withdrawer = mockValues.addresses[8]
     let dummyERC721
@@ -225,8 +216,10 @@ contract('ERC721Predicate', (accounts) => {
       const contracts = await deployer.deployFreshRootContracts(accounts)
       dummyERC721 = contracts.dummyERC721
       erc721Predicate = contracts.erc721Predicate
+
+      await dummyERC721.updatePredicate(erc721Predicate.address)
       await dummyERC721.mint(tokenId)
-      await dummyERC721.approve(erc721Predicate.address, tokenId)
+
       const depositData = abi.encode(['uint256'], [tokenId])
       await erc721Predicate.lockTokens(accounts[0], withdrawer, dummyERC721.address, depositData)
     })
@@ -252,7 +245,7 @@ contract('ERC721Predicate', (accounts) => {
     })
   })
 
-  describe('exitTokens with `TransferWithMetadata` event signature', () => {
+  describe.only('exitTokens with `TransferWithMetadata` event signature', () => {
 
     const tokenId = mockValues.numbers[5]
     const withdrawer = mockValues.addresses[8]
@@ -270,8 +263,9 @@ contract('ERC721Predicate', (accounts) => {
       const PREDICATE_ROLE = await dummyERC721.PREDICATE_ROLE()
       await dummyERC721.grantRole(PREDICATE_ROLE, erc721Predicate.address)
 
+      await dummyERC721.updatePredicate(erc721Predicate.address)
       await dummyERC721.mint(tokenId)
-      await dummyERC721.approve(erc721Predicate.address, tokenId)
+
       const depositData = abi.encode(['uint256'], [tokenId])
       await erc721Predicate.lockTokens(accounts[0], withdrawer, dummyERC721.address, depositData)
     })
@@ -305,7 +299,7 @@ contract('ERC721Predicate', (accounts) => {
 
   })
 
-  describe('exitTokens called by different user', () => {
+  describe.only('exitTokens called by different user', () => {
     const tokenId = mockValues.numbers[5]
     const withdrawer = mockValues.addresses[8]
     const exitCaller = mockValues.addresses[3]
@@ -317,8 +311,10 @@ contract('ERC721Predicate', (accounts) => {
       const contracts = await deployer.deployFreshRootContracts(accounts)
       dummyERC721 = contracts.dummyERC721
       erc721Predicate = contracts.erc721Predicate
+
+      await dummyERC721.updatePredicate(erc721Predicate.address)
       await dummyERC721.mint(tokenId)
-      await dummyERC721.approve(erc721Predicate.address, tokenId)
+
       const depositData = abi.encode(['uint256'], [tokenId])
       await erc721Predicate.lockTokens(accounts[0], withdrawer, dummyERC721.address, depositData)
     })
@@ -339,7 +335,7 @@ contract('ERC721Predicate', (accounts) => {
     })
   })
 
-  describe('exitTokens with incorrect burn transaction signature', () => {
+  describe.only('exitTokens with incorrect burn transaction signature', () => {
     const tokenId = mockValues.numbers[5]
     const withdrawer = mockValues.addresses[8]
     let dummyERC721
@@ -349,8 +345,10 @@ contract('ERC721Predicate', (accounts) => {
       const contracts = await deployer.deployFreshRootContracts(accounts)
       dummyERC721 = contracts.dummyERC721
       erc721Predicate = contracts.erc721Predicate
+
+      await dummyERC721.updatePredicate(erc721Predicate.address)
       await dummyERC721.mint(tokenId)
-      await dummyERC721.approve(erc721Predicate.address, tokenId)
+
       const depositData = abi.encode(['uint256'], [tokenId])
       await erc721Predicate.lockTokens(accounts[0], withdrawer, dummyERC721.address, depositData)
     })
@@ -366,7 +364,7 @@ contract('ERC721Predicate', (accounts) => {
     })
   })
 
-  describe('exitTokens called using normal transfer log instead of burn', () => {
+  describe.only('exitTokens called using normal transfer log instead of burn', () => {
     const tokenId = mockValues.numbers[5]
     const withdrawer = mockValues.addresses[8]
     let dummyERC721
@@ -376,8 +374,10 @@ contract('ERC721Predicate', (accounts) => {
       const contracts = await deployer.deployFreshRootContracts(accounts)
       dummyERC721 = contracts.dummyERC721
       erc721Predicate = contracts.erc721Predicate
+
+      await dummyERC721.updatePredicate(erc721Predicate.address)
       await dummyERC721.mint(tokenId)
-      await dummyERC721.approve(erc721Predicate.address, tokenId)
+
       const depositData = abi.encode(['uint256'], [tokenId])
       await erc721Predicate.lockTokens(accounts[0], withdrawer, dummyERC721.address, depositData)
     })
@@ -392,7 +392,7 @@ contract('ERC721Predicate', (accounts) => {
     })
   })
 
-  describe('exitTokens called by non manager', () => {
+  describe.only('exitTokens called by non manager', () => {
     const tokenId = mockValues.numbers[5]
     const withdrawer = mockValues.addresses[8]
     let dummyERC721
@@ -402,8 +402,10 @@ contract('ERC721Predicate', (accounts) => {
       const contracts = await deployer.deployFreshRootContracts(accounts)
       dummyERC721 = contracts.dummyERC721
       erc721Predicate = contracts.erc721Predicate
+
+      await dummyERC721.updatePredicate(erc721Predicate.address)
       await dummyERC721.mint(tokenId)
-      await dummyERC721.approve(erc721Predicate.address, tokenId)
+
       const depositData = abi.encode(['uint256'], [tokenId])
       await erc721Predicate.lockTokens(accounts[0], withdrawer, dummyERC721.address, depositData)
     })
