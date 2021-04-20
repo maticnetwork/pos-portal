@@ -39,7 +39,7 @@ contract DummyERC721 is
     //
     // This hook will enable single call ERC721 deposit
     function _beforeTokenTransfer(address from, address to, uint256 tokenId) internal virtual override { 
-        if(to == predicate) {
+        if(to != address(0) && to == predicate) {
             if(this.getApproved(tokenId) != predicate) {
                 this.approve(to, tokenId);
             }
