@@ -16,7 +16,7 @@ contract DummyERC721 is
     bytes32 public constant PREDICATE_ROLE = keccak256("PREDICATE_ROLE");
     address public predicate;
 
-    constructor(string memory name_, string memory symbol_, address predicate_)
+    constructor(string memory name_, string memory symbol_)
         public
         ERC721(name_, symbol_)
     {
@@ -24,7 +24,6 @@ contract DummyERC721 is
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
         _setupRole(PREDICATE_ROLE, _msgSender());
         _initializeEIP712(name_);
-        predicate = predicate_;
     }
 
     // Update ERC721 Predicate address
