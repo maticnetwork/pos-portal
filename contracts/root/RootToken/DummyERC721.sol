@@ -14,7 +14,9 @@ contract DummyERC721 is
     ContextMixin
 {
     bytes32 public constant PREDICATE_ROLE = keccak256("PREDICATE_ROLE");
-    constructor(string memory name_, string memory symbol_)
+    address public predicate;
+
+    constructor(string memory name_, string memory symbol_, address predicate_)
         public
         ERC721(name_, symbol_)
     {
@@ -22,6 +24,27 @@ contract DummyERC721 is
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
         _setupRole(PREDICATE_ROLE, _msgSender());
         _initializeEIP712(name_);
+        predicate = predicate_;
+    }
+
+    // Update ERC721 Predicate address
+    //
+    // It's primarily initialised with https://github.com/maticnetwork/static/blob/daedb01a15e2dcb3e7cbc35d773c6b676f79bfd4/network/mainnet/v1/index.json#L57
+    function updatePredicate(address predicate_) external only(DEFAULT_ADMIN_ROLE) {
+        predicate = predicate_;
+    }
+
+    // When performing token deposit from L1 to L2, listen for transfer being invoked
+    // by `predicate` i.e. during lockTokens call & check if token is already not
+    // approved to be used by predicate, then do so.
+    //
+    // This hook will enable single call ERC721 deposit
+    function _beforeTokenTransfer(address from, address to, uint256 tokenId) internal virtual override { 
+        if(to == predicate) {
+            if(this.getApproved(tokenId) != predicate) {
+                this.approve(to, tokenId);
+            }
+        }
     }
 
     function mint(uint256 tokenId) public {
