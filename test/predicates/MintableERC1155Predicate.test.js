@@ -212,12 +212,13 @@ contract('MintableERC1155Predicate', (accounts) => {
             const PREDICATE_ROLE = await dummyMintableERC1155.PREDICATE_ROLE()
             await dummyMintableERC1155.grantRole(PREDICATE_ROLE, mintableERC1155Predicate.address)
 
-            const burnLog = getERC1155TransferBatchLog({
+            // Force predicate to `mint`
+            const burnLog = getERC1155TransferSingleLog({
                 operator: depositor,
                 from: depositor,
                 to: mockValues.zeroAddress,
-                tokenIds: [tokenId],
-                amounts: [amount]
+                tokenId,
+                amount
             })
 
             await mintableERC1155Predicate.exitTokens(depositor, dummyMintableERC1155.address, burnLog)
@@ -262,10 +263,10 @@ contract('MintableERC1155Predicate', (accounts) => {
     describe('exitTokens batch', () => {
         const amountA = mockValues.amounts[9]
         const amountB = mockValues.amounts[8]
-        
+
         const tokenIdA = mockValues.numbers[4]
         const tokenIdB = mockValues.numbers[5]
-        
+
         const depositData = constructERC1155DepositData([tokenIdA, tokenIdB], [amountA, amountB])
         const depositor = accounts[1]
         const withdrawer = mockValues.addresses[8]
@@ -298,7 +299,7 @@ contract('MintableERC1155Predicate', (accounts) => {
             await dummyMintableERC1155.setApprovalForAll(mintableERC1155Predicate.address, true, { from: depositor })
 
             await mintableERC1155Predicate.lockTokens(depositor, mockValues.addresses[2], dummyMintableERC1155.address, depositData)
-            
+
             oldAccountBalanceA = await dummyMintableERC1155.balanceOf(withdrawer, tokenIdA)
             oldAccountBalanceB = await dummyMintableERC1155.balanceOf(withdrawer, tokenIdB)
 
@@ -355,10 +356,10 @@ contract('MintableERC1155Predicate', (accounts) => {
     describe('exitTokens called by different user', () => {
         const amountA = mockValues.amounts[9]
         const amountB = mockValues.amounts[8]
-        
+
         const tokenIdA = mockValues.numbers[4]
         const tokenIdB = mockValues.numbers[5]
-        
+
         const depositData = constructERC1155DepositData([tokenIdA, tokenIdB], [amountA, amountB])
         const depositor = accounts[1]
         const withdrawer = mockValues.addresses[8]
@@ -392,7 +393,7 @@ contract('MintableERC1155Predicate', (accounts) => {
             await dummyMintableERC1155.setApprovalForAll(mintableERC1155Predicate.address, true, { from: depositor })
 
             await mintableERC1155Predicate.lockTokens(depositor, mockValues.addresses[2], dummyMintableERC1155.address, depositData)
-            
+
             oldAccountBalanceA = await dummyMintableERC1155.balanceOf(withdrawer, tokenIdA)
             oldAccountBalanceB = await dummyMintableERC1155.balanceOf(withdrawer, tokenIdB)
 
@@ -447,7 +448,7 @@ contract('MintableERC1155Predicate', (accounts) => {
         const depositData = constructERC1155DepositData([tokenId], [amount])
         const depositor = accounts[1]
         const withdrawer = mockValues.addresses[8]
-        
+
         let dummyMintableERC1155
         let mintableERC1155Predicate
 
@@ -459,12 +460,12 @@ contract('MintableERC1155Predicate', (accounts) => {
             const PREDICATE_ROLE = await dummyMintableERC1155.PREDICATE_ROLE()
             await dummyMintableERC1155.grantRole(PREDICATE_ROLE, mintableERC1155Predicate.address)
 
-            const burnLog = getERC1155TransferBatchLog({
+            const burnLog = getERC1155TransferSingleLog({
                 operator: depositor,
                 from: depositor,
                 to: mockValues.zeroAddress,
-                tokenIds: [tokenId],
-                amounts: [amount]
+                tokenId,
+                amount
             })
 
             await mintableERC1155Predicate.exitTokens(depositor, dummyMintableERC1155.address, burnLog)
@@ -479,8 +480,8 @@ contract('MintableERC1155Predicate', (accounts) => {
                 operator: withdrawer,
                 from: withdrawer,
                 to: mockValues.zeroAddress,
-                tokenId: tokenId,
-                amount: amount
+                tokenId,
+                amount
             })
             await expectRevert(mintableERC1155Predicate.exitTokens(withdrawer, dummyMintableERC1155.address, burnLog), 'MintableERC1155Predicate: INVALID_WITHDRAW_SIG')
         })
@@ -548,12 +549,12 @@ contract('MintableERC1155Predicate', (accounts) => {
             const PREDICATE_ROLE = await dummyMintableERC1155.PREDICATE_ROLE()
             await dummyMintableERC1155.grantRole(PREDICATE_ROLE, mintableERC1155Predicate.address)
 
-            const burnLog = getERC1155TransferBatchLog({
+            const burnLog = getERC1155TransferSingleLog({
                 operator: depositor,
                 from: depositor,
                 to: mockValues.zeroAddress,
-                tokenIds: [tokenId],
-                amounts: [amount]
+                tokenId,
+                amount
             })
 
             await mintableERC1155Predicate.exitTokens(depositor, dummyMintableERC1155.address, burnLog)
@@ -567,8 +568,8 @@ contract('MintableERC1155Predicate', (accounts) => {
                 operator: withdrawer,
                 from: withdrawer,
                 to: mockValues.zeroAddress,
-                tokenId: tokenId,
-                amount: amount
+                tokenId,
+                amount
             })
             await expectRevert(
                 mintableERC1155Predicate.exitTokens(withdrawer, dummyMintableERC1155.address, burnLog, { from: accounts[2] }),
