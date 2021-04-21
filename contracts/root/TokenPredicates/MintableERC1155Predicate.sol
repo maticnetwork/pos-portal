@@ -105,6 +105,24 @@ contract MintableERC1155Predicate is
             data
         );
     }
+    
+    // Used when attempting to exit with single token, single amount/ id is converted into
+    // slice of amounts/ ids
+    // Generally size is going to be `1` i.e. single element array, but it's kept generic
+    function makeArrayWithValue(uint256 val, uint size) internal pure returns(uint256[] memory) {
+        require(
+            size > 0,
+            "MintableERC1155Predicate: Invalid resulting array length"
+        );
+
+        uint256[] memory vals = new uint256[](size);
+
+        for (uint256 i = 0; i < size; i++) {
+            vals[i] = val;
+        }
+
+        return vals;
+    }
 
     /**
      * @notice Creates an array of `size` by repeating provided address,
@@ -206,7 +224,15 @@ contract MintableERC1155Predicate is
             // it'll mint those tokens for this contract and return
             // safely transfer those to withdrawer
             if (tokenBalance < amount) {
-                token.mint(address(this), id, amount - tokenBalance, bytes(""));
+                // @notice We could have done `mint`, but that would require
+                // us implementing `onERC1155Received`, which we avoid intentionally
+                // for sake of only supporting batch deposit.
+                //
+                // Which is why this transfer is wrapped as single element batch minting
+                token.mintBatch(address(this), 
+                    makeArrayWithValue(id, 1), 
+                    makeArrayWithValue(amount - tokenBalance, 1), 
+                    bytes(""));
             }
 
             token.safeTransferFrom(
