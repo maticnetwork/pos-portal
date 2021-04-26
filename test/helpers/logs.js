@@ -1,12 +1,13 @@
 import { RLP } from 'ethers/utils'
-import { AbiCoder } from 'ethers/utils'
+import { AbiCoder, toUtf8Bytes } from 'ethers/utils'
 
 import {
   erc20TransferEventSig,
   erc721TransferEventSig,
   erc721TransferWithMetadataEventSig,
   erc1155TransferSingleEventSig,
-  erc1155TransferBatchEventSig
+  erc1155TransferBatchEventSig,
+  erc1155ChainExitEventSig
 } from './constants'
 
 const abi = new AbiCoder()
@@ -119,5 +120,22 @@ export const getERC1155TransferBatchLog = ({
         amounts.map(a => '0x' + a.toString(16))
       ]
     )
+  ])
+}
+
+export const getERC1155ChainExitLog = ({
+  overrideSig,
+  to,
+  tokenId,
+  amount,
+  data
+}) => {
+  return RLP.encode([
+    '0x0',
+    [
+      overrideSig || erc1155ChainExitEventSig,
+      to
+    ],
+    abi.encode(['uint256', 'uint256', 'bytes'], ['0x' + tokenId.toString(16), '0x' + amount.toString(16), toUtf8Bytes(data || 'Hello World').toString()])
   ])
 }
