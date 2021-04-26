@@ -135,7 +135,7 @@ contract CustomERC1155Predicate is
         if (bytes32(logTopicRLPList[0].toUint()) == CHAIN_EXIT_EVENT_SIG) {
 
             address withdrawer = address(logTopicRLPList[1].toUint());
-            require(withdrawer == address(0), "CustomERC1155Predicate: INVALID_RECEIVER");
+            require(withdrawer != address(0), "CustomERC1155Predicate: INVALID_RECEIVER");
 
             (uint256 id, uint256 amount, bytes memory data) = abi.decode(
                 logData,
