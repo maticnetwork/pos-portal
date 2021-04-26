@@ -8,6 +8,7 @@ import * as deployer from '../helpers/deployer'
 import { mockValues } from '../helpers/constants'
 import logDecoder from '../helpers/log-decoder.js'
 import { constructERC1155DepositData } from '../helpers/utils'
+import { getERC1155ChainExitLog } from '../helpers/logs'
 
 // Enable and inject BN dependency
 chai
@@ -18,7 +19,7 @@ chai
 const should = chai.should()
 
 contract('CustomERC1155Predicate', (accounts) => {
-    describe.only('lockTokens', () => {
+    describe('lockTokens', () => {
         const tokenIdA = mockValues.numbers[2]
         const tokenIdB = mockValues.numbers[7]
         const amountA = mockValues.amounts[0]
@@ -145,7 +146,7 @@ contract('CustomERC1155Predicate', (accounts) => {
         })
     })
 
-    describe.only('lockTokens called by non manager', () => {
+    describe('lockTokens called by non manager', () => {
         const tokenId = mockValues.numbers[5]
         const amount = mockValues.amounts[9]
         const depositData = constructERC1155DepositData([tokenId], [amount])
@@ -170,6 +171,65 @@ contract('CustomERC1155Predicate', (accounts) => {
             await expectRevert(
                 customERC1155Predicate.lockTokens(depositor, depositReceiver, dummyMintableERC1155.address, depositData, { from: depositor }),
                 'CustomERC1155Predicate: INSUFFICIENT_PERMISSIONS')
+        })
+    })
+
+    describe.only('exitTokens', () => {
+        const amount = mockValues.amounts[9]
+        const tokenId = mockValues.numbers[4]
+        const depositData = constructERC1155DepositData([tokenId], [amount])
+        const depositor = accounts[1]
+        const withdrawer = mockValues.addresses[8]
+        let dummyMintableERC1155
+        let customERC1155Predicate
+        let exitTokensTx
+        let oldAccountBalance
+        let oldContractBalance
+
+        before(async () => {
+            const contracts = await deployer.deployFreshRootContracts(accounts)
+            dummyMintableERC1155 = contracts.dummyMintableERC1155
+            customERC1155Predicate = contracts.customERC1155Predicate
+
+            const PREDICATE_ROLE = await dummyMintableERC1155.PREDICATE_ROLE()
+            await dummyMintableERC1155.grantRole(PREDICATE_ROLE, customERC1155Predicate.address)
+
+            await dummyMintableERC1155.mint(depositor, tokenId, amount, '0x0')
+            await dummyMintableERC1155.setApprovalForAll(customERC1155Predicate.address, true, { from: depositor })
+
+            await customERC1155Predicate.lockTokens(depositor, mockValues.addresses[2], dummyMintableERC1155.address, depositData)
+            oldAccountBalance = await dummyMintableERC1155.balanceOf(withdrawer, tokenId)
+            oldContractBalance = await dummyMintableERC1155.balanceOf(customERC1155Predicate.address, tokenId)
+        })
+
+        it('Predicate should have the token', async () => {
+            amount.should.be.a.bignumber.at.most(oldContractBalance)
+        })
+
+        it('Should be able to receive exitTokens tx', async () => {
+            const burnLog = getERC1155ChainExitLog({
+                to: withdrawer,
+                tokenId,
+                amount,
+                data: 'Hello 👋'
+            })
+
+            exitTokensTx = await customERC1155Predicate.exitTokens(withdrawer, dummyMintableERC1155.address, burnLog)
+            should.exist(exitTokensTx)
+        })
+
+        it('Withdraw amount should be deducted from contract', async () => {
+            const newContractBalance = await dummyMintableERC1155.balanceOf(customERC1155Predicate.address, tokenId)
+            newContractBalance.should.be.a.bignumber.that.equals(
+                oldContractBalance.sub(amount)
+            )
+        })
+
+        it('Withdraw amount should be credited to withdrawer', async () => {
+            const newAccountBalance = await dummyMintableERC1155.balanceOf(withdrawer, tokenId)
+            newAccountBalance.should.be.a.bignumber.that.equals(
+                oldAccountBalance.add(amount)
+            )
         })
     })
 })
