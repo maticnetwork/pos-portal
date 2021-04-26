@@ -44,7 +44,7 @@ contract('CustomERC1155Predicate', (accounts) => {
             const PREDICATE_ROLE = await dummyMintableERC1155.PREDICATE_ROLE()
             await dummyMintableERC1155.grantRole(PREDICATE_ROLE, customERC1155Predicate.address)
 
-            await dummyMintableERC1155.mintBatch(depositor, [tokenIdA, tokenIdB], [amountA, amountB], "")
+            await dummyMintableERC1155.mintBatch(depositor, [tokenIdA, tokenIdB], [amountA, amountB], '0x0')
             await dummyMintableERC1155.setApprovalForAll(customERC1155Predicate.address, true, { from: depositor })
 
             oldAccountBalanceA = await dummyMintableERC1155.balanceOf(depositor, tokenIdA)
@@ -162,7 +162,7 @@ contract('CustomERC1155Predicate', (accounts) => {
             const PREDICATE_ROLE = await dummyMintableERC1155.PREDICATE_ROLE()
             await dummyMintableERC1155.grantRole(PREDICATE_ROLE, customERC1155Predicate.address)
 
-            await dummyMintableERC1155.mint(depositor, tokenId, amount)
+            await dummyMintableERC1155.mint(depositor, tokenId, amount, '0x0')
             await dummyMintableERC1155.setApprovalForAll(customERC1155Predicate.address, true, { from: depositor })
         })
 
