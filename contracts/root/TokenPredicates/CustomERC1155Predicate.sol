@@ -121,7 +121,7 @@ contract CustomERC1155Predicate is
      * then sends the correct tokenId, amount to withdrawer
      * callable only by manager
      * @param rootToken Token which gets withdrawn
-     * @param log Valid ERC1155 TransferSingle burn or TransferBatch burn log from child chain
+     * @param log Valid ChainExit log from child chain
      */
     function exitTokens(
         address,

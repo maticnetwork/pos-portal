@@ -19,7 +19,21 @@ const artifactsToGenerate = [
   'BaseRootTunnel.json',
   'BaseChildTunnel.json',
   'RootTunnel.json',
-  'ChildTunnel.json'
+  'ChildTunnel.json',
+  'ERC20Predicate.json',
+  'ERC20PredicateProxy.json',
+  'ERC721Predicate.json',
+  'ERC721PredicateProxy.json',
+  'ERC1155Predicate.json',
+  'ERC1155PredicateProxy.json',
+  'MintableERC20Predicate.json',
+  'MintableERC20PredicateProxy.json',
+  'MintableERC721Predicate.json',
+  'MintableERC721PredicateProxy.json',
+  'MintableERC1155Predicate.json',
+  'MintableERC1155PredicateProxy.json',
+  'CustomERC1155Predicate.json',
+  'CustomERC1155PredicateProxy.json'
 ]
 
 artifactsToGenerate.forEach(a => {
