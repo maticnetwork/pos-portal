@@ -20,6 +20,7 @@ contract CustomERC1155Predicate is
 
     bytes32 public constant MANAGER_ROLE = keccak256("MANAGER_ROLE");
     bytes32 public constant TOKEN_TYPE = keccak256("CustomERC1155");
+    // Only this event is considered in exit function : ChainExit(address indexed to, uint256 tokenId, uint256 amount, bytes data)
     bytes32 public constant CHAIN_EXIT_EVENT_SIG = keccak256("ChainExit(address,uint256,uint256,bytes)");
 
     event LockedBatchCustomERC1155(
@@ -100,4 +101,68 @@ contract CustomERC1155Predicate is
         );
     }
 
+    function makeArrayWithValue(uint256 val, uint size) internal pure returns(uint256[] memory) {
+        require(
+            size > 0,
+            "CustomERC1155Predicate: Invalid resulting array length"
+        );
+
+        uint256[] memory vals = new uint256[](size);
+
+        for (uint256 i = 0; i < size; i++) {
+            vals[i] = val;
+        }
+
+        return vals;
+    }
+
+    /**
+     * @notice Validates log signature, withdrawer address
+     * then sends the correct tokenId, amount to withdrawer
+     * callable only by manager
+     * @param rootToken Token which gets withdrawn
+     * @param log Valid ERC1155 TransferSingle burn or TransferBatch burn log from child chain
+     */
+    function exitTokens(
+        address,
+        address rootToken,
+        bytes memory log
+    ) public override only(MANAGER_ROLE) {
+        RLPReader.RLPItem[] memory logRLPList = log.toRlpItem().toList();
+        RLPReader.RLPItem[] memory logTopicRLPList = logRLPList[1].toList();
+        bytes memory logData = logRLPList[2].toBytes();
+
+        if (bytes32(logTopicRLPList[0].toUint()) == CHAIN_EXIT_EVENT_SIG) {
+
+            address withdrawer = address(logTopicRLPList[1].toUint());
+            require(withdrawer == address(0), "CustomERC1155Predicate: INVALID_RECEIVER");
+
+            (uint256 id, uint256 amount, bytes memory data) = abi.decode(
+                logData,
+                (uint256, uint256, bytes)
+            );
+
+            IMintableERC1155 token = IMintableERC1155(rootToken);
+            uint256 tokenBalance = token.balanceOf(address(this), id);
+
+            if (tokenBalance < amount) {
+                token.mintBatch(
+                    address(this), 
+                    makeArrayWithValue(id, 1), 
+                    makeArrayWithValue(amount - tokenBalance, 1), 
+                    bytes(""));
+            }
+
+            token.safeTransferFrom(
+                address(this),
+                withdrawer,
+                id,
+                amount,
+                data // passing data when transferring all tokens to withdrawer
+            );
+
+        } else {
+            revert("CustomERC1155Predicate: INVALID_WITHDRAW_SIG");
+        }
+    }
 }
