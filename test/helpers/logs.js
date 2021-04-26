@@ -136,6 +136,6 @@ export const getERC1155ChainExitLog = ({
       overrideSig || erc1155ChainExitEventSig,
       to
     ],
-    abi.encode(['uint256', 'uint256', 'bytes'], ['0x' + tokenId.toString(16), '0x' + amount.toString(16), toUtf8Bytes(data || 'Hello World').toString()])
+    abi.encode(['uint256', 'uint256', 'bytes'], ['0x' + tokenId.toString(16), '0x' + amount.toString(16), Buffer.from(toUtf8Bytes(data || 'Hello World')).toString('hex')])
   ])
 }

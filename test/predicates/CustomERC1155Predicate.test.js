@@ -232,4 +232,39 @@ contract('CustomERC1155Predicate', (accounts) => {
             )
         })
     })
+
+    describe.only('exitTokens with real burn log', () => {
+        const amount = mockValues.amounts[9]
+        const tokenId = mockValues.numbers[4]
+        const depositData = constructERC1155DepositData([tokenId], [amount])
+        const depositor = accounts[1]
+        const withdrawer = mockValues.addresses[8]
+
+        let dummyMintableERC1155
+        let customERC1155Predicate
+
+        before(async () => {
+            const contracts = await deployer.deployFreshRootContracts(accounts)
+            dummyMintableERC1155 = contracts.dummyMintableERC1155
+            customERC1155Predicate = contracts.customERC1155Predicate
+
+            const PREDICATE_ROLE = await dummyMintableERC1155.PREDICATE_ROLE()
+            await dummyMintableERC1155.grantRole(PREDICATE_ROLE, customERC1155Predicate.address)
+
+            await dummyMintableERC1155.mint(depositor, tokenId, amount, '0x0')
+            await dummyMintableERC1155.setApprovalForAll(customERC1155Predicate.address, true, { from: depositor })
+
+            await customERC1155Predicate.lockTokens(depositor, mockValues.addresses[2], dummyMintableERC1155.address, depositData)
+        })
+
+        it('Should revert with correct reason', async () => {
+            const burnLog = getERC1155ChainExitLog({
+                to: mockValues.zeroAddress,
+                tokenId,
+                amount,
+                data: 'Hello 👋'
+            })
+            await expectRevert(customERC1155Predicate.exitTokens(withdrawer, dummyMintableERC1155.address, burnLog), 'CustomERC1155Predicate: INVALID_RECEIVER')
+        })
+    })
 })
