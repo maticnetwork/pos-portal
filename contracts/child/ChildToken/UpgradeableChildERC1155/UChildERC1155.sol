@@ -6,7 +6,7 @@ import {IChildToken} from "../IChildToken.sol";
 import {NativeMetaTransaction} from "../../../common/NativeMetaTransaction.sol";
 import {ContextMixin} from "../../../common/ContextMixin.sol";
 
-contract ChildERC1155 is
+contract UChildERC1155 is
     ERC1155,
     IChildToken,
     AccessControlMixin,

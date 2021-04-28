@@ -2112,7 +2112,7 @@ pragma solidity 0.6.6;
 
 
 
-contract ChildERC721 is
+contract UChildERC721 is
     ERC721,
     IChildToken,
     AccessControlMixin,

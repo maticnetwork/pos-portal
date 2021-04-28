@@ -1743,7 +1743,7 @@ pragma solidity 0.6.6;
 
 
 
-contract ChildERC1155 is
+contract UChildERC1155 is
     ERC1155,
     IChildToken,
     AccessControlMixin,
