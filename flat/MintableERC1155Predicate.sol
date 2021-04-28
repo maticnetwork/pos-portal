@@ -1497,6 +1497,11 @@ contract MintableERC1155Predicate is
             // it'll mint those tokens for this contract and return
             // safely transfer those to withdrawer
             if (tokenBalance < amount) {
+                // @notice We could have done `mint`, but that would require
+                // us implementing `onERC1155Received`, which we avoid intentionally
+                // for sake of only supporting batch deposit.
+                //
+                // Which is why this transfer is wrapped as single element batch minting
                 token.mintBatch(address(this), 
                     makeArrayWithValue(id, 1), 
                     makeArrayWithValue(amount - tokenBalance, 1), 
