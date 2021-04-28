@@ -32,8 +32,8 @@ const artifactsToGenerate = [
   'MintableERC721PredicateProxy.json',
   'MintableERC1155Predicate.json',
   'MintableERC1155PredicateProxy.json',
-  'CustomERC1155Predicate.json',
-  'CustomERC1155PredicateProxy.json'
+  'ChainExitERC1155Predicate.json',
+  'ChainExitERC1155PredicateProxy.json'
 ]
 
 artifactsToGenerate.forEach(a => {

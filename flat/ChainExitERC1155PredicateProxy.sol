@@ -156,12 +156,12 @@ contract UpgradableProxy is Proxy {
     }
 }
 
-// File: contracts/root/TokenPredicates/CustomERC1155PredicateProxy.sol
+// File: contracts/root/TokenPredicates/ChainExitERC1155PredicateProxy.sol
 
 pragma solidity 0.6.6;
 
 
-contract CustomERC1155PredicateProxy is UpgradableProxy {
+contract ChainExitERC1155PredicateProxy is UpgradableProxy {
     constructor(address _proxyTo)
         public
         UpgradableProxy(_proxyTo)

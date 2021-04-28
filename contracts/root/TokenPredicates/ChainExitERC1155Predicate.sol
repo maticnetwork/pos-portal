@@ -9,7 +9,7 @@ import {RLPReader} from "../../lib/RLPReader.sol";
 import {ITokenPredicate} from "./ITokenPredicate.sol";
 import {Initializable} from "../../common/Initializable.sol";
 
-contract CustomERC1155Predicate is
+contract ChainExitERC1155Predicate is
     ITokenPredicate,
     ERC1155Receiver,
     AccessControlMixin,
@@ -19,11 +19,11 @@ contract CustomERC1155Predicate is
     using RLPReader for RLPReader.RLPItem;
 
     bytes32 public constant MANAGER_ROLE = keccak256("MANAGER_ROLE");
-    bytes32 public constant TOKEN_TYPE = keccak256("CustomERC1155");
+    bytes32 public constant TOKEN_TYPE = keccak256("ChainExitERC1155");
     // Only this event is considered in exit function : ChainExit(address indexed to, uint256 tokenId, uint256 amount, bytes data)
     bytes32 public constant CHAIN_EXIT_EVENT_SIG = keccak256("ChainExit(address,uint256,uint256,bytes)");
 
-    event LockedBatchCustomERC1155(
+    event LockedBatchChainExitERC1155(
         address indexed depositor,
         address indexed depositReceiver,
         address indexed rootToken,
@@ -34,7 +34,7 @@ contract CustomERC1155Predicate is
     constructor() public {}
 
     function initialize(address _owner) external initializer {
-        _setupContractId("CustomERC1155Predicate");
+        _setupContractId("ChainExitERC1155Predicate");
         _setupRole(DEFAULT_ADMIN_ROLE, _owner);
         _setupRole(MANAGER_ROLE, _owner);
     }
@@ -85,7 +85,7 @@ contract CustomERC1155Predicate is
             bytes memory data
         ) = abi.decode(depositData, (uint256[], uint256[], bytes));
 
-        emit LockedBatchCustomERC1155(
+        emit LockedBatchChainExitERC1155(
             depositor,
             depositReceiver,
             rootToken,
@@ -104,7 +104,7 @@ contract CustomERC1155Predicate is
     function makeArrayWithValue(uint256 val, uint size) internal pure returns(uint256[] memory) {
         require(
             size > 0,
-            "CustomERC1155Predicate: Invalid resulting array length"
+            "ChainExitERC1155Predicate: Invalid resulting array length"
         );
 
         uint256[] memory vals = new uint256[](size);
@@ -135,7 +135,7 @@ contract CustomERC1155Predicate is
         if (bytes32(logTopicRLPList[0].toUint()) == CHAIN_EXIT_EVENT_SIG) {
 
             address withdrawer = address(logTopicRLPList[1].toUint());
-            require(withdrawer != address(0), "CustomERC1155Predicate: INVALID_RECEIVER");
+            require(withdrawer != address(0), "ChainExitERC1155Predicate: INVALID_RECEIVER");
 
             (uint256 id, uint256 amount, bytes memory data) = abi.decode(
                 logData,
@@ -162,7 +162,7 @@ contract CustomERC1155Predicate is
             );
 
         } else {
-            revert("CustomERC1155Predicate: INVALID_WITHDRAW_SIG");
+            revert("ChainExitERC1155Predicate: INVALID_WITHDRAW_SIG");
         }
     }
 }

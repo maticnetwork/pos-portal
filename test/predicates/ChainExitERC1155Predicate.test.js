@@ -18,7 +18,7 @@ chai
 
 const should = chai.should()
 
-contract('CustomERC1155Predicate', (accounts) => {
+contract('ChainExitERC1155Predicate', (accounts) => {
     describe('lockTokens', () => {
         const tokenIdA = mockValues.numbers[2]
         const tokenIdB = mockValues.numbers[7]
@@ -29,7 +29,7 @@ contract('CustomERC1155Predicate', (accounts) => {
         const depositData = constructERC1155DepositData([tokenIdA, tokenIdB], [amountA, amountB])
 
         let dummyMintableERC1155
-        let customERC1155Predicate
+        let chainExitERC1155Predicate
         let lockTokensTx
         let lockedLog
         let oldAccountBalanceA
@@ -40,18 +40,18 @@ contract('CustomERC1155Predicate', (accounts) => {
         before(async () => {
             const contracts = await deployer.deployFreshRootContracts(accounts)
             dummyMintableERC1155 = contracts.dummyMintableERC1155
-            customERC1155Predicate = contracts.customERC1155Predicate
+            chainExitERC1155Predicate = contracts.chainExitERC1155Predicate
 
             const PREDICATE_ROLE = await dummyMintableERC1155.PREDICATE_ROLE()
-            await dummyMintableERC1155.grantRole(PREDICATE_ROLE, customERC1155Predicate.address)
+            await dummyMintableERC1155.grantRole(PREDICATE_ROLE, chainExitERC1155Predicate.address)
 
             await dummyMintableERC1155.mintBatch(depositor, [tokenIdA, tokenIdB], [amountA, amountB], '0x0')
-            await dummyMintableERC1155.setApprovalForAll(customERC1155Predicate.address, true, { from: depositor })
+            await dummyMintableERC1155.setApprovalForAll(chainExitERC1155Predicate.address, true, { from: depositor })
 
             oldAccountBalanceA = await dummyMintableERC1155.balanceOf(depositor, tokenIdA)
             oldAccountBalanceB = await dummyMintableERC1155.balanceOf(depositor, tokenIdB)
-            oldContractBalanceA = await dummyMintableERC1155.balanceOf(customERC1155Predicate.address, tokenIdA)
-            oldContractBalanceB = await dummyMintableERC1155.balanceOf(customERC1155Predicate.address, tokenIdB)
+            oldContractBalanceA = await dummyMintableERC1155.balanceOf(chainExitERC1155Predicate.address, tokenIdA)
+            oldContractBalanceB = await dummyMintableERC1155.balanceOf(chainExitERC1155Predicate.address, tokenIdB)
         })
 
         it('Depositor should have balance', () => {
@@ -60,25 +60,25 @@ contract('CustomERC1155Predicate', (accounts) => {
         })
 
         it('Depositor should have approved token transfer', async () => {
-            const approved = await dummyMintableERC1155.isApprovedForAll(depositor, customERC1155Predicate.address)
+            const approved = await dummyMintableERC1155.isApprovedForAll(depositor, chainExitERC1155Predicate.address)
             approved.should.equal(true)
         })
 
         it('Should be able to receive lockTokens tx', async () => {
-            lockTokensTx = await customERC1155Predicate.lockTokens(depositor, depositReceiver, dummyMintableERC1155.address, depositData)
+            lockTokensTx = await chainExitERC1155Predicate.lockTokens(depositor, depositReceiver, dummyMintableERC1155.address, depositData)
             should.exist(lockTokensTx)
         })
 
-        it('Should emit LockedBatchCustomERC1155 log', () => {
+        it('Should emit LockedBatchChainExitERC1155 log', () => {
             const logs = logDecoder.decodeLogs(lockTokensTx.receipt.rawLogs)
-            lockedLog = logs.find(l => l.event === 'LockedBatchCustomERC1155')
+            lockedLog = logs.find(l => l.event === 'LockedBatchChainExitERC1155')
             should.exist(lockedLog)
         })
 
-        describe('Correct values should be emitted in LockedBatchCustomERC1155 log', () => {
+        describe('Correct values should be emitted in LockedBatchChainExitERC1155 log', () => {
             it('Event should be emitted by correct contract', () => {
                 lockedLog.address.should.equal(
-                    customERC1155Predicate.address.toLowerCase()
+                    chainExitERC1155Predicate.address.toLowerCase()
                 )
             })
 
@@ -132,14 +132,14 @@ contract('CustomERC1155Predicate', (accounts) => {
         })
 
         it('Deposit amount should be credited to correct contract for A', async () => {
-            const newContractBalance = await dummyMintableERC1155.balanceOf(customERC1155Predicate.address, tokenIdA)
+            const newContractBalance = await dummyMintableERC1155.balanceOf(chainExitERC1155Predicate.address, tokenIdA)
             newContractBalance.should.be.a.bignumber.that.equals(
                 oldContractBalanceA.add(amountA)
             )
         })
 
         it('Deposit amount should be credited to correct contract for B', async () => {
-            const newContractBalance = await dummyMintableERC1155.balanceOf(customERC1155Predicate.address, tokenIdB)
+            const newContractBalance = await dummyMintableERC1155.balanceOf(chainExitERC1155Predicate.address, tokenIdB)
             newContractBalance.should.be.a.bignumber.that.equals(
                 oldContractBalanceB.add(amountB)
             )
@@ -153,24 +153,24 @@ contract('CustomERC1155Predicate', (accounts) => {
         const depositor = accounts[1]
         const depositReceiver = accounts[2]
         let dummyMintableERC1155
-        let customERC1155Predicate
+        let chainExitERC1155Predicate
 
         before(async () => {
             const contracts = await deployer.deployFreshRootContracts(accounts)
             dummyMintableERC1155 = contracts.dummyMintableERC1155
-            customERC1155Predicate = contracts.customERC1155Predicate
+            chainExitERC1155Predicate = contracts.chainExitERC1155Predicate
 
             const PREDICATE_ROLE = await dummyMintableERC1155.PREDICATE_ROLE()
-            await dummyMintableERC1155.grantRole(PREDICATE_ROLE, customERC1155Predicate.address)
+            await dummyMintableERC1155.grantRole(PREDICATE_ROLE, chainExitERC1155Predicate.address)
 
             await dummyMintableERC1155.mint(depositor, tokenId, amount, '0x0')
-            await dummyMintableERC1155.setApprovalForAll(customERC1155Predicate.address, true, { from: depositor })
+            await dummyMintableERC1155.setApprovalForAll(chainExitERC1155Predicate.address, true, { from: depositor })
         })
 
         it('Should revert with correct reason', async () => {
             await expectRevert(
-                customERC1155Predicate.lockTokens(depositor, depositReceiver, dummyMintableERC1155.address, depositData, { from: depositor }),
-                'CustomERC1155Predicate: INSUFFICIENT_PERMISSIONS')
+                chainExitERC1155Predicate.lockTokens(depositor, depositReceiver, dummyMintableERC1155.address, depositData, { from: depositor }),
+                'ChainExitERC1155Predicate: INSUFFICIENT_PERMISSIONS')
         })
     })
 
@@ -181,7 +181,7 @@ contract('CustomERC1155Predicate', (accounts) => {
         const depositor = accounts[1]
         const withdrawer = mockValues.addresses[8]
         let dummyMintableERC1155
-        let customERC1155Predicate
+        let chainExitERC1155Predicate
         let exitTokensTx
         let oldAccountBalance
         let oldContractBalance
@@ -189,17 +189,17 @@ contract('CustomERC1155Predicate', (accounts) => {
         before(async () => {
             const contracts = await deployer.deployFreshRootContracts(accounts)
             dummyMintableERC1155 = contracts.dummyMintableERC1155
-            customERC1155Predicate = contracts.customERC1155Predicate
+            chainExitERC1155Predicate = contracts.chainExitERC1155Predicate
 
             const PREDICATE_ROLE = await dummyMintableERC1155.PREDICATE_ROLE()
-            await dummyMintableERC1155.grantRole(PREDICATE_ROLE, customERC1155Predicate.address)
+            await dummyMintableERC1155.grantRole(PREDICATE_ROLE, chainExitERC1155Predicate.address)
 
             await dummyMintableERC1155.mint(depositor, tokenId, amount, '0x0')
-            await dummyMintableERC1155.setApprovalForAll(customERC1155Predicate.address, true, { from: depositor })
+            await dummyMintableERC1155.setApprovalForAll(chainExitERC1155Predicate.address, true, { from: depositor })
 
-            await customERC1155Predicate.lockTokens(depositor, mockValues.addresses[2], dummyMintableERC1155.address, depositData)
+            await chainExitERC1155Predicate.lockTokens(depositor, mockValues.addresses[2], dummyMintableERC1155.address, depositData)
             oldAccountBalance = await dummyMintableERC1155.balanceOf(withdrawer, tokenId)
-            oldContractBalance = await dummyMintableERC1155.balanceOf(customERC1155Predicate.address, tokenId)
+            oldContractBalance = await dummyMintableERC1155.balanceOf(chainExitERC1155Predicate.address, tokenId)
         })
 
         it('Predicate should have the token', async () => {
@@ -214,12 +214,12 @@ contract('CustomERC1155Predicate', (accounts) => {
                 data: 'Hello 👋'
             })
 
-            exitTokensTx = await customERC1155Predicate.exitTokens(withdrawer, dummyMintableERC1155.address, burnLog)
+            exitTokensTx = await chainExitERC1155Predicate.exitTokens(withdrawer, dummyMintableERC1155.address, burnLog)
             should.exist(exitTokensTx)
         })
 
         it('Withdraw amount should be deducted from contract', async () => {
-            const newContractBalance = await dummyMintableERC1155.balanceOf(customERC1155Predicate.address, tokenId)
+            const newContractBalance = await dummyMintableERC1155.balanceOf(chainExitERC1155Predicate.address, tokenId)
             newContractBalance.should.be.a.bignumber.that.equals(
                 oldContractBalance.sub(amount)
             )
@@ -241,20 +241,20 @@ contract('CustomERC1155Predicate', (accounts) => {
         const withdrawer = mockValues.addresses[8]
 
         let dummyMintableERC1155
-        let customERC1155Predicate
+        let chainExitERC1155Predicate
 
         before(async () => {
             const contracts = await deployer.deployFreshRootContracts(accounts)
             dummyMintableERC1155 = contracts.dummyMintableERC1155
-            customERC1155Predicate = contracts.customERC1155Predicate
+            chainExitERC1155Predicate = contracts.chainExitERC1155Predicate
 
             const PREDICATE_ROLE = await dummyMintableERC1155.PREDICATE_ROLE()
-            await dummyMintableERC1155.grantRole(PREDICATE_ROLE, customERC1155Predicate.address)
+            await dummyMintableERC1155.grantRole(PREDICATE_ROLE, chainExitERC1155Predicate.address)
 
             await dummyMintableERC1155.mint(depositor, tokenId, amount, '0x0')
-            await dummyMintableERC1155.setApprovalForAll(customERC1155Predicate.address, true, { from: depositor })
+            await dummyMintableERC1155.setApprovalForAll(chainExitERC1155Predicate.address, true, { from: depositor })
 
-            await customERC1155Predicate.lockTokens(depositor, mockValues.addresses[2], dummyMintableERC1155.address, depositData)
+            await chainExitERC1155Predicate.lockTokens(depositor, mockValues.addresses[2], dummyMintableERC1155.address, depositData)
         })
 
         it('Should revert with correct reason', async () => {
@@ -264,11 +264,11 @@ contract('CustomERC1155Predicate', (accounts) => {
                 amount,
                 data: 'Hello 👋'
             })
-            await expectRevert(customERC1155Predicate.exitTokens(withdrawer, dummyMintableERC1155.address, burnLog), 'CustomERC1155Predicate: INVALID_RECEIVER')
+            await expectRevert(chainExitERC1155Predicate.exitTokens(withdrawer, dummyMintableERC1155.address, burnLog), 'ChainExitERC1155Predicate: INVALID_RECEIVER')
         })
     })
 
-    describe.only('exitTokens with unsupported burn log', () => {
+    describe('exitTokens with unsupported burn log', () => {
         const amount = mockValues.amounts[9]
         const tokenId = mockValues.numbers[4]
         const depositData = constructERC1155DepositData([tokenId], [amount])
@@ -276,20 +276,20 @@ contract('CustomERC1155Predicate', (accounts) => {
         const withdrawer = mockValues.addresses[8]
 
         let dummyMintableERC1155
-        let customERC1155Predicate
+        let chainExitERC1155Predicate
 
         before(async () => {
             const contracts = await deployer.deployFreshRootContracts(accounts)
             dummyMintableERC1155 = contracts.dummyMintableERC1155
-            customERC1155Predicate = contracts.customERC1155Predicate
+            chainExitERC1155Predicate = contracts.chainExitERC1155Predicate
 
             const PREDICATE_ROLE = await dummyMintableERC1155.PREDICATE_ROLE()
-            await dummyMintableERC1155.grantRole(PREDICATE_ROLE, customERC1155Predicate.address)
+            await dummyMintableERC1155.grantRole(PREDICATE_ROLE, chainExitERC1155Predicate.address)
 
             await dummyMintableERC1155.mint(depositor, tokenId, amount, '0x0')
-            await dummyMintableERC1155.setApprovalForAll(customERC1155Predicate.address, true, { from: depositor })
+            await dummyMintableERC1155.setApprovalForAll(chainExitERC1155Predicate.address, true, { from: depositor })
 
-            await customERC1155Predicate.lockTokens(depositor, mockValues.addresses[2], dummyMintableERC1155.address, depositData)
+            await chainExitERC1155Predicate.lockTokens(depositor, mockValues.addresses[2], dummyMintableERC1155.address, depositData)
         })
 
         it('Should revert with correct reason', async () => {
@@ -300,7 +300,7 @@ contract('CustomERC1155Predicate', (accounts) => {
                 amount,
                 data: 'Hello 👋'
             })
-            await expectRevert(customERC1155Predicate.exitTokens(withdrawer, dummyMintableERC1155.address, burnLog), 'CustomERC1155Predicate: INVALID_WITHDRAW_SIG')
+            await expectRevert(chainExitERC1155Predicate.exitTokens(withdrawer, dummyMintableERC1155.address, burnLog), 'ChainExitERC1155Predicate: INVALID_WITHDRAW_SIG')
         })
     })
 })
