@@ -209,8 +209,8 @@ contract('ChainExitERC1155Predicate', (accounts) => {
         it('Should be able to receive exitTokens tx', async () => {
             const burnLog = getERC1155ChainExitLog({
                 to: withdrawer,
-                tokenId,
-                amount,
+                tokenIds: [tokenId],
+                amounts: [amount],
                 data: 'Hello 👋'
             })
 
@@ -260,8 +260,8 @@ contract('ChainExitERC1155Predicate', (accounts) => {
         it('Should revert with correct reason', async () => {
             const burnLog = getERC1155ChainExitLog({
                 to: mockValues.zeroAddress,
-                tokenId,
-                amount,
+                tokenIds: [tokenId],
+                amounts: [amount],
                 data: 'Hello 👋'
             })
             await expectRevert(chainExitERC1155Predicate.exitTokens(withdrawer, dummyMintableERC1155.address, burnLog), 'ChainExitERC1155Predicate: INVALID_RECEIVER')
@@ -296,8 +296,8 @@ contract('ChainExitERC1155Predicate', (accounts) => {
             const burnLog = getERC1155ChainExitLog({
                 overrideSig: mockValues.bytes32[2],
                 to: withdrawer,
-                tokenId,
-                amount,
+                tokenIds: [tokenId],
+                amounts: [amount],
                 data: 'Hello 👋'
             })
             await expectRevert(chainExitERC1155Predicate.exitTokens(withdrawer, dummyMintableERC1155.address, burnLog), 'ChainExitERC1155Predicate: INVALID_WITHDRAW_SIG')

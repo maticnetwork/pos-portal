@@ -126,8 +126,8 @@ export const getERC1155TransferBatchLog = ({
 export const getERC1155ChainExitLog = ({
   overrideSig,
   to,
-  tokenId,
-  amount,
+  tokenIds,
+  amounts,
   data
 }) => {
   return RLP.encode([
@@ -136,6 +136,17 @@ export const getERC1155ChainExitLog = ({
       overrideSig || erc1155ChainExitEventSig,
       to
     ],
-    abi.encode(['uint256', 'uint256', 'bytes'], ['0x' + tokenId.toString(16), '0x' + amount.toString(16), `0x${Buffer.from(toUtf8Bytes(data || 'Hello World')).toString('hex')}`])
+    abi.encode(
+      [
+        'uint256[]',
+        'uint256[]',
+        'bytes'
+      ],
+      [
+        tokenIds.map(t => '0x' + t.toString(16)),
+        amounts.map(a => '0x' + a.toString(16)),
+        `0x${Buffer.from(toUtf8Bytes(data || 'Hello World')).toString('hex')}`
+      ]
+    )
   ])
 }

@@ -20,7 +20,7 @@ export const erc721TransferEventSig = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f
 export const erc721TransferWithMetadataEventSig = '0xf94915c6d1fd521cee85359239227480c7e8776d7caf1fc3bacad5c269b66a14'
 export const erc1155TransferSingleEventSig = '0xc3d58168c5ae7397731d063d5bbf3d657854427343f4c083240f7aacaa2d0f62'
 export const erc1155TransferBatchEventSig = '0x4a39dc06d4c0dbc64b70af90fd698a233a518aa5d07e595d983b8c0526c8f7fb'
-export const erc1155ChainExitEventSig = '0x285b1a47dd270318ae8855e6edb8267384579b383b2c06bb5369e58d5e861e23'
+export const erc1155ChainExitEventSig = '0xc7b80b68f1c661da97dbd7e6e143a0c7c587dfc522cb2ac508b9084fecc492bc'
 
 export const mockValues = {
   zeroAddress: '0x0000000000000000000000000000000000000000',
