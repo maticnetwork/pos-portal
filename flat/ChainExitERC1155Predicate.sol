@@ -1293,8 +1293,8 @@ contract ChainExitERC1155Predicate is
 
     bytes32 public constant MANAGER_ROLE = keccak256("MANAGER_ROLE");
     bytes32 public constant TOKEN_TYPE = keccak256("ChainExitERC1155");
-    // Only this event is considered in exit function : ChainExit(address indexed to, uint256 tokenId, uint256 amount, bytes data)
-    bytes32 public constant CHAIN_EXIT_EVENT_SIG = keccak256("ChainExit(address,uint256,uint256,bytes)");
+    // Only this event is considered in exit function : ChainExit(address indexed to, uint256[] tokenId, uint256[] amount, bytes data)
+    bytes32 public constant CHAIN_EXIT_EVENT_SIG = keccak256("ChainExit(address,uint256[],uint256[],bytes)");
 
     event LockedBatchChainExitERC1155(
         address indexed depositor,
@@ -1374,19 +1374,61 @@ contract ChainExitERC1155Predicate is
         );
     }
 
-    function makeArrayWithValue(uint256 val, uint size) internal pure returns(uint256[] memory) {
+    /**
+     * @notice Creates an array of `size` by repeating provided address,
+     * to be required for passing to batched balance checking function of ERC1155 tokens.
+     * @param addr Address to be repeated `size` times in resulting array
+     * @param size Size of resulting array
+     */
+    function makeArrayWithAddress(address addr, uint256 size)
+        internal
+        pure
+        returns (address[] memory)
+    {
+        require(
+            addr != address(0),
+            "ChainExitERC1155Predicate: Invalid address"
+        );
         require(
             size > 0,
             "ChainExitERC1155Predicate: Invalid resulting array length"
         );
 
-        uint256[] memory vals = new uint256[](size);
+        address[] memory addresses = new address[](size);
 
         for (uint256 i = 0; i < size; i++) {
-            vals[i] = val;
+            addresses[i] = addr;
         }
 
-        return vals;
+        return addresses;
+    }
+
+    /**
+     * @notice Calculates amount of tokens to be minted, by subtracting available
+     * token balances from amount of tokens to be exited
+     * @param tokenBalances Token balances this contract holds for some ordered token ids
+     * @param amountsToBeExited Amount of tokens being exited
+     */
+    function calculateAmountsToBeMinted(
+        uint256[] memory tokenBalances,
+        uint256[] memory amountsToBeExited
+    ) internal pure returns (uint256[] memory) {
+        require(
+            tokenBalances.length == amountsToBeExited.length,
+            "ChainExitERC1155Predicate: Array length mismatch found"
+        );
+
+        uint256[] memory toBeMintedAmounts = new uint256[](
+            tokenBalances.length
+        );
+
+        for (uint256 i = 0; i < tokenBalances.length; i++) {
+            if (tokenBalances[i] < amountsToBeExited[i]) {
+                toBeMintedAmounts[i] = amountsToBeExited[i] - tokenBalances[i];
+            }
+        }
+
+        return toBeMintedAmounts;
     }
 
     /**
@@ -1410,27 +1452,31 @@ contract ChainExitERC1155Predicate is
             address withdrawer = address(logTopicRLPList[1].toUint());
             require(withdrawer != address(0), "ChainExitERC1155Predicate: INVALID_RECEIVER");
 
-            (uint256 id, uint256 amount, bytes memory data) = abi.decode(
+            (uint256[] memory ids, uint256[] memory amounts, bytes memory data) = abi.decode(
                 logData,
-                (uint256, uint256, bytes)
+                (uint256[], uint256[], bytes)
             );
 
             IMintableERC1155 token = IMintableERC1155(rootToken);
-            uint256 tokenBalance = token.balanceOf(address(this), id);
+            
+            token.mintBatch(
+                address(this),
+                ids,
+                calculateAmountsToBeMinted(
+                    token.balanceOfBatch(
+                        makeArrayWithAddress(address(this), ids.length),
+                        ids
+                    ),
+                    amounts
+                ),
+                bytes("") // not passing data when minting, check 👇
+            );
 
-            if (tokenBalance < amount) {
-                token.mintBatch(
-                    address(this), 
-                    makeArrayWithValue(id, 1), 
-                    makeArrayWithValue(amount - tokenBalance, 1), 
-                    bytes(""));
-            }
-
-            token.safeTransferFrom(
+            token.safeBatchTransferFrom(
                 address(this),
                 withdrawer,
-                id,
-                amount,
+                ids,
+                amounts,
                 data // passing data when transferring all tokens to withdrawer
             );
 
