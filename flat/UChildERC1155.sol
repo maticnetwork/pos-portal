@@ -602,7 +602,7 @@ library Address {
     }
 }
 
-// File: contracts/child/ChildToken/UpgradeableChildERC1155/ERC1155.sol
+// File: @openzeppelin/contracts/token/ERC1155/ERC1155.sol
 
 // SPDX-License-Identifier: MIT
 
