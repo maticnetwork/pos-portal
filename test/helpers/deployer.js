@@ -8,34 +8,46 @@ export const deployFreshRootContracts = async(accounts) => {
     dummyStateSender,
     erc20PredicateLogic,
     mintableERC20PredicateLogic,
+    burnableERC20PredicateLogic,
     erc721PredicateLogic,
     mintableERC721PredicateLogic,
+    burnableERC721PredicateLogic,
     erc1155PredicateLogic,
     mintableERC1155PredicateLogic,
+    burnableERC1155PredicateLogic,
     etherPredicateLogic,
     dummyERC20,
     dummyMintableERC20,
+    dummyBurnableERC20,
     dummyERC721,
     dummyMintableERC721,
+    dummyBurnableERC721,
     dummyERC1155,
-    dummyMintableERC1155
+    dummyMintableERC1155,
+    dummyBurnableERC1155
   ] = await Promise.all([
     contracts.MockCheckpointManager.new(),
     contracts.RootChainManager.new(),
     contracts.DummyStateSender.new(),
     contracts.ERC20Predicate.new(),
     contracts.MintableERC20Predicate.new(),
+    contracts.BurnableERC20Predicate.new(),
     contracts.ERC721Predicate.new(),
     contracts.MintableERC721Predicate.new(),
+    contracts.BurnableERC721Predicate.new(),
     contracts.ERC1155Predicate.new(),
     contracts.MintableERC1155Predicate.new(),
+    contracts.BurnableERC1155Predicate.new(),
     contracts.EtherPredicate.new(),
     contracts.DummyERC20.new('Dummy ERC20', 'DERC20'),
     contracts.DummyMintableERC20.new('Dummy Mintable ERC20', 'DMERC20'),
+    contracts.DummyBurnableERC20.new('Dummy Burnable ERC20', 'DBERC20'),
     contracts.DummyERC721.new('Dummy ERC721', 'DERC721'),
     contracts.DummyMintableERC721.new('Dummy Mintable ERC721', 'DMERC721'),
+    contracts.DummyBurnableERC721.new('Dummy Burnable ERC721', 'DBERC721'),
     contracts.DummyERC1155.new('Dummy ERC1155'),
-    contracts.DummyMintableERC1155.new('Dummy Mintable ERC1155')
+    contracts.DummyMintableERC1155.new('Dummy Mintable ERC1155'),
+    contracts.DummyBurnableERC1155.new('Dummy Burnable ERC1155')
   ])
 
   const rootChainManagerProxy = await contracts.RootChainManagerProxy.new('0x0000000000000000000000000000000000000000')
@@ -50,6 +62,10 @@ export const deployFreshRootContracts = async(accounts) => {
   await mintableERC20PredicateProxy.updateAndCall(mintableERC20PredicateLogic.address, mintableERC20PredicateLogic.contract.methods.initialize(accounts[0]).encodeABI())
   const mintableERC20Predicate = await contracts.MintableERC20Predicate.at(mintableERC20PredicateProxy.address)
 
+  const burnableERC20PredicateProxy = await contracts.BurnableERC20PredicateProxy.new('0x0000000000000000000000000000000000000000')
+  await burnableERC20PredicateProxy.updateAndCall(burnableERC20PredicateLogic.address, burnableERC20PredicateLogic.contract.methods.initialize(accounts[0]).encodeABI())
+  const burnableERC20Predicate = await contracts.BurnableERC20Predicate.at(burnableERC20PredicateProxy.address)
+
   const erc721PredicateProxy = await contracts.ERC721PredicateProxy.new('0x0000000000000000000000000000000000000000')
   await erc721PredicateProxy.updateAndCall(erc721PredicateLogic.address, erc721PredicateLogic.contract.methods.initialize(accounts[0]).encodeABI())
   const erc721Predicate = await contracts.ERC721Predicate.at(erc721PredicateProxy.address)
@@ -58,6 +74,10 @@ export const deployFreshRootContracts = async(accounts) => {
   await mintableERC721PredicateProxy.updateAndCall(mintableERC721PredicateLogic.address, mintableERC721PredicateLogic.contract.methods.initialize(accounts[0]).encodeABI())
   const mintableERC721Predicate = await contracts.MintableERC721Predicate.at(mintableERC721PredicateProxy.address)
 
+  const burnableERC721PredicateProxy = await contracts.BurnableERC721PredicateProxy.new('0x0000000000000000000000000000000000000000')
+  await burnableERC721PredicateProxy.updateAndCall(burnableERC721PredicateLogic.address, burnableERC721PredicateLogic.contract.methods.initialize(accounts[0]).encodeABI())
+  const burnableERC721Predicate = await contracts.BurnableERC721Predicate.at(burnableERC721PredicateProxy.address)
+
   const erc1155PredicateProxy = await contracts.ERC1155PredicateProxy.new('0x0000000000000000000000000000000000000000')
   await erc1155PredicateProxy.updateAndCall(erc1155PredicateLogic.address, erc1155PredicateLogic.contract.methods.initialize(accounts[0]).encodeABI())
   const erc1155Predicate = await contracts.ERC1155Predicate.at(erc1155PredicateProxy.address)
@@ -65,6 +85,10 @@ export const deployFreshRootContracts = async(accounts) => {
   const mintableERC1155PredicateProxy = await contracts.MintableERC1155PredicateProxy.new('0x0000000000000000000000000000000000000000')
   await mintableERC1155PredicateProxy.updateAndCall(mintableERC1155PredicateLogic.address, mintableERC1155PredicateLogic.contract.methods.initialize(accounts[0]).encodeABI())
   const mintableERC1155Predicate = await contracts.MintableERC1155Predicate.at(mintableERC1155PredicateProxy.address)
+
+  const burnableERC1155PredicateProxy = await contracts.BurnableERC1155PredicateProxy.new('0x0000000000000000000000000000000000000000')
+  await burnableERC1155PredicateProxy.updateAndCall(burnableERC1155PredicateLogic.address, burnableERC1155PredicateLogic.contract.methods.initialize(accounts[0]).encodeABI())
+  const burnableERC1155Predicate = await contracts.BurnableERC20Predicate.at(burnableERC1155PredicateProxy.address)
 
   const etherPredicateProxy = await contracts.EtherPredicateProxy.new('0x0000000000000000000000000000000000000000')
   await etherPredicateProxy.updateAndCall(etherPredicateLogic.address, etherPredicateLogic.contract.methods.initialize(accounts[0]).encodeABI())
@@ -76,17 +100,23 @@ export const deployFreshRootContracts = async(accounts) => {
     dummyStateSender,
     erc20Predicate,
     mintableERC20Predicate,
+    burnableERC20Predicate,
     erc721Predicate,
     mintableERC721Predicate,
+    burnableERC721Predicate,
     erc1155Predicate,
     mintableERC1155Predicate,
+    burnableERC1155Predicate,
     etherPredicate,
     dummyERC20,
     dummyMintableERC20,
+    dummyBurnableERC20,
     dummyERC721,
     dummyMintableERC721,
+    dummyBurnableERC721,
     dummyERC1155,
-    dummyMintableERC1155
+    dummyMintableERC1155,
+    dummyBurnableERC1155
   }
 }
 
@@ -99,18 +129,24 @@ export const deployFreshChildContracts = async(accounts) => {
   const [
     dummyERC20,
     dummyMintableERC20,
+    dummyBurnableERC20,
     dummyERC721,
     dummyMintableERC721,
+    dummyBurnableERC721,
     dummyERC1155,
     dummyMintableERC1155,
+    dummyBurnableERC1155,
     maticWETH
   ] = await Promise.all([
     contracts.ChildERC20.new('Dummy ERC20', 'DERC20', 18, childChainManager.address),
     contracts.ChildMintableERC20.new('Dummy Mintable ERC20', 'DMERC20', 18, childChainManager.address),
+    contracts.ChildBurnableERC20.new('Dummy Burnable ERC20', 'DBERC20', 18, childChainManager.address),
     contracts.ChildERC721.new('Dummy ERC721', 'DERC721', childChainManager.address),
     contracts.ChildMintableERC721.new('Dummy Mintable ERC721', 'DMERC721', childChainManager.address),
+    contracts.ChildBurnableERC721.new('Dummy Burnable ERC721', 'DBERC721', childChainManager.address),
     contracts.ChildERC1155.new('Dummy ERC1155', childChainManager.address),
     contracts.ChildMintableERC1155.new('Dummy Mintable ERC1155', childChainManager.address),
+    contracts.ChildBurnableERC1155.new('Dummy Burnable ERC1155', childChainManager.address),
     contracts.MaticWETH.new(childChainManager.address)
   ])
 
@@ -118,10 +154,13 @@ export const deployFreshChildContracts = async(accounts) => {
     childChainManager,
     dummyERC20,
     dummyMintableERC20,
+    dummyBurnableERC20,
     dummyERC721,
     dummyMintableERC721,
+    dummyBurnableERC721,
     dummyERC1155,
     dummyMintableERC1155,
+    dummyBurnableERC1155,
     maticWETH
   }
 }
@@ -156,6 +195,14 @@ export const deployInitializedContracts = async(accounts) => {
 
   await root.dummyMintableERC20.grantRole(PREDICATE_ROLE, root.mintableERC20Predicate.address)
 
+  const BurnableERC20Type = await root.burnableERC20Predicate.TOKEN_TYPE()
+  await root.burnableERC20Predicate.grantRole(MANAGER_ROLE, root.rootChainManager.address)
+  await root.rootChainManager.registerPredicate(BurnableERC20Type, root.burnableERC20Predicate.address)
+  await root.rootChainManager.mapToken(root.dummyBurnableERC20.address, child.dummyBurnableERC20.address, BurnableERC20Type)
+  await child.childChainManager.mapToken(root.dummyBurnableERC20.address, child.dummyBurnableERC20.address)
+
+  await root.dummyBurnableERC20.grantRole(PREDICATE_ROLE, root.burnableERC20Predicate.address)
+
   const ERC721Type = await root.erc721Predicate.TOKEN_TYPE()
   await root.erc721Predicate.grantRole(MANAGER_ROLE, root.rootChainManager.address)
   await root.rootChainManager.registerPredicate(ERC721Type, root.erc721Predicate.address)
@@ -170,6 +217,14 @@ export const deployInitializedContracts = async(accounts) => {
 
   await root.dummyMintableERC721.grantRole(PREDICATE_ROLE, root.mintableERC721Predicate.address)
 
+  const BurnableERC721Type = await root.burnableERC721Predicate.TOKEN_TYPE()
+  await root.burnableERC721Predicate.grantRole(MANAGER_ROLE, root.rootChainManager.address)
+  await root.rootChainManager.registerPredicate(BurnableERC721Type, root.burnableERC721Predicate.address)
+  await root.rootChainManager.mapToken(root.dummyBurnableERC721.address, child.dummyBurnableERC721.address, BurnableERC721Type)
+  await child.childChainManager.mapToken(root.dummyBurnableERC721.address, child.dummyBurnableERC721.address)
+
+  await root.dummyBurnableERC721.grantRole(PREDICATE_ROLE, root.burnableERC721Predicate.address)
+
   const ERC1155Type = await root.erc1155Predicate.TOKEN_TYPE()
   await root.erc1155Predicate.grantRole(MANAGER_ROLE, root.rootChainManager.address)
   await root.rootChainManager.registerPredicate(ERC1155Type, root.erc1155Predicate.address)
@@ -179,10 +234,18 @@ export const deployInitializedContracts = async(accounts) => {
   const MintableERC1155Type = await root.mintableERC1155Predicate.TOKEN_TYPE()
   await root.mintableERC1155Predicate.grantRole(MANAGER_ROLE, root.rootChainManager.address)
   await root.rootChainManager.registerPredicate(MintableERC1155Type, root.mintableERC1155Predicate.address)
-  await root.rootChainManager.mapToken(root.dummyMintableERC1155.address, child.dummyMintableERC1155.address, MintableERC721Type)
+  await root.rootChainManager.mapToken(root.dummyMintableERC1155.address, child.dummyMintableERC1155.address, MintableERC1155Type)
   await child.childChainManager.mapToken(root.dummyMintableERC1155.address, child.dummyMintableERC1155.address)
 
   await root.dummyMintableERC1155.grantRole(PREDICATE_ROLE, root.mintableERC1155Predicate.address)
+
+  const BurnableERC1155Type = await root.burnableERC1155Predicate.TOKEN_TYPE()
+  await root.burnableERC1155Predicate.grantRole(MANAGER_ROLE, root.rootChainManager.address)
+  await root.rootChainManager.registerPredicate(BurnableERC1155Type, root.burnableERC1155Predicate.address)
+  await root.rootChainManager.mapToken(root.dummyBurnableERC1155.address, child.dummyBurnableERC1155.address, BurnableERC1155Type)
+  await child.childChainManager.mapToken(root.dummyBurnableERC1155.address, child.dummyBurnableERC1155.address)
+
+  await root.dummyBurnableERC1155.grantRole(PREDICATE_ROLE, root.burnableERC1155Predicate.address)
 
   const EtherType = await root.etherPredicate.TOKEN_TYPE()
   await root.etherPredicate.grantRole(MANAGER_ROLE, root.rootChainManager.address)

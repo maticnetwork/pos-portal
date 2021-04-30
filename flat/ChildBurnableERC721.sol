@@ -2100,7 +2100,7 @@ abstract contract ContextMixin {
     }
 }
 
-// File: contracts/child/ChildToken/ChildMintableERC721.sol
+// File: contracts/child/ChildToken/ChildBurnableERC721.sol
 
 pragma solidity 0.6.6;
 
@@ -2110,7 +2110,7 @@ pragma solidity 0.6.6;
 
 
 
-contract ChildMintableERC721 is
+contract ChildBurnableERC721 is
     ERC721,
     IChildToken,
     AccessControlMixin,
@@ -2123,15 +2123,26 @@ contract ChildMintableERC721 is
     // limit batching of tokens due to gas limit restrictions
     uint256 public constant BATCH_LIMIT = 20;
 
+    // When you're interested in doing a batch withdraw of tokens, without **actually** burning them
     event WithdrawnBatch(address indexed user, uint256[] tokenIds);
+    // When you want to transfer token from L2 to L1, while also taking some arbitrary metadata, cross-chain
+    // with out **actually** burning it
     event TransferWithMetadata(address indexed from, address indexed to, uint256 indexed tokenId, bytes metaData);
+
+    // When you want to **actually** burn token, on L2, L1
+    event Burn(address indexed from, uint256 indexed tokenId);
+    // When you want to **actually** burn a batch of tokens, on L2, L1
+    event BurnBatch(address indexed from, uint256[] tokenIds);
+    // When you're interested in **actually** burning token & also transferring arbitrary data
+    // cross chain i.e. L2 -> L1
+    event BurnWithMetadata(address indexed from, uint256 indexed tokenId, bytes metaData);
 
     constructor(
         string memory name_,
         string memory symbol_,
         address childChainManager
     ) public ERC721(name_, symbol_) {
-        _setupContractId("ChildMintableERC721");
+        _setupContractId("ChildBurnableERC721");
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
         _setupRole(DEPOSITOR_ROLE, childChainManager);
         _initializeEIP712(name_);
@@ -2189,7 +2200,7 @@ contract ChildMintableERC721 is
      * @param tokenId tokenId to withdraw
      */
     function withdraw(uint256 tokenId) external {
-        require(_msgSender() == ownerOf(tokenId), "ChildMintableERC721: INVALID_TOKEN_OWNER");
+        require(_msgSender() == ownerOf(tokenId), "ChildBurnableERC721: INVALID_TOKEN_OWNER");
         withdrawnTokens[tokenId] = true;
         _burn(tokenId);
     }
@@ -2202,7 +2213,7 @@ contract ChildMintableERC721 is
     function withdrawBatch(uint256[] calldata tokenIds) external {
 
         uint256 length = tokenIds.length;
-        require(length <= BATCH_LIMIT, "ChildMintableERC721: EXCEEDS_BATCH_LIMIT");
+        require(length <= BATCH_LIMIT, "ChildBurnableERC721: EXCEEDS_BATCH_LIMIT");
 
         // Iteratively burn ERC721 tokens, for performing
         // batch withdraw
@@ -2210,7 +2221,7 @@ contract ChildMintableERC721 is
 
             uint256 tokenId = tokenIds[i];
 
-            require(_msgSender() == ownerOf(tokenId), string(abi.encodePacked("ChildMintableERC721: INVALID_TOKEN_OWNER ", tokenId)));
+            require(_msgSender() == ownerOf(tokenId), string(abi.encodePacked("ChildBurnableERC721: INVALID_TOKEN_OWNER ", tokenId)));
             withdrawnTokens[tokenId] = true;
             _burn(tokenId);
 
@@ -2233,11 +2244,91 @@ contract ChildMintableERC721 is
      */
     function withdrawWithMetadata(uint256 tokenId) external {
 
-        require(_msgSender() == ownerOf(tokenId), "ChildMintableERC721: INVALID_TOKEN_OWNER");
+        require(_msgSender() == ownerOf(tokenId), "ChildBurnableERC721: INVALID_TOKEN_OWNER");
         withdrawnTokens[tokenId] = true;
 
         // Encoding metadata associated with tokenId & emitting event
         emit TransferWithMetadata(ownerOf(tokenId), address(0), tokenId, this.encodeTokenMetadata(tokenId));
+
+        _burn(tokenId);
+
+    }
+
+    /**
+     * @notice Use this method when you want to **actually** burn token on both L2, L1
+     *
+     * @dev Invoking this method emits both `Transfer` & `Burn` event, now it can be considered as
+     * race between actually burning token on L1 or transferring token on L1
+     *
+     * Let's take an example, you're owner of this token `T` & wanted to actually burn token
+     * you invoked this method & now this burn tx is eligible for both **actual** burn on L1 &
+     * transferring to your account on L1
+     *
+     * Some one ( other than you ) can perform `exit` on L1, for this tx, while packing proof
+     * as this tx only emitted `Transfer` event, & you'll receive token on L1, but remember your
+     * objective wasn't that.
+     *
+     * Now question is would someone do it before you perform your own `exit`, where they don't
+     * really have any **direct** monetary benefit ?
+     *
+     * You can consider writing your custom child token, which doesn't suffer from this syndrome.
+     *
+     */
+    function burn(uint256 tokenId) external {
+
+        require(_msgSender() == ownerOf(tokenId), "ChildBurnableERC721: INVALID_TOKEN_OWNER");
+        withdrawnTokens[tokenId] = true;
+        _burn(tokenId);
+
+        // This event will be used in predicate for **actually** burning token
+        emit Burn(_msgSender(), tokenId);
+
+    }
+
+    /**
+     * @notice Use this method when you want to **actually** burn a batch of tokens, on both L2, L1
+     *
+     * @dev You're strictly adviced to read <ChildBurnableERC721:burn>, defined above
+     */
+    function burnBatch(uint256[] calldata tokenIds) external {
+
+
+        uint256 length = tokenIds.length;
+        require(length <= BATCH_LIMIT, "ChildBurnableERC721: EXCEEDS_BATCH_LIMIT");
+
+        // Iteratively burn ERC721 tokens, for performing
+        // batch withdraw
+        for (uint256 i; i < length; i++) {
+
+            uint256 tokenId = tokenIds[i];
+
+            require(_msgSender() == ownerOf(tokenId), string(abi.encodePacked("ChildBurnableERC721: INVALID_TOKEN_OWNER ", tokenId)));
+            withdrawnTokens[tokenId] = true;
+            _burn(tokenId);
+
+        }
+
+        // At last emit this event, which will be used
+        // in BurnableRC721 predicate contract on L1
+        // while verifying burn proof
+        emit BurnBatch(_msgSender(), tokenIds);
+
+    }
+
+    /**
+     * @notice You're supposed to be invoking this method, when you want to
+     * **actually** burn a token on both L2, L1 & bring some arbitary metadata
+     * cross-chain
+     *
+     * @dev You're strictly adviced to read <ChildBurnableERC721:burn>, defined above
+     */
+    function burnWithMetadata(uint256 tokenId) external {
+
+        require(_msgSender() == ownerOf(tokenId), "ChildBurnableERC721: INVALID_TOKEN_OWNER");
+        withdrawnTokens[tokenId] = true;
+
+        // Encoding metadata associated with tokenId & emitting event
+        emit BurnWithMetadata(_msgSender(), tokenId, this.encodeTokenMetadata(tokenId));
 
         _burn(tokenId);
 

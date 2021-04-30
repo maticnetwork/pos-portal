@@ -22,10 +22,17 @@ const contractsToFlatten = [
     path: 'contracts/root/TokenPredicates',
     fileName: 'MintableERC20Predicate.sol'
   },
-
   {
     path: 'contracts/root/TokenPredicates',
     fileName: 'MintableERC20PredicateProxy.sol'
+  },
+  {
+    path: 'contracts/root/TokenPredicates',
+    fileName: 'BurnableERC20Predicate.sol'
+  },
+  {
+    path: 'contracts/root/TokenPredicates',
+    fileName: 'BurnableERC20PredicateProxy.sol'
   },
   {
     path: 'contracts/root/TokenPredicates',
@@ -45,6 +52,14 @@ const contractsToFlatten = [
   },
   {
     path: 'contracts/root/TokenPredicates',
+    fileName: 'BurnableERC721Predicate.sol'
+  },
+  {
+    path: 'contracts/root/TokenPredicates',
+    fileName: 'BurnableERC721PredicateProxy.sol'
+  },
+  {
+    path: 'contracts/root/TokenPredicates',
     fileName: 'ERC1155Predicate.sol'
   },
   {
@@ -58,6 +73,14 @@ const contractsToFlatten = [
   {
     path: 'contracts/root/TokenPredicates',
     fileName: 'MintableERC1155PredicateProxy.sol'
+  },
+  {
+    path: 'contracts/root/TokenPredicates',
+    fileName: 'BurnableERC1155Predicate.sol'
+  },
+  {
+    path: 'contracts/root/TokenPredicates',
+    fileName: 'BurnableERC1155PredicateProxy.sol'
   },
   {
     path: 'contracts/root/TokenPredicates',
@@ -81,6 +104,10 @@ const contractsToFlatten = [
   },
   {
     path: 'contracts/root/RootToken',
+    fileName: 'DummyBurnableERC20.sol'
+  },
+  {
+    path: 'contracts/root/RootToken',
     fileName: 'DummyERC721.sol'
   },
   {
@@ -89,11 +116,19 @@ const contractsToFlatten = [
   },
   {
     path: 'contracts/root/RootToken',
+    fileName: 'DummyBurnableERC721.sol'
+  },
+  {
+    path: 'contracts/root/RootToken',
     fileName: 'DummyERC1155.sol'
   },
   {
     path: 'contracts/root/RootToken',
     fileName: 'DummyMintableERC1155.sol'
+  },
+  {
+    path: 'contracts/root/RootToken',
+    fileName: 'DummyBurnableERC1155.sol'
   },
   {
     path: 'contracts/child/ChildChainManager',
@@ -113,6 +148,10 @@ const contractsToFlatten = [
   },
   {
     path: 'contracts/child/ChildToken',
+    fileName: 'ChildBurnableERC20.sol'
+  },
+  {
+    path: 'contracts/child/ChildToken',
     fileName: 'ChildERC721.sol'
   },
   {
@@ -121,11 +160,19 @@ const contractsToFlatten = [
   },
   {
     path: 'contracts/child/ChildToken',
+    fileName: 'ChildBurnableERC721.sol'
+  },
+  {
+    path: 'contracts/child/ChildToken',
     fileName: 'ChildERC1155.sol'
   },
   {
     path: 'contracts/child/ChildToken',
     fileName: 'ChildMintableERC1155.sol'
+  },
+  {
+    path: 'contracts/child/ChildToken',
+    fileName: 'ChildBurnableERC1155.sol'
   },
   {
     path: 'contracts/child/ChildToken',
