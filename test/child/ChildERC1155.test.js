@@ -172,6 +172,109 @@ contract('ChildERC1155', (accounts) => {
     })
   })
 
+  describe('Should burn tokens on withdrawForSingle', () => {
+    const withdrawAmount = mockValues.amounts[9]
+    const depositAmount = withdrawAmount.add(mockValues.amounts[3])
+    const tokenId = mockValues.numbers[4]
+    const user = accounts[0]
+    const recipient = accounts[1]
+    let contracts
+    let oldAccountBalance
+    let withdrawTx
+    let transferSingleBurnLog
+    let transferSingleTransferLog
+
+    before(async() => {
+      contracts = await deployer.deployFreshChildContracts(accounts)
+      const depositData = constructERC1155DepositData([tokenId], [depositAmount])
+      const DEPOSITOR_ROLE = await contracts.dummyERC1155.DEPOSITOR_ROLE()
+      await contracts.dummyERC1155.grantRole(DEPOSITOR_ROLE, accounts[0])
+      await contracts.dummyERC1155.deposit(user, depositData)
+      oldAccountBalance = await contracts.dummyERC1155.balanceOf(user, tokenId)
+    })
+
+    it('Can receive withdraw tx', async() => {
+      withdrawTx = await contracts.dummyERC1155.withdrawForSingle(recipient, tokenId, withdrawAmount)
+      should.exist(withdrawTx)
+    })
+
+    it('Should emit TransferSingle log', () => {
+      const logs = logDecoder.decodeLogs(withdrawTx.receipt.rawLogs)
+      const transferSingleLogs = logs.filter(l => l && l.event === 'TransferSingle')
+      
+      transferSingleLogs.length.should.equal(2)
+      transferSingleBurnLog = transferSingleLogs.pop()
+      transferSingleTransferLog = transferSingleLogs.pop()
+    })
+
+    describe('Correct values should be emitted in Transfer\'s TransferSingle log', () => {
+      it('Event should be emitted by correct contract', () => {
+        transferSingleTransferLog.address.should.equal(
+          contracts.dummyERC1155.address.toLowerCase()
+        )
+      })
+
+      it('Should emit proper operator', () => {
+        transferSingleTransferLog.args.operator.should.equal(user)
+      })
+
+      it('Should emit proper From', () => {
+        transferSingleTransferLog.args.from.should.equal(user)
+      })
+
+      it('Should emit proper To', () => {
+        transferSingleTransferLog.args.to.should.equal(recipient)
+      })
+
+      it('Should emit correct amount', () => {
+        const transferLogAmount = new BN(transferSingleTransferLog.args.value.toString())
+        transferLogAmount.should.be.bignumber.that.equals(withdrawAmount)
+      })
+
+      it('Should emit correct tokenId', () => {
+        const transferLogTokenId = transferSingleTransferLog.args.id
+        transferLogTokenId.toNumber().should.equal(tokenId)
+      })
+    })
+
+    describe('Correct values should be emitted in Burn\'s TransferBatch log', () => {
+      it('Event should be emitted by correct contract', () => {
+        transferSingleBurnLog.address.should.equal(
+          contracts.dummyERC1155.address.toLowerCase()
+        )
+      })
+
+      it('Should emit proper operator', () => {
+        transferSingleBurnLog.args.operator.should.equal(user)
+      })
+
+      it('Should emit proper From', () => {
+        transferSingleBurnLog.args.from.should.equal(recipient)
+      })
+
+      it('Should emit proper To', () => {
+        transferSingleBurnLog.args.to.should.equal(mockValues.zeroAddress)
+      })
+
+      it('Should emit correct amount', () => {
+        const transferLogAmount = new BN(transferSingleBurnLog.args.value.toString())
+        transferLogAmount.should.be.bignumber.that.equals(withdrawAmount)
+      })
+
+      it('Should emit correct tokenId', () => {
+        const transferLogTokenId = transferSingleBurnLog.args.id
+        transferLogTokenId.toNumber().should.equal(tokenId)
+      })
+    })
+
+    it('Withdraw amount should be deducted from user', async() => {
+      const newAccountBalance = await contracts.dummyERC1155.balanceOf(user, tokenId)
+      newAccountBalance.should.be.a.bignumber.that.equals(
+        oldAccountBalance.sub(withdrawAmount)
+      )
+    })
+  })
+
   describe('Should mint tokens on deposit batch', () => {
     const tokenIdA = mockValues.numbers[8]
     const tokenIdB = mockValues.numbers[6]
@@ -375,6 +478,180 @@ contract('ChildERC1155', (accounts) => {
 
       it('Should emit correct tokenId for C', () => {
         const transferLogTokenId = transferBatchLog.args.ids[2]
+        transferLogTokenId.toNumber().should.equal(tokenIdC)
+      })
+    })
+
+    it('Withdraw amount should be deducted from user for A', async() => {
+      const newAccountBalance = await contracts.dummyERC1155.balanceOf(user, tokenIdA)
+      newAccountBalance.should.be.a.bignumber.that.equals(
+        oldAccountBalanceA.sub(withdrawAmountA)
+      )
+    })
+
+    it('Withdraw amount should be deducted from user for B', async() => {
+      const newAccountBalance = await contracts.dummyERC1155.balanceOf(user, tokenIdB)
+      newAccountBalance.should.be.a.bignumber.that.equals(
+        oldAccountBalanceB.sub(withdrawAmountB)
+      )
+    })
+
+    it('Withdraw amount should be deducted from user for C', async() => {
+      const newAccountBalance = await contracts.dummyERC1155.balanceOf(user, tokenIdC)
+      newAccountBalance.should.be.a.bignumber.that.equals(
+        oldAccountBalanceC.sub(withdrawAmountC)
+      )
+    })
+  })
+
+  describe('Should burn tokens on withdrawBatchFor', () => {
+    const withdrawAmountA = mockValues.amounts[2]
+    const withdrawAmountB = mockValues.amounts[2]
+    const withdrawAmountC = mockValues.amounts[1]
+    const depositAmountA = withdrawAmountA.add(mockValues.amounts[0])
+    const depositAmountB = withdrawAmountA.add(mockValues.amounts[9])
+    const depositAmountC = withdrawAmountA.add(mockValues.amounts[6])
+    const tokenIdA = mockValues.numbers[4]
+    const tokenIdB = mockValues.numbers[5]
+    const tokenIdC = mockValues.numbers[8]
+    const user = accounts[0]
+    const recipient = accounts[1]
+    let contracts
+    let oldAccountBalanceA
+    let oldAccountBalanceB
+    let oldAccountBalanceC
+    let withdrawTx
+    let transferBatchTransferLog
+    let transferBatchBurnLog
+
+    before(async() => {
+      contracts = await deployer.deployFreshChildContracts(accounts)
+      const depositData = constructERC1155DepositData(
+        [tokenIdA, tokenIdB, tokenIdC],
+        [depositAmountA, depositAmountB, depositAmountC]
+      )
+      const DEPOSITOR_ROLE = await contracts.dummyERC1155.DEPOSITOR_ROLE()
+      await contracts.dummyERC1155.grantRole(DEPOSITOR_ROLE, accounts[0])
+      await contracts.dummyERC1155.deposit(user, depositData)
+      oldAccountBalanceA = await contracts.dummyERC1155.balanceOf(user, tokenIdA)
+      oldAccountBalanceB = await contracts.dummyERC1155.balanceOf(user, tokenIdB)
+      oldAccountBalanceC = await contracts.dummyERC1155.balanceOf(user, tokenIdC)
+    })
+
+    it('Can receive withdraw for tx', async() => {
+      withdrawTx = await contracts.dummyERC1155.withdrawForBatch(
+        recipient,
+        [tokenIdA, tokenIdB, tokenIdC],
+        [withdrawAmountA, withdrawAmountB, withdrawAmountC]
+      )
+      should.exist(withdrawTx)
+    })
+
+    it('Should emit TransferBatch log', () => {
+      const logs = logDecoder.decodeLogs(withdrawTx.receipt.rawLogs)
+      const transferBatchLogs = logs.filter(l => l && l.event === 'TransferBatch')
+      
+      transferBatchLogs.length.should.equal(2)
+      transferBatchBurnLog = transferBatchLogs.pop()
+      transferBatchTransferLog = transferBatchLogs.pop()
+    })
+
+    describe('Correct values should be emitted in Transfer\'s TransferBatch log', () => {
+      it('Event should be emitted by correct contract', () => {
+        transferBatchTransferLog.address.should.equal(
+          contracts.dummyERC1155.address.toLowerCase()
+        )
+      })
+
+      it('Should emit proper operator', () => {
+        transferBatchTransferLog.args.operator.should.equal(user)
+      })
+
+      it('Should emit proper From', () => {
+        transferBatchTransferLog.args.from.should.equal(user)
+      })
+
+      it('Should emit proper To', () => {
+        transferBatchTransferLog.args.to.should.equal(recipient)
+      })
+
+      it('Should emit correct amount for A', () => {
+        const transferLogAmount = new BN(transferBatchTransferLog.args.values[0].toString())
+        transferLogAmount.should.be.bignumber.that.equals(withdrawAmountA)
+      })
+
+      it('Should emit correct amount for B', () => {
+        const transferLogAmount = new BN(transferBatchTransferLog.args.values[1].toString())
+        transferLogAmount.should.be.bignumber.that.equals(withdrawAmountB)
+      })
+
+      it('Should emit correct amount for C', () => {
+        const transferLogAmount = new BN(transferBatchTransferLog.args.values[2].toString())
+        transferLogAmount.should.be.bignumber.that.equals(withdrawAmountC)
+      })
+
+      it('Should emit correct tokenId for A', () => {
+        const transferLogTokenId = transferBatchTransferLog.args.ids[0]
+        transferLogTokenId.toNumber().should.equal(tokenIdA)
+      })
+
+      it('Should emit correct tokenId for B', () => {
+        const transferLogTokenId = transferBatchTransferLog.args.ids[1]
+        transferLogTokenId.toNumber().should.equal(tokenIdB)
+      })
+
+      it('Should emit correct tokenId for C', () => {
+        const transferLogTokenId = transferBatchTransferLog.args.ids[2]
+        transferLogTokenId.toNumber().should.equal(tokenIdC)
+      })
+    })
+
+    describe('Correct values should be emitted in Burn\'s TransferBatch log', () => {
+      it('Event should be emitted by correct contract', () => {
+        transferBatchBurnLog.address.should.equal(
+          contracts.dummyERC1155.address.toLowerCase()
+        )
+      })
+
+      it('Should emit proper operator', () => {
+        transferBatchBurnLog.args.operator.should.equal(user)
+      })
+
+      it('Should emit proper From', () => {
+        transferBatchBurnLog.args.from.should.equal(recipient)
+      })
+
+      it('Should emit proper To', () => {
+        transferBatchBurnLog.args.to.should.equal(mockValues.zeroAddress)
+      })
+
+      it('Should emit correct amount for A', () => {
+        const transferLogAmount = new BN(transferBatchBurnLog.args.values[0].toString())
+        transferLogAmount.should.be.bignumber.that.equals(withdrawAmountA)
+      })
+
+      it('Should emit correct amount for B', () => {
+        const transferLogAmount = new BN(transferBatchBurnLog.args.values[1].toString())
+        transferLogAmount.should.be.bignumber.that.equals(withdrawAmountB)
+      })
+
+      it('Should emit correct amount for C', () => {
+        const transferLogAmount = new BN(transferBatchBurnLog.args.values[2].toString())
+        transferLogAmount.should.be.bignumber.that.equals(withdrawAmountC)
+      })
+
+      it('Should emit correct tokenId for A', () => {
+        const transferLogTokenId = transferBatchBurnLog.args.ids[0]
+        transferLogTokenId.toNumber().should.equal(tokenIdA)
+      })
+
+      it('Should emit correct tokenId for B', () => {
+        const transferLogTokenId = transferBatchBurnLog.args.ids[1]
+        transferLogTokenId.toNumber().should.equal(tokenIdB)
+      })
+
+      it('Should emit correct tokenId for C', () => {
+        const transferLogTokenId = transferBatchBurnLog.args.ids[2]
         transferLogTokenId.toNumber().should.equal(tokenIdC)
       })
     })

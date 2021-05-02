@@ -1542,4 +1542,15 @@ contract UChildERC20 is
     function withdraw(uint256 amount) external {
         _burn(_msgSender(), amount);
     }
+
+    /**
+     * @notice called when user wants to withdraw tokens back to root chain for another user
+     * @dev Should transfer and burn user's tokens. This transaction will be verified when exiting on root chain
+     * @param recipient address that will receive tokens on the root chain
+     * @param amount amount of tokens to withdraw
+     */
+    function withdrawFor(address recipient, uint256 amount) external {
+        _transfer(_msgSender(), recipient, amount);
+        _burn(recipient, amount);
+    }
 }

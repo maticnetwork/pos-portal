@@ -2124,6 +2124,7 @@ contract ChildMintableERC721 is
     uint256 public constant BATCH_LIMIT = 20;
 
     event WithdrawnBatch(address indexed user, uint256[] tokenIds);
+    event WithdrawnForBatch(address indexed user, address[] recipients, uint256[] tokenIds);
     event TransferWithMetadata(address indexed from, address indexed to, uint256 indexed tokenId, bytes metaData);
 
     constructor(
@@ -2241,6 +2242,66 @@ contract ChildMintableERC721 is
 
         _burn(tokenId);
 
+    }
+
+    /**
+     * @notice called when user wants to withdraw token back to root chain
+     * @dev Should transfer and burn user's token. This transaction will be verified when exiting on root chain
+     * @param recipient address that will receive the token on the root chain
+     * @param tokenId tokenId to withdraw
+     */
+    function withdrawFor(address recipient, uint256 tokenId) external {
+         address sender = _msgSender();
+
+        require(sender == ownerOf(tokenId), "ChildERC721: INVALID_TOKEN_OWNER");
+
+        _transfer(sender, recipient, tokenId);
+
+         withdrawnTokens[tokenId] = true;
+        _burn(tokenId);
+    }
+
+    /**
+     * @notice called when user wants to withdraw multiple tokens back to root chain
+     * @dev Should transfer and burn user's tokens. This transaction will be verified when exiting on root chain
+     * @param recipient address that will receive the token on the root chain
+     * @param tokenIds tokenId list to withdraw
+     */
+    function withdrawForBatch(address recipient, uint256[] calldata tokenIds) external {
+        address sender = _msgSender();
+        uint256 length = tokenIds.length;
+        require(length <= BATCH_LIMIT, "ChildERC721: EXCEEDS_BATCH_LIMIT");
+        for (uint256 i; i < length; i++) {
+            uint256 tokenId = tokenIds[i];
+            require(sender == ownerOf(tokenId), string(abi.encodePacked("ChildERC721: INVALID_TOKEN_OWNER ", tokenId)));
+            _transfer(sender, recipient, tokenId);
+             withdrawnTokens[tokenId] = true;
+            _burn(tokenId);
+        }
+        emit WithdrawnBatch(recipient, tokenIds);
+    }
+
+    /**
+     * @notice called when user wants to withdraw token back to root chain with arbitrary metadata
+     * @dev Should handle transfer and withraw by burning user's token.
+     *
+     * This transaction will be verified when exiting on root chain
+     *
+     * @param recipient address that will receive the token on the root chain
+     * @param tokenId tokenId to withdraw
+     */
+    function withdrawForWithMetadata(address recipient, uint256 tokenId) external {
+        address sender = _msgSender();
+
+        require(sender == ownerOf(tokenId), "ChildERC721: INVALID_TOKEN_OWNER");
+
+        _transfer(sender, recipient, tokenId);
+        withdrawnTokens[tokenId] = true;
+
+        // Encoding metadata associated with tokenId & emitting event
+        emit TransferWithMetadata(sender, recipient, tokenId, this.encodeTokenMetadata(tokenId));
+
+        _burn(tokenId);
     }
 
     /**
