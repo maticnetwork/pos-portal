@@ -240,4 +240,225 @@ contract('ChildERC721', (accounts) => {
       await expectRevert(contracts.dummyERC721.ownerOf(tokenId), 'ERC721: owner query for nonexistent token')
     })
   })
+
+  describe('Should burn token on withdrawFor', () => {
+    const tokenId = mockValues.numbers[6]
+    const user = accounts[0]
+    const withdrawer = accounts[1]
+    let contracts
+    let withdrawTx
+    let transferLogs
+    let transferTransferLog
+    let burnTransferLog
+
+    before(async() => {
+      contracts = await deployer.deployFreshChildContracts(accounts)
+      const depositData = abi.encode(['uint256'], [tokenId])
+      const DEPOSITOR_ROLE = await contracts.dummyERC721.DEPOSITOR_ROLE()
+      await contracts.dummyERC721.grantRole(DEPOSITOR_ROLE, accounts[0])
+      await contracts.dummyERC721.deposit(user, depositData)
+    })
+
+    it('User should own token', async() => {
+      const owner = await contracts.dummyERC721.ownerOf(tokenId)
+      owner.should.equal(user)
+    })
+
+    it('Can receive withdraw tx', async() => {
+      withdrawTx = await contracts.dummyERC721.withdrawFor(withdrawer, tokenId)
+      should.exist(withdrawTx)
+    })
+
+    it('Should emit Transfer log', () => {
+      const logs = logDecoder.decodeLogs(withdrawTx.receipt.rawLogs)
+      transferLogs = logs.filter(l => l && l.event === 'Transfer')
+      transferLogs.length.should.equal(2)
+
+      burnTransferLog = transferLogs.pop()
+      transferTransferLog = transferLogs.pop()
+    })
+
+    describe('Correct values should be emitted in transfer\'s Transfer log', () => {
+      it('Event should be emitted by correct contract', () => {
+        transferTransferLog.address.should.equal(
+          contracts.dummyERC721.address.toLowerCase()
+        )
+      })
+
+      it('Should emit proper From', () => {
+        transferTransferLog.args.from.should.equal(user)
+      })
+
+      it('Should emit proper To', () => {
+        transferTransferLog.args.to.should.equal(withdrawer)
+      })
+
+      it('Should emit correct tokenId', () => {
+        const transferTransferLogTokenId = transferTransferLog.args.tokenId.toNumber()
+        transferTransferLogTokenId.should.equal(tokenId)
+      })
+    })
+
+    describe('Correct values should be emitted in burn\'s Transfer log', () => {
+      it('Event should be emitted by correct contract', () => {
+        burnTransferLog.address.should.equal(
+          contracts.dummyERC721.address.toLowerCase()
+        )
+      })
+
+      it('Should emit proper From', () => {
+        burnTransferLog.args.from.should.equal(withdrawer)
+      })
+
+      it('Should emit proper To', () => {
+        burnTransferLog.args.to.should.equal(mockValues.zeroAddress)
+      })
+
+      it('Should emit correct tokenId', () => {
+        const burnTransferLogTokenId = burnTransferLog.args.tokenId.toNumber()
+        burnTransferLogTokenId.should.equal(tokenId)
+      })
+    })
+
+    it('Token should not exist after burning', async() => {
+      await expectRevert(contracts.dummyERC721.ownerOf(tokenId), 'ERC721: owner query for nonexistent token')
+    })
+  })
+
+  describe('Should burn token on withdrawForBatch', () => {
+    const tokenId = mockValues.numbers[6]
+    const tokenId1 = mockValues.numbers[7]
+    const user = accounts[0]
+    const withdrawer = accounts[1]
+    let contracts
+    let withdrawTx
+    let transferLogs
+    let burnTransferLogTokenId 
+    let transferTransferLogTokenId 
+    let burnTransferLogTokenId1 
+    let transferTransferLogTokenId1 
+
+    before(async() => {
+      contracts = await deployer.deployFreshChildContracts(accounts)
+      const DEPOSITOR_ROLE = await contracts.dummyERC721.DEPOSITOR_ROLE()
+      let depositData = abi.encode(['uint256'], [tokenId])
+      await contracts.dummyERC721.grantRole(DEPOSITOR_ROLE, accounts[0])
+      await contracts.dummyERC721.deposit(user, depositData)
+
+      depositData = abi.encode(['uint256'], [tokenId1])
+      await contracts.dummyERC721.grantRole(DEPOSITOR_ROLE, accounts[0])
+      await contracts.dummyERC721.deposit(user, depositData)
+    })
+
+    it('User should own token', async() => {
+      const owner = await contracts.dummyERC721.ownerOf(tokenId)
+      owner.should.equal(user)
+    })
+
+    it('Can receive withdraw tx', async() => {
+      withdrawTx = await contracts.dummyERC721.withdrawForBatch(withdrawer, [tokenId, tokenId1])
+      should.exist(withdrawTx)
+    })
+
+    it('Should emit Transfer log', () => {
+      const logs = logDecoder.decodeLogs(withdrawTx.receipt.rawLogs)
+      transferLogs = logs.filter(l => l && l.event === 'Transfer')
+      transferLogs.length.should.equal(4)
+      
+      burnTransferLogTokenId1 = transferLogs.pop()
+      transferTransferLogTokenId1 = transferLogs.pop()
+      burnTransferLogTokenId = transferLogs.pop()
+      transferTransferLogTokenId = transferLogs.pop()
+    })
+
+    describe('Correct values should be emitted in transfer\'s Transfer log for tokenId', () => {
+      it('Event should be emitted by correct contract', () => {
+        transferTransferLogTokenId1.address.should.equal(
+          contracts.dummyERC721.address.toLowerCase()
+        )
+      })
+
+      it('Should emit proper From', () => {
+        transferTransferLogTokenId1.args.from.should.equal(user)
+      })
+
+      it('Should emit proper To', () => {
+        transferTransferLogTokenId1.args.to.should.equal(withdrawer)
+      })
+
+      it('Should emit correct tokenId', () => {
+        const transferTransferLogTokenId1TokenId = transferTransferLogTokenId1.args.tokenId.toNumber()
+        transferTransferLogTokenId1TokenId.should.equal(tokenId1)
+      })
+    })
+
+    describe('Correct values should be emitted in burn\'s Transfer log for tokenId1', () => {
+      it('Event should be emitted by correct contract', () => {
+        burnTransferLogTokenId1.address.should.equal(
+          contracts.dummyERC721.address.toLowerCase()
+        )
+      })
+
+      it('Should emit proper From', () => {
+        burnTransferLogTokenId1.args.from.should.equal(withdrawer)
+      })
+
+      it('Should emit proper To', () => {
+        burnTransferLogTokenId1.args.to.should.equal(mockValues.zeroAddress)
+      })
+
+      it('Should emit correct tokenId', () => {
+        const burnTransferLogTokenId1TokenId = burnTransferLogTokenId1.args.tokenId.toNumber()
+        burnTransferLogTokenId1TokenId.should.equal(tokenId1)
+      })
+    })
+
+    describe('Correct values should be emitted in transfer\'s Transfer log for tokenId', () => {
+      it('Event should be emitted by correct contract', () => {
+        transferTransferLogTokenId.address.should.equal(
+          contracts.dummyERC721.address.toLowerCase()
+        )
+      })
+
+      it('Should emit proper From', () => {
+        transferTransferLogTokenId.args.from.should.equal(user)
+      })
+
+      it('Should emit proper To', () => {
+        transferTransferLogTokenId.args.to.should.equal(withdrawer)
+      })
+
+      it('Should emit correct tokenId', () => {
+        const transferTransferLogTokenIdTokenId = transferTransferLogTokenId.args.tokenId.toNumber()
+        transferTransferLogTokenIdTokenId.should.equal(tokenId)
+      })
+    })
+
+    describe('Correct values should be emitted in burn\'s Transfer log for tokenId', () => {
+      it('Event should be emitted by correct contract', () => {
+        burnTransferLogTokenId.address.should.equal(
+          contracts.dummyERC721.address.toLowerCase()
+        )
+      })
+
+      it('Should emit proper From', () => {
+        burnTransferLogTokenId.args.from.should.equal(withdrawer)
+      })
+
+      it('Should emit proper To', () => {
+        burnTransferLogTokenId.args.to.should.equal(mockValues.zeroAddress)
+      })
+
+      it('Should emit correct tokenId', () => {
+        const burnTransferLogTokenIdTokenId = burnTransferLogTokenId.args.tokenId.toNumber()
+        burnTransferLogTokenIdTokenId.should.equal(tokenId)
+      })
+    })
+
+
+    it('Token should not exist after burning', async() => {
+      await expectRevert(contracts.dummyERC721.ownerOf(tokenId), 'ERC721: owner query for nonexistent token')
+      await expectRevert(contracts.dummyERC721.ownerOf(tokenId1), 'ERC721: owner query for nonexistent token')
+    })
+  })
 })
