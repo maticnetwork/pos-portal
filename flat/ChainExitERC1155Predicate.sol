@@ -1406,29 +1406,28 @@ contract ChainExitERC1155Predicate is
     /**
      * @notice Calculates amount of tokens to be minted, by subtracting available
      * token balances from amount of tokens to be exited
-     * @param tokenBalances Token balances this contract holds for some ordered token ids
-     * @param amountsToBeExited Amount of tokens being exited
+     * @param balances Token balances this contract holds for some ordered token ids
+     * @param exitAmounts Amount of tokens being exited
      */
     function calculateAmountsToBeMinted(
-        uint256[] memory tokenBalances,
-        uint256[] memory amountsToBeExited
+        uint256[] memory balances,
+        uint256[] memory exitAmounts
     ) internal pure returns (uint256[] memory) {
+        uint256 count = balances.length;
         require(
-            tokenBalances.length == amountsToBeExited.length,
+            count == exitAmounts.length,
             "ChainExitERC1155Predicate: Array length mismatch found"
         );
 
-        uint256[] memory toBeMintedAmounts = new uint256[](
-            tokenBalances.length
-        );
+        uint256[] memory toBeMinted = new uint256[](count);
 
-        for (uint256 i = 0; i < tokenBalances.length; i++) {
-            if (tokenBalances[i] < amountsToBeExited[i]) {
-                toBeMintedAmounts[i] = amountsToBeExited[i] - tokenBalances[i];
+        for (uint256 i = 0; i < count; i++) {
+            if (balances[i] < exitAmounts[i]) {
+                toBeMinted[i] = exitAmounts[i] - balances[i];
             }
         }
 
-        return toBeMintedAmounts;
+        return toBeMinted;
     }
 
     /**
@@ -1458,26 +1457,23 @@ contract ChainExitERC1155Predicate is
             );
 
             IMintableERC1155 token = IMintableERC1155(rootToken);
-            
+
+            uint256[] memory balances = token.balanceOfBatch(makeArrayWithAddress(address(this), ids.length), ids);
+            uint256[] memory toBeMinted = calculateAmountsToBeMinted(balances, amounts);
+
             token.mintBatch(
-                address(this),
+                withdrawer,
                 ids,
-                calculateAmountsToBeMinted(
-                    token.balanceOfBatch(
-                        makeArrayWithAddress(address(this), ids.length),
-                        ids
-                    ),
-                    amounts
-                ),
-                bytes("") // not passing data when minting, check 👇
+                toBeMinted,
+                data // passing data when minting to withdrawer
             );
 
             token.safeBatchTransferFrom(
                 address(this),
                 withdrawer,
                 ids,
-                amounts,
-                data // passing data when transferring all tokens to withdrawer
+                balances,
+                data // passing data when transferring unlocked tokens to withdrawer
             );
 
         } else {
