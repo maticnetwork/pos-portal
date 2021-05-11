@@ -1412,7 +1412,7 @@ contract ChainExitERC1155Predicate is
     function calculateAmountsToBeMinted(
         uint256[] memory balances,
         uint256[] memory exitAmounts
-    ) internal pure returns (uint256[] memory) {
+    ) internal pure returns (uint256[] memory, bool, bool) {
         uint256 count = balances.length;
         require(
             count == exitAmounts.length,
@@ -1420,14 +1420,21 @@ contract ChainExitERC1155Predicate is
         );
 
         uint256[] memory toBeMinted = new uint256[](count);
+        bool needMintStep;
+        bool needTransferStep;
 
         for (uint256 i = 0; i < count; i++) {
             if (balances[i] < exitAmounts[i]) {
                 toBeMinted[i] = exitAmounts[i] - balances[i];
+                needMintStep = true;
+            }
+
+            if(balances[i] != 0) {
+                needTransferStep = true;
             }
         }
 
-        return toBeMinted;
+        return (toBeMinted, needMintStep, needTransferStep);
     }
 
     /**
@@ -1459,22 +1466,26 @@ contract ChainExitERC1155Predicate is
             IMintableERC1155 token = IMintableERC1155(rootToken);
 
             uint256[] memory balances = token.balanceOfBatch(makeArrayWithAddress(address(this), ids.length), ids);
-            uint256[] memory toBeMinted = calculateAmountsToBeMinted(balances, amounts);
+            (uint256[] memory toBeMinted, bool needMintStep, bool needTransferStep) = calculateAmountsToBeMinted(balances, amounts);
 
-            token.mintBatch(
-                withdrawer,
-                ids,
-                toBeMinted,
-                data // passing data when minting to withdrawer
-            );
+            if(needMintStep) {
+                token.mintBatch(
+                    withdrawer,
+                    ids,
+                    toBeMinted,
+                    data // passing data when minting to withdrawer
+                );
+            }
 
-            token.safeBatchTransferFrom(
-                address(this),
-                withdrawer,
-                ids,
-                balances,
-                data // passing data when transferring unlocked tokens to withdrawer
-            );
+            if(needTransferStep) {
+                token.safeBatchTransferFrom(
+                    address(this),
+                    withdrawer,
+                    ids,
+                    balances,
+                    data // passing data when transferring unlocked tokens to withdrawer
+                );
+            }
 
         } else {
             revert("ChainExitERC1155Predicate: INVALID_WITHDRAW_SIG");
