@@ -162,7 +162,7 @@ contract MintableERC1155Predicate is
     function calculateAmountsToBeMinted(
         uint256[] memory tokenBalances,
         uint256[] memory amountsToBeExited
-    ) internal pure returns (uint256[] memory, bool) {
+    ) internal pure returns (uint256[] memory, bool, bool) {
         require(
             tokenBalances.length == amountsToBeExited.length,
             "MintableERC1155Predicate: Array length mismatch found"
@@ -171,7 +171,8 @@ contract MintableERC1155Predicate is
         uint256[] memory toBeMintedAmounts = new uint256[](
             tokenBalances.length
         );
-        bool needTransferStep = false;
+        bool needMintStep;
+        bool needTransferStep;
 
         // Iteratively calculating amounts of token to be minted
         //
@@ -180,6 +181,7 @@ contract MintableERC1155Predicate is
         for (uint256 i = 0; i < tokenBalances.length; i++) {
             if (tokenBalances[i] < amountsToBeExited[i]) {
                 toBeMintedAmounts[i] = amountsToBeExited[i] - tokenBalances[i];
+                needMintStep = true;
             }
 
             if(tokenBalances[i] != 0) {
@@ -187,7 +189,7 @@ contract MintableERC1155Predicate is
             }
         }
 
-        return (toBeMintedAmounts, needTransferStep);
+        return (toBeMintedAmounts, needMintStep, needTransferStep);
     }
 
     /**
@@ -245,14 +247,16 @@ contract MintableERC1155Predicate is
             IMintableERC1155 token = IMintableERC1155(rootToken);
 
             uint256[] memory balances = token.balanceOfBatch(makeArrayWithAddress(address(this), ids.length), ids);
-            (uint256[] memory toBeMinted, bool needTransferStep) = calculateAmountsToBeMinted(balances, amounts);
+            (uint256[] memory toBeMinted, bool needMintStep, bool needTransferStep) = calculateAmountsToBeMinted(balances, amounts);
 
-            token.mintBatch(
-                withdrawer,
-                ids,
-                toBeMinted,
-                bytes("")
-            );
+            if(needMintStep) {
+                token.mintBatch(
+                    withdrawer,
+                    ids,
+                    toBeMinted,
+                    bytes("")
+                );
+            }
 
             if(needTransferStep) {
                 token.safeBatchTransferFrom(
