@@ -148,7 +148,7 @@ contract RootChainManager is
     function registerPredicate(bytes32 tokenType, address predicateAddress)
         external
         override
-        only(MAPPER_ROLE)
+        only(DEFAULT_ADMIN_ROLE)
     {
         typeToPredicate[tokenType] = predicateAddress;
         emit PredicateRegistered(tokenType, predicateAddress);
@@ -182,7 +182,7 @@ contract RootChainManager is
     function cleanMapToken(
         address rootToken,
         address childToken
-    ) external override only(MAPPER_ROLE) {
+    ) external override only(DEFAULT_ADMIN_ROLE) {
         rootToChildToken[rootToken] = address(0);
         childToRootToken[childToken] = address(0);
         tokenToType[rootToken] = bytes32(0);
@@ -201,7 +201,7 @@ contract RootChainManager is
         address rootToken,
         address childToken,
         bytes32 tokenType
-    ) external override only(MAPPER_ROLE) {
+    ) external override only(DEFAULT_ADMIN_ROLE) {
         // cleanup old mapping
         address oldChildToken = rootToChildToken[rootToken];
         address oldRootToken = childToRootToken[childToken];
