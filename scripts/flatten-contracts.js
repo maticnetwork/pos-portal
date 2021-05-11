@@ -61,6 +61,14 @@ const contractsToFlatten = [
   },
   {
     path: 'contracts/root/TokenPredicates',
+    fileName: 'ChainExitERC1155Predicate.sol'
+  },
+  {
+    path: 'contracts/root/TokenPredicates',
+    fileName: 'ChainExitERC1155PredicateProxy.sol'
+  },
+  {
+    path: 'contracts/root/TokenPredicates',
     fileName: 'EtherPredicate.sol'
   },
   {
