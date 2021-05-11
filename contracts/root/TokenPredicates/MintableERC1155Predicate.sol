@@ -208,43 +208,28 @@ contract MintableERC1155Predicate is
             "MintableERC1155Predicate: INVALID_RECEIVER"
         );
 
-        if (bytes32(logTopicRLPList[0].toUint()) == TRANSFER_SINGLE_EVENT_SIG) {
-            // topic0 is event sig
+        bytes32 eventSig = bytes32(logTopicRLPList[0].toUint());
+        if (eventSig == TRANSFER_SINGLE_EVENT_SIG) {
             (uint256 id, uint256 amount) = abi.decode(
                 logData,
                 (uint256, uint256)
             );
 
             IMintableERC1155 token = IMintableERC1155(rootToken);
-            // Currently locked tokens for `id` in this contract
-            uint256 tokenBalance = token.balanceOf(address(this), id);
 
-            // Checking whether MintableERC1155 contract has enough
-            // tokens locked in to transfer to withdrawer, if not
-            // it'll mint those tokens for this contract and return
-            // safely transfer those to withdrawer
-            if (tokenBalance < amount) {
-                // @notice We could have done `mint`, but that would require
-                // us implementing `onERC1155Received`, which we avoid intentionally
-                // for sake of only supporting batch deposit.
-                //
-                // Which is why this transfer is wrapped as single element batch minting
-                token.mintBatch(address(this), 
-                    makeArrayWithValue(id, 1), 
-                    makeArrayWithValue(amount - tokenBalance, 1), 
-                    bytes(""));
+            uint256 balance = token.balanceOf(address(this), id);
+            if (balance < amount) {
+                token.mint(withdrawer, id, amount - balance, bytes(""));
             }
 
             token.safeTransferFrom(
                 address(this),
                 withdrawer,
                 id,
-                amount,
+                balance,
                 bytes("")
             );
-        } else if (
-            bytes32(logTopicRLPList[0].toUint()) == TRANSFER_BATCH_EVENT_SIG
-        ) {
+        } else if (eventSig == TRANSFER_BATCH_EVENT_SIG) {
             (uint256[] memory ids, uint256[] memory amounts) = abi.decode(
                 logData,
                 (uint256[], uint256[])
@@ -252,24 +237,21 @@ contract MintableERC1155Predicate is
 
             IMintableERC1155 token = IMintableERC1155(rootToken);
 
+            uint256[] memory balances = token.balanceOfBatch(makeArrayWithAddress(address(this), ids.length), ids);
+            uint256[] memory toBeMinted = calculateAmountsToBeMinted(balances, amounts);
+
             token.mintBatch(
-                address(this),
+                withdrawer,
                 ids,
-                calculateAmountsToBeMinted(
-                    token.balanceOfBatch(
-                        makeArrayWithAddress(address(this), ids.length),
-                        ids
-                    ),
-                    amounts
-                ),
+                toBeMinted,
                 bytes("")
             );
 
-            IMintableERC1155(rootToken).safeBatchTransferFrom(
+            token.safeBatchTransferFrom(
                 address(this),
                 withdrawer,
                 ids,
-                amounts,
+                balances,
                 bytes("")
             );
         } else {
