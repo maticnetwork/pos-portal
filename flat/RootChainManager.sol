@@ -2296,10 +2296,11 @@ contract RootChainManager is
             "RootChainManager: INVALID_USER"
         );
 
-        if(tokenType == 0x8ae85d849167ff996c04040c44924fd364217285e4cad818292c7ac37c0a345b || tokenType == 0x5ffef61af1560b9aefc0e42aaa0f9464854ab113ab7b8bfab271be94cdb1d053) {
-            uint256 amount = abi.decode(depositData, (uint256));
-            
+        // (Mintable)ERC20
+        if(tokenType == 0x8ae85d849167ff996c04040c44924fd364217285e4cad818292c7ac37c0a345b || 
+            tokenType == 0x5ffef61af1560b9aefc0e42aaa0f9464854ab113ab7b8bfab271be94cdb1d053) {
             IERC20 token = IERC20(rootToken);
+            
             uint256 oldBalance = token.balanceOf(predicateAddress);
             ITokenPredicate(predicateAddress).lockTokens(
                 _msgSender(),
@@ -2314,9 +2315,15 @@ contract RootChainManager is
                 childChainManagerAddress,
                 abi.encode(DEPOSIT, syncData)
             );
-        } else if(tokenType == 0x73ad2146b3d3a286642c794379d750360a2d53a3459a11b3e5d6cc900f55f44a || tokenType == 0xd4392723c111fcb98b073fe55873efb447bcd23cd3e49ec9ea2581930cd01ddc) {
+
+            return;
+        }
+        
+        // (Mintable)ERC721
+        if(tokenType == 0x73ad2146b3d3a286642c794379d750360a2d53a3459a11b3e5d6cc900f55f44a || 
+            tokenType == 0xd4392723c111fcb98b073fe55873efb447bcd23cd3e49ec9ea2581930cd01ddc) {
             IERC721 token = IERC721(rootToken);
-            // deposit single
+            // Deposit Single
             if (depositData.length == 32) {
                 uint256 tokenId = abi.decode(depositData, (uint256));
                 
@@ -2334,7 +2341,7 @@ contract RootChainManager is
                         abi.encode(DEPOSIT, syncData)
                     );
                 }
-            // deposit batch
+            // Deposit Batch
             } else {
                 uint256[] memory tokenIds = abi.decode(depositData, (uint256[]));
 
@@ -2344,10 +2351,18 @@ contract RootChainManager is
                     rootToken,
                     depositData
                 );
+                
+                /**
+                    Can't do batch state sync because any of those tokens
+                    in batch may not yet be owned by respective predicate
+                    & we can't create a dynamic memory array
+                 */
 
                 for (uint256 i; i < tokenIds.length; i++) {
 
+                    // check ownership for each of them
                     if(token.ownerOf(tokenIds[i]) == predicateAddress) {
+                        // and emit state sync for it
                         bytes memory syncData = abi.encode(user, rootToken, depositData);
                         _stateSender.syncState(
                             childChainManagerAddress,
@@ -2357,7 +2372,13 @@ contract RootChainManager is
 
                 }
             }
-        } else if(tokenType == 0x973bb64086f173ec8099b7ed3d43da984f4a332e4417a08bc6a286e6402b0586 || tokenType == 0xb62883a28321b19a93c6657bfb8ea4cec51ed05c3ab26ecec680fa0c7efb31b9) {
+
+            return;
+        }
+        
+        // (Mintable)ERC1155
+        if(tokenType == 0x973bb64086f173ec8099b7ed3d43da984f4a332e4417a08bc6a286e6402b0586 || 
+            tokenType == 0xb62883a28321b19a93c6657bfb8ea4cec51ed05c3ab26ecec680fa0c7efb31b9) {
             (
                 uint256[] memory ids,
                 uint256[] memory amounts,
@@ -2384,20 +2405,22 @@ contract RootChainManager is
                 childChainManagerAddress,
                 abi.encode(DEPOSIT, syncData)
             );
-        } else {
-            ITokenPredicate(predicateAddress).lockTokens(
-                _msgSender(),
-                user,
-                rootToken,
-                depositData
-            );
 
-            bytes memory syncData = abi.encode(user, rootToken, depositData);
-            _stateSender.syncState(
-                childChainManagerAddress,
-                abi.encode(DEPOSIT, syncData)
-            );
+            return;
         }
+        
+        ITokenPredicate(predicateAddress).lockTokens(
+            _msgSender(),
+            user,
+            rootToken,
+            depositData
+        );
+
+        bytes memory syncData = abi.encode(user, rootToken, depositData);
+        _stateSender.syncState(
+            childChainManagerAddress,
+            abi.encode(DEPOSIT, syncData)
+        );
     }
 
     function makeArrayWithAddress(address addr, uint256 size)
