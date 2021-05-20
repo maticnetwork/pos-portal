@@ -2363,7 +2363,7 @@ contract RootChainManager is
                     // check ownership for each of them
                     if(token.ownerOf(tokenIds[i]) == predicateAddress) {
                         // and emit state sync for it
-                        bytes memory syncData = abi.encode(user, rootToken, depositData);
+                        bytes memory syncData = abi.encode(user, rootToken, abi.encode(tokenIds[i]));
                         _stateSender.syncState(
                             childChainManagerAddress,
                             abi.encode(DEPOSIT, syncData)
