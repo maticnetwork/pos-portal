@@ -1343,6 +1343,16 @@ contract MintableERC1155Predicate is
         return ERC1155Receiver(0).onERC1155BatchReceived.selector;
     }
 
+    function calculateLockedAmounts(uint256[] memory oldBalances, uint256[] memory newBalances) internal pure returns(uint256[] memory){
+        uint256[] memory locked = new uint256[](oldBalances.length);
+
+        for(uint256 i; i < oldBalances.length; i++) {
+            locked[i] = newBalances[i] - oldBalances[i];
+        }
+
+        return locked;
+    }
+
     /**
      * @notice Lock ERC1155 tokens for deposit, callable only by manager
      * @param depositor Address who wants to deposit tokens
@@ -1363,19 +1373,27 @@ contract MintableERC1155Predicate is
             bytes memory data
         ) = abi.decode(depositData, (uint256[], uint256[], bytes));
 
-        emit LockedBatchMintableERC1155(
-            depositor,
-            depositReceiver,
-            rootToken,
-            ids,
-            amounts
-        );
-        IMintableERC1155(rootToken).safeBatchTransferFrom(
+        IMintableERC1155 token = IMintableERC1155(rootToken);
+
+        address[] memory addrArray = makeArrayWithAddress(address(this), ids.length);
+        uint256[] memory oldBalances = token.balanceOfBatch(addrArray, ids);
+        token.safeBatchTransferFrom(
             depositor,
             address(this),
             ids,
             amounts,
             data
+        );
+        uint256[] memory lockedBalances = calculateLockedAmounts(
+            oldBalances, 
+            token.balanceOfBatch(addrArray, ids));
+
+        emit LockedBatchMintableERC1155(
+            depositor,
+            depositReceiver,
+            rootToken,
+            ids,
+            lockedBalances
         );
     }
     

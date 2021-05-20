@@ -1121,12 +1121,12 @@ contract MintableERC20Predicate is
     ) external override only(MANAGER_ROLE) {
         uint256 amount = abi.decode(depositData, (uint256));
 
-        emit LockedMintableERC20(depositor, depositReceiver, rootToken, amount);
-        IMintableERC20(rootToken).transferFrom(
-            depositor,
-            address(this),
-            amount
-        );
+        IMintableERC20 token = IMintableERC20(rootToken);
+        uint256 oldBalance = token.balanceOf(address(this));
+        token.transferFrom(depositor, address(this), amount);
+        uint256 newBalance = token.balanceOf(address(this));
+
+        emit LockedMintableERC20(depositor, depositReceiver, rootToken, newBalance - oldBalance);
     }
 
     /**

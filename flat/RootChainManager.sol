@@ -1644,9 +1644,355 @@ abstract contract ContextMixin {
     }
 }
 
+// File: @openzeppelin/contracts/token/ERC20/IERC20.sol
+
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.6.0;
+
+/**
+ * @dev Interface of the ERC20 standard as defined in the EIP.
+ */
+interface IERC20 {
+    /**
+     * @dev Returns the amount of tokens in existence.
+     */
+    function totalSupply() external view returns (uint256);
+
+    /**
+     * @dev Returns the amount of tokens owned by `account`.
+     */
+    function balanceOf(address account) external view returns (uint256);
+
+    /**
+     * @dev Moves `amount` tokens from the caller's account to `recipient`.
+     *
+     * Returns a boolean value indicating whether the operation succeeded.
+     *
+     * Emits a {Transfer} event.
+     */
+    function transfer(address recipient, uint256 amount) external returns (bool);
+
+    /**
+     * @dev Returns the remaining number of tokens that `spender` will be
+     * allowed to spend on behalf of `owner` through {transferFrom}. This is
+     * zero by default.
+     *
+     * This value changes when {approve} or {transferFrom} are called.
+     */
+    function allowance(address owner, address spender) external view returns (uint256);
+
+    /**
+     * @dev Sets `amount` as the allowance of `spender` over the caller's tokens.
+     *
+     * Returns a boolean value indicating whether the operation succeeded.
+     *
+     * IMPORTANT: Beware that changing an allowance with this method brings the risk
+     * that someone may use both the old and the new allowance by unfortunate
+     * transaction ordering. One possible solution to mitigate this race
+     * condition is to first reduce the spender's allowance to 0 and set the
+     * desired value afterwards:
+     * https://github.com/ethereum/EIPs/issues/20#issuecomment-263524729
+     *
+     * Emits an {Approval} event.
+     */
+    function approve(address spender, uint256 amount) external returns (bool);
+
+    /**
+     * @dev Moves `amount` tokens from `sender` to `recipient` using the
+     * allowance mechanism. `amount` is then deducted from the caller's
+     * allowance.
+     *
+     * Returns a boolean value indicating whether the operation succeeded.
+     *
+     * Emits a {Transfer} event.
+     */
+    function transferFrom(address sender, address recipient, uint256 amount) external returns (bool);
+
+    /**
+     * @dev Emitted when `value` tokens are moved from one account (`from`) to
+     * another (`to`).
+     *
+     * Note that `value` may be zero.
+     */
+    event Transfer(address indexed from, address indexed to, uint256 value);
+
+    /**
+     * @dev Emitted when the allowance of a `spender` for an `owner` is set by
+     * a call to {approve}. `value` is the new allowance.
+     */
+    event Approval(address indexed owner, address indexed spender, uint256 value);
+}
+
+// File: @openzeppelin/contracts/introspection/IERC165.sol
+
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.6.0;
+
+/**
+ * @dev Interface of the ERC165 standard, as defined in the
+ * https://eips.ethereum.org/EIPS/eip-165[EIP].
+ *
+ * Implementers can declare support of contract interfaces, which can then be
+ * queried by others ({ERC165Checker}).
+ *
+ * For an implementation, see {ERC165}.
+ */
+interface IERC165 {
+    /**
+     * @dev Returns true if this contract implements the interface defined by
+     * `interfaceId`. See the corresponding
+     * https://eips.ethereum.org/EIPS/eip-165#how-interfaces-are-identified[EIP section]
+     * to learn more about how these ids are created.
+     *
+     * This function call must use less than 30 000 gas.
+     */
+    function supportsInterface(bytes4 interfaceId) external view returns (bool);
+}
+
+// File: @openzeppelin/contracts/token/ERC721/IERC721.sol
+
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.6.2;
+
+
+/**
+ * @dev Required interface of an ERC721 compliant contract.
+ */
+interface IERC721 is IERC165 {
+    /**
+     * @dev Emitted when `tokenId` token is transfered from `from` to `to`.
+     */
+    event Transfer(address indexed from, address indexed to, uint256 indexed tokenId);
+
+    /**
+     * @dev Emitted when `owner` enables `approved` to manage the `tokenId` token.
+     */
+    event Approval(address indexed owner, address indexed approved, uint256 indexed tokenId);
+
+    /**
+     * @dev Emitted when `owner` enables or disables (`approved`) `operator` to manage all of its assets.
+     */
+    event ApprovalForAll(address indexed owner, address indexed operator, bool approved);
+
+    /**
+     * @dev Returns the number of tokens in ``owner``'s account.
+     */
+    function balanceOf(address owner) external view returns (uint256 balance);
+
+    /**
+     * @dev Returns the owner of the `tokenId` token.
+     *
+     * Requirements:
+     *
+     * - `tokenId` must exist.
+     */
+    function ownerOf(uint256 tokenId) external view returns (address owner);
+
+    /**
+     * @dev Safely transfers `tokenId` token from `from` to `to`, checking first that contract recipients
+     * are aware of the ERC721 protocol to prevent tokens from being forever locked.
+     *
+     * Requirements:
+     *
+     * - `from` cannot be the zero address.
+     * - `to` cannot be the zero address.
+     * - `tokenId` token must exist and be owned by `from`.
+     * - If the caller is not `from`, it must be have been allowed to move this token by either {approve} or {setApprovalForAll}.
+     * - If `to` refers to a smart contract, it must implement {IERC721Receiver-onERC721Received}, which is called upon a safe transfer.
+     *
+     * Emits a {Transfer} event.
+     */
+    function safeTransferFrom(address from, address to, uint256 tokenId) external;
+
+    /**
+     * @dev Transfers `tokenId` token from `from` to `to`.
+     *
+     * WARNING: Usage of this method is discouraged, use {safeTransferFrom} whenever possible.
+     *
+     * Requirements:
+     *
+     * - `from` cannot be the zero address.
+     * - `to` cannot be the zero address.
+     * - `tokenId` token must be owned by `from`.
+     * - If the caller is not `from`, it must be approved to move this token by either {approve} or {setApprovalForAll}.
+     *
+     * Emits a {Transfer} event.
+     */
+    function transferFrom(address from, address to, uint256 tokenId) external;
+
+    /**
+     * @dev Gives permission to `to` to transfer `tokenId` token to another account.
+     * The approval is cleared when the token is transferred.
+     *
+     * Only a single account can be approved at a time, so approving the zero address clears previous approvals.
+     *
+     * Requirements:
+     *
+     * - The caller must own the token or be an approved operator.
+     * - `tokenId` must exist.
+     *
+     * Emits an {Approval} event.
+     */
+    function approve(address to, uint256 tokenId) external;
+
+    /**
+     * @dev Returns the account approved for `tokenId` token.
+     *
+     * Requirements:
+     *
+     * - `tokenId` must exist.
+     */
+    function getApproved(uint256 tokenId) external view returns (address operator);
+
+    /**
+     * @dev Approve or remove `operator` as an operator for the caller.
+     * Operators can call {transferFrom} or {safeTransferFrom} for any token owned by the caller.
+     *
+     * Requirements:
+     *
+     * - The `operator` cannot be the caller.
+     *
+     * Emits an {ApprovalForAll} event.
+     */
+    function setApprovalForAll(address operator, bool _approved) external;
+
+    /**
+     * @dev Returns if the `operator` is allowed to manage all of the assets of `owner`.
+     *
+     * See {setApprovalForAll}
+     */
+    function isApprovedForAll(address owner, address operator) external view returns (bool);
+
+    /**
+      * @dev Safely transfers `tokenId` token from `from` to `to`.
+      *
+      * Requirements:
+      *
+     * - `from` cannot be the zero address.
+     * - `to` cannot be the zero address.
+      * - `tokenId` token must exist and be owned by `from`.
+      * - If the caller is not `from`, it must be approved to move this token by either {approve} or {setApprovalForAll}.
+      * - If `to` refers to a smart contract, it must implement {IERC721Receiver-onERC721Received}, which is called upon a safe transfer.
+      *
+      * Emits a {Transfer} event.
+      */
+    function safeTransferFrom(address from, address to, uint256 tokenId, bytes calldata data) external;
+}
+
+// File: @openzeppelin/contracts/token/ERC1155/IERC1155.sol
+
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.6.2;
+
+
+/**
+ * @dev Required interface of an ERC1155 compliant contract, as defined in the
+ * https://eips.ethereum.org/EIPS/eip-1155[EIP].
+ *
+ * _Available since v3.1._
+ */
+interface IERC1155 is IERC165 {
+    /**
+     * @dev Emitted when `value` tokens of token type `id` are transfered from `from` to `to` by `operator`.
+     */
+    event TransferSingle(address indexed operator, address indexed from, address indexed to, uint256 id, uint256 value);
+
+    /**
+     * @dev Equivalent to multiple {TransferSingle} events, where `operator`, `from` and `to` are the same for all
+     * transfers.
+     */
+    event TransferBatch(address indexed operator, address indexed from, address indexed to, uint256[] ids, uint256[] values);
+
+    /**
+     * @dev Emitted when `account` grants or revokes permission to `operator` to transfer their tokens, according to
+     * `approved`.
+     */
+    event ApprovalForAll(address indexed account, address indexed operator, bool approved);
+
+    /**
+     * @dev Emitted when the URI for token type `id` changes to `value`, if it is a non-programmatic URI.
+     *
+     * If an {URI} event was emitted for `id`, the standard
+     * https://eips.ethereum.org/EIPS/eip-1155#metadata-extensions[guarantees] that `value` will equal the value
+     * returned by {IERC1155MetadataURI-uri}.
+     */
+    event URI(string value, uint256 indexed id);
+
+    /**
+     * @dev Returns the amount of tokens of token type `id` owned by `account`.
+     *
+     * Requirements:
+     *
+     * - `account` cannot be the zero address.
+     */
+    function balanceOf(address account, uint256 id) external view returns (uint256);
+
+    /**
+     * @dev xref:ROOT:erc1155.adoc#batch-operations[Batched] version of {balanceOf}.
+     *
+     * Requirements:
+     *
+     * - `accounts` and `ids` must have the same length.
+     */
+    function balanceOfBatch(address[] calldata accounts, uint256[] calldata ids) external view returns (uint256[] memory);
+
+    /**
+     * @dev Grants or revokes permission to `operator` to transfer the caller's tokens, according to `approved`,
+     *
+     * Emits an {ApprovalForAll} event.
+     *
+     * Requirements:
+     *
+     * - `operator` cannot be the caller.
+     */
+    function setApprovalForAll(address operator, bool approved) external;
+
+    /**
+     * @dev Returns true if `operator` is approved to transfer ``account``'s tokens.
+     *
+     * See {setApprovalForAll}.
+     */
+    function isApprovedForAll(address account, address operator) external view returns (bool);
+
+    /**
+     * @dev Transfers `amount` tokens of token type `id` from `from` to `to`.
+     *
+     * Emits a {TransferSingle} event.
+     *
+     * Requirements:
+     *
+     * - `to` cannot be the zero address.
+     * - If the caller is not `from`, it must be have been approved to spend ``from``'s tokens via {setApprovalForAll}.
+     * - `from` must have a balance of tokens of type `id` of at least `amount`.
+     * - If `to` refers to a smart contract, it must implement {IERC1155Receiver-onERC1155Received} and return the
+     * acceptance magic value.
+     */
+    function safeTransferFrom(address from, address to, uint256 id, uint256 amount, bytes calldata data) external;
+
+    /**
+     * @dev xref:ROOT:erc1155.adoc#batch-operations[Batched] version of {safeTransferFrom}.
+     *
+     * Emits a {TransferBatch} event.
+     *
+     * Requirements:
+     *
+     * - `ids` and `amounts` must have the same length.
+     * - If `to` refers to a smart contract, it must implement {IERC1155Receiver-onERC1155BatchReceived} and return the
+     * acceptance magic value.
+     */
+    function safeBatchTransferFrom(address from, address to, uint256[] calldata ids, uint256[] calldata amounts, bytes calldata data) external;
+}
+
 // File: contracts/root/RootChainManager/RootChainManager.sol
 
 pragma solidity 0.6.6;
+
+
+
 
 
 
@@ -1950,17 +2296,135 @@ contract RootChainManager is
             "RootChainManager: INVALID_USER"
         );
 
-        ITokenPredicate(predicateAddress).lockTokens(
-            _msgSender(),
-            user,
-            rootToken,
-            depositData
-        );
-        bytes memory syncData = abi.encode(user, rootToken, depositData);
-        _stateSender.syncState(
-            childChainManagerAddress,
-            abi.encode(DEPOSIT, syncData)
-        );
+        if(tokenType == 0x8ae85d849167ff996c04040c44924fd364217285e4cad818292c7ac37c0a345b || tokenType == 0x5ffef61af1560b9aefc0e42aaa0f9464854ab113ab7b8bfab271be94cdb1d053) {
+            uint256 amount = abi.decode(depositData, (uint256));
+            
+            IERC20 token = IERC20(rootToken);
+            uint256 oldBalance = token.balanceOf(predicateAddress);
+            ITokenPredicate(predicateAddress).lockTokens(
+                _msgSender(),
+                user,
+                rootToken,
+                depositData
+            );
+            uint256 newBalance = token.balanceOf(predicateAddress);
+
+            bytes memory syncData = abi.encode(user, rootToken, abi.encode(newBalance - oldBalance));
+            _stateSender.syncState(
+                childChainManagerAddress,
+                abi.encode(DEPOSIT, syncData)
+            );
+        } else if(tokenType == 0x73ad2146b3d3a286642c794379d750360a2d53a3459a11b3e5d6cc900f55f44a || tokenType == 0xd4392723c111fcb98b073fe55873efb447bcd23cd3e49ec9ea2581930cd01ddc) {
+            IERC721 token = IERC721(rootToken);
+            // deposit single
+            if (depositData.length == 32) {
+                uint256 tokenId = abi.decode(depositData, (uint256));
+                
+                ITokenPredicate(predicateAddress).lockTokens(
+                    _msgSender(),
+                    user,
+                    rootToken,
+                    depositData
+                );
+
+                if(token.ownerOf(tokenId) == predicateAddress) {
+                    bytes memory syncData = abi.encode(user, rootToken, depositData);
+                    _stateSender.syncState(
+                        childChainManagerAddress,
+                        abi.encode(DEPOSIT, syncData)
+                    );
+                }
+            // deposit batch
+            } else {
+                uint256[] memory tokenIds = abi.decode(depositData, (uint256[]));
+
+                ITokenPredicate(predicateAddress).lockTokens(
+                    _msgSender(),
+                    user,
+                    rootToken,
+                    depositData
+                );
+
+                for (uint256 i; i < tokenIds.length; i++) {
+
+                    if(token.ownerOf(tokenIds[i]) == predicateAddress) {
+                        bytes memory syncData = abi.encode(user, rootToken, depositData);
+                        _stateSender.syncState(
+                            childChainManagerAddress,
+                            abi.encode(DEPOSIT, syncData)
+                        );
+                    }
+
+                }
+            }
+        } else if(tokenType == 0x973bb64086f173ec8099b7ed3d43da984f4a332e4417a08bc6a286e6402b0586 || tokenType == 0xb62883a28321b19a93c6657bfb8ea4cec51ed05c3ab26ecec680fa0c7efb31b9) {
+            (
+                uint256[] memory ids,
+                uint256[] memory amounts,
+                bytes memory data
+            ) = abi.decode(depositData, (uint256[], uint256[], bytes));
+
+            IERC1155 token = IERC1155(rootToken);
+            address[] memory addrArray = makeArrayWithAddress(predicateAddress, ids.length);
+            uint256[] memory oldBalances = token.balanceOfBatch(addrArray, ids);
+
+            ITokenPredicate(predicateAddress).lockTokens(
+                _msgSender(),
+                user,
+                rootToken,
+                depositData
+            );
+
+            uint256[] memory lockedBalances = calculateLockedAmounts(
+                oldBalances, 
+                token.balanceOfBatch(addrArray, ids));
+            
+            bytes memory syncData = abi.encode(user, rootToken, abi.encode(ids, lockedBalances, data));
+            _stateSender.syncState(
+                childChainManagerAddress,
+                abi.encode(DEPOSIT, syncData)
+            );
+        } else {
+            ITokenPredicate(predicateAddress).lockTokens(
+                _msgSender(),
+                user,
+                rootToken,
+                depositData
+            );
+
+            bytes memory syncData = abi.encode(user, rootToken, depositData);
+            _stateSender.syncState(
+                childChainManagerAddress,
+                abi.encode(DEPOSIT, syncData)
+            );
+        }
+    }
+
+    function makeArrayWithAddress(address addr, uint256 size)
+        internal
+        pure
+        returns (address[] memory)
+    {
+        require(addr != address(0), "RootChainManager: Invalid address");
+        require(size > 0, "RootChainManager: Invalid resulting array length");
+
+        address[] memory addresses = new address[](size);
+
+        for (uint256 i = 0; i < size; i++) {
+            addresses[i] = addr;
+        }
+
+        return addresses;
+    }
+
+    function calculateLockedAmounts(uint256[] memory oldBalances, uint256[] memory newBalances) internal pure returns(uint256[] memory){
+        uint256[] memory locked = new uint256[](oldBalances.length);
+
+        for(uint256 i; i < oldBalances.length; i++) {
+            locked[i] = newBalances[i] - oldBalances[i];
+        }
+
+        return locked;
     }
 
     /**

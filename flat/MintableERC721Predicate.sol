@@ -1280,35 +1280,30 @@ contract MintableERC721Predicate is ITokenPredicate, AccessControlMixin, Initial
 
             uint256 tokenId = abi.decode(depositData, (uint256));
 
-            // Emitting event that single token is getting locked in predicate
-            emit LockedMintableERC721(depositor, depositReceiver, rootToken, tokenId);
+            IMintableERC721 token = IMintableERC721(rootToken);
+            token.safeTransferFrom(depositor, address(this), tokenId);
 
-            // Transferring token to this address, which will be
-            // released when attempted to be unlocked
-            IMintableERC721(rootToken).safeTransferFrom(depositor, address(this), tokenId);
+            if(token.ownerOf(tokenId) == address(this)) {
+                emit LockedMintableERC721(depositor, depositReceiver, rootToken, tokenId);
+            }
 
         } else {
             // Locking a set a ERC721 token(s)
-
             uint256[] memory tokenIds = abi.decode(depositData, (uint256[]));
 
-            // Emitting event that a set of ERC721 tokens are getting lockec
-            // in this predicate contract
-            emit LockedMintableERC721Batch(depositor, depositReceiver, rootToken, tokenIds);
-
-            // These many tokens are attempted to be deposited
-            // by user
             uint256 length = tokenIds.length;
             require(length <= BATCH_LIMIT, "MintableERC721Predicate: EXCEEDS_BATCH_LIMIT");
 
-            // Iteratively trying to transfer ERC721 token
-            // to this predicate address
+            IMintableERC721 token = IMintableERC721(rootToken);
+
             for (uint256 i; i < length; i++) {
+                uint256 tokenId = tokenIds[i];
 
-                IMintableERC721(rootToken).safeTransferFrom(depositor, address(this), tokenIds[i]);
-
+                token.safeTransferFrom(depositor, address(this), tokenId);
+                if(token.ownerOf(tokenId) == address(this)) {
+                    emit LockedMintableERC721(depositor, depositReceiver, rootToken, tokenId);
+                }
             }
-
         }
 
     }
