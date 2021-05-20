@@ -49,8 +49,13 @@ contract ERC20Predicate is ITokenPredicate, AccessControlMixin, Initializable {
         only(MANAGER_ROLE)
     {
         uint256 amount = abi.decode(depositData, (uint256));
-        emit LockedERC20(depositor, depositReceiver, rootToken, amount);
-        IERC20(rootToken).safeTransferFrom(depositor, address(this), amount);
+
+        IERC20 token = IERC20(rootToken);
+        uint256 oldBalance = token.balanceOf(address(this));
+        token.safeTransferFrom(depositor, address(this), amount);
+        uint256 newBalance = token.balanceOf(address(this));
+
+        emit LockedERC20(depositor, depositReceiver, rootToken, newBalance - oldBalance);
     }
 
     /**
