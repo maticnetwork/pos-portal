@@ -96,15 +96,18 @@ contract ERC721Predicate is ITokenPredicate, AccessControlMixin, Initializable, 
             require(length <= BATCH_LIMIT, "ERC721Predicate: EXCEEDS_BATCH_LIMIT");
 
             IRootERC721 token = IRootERC721(rootToken);
+            uint256[] memory owned = new uint256[](length);
 
             for (uint256 i; i < length; i++) {
                 uint256 tokenId = tokenIds[i];
 
                 token.safeTransferFrom(depositor, address(this), tokenId);
                 if(token.ownerOf(tokenId) == address(this)) {
-                    emit LockedERC721(depositor, depositReceiver, rootToken, tokenId);
+                    owned[i] = tokenId;
                 }
             }
+
+            emit LockedERC721Batch(depositor, depositReceiver, rootToken, owned);
         }
     }
 
