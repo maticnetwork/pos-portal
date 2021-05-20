@@ -774,7 +774,7 @@ contract('RootChainManager', async(accounts) => {
     let rootChainManager
     let depositTx
     let lockedLog
-    let stateSyncedlog
+    let stateSyncedlogs
 
     before(async() => {
       contracts = await deployer.deployInitializedContracts(accounts)
@@ -847,13 +847,14 @@ contract('RootChainManager', async(accounts) => {
 
     it('Should Emit StateSynced log', () => {
       const logs = logDecoder.decodeLogs(depositTx.receipt.rawLogs)
-      stateSyncedlog = logs.find(l => l.event === 'StateSynced')
-      should.exist(stateSyncedlog)
+      stateSyncedlogs = logs.filter(l => l.event === 'StateSynced')
+      should.exist(stateSyncedlogs)
     })
 
-    describe('Correct values should be emitted in StateSynced log', () => {
-      let depositReceiver, rootToken, depositData
+    describe('Correct values should be emitted in StateSynced log 1', () => {
+      let depositReceiver, rootToken, depositData, stateSyncedlog
       before(() => {
+        stateSyncedlog = stateSyncedlogs[0]
         const [, syncData] = abi.decode(['bytes32', 'bytes'], stateSyncedlog.args.data)
         const data = abi.decode(['address', 'address', 'bytes'], syncData)
         depositReceiver = data[0]
@@ -876,11 +877,82 @@ contract('RootChainManager', async(accounts) => {
       })
 
       it('Should emit proper token ids', () => {
-        const [tokenIds] = abi.decode(['uint256[]'], depositData)
-        const tokenIdNumbers = tokenIds.map(t => t.toNumber())
-        tokenIdNumbers.should.include(tokenId1)
-        tokenIdNumbers.should.include(tokenId2)
-        tokenIdNumbers.should.include(tokenId3)
+        const [tokenId] = abi.decode(['uint256'], depositData)
+        tokenId.toNumber().should.equal(tokenId1)
+      })
+
+      it('Should emit proper contract address', () => {
+        stateSyncedlog.args.contractAddress.should.equal(
+          contracts.child.childChainManager.address
+        )
+      })
+    })
+
+    describe('Correct values should be emitted in StateSynced log 2', () => {
+      let depositReceiver, rootToken, depositData, stateSyncedlog
+      before(() => {
+        stateSyncedlog = stateSyncedlogs[1]
+        const [, syncData] = abi.decode(['bytes32', 'bytes'], stateSyncedlog.args.data)
+        const data = abi.decode(['address', 'address', 'bytes'], syncData)
+        depositReceiver = data[0]
+        rootToken = data[1]
+        depositData = data[2]
+      })
+
+      it('Event should be emitted by correct contract', () => {
+        stateSyncedlog.address.should.equal(
+          contracts.root.dummyStateSender.address.toLowerCase()
+        )
+      })
+
+      it('Should emit proper deposit receiver', () => {
+        depositReceiver.should.equal(depositForAccount)
+      })
+
+      it('Should emit proper root token', () => {
+        rootToken.should.equal(dummyERC721.address)
+      })
+
+      it('Should emit proper token ids', () => {
+        const [tokenId] = abi.decode(['uint256'], depositData)
+        tokenId.toNumber().should.equal(tokenId2)
+      })
+
+      it('Should emit proper contract address', () => {
+        stateSyncedlog.args.contractAddress.should.equal(
+          contracts.child.childChainManager.address
+        )
+      })
+    })
+
+    describe('Correct values should be emitted in StateSynced log 3', () => {
+      let depositReceiver, rootToken, depositData, stateSyncedlog
+      before(() => {
+        stateSyncedlog = stateSyncedlogs[2]
+        const [, syncData] = abi.decode(['bytes32', 'bytes'], stateSyncedlog.args.data)
+        const data = abi.decode(['address', 'address', 'bytes'], syncData)
+        depositReceiver = data[0]
+        rootToken = data[1]
+        depositData = data[2]
+      })
+
+      it('Event should be emitted by correct contract', () => {
+        stateSyncedlog.address.should.equal(
+          contracts.root.dummyStateSender.address.toLowerCase()
+        )
+      })
+
+      it('Should emit proper deposit receiver', () => {
+        depositReceiver.should.equal(depositForAccount)
+      })
+
+      it('Should emit proper root token', () => {
+        rootToken.should.equal(dummyERC721.address)
+      })
+
+      it('Should emit proper token ids', () => {
+        const [tokenId] = abi.decode(['uint256'], depositData)
+        tokenId.toNumber().should.equal(tokenId3)
       })
 
       it('Should emit proper contract address', () => {
