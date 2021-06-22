@@ -354,34 +354,15 @@ contract RootChainManager is
                 }
             // Deposit Batch
             } else {
-                uint256[] memory tokenIds = abi.decode(depositData, (uint256[]));
-
                 ITokenPredicate(predicateAddress).lockTokens(
                     _msgSender(),
                     user,
                     rootToken,
                     depositData
                 );
-                
-                /**
-                    Can't do batch state sync because any of those tokens
-                    in batch may not yet be owned by respective predicate
-                    & we can't create a dynamic memory array
-                 */
 
-                for (uint256 i; i < tokenIds.length; i++) {
-
-                    // check ownership for each of them
-                    if(token.ownerOf(tokenIds[i]) == predicateAddress) {
-                        // and emit state sync for it
-                        bytes memory syncData = abi.encode(user, rootToken, abi.encode(tokenIds[i]));
-                        _stateSender.syncState(
-                            childChainManagerAddress,
-                            abi.encode(DEPOSIT, syncData)
-                        );
-                    }
-
-                }
+                bytes memory syncData = abi.encode(user, rootToken, depositData);
+                _stateSender.syncState(childChainManagerAddress, abi.encode(DEPOSIT, syncData));
             }
 
             return;
@@ -390,11 +371,7 @@ contract RootChainManager is
         // (Mintable)ERC1155
         if(tokenType == 0x973bb64086f173ec8099b7ed3d43da984f4a332e4417a08bc6a286e6402b0586 || 
             tokenType == 0xb62883a28321b19a93c6657bfb8ea4cec51ed05c3ab26ecec680fa0c7efb31b9) {
-            (
-                uint256[] memory ids,
-                uint256[] memory amounts,
-                bytes memory data
-            ) = abi.decode(depositData, (uint256[], uint256[], bytes));
+            (uint256[] memory ids, , bytes memory data) = abi.decode(depositData, (uint256[], uint256[], bytes));
 
             IERC1155 token = IERC1155(rootToken);
             address[] memory addrArray = makeArrayWithAddress(predicateAddress, ids.length);

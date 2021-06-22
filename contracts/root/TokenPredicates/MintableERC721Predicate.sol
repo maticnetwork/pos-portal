@@ -101,18 +101,13 @@ contract MintableERC721Predicate is ITokenPredicate, AccessControlMixin, Initial
             require(length <= BATCH_LIMIT, "MintableERC721Predicate: EXCEEDS_BATCH_LIMIT");
 
             IMintableERC721 token = IMintableERC721(rootToken);
-            uint256[] memory owned = new uint256[](length);
-
             for (uint256 i; i < length; i++) {
                 uint256 tokenId = tokenIds[i];
 
                 token.safeTransferFrom(depositor, address(this), tokenId);
-                if(token.ownerOf(tokenId) == address(this)) {
-                    owned[i] = tokenId;
-                }
+                require(token.ownerOf(tokenId) == address(this), "MintableERC721Predicate: TOKEN_NOT_LOCKED");
             }
-
-            emit LockedMintableERC721Batch(depositor, depositReceiver, rootToken, owned);
+            emit LockedMintableERC721Batch(depositor, depositReceiver, rootToken, tokenIds);
         }
 
     }
