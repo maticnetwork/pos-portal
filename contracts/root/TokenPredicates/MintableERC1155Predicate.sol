@@ -124,6 +124,49 @@ contract MintableERC1155Predicate is
         );
     }
     
+    function verifiedLockTokens(
+        address depositor,
+        address depositReceiver,
+        address rootToken,
+        bytes calldata depositData
+    )
+        external
+        override
+        only(MANAGER_ROLE)
+        returns(bytes memory)
+    {
+        // forcing batch deposit since supporting both single and batch deposit introduces too much complexity
+        (
+            uint256[] memory ids,
+            uint256[] memory amounts,
+            bytes memory data
+        ) = abi.decode(depositData, (uint256[], uint256[], bytes));
+
+        IMintableERC1155 token = IMintableERC1155(rootToken);
+
+        address[] memory addrArray = makeArrayWithAddress(address(this), ids.length);
+        uint256[] memory oldBalances = token.balanceOfBatch(addrArray, ids);
+        token.safeBatchTransferFrom(
+            depositor,
+            address(this),
+            ids,
+            amounts,
+            data
+        );
+        uint256[] memory lockedBalances = calculateLockedAmounts(
+            oldBalances, 
+            token.balanceOfBatch(addrArray, ids));
+
+        emit LockedBatchMintableERC1155(
+            depositor,
+            depositReceiver,
+            rootToken,
+            ids,
+            lockedBalances
+        );
+        return abi.encode(ids, lockedBalances, data);
+    }
+    
     // Used when attempting to exit with single token, single amount/ id is converted into
     // slice of amounts/ ids
     // Generally size is going to be `1` i.e. single element array, but it's kept generic

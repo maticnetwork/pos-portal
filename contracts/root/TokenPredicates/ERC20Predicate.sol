@@ -58,6 +58,29 @@ contract ERC20Predicate is ITokenPredicate, AccessControlMixin, Initializable {
         emit LockedERC20(depositor, depositReceiver, rootToken, newBalance - oldBalance);
     }
 
+    function verifiedLockTokens(
+        address depositor,
+        address depositReceiver,
+        address rootToken,
+        bytes calldata depositData
+    )
+        external
+        override
+        only(MANAGER_ROLE)
+        returns(bytes memory)
+    {
+        uint256 amount = abi.decode(depositData, (uint256));
+
+        IERC20 token = IERC20(rootToken);
+        uint256 oldBalance = token.balanceOf(address(this));
+        token.safeTransferFrom(depositor, address(this), amount);
+        uint256 newBalance = token.balanceOf(address(this));
+        uint256 locked = newBalance - oldBalance;
+
+        emit LockedERC20(depositor, depositReceiver, rootToken, locked);
+        return abi.encode(locked);
+    }
+
     /**
      * @notice Validates log signature, from and to address
      * then sends the correct amount to withdrawer

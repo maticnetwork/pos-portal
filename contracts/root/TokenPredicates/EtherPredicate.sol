@@ -57,6 +57,22 @@ contract EtherPredicate is ITokenPredicate, AccessControlMixin, Initializable {
         emit LockedEther(depositor, depositReceiver, amount);
     }
 
+    function verifiedLockTokens(
+        address depositor,
+        address depositReceiver,
+        address,
+        bytes calldata depositData
+    )
+        external
+        override
+        only(MANAGER_ROLE)
+        returns (bytes memory)
+    {
+        uint256 amount = abi.decode(depositData, (uint256));
+        emit LockedEther(depositor, depositReceiver, amount);
+        return depositData;
+    }
+
     /**
      * @notice Validates log signature, from and to address
      * then sends the correct amount to withdrawer

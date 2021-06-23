@@ -106,6 +106,46 @@ contract ERC721Predicate is ITokenPredicate, AccessControlMixin, Initializable, 
         }
     }
 
+    function verifiedLockTokens(
+        address depositor,
+        address depositReceiver,
+        address rootToken,
+        bytes calldata depositData
+    )
+        external
+        override
+        only(MANAGER_ROLE)
+        returns (bytes memory)
+    {
+        // deposit single
+        if (depositData.length == 32) {
+            uint256 tokenId = abi.decode(depositData, (uint256));
+            
+            IRootERC721 token = IRootERC721(rootToken);
+            token.safeTransferFrom(depositor, address(this), tokenId);
+
+            require(token.ownerOf(tokenId) == address(this), "ERC721Predicate: TOKEN_NOT_LOCKED");
+            emit LockedERC721(depositor, depositReceiver, rootToken, tokenId);
+
+        // deposit batch
+        } else {
+            uint256[] memory tokenIds = abi.decode(depositData, (uint256[]));
+
+            uint256 length = tokenIds.length;
+            require(length <= BATCH_LIMIT, "ERC721Predicate: EXCEEDS_BATCH_LIMIT");
+
+            IRootERC721 token = IRootERC721(rootToken);
+            for (uint256 i; i < length; i++) {
+                uint256 tokenId = tokenIds[i];
+
+                token.safeTransferFrom(depositor, address(this), tokenId);
+                require(token.ownerOf(tokenId) == address(this), "ERC721Predicate: TOKEN_NOT_LOCKED");
+            }
+            emit LockedERC721Batch(depositor, depositReceiver, rootToken, tokenIds);
+        }
+        return depositData;
+    }
+
     /**
      * @notice Validates log signature, from and to address
      * then sends the correct tokenId to withdrawer

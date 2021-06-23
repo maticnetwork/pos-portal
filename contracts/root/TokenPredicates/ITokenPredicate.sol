@@ -7,7 +7,7 @@ import {RLPReader} from "../../lib/RLPReader.sol";
 interface ITokenPredicate {
 
     /**
-     * @notice Deposit tokens into pos portal
+     * @notice Deposit tokens into pos portal.
      * @dev When `depositor` deposits tokens into pos portal, tokens get locked into predicate contract.
      * @param depositor Address who wants to deposit tokens
      * @param depositReceiver Address (address) who wants to receive tokens on side chain
@@ -20,6 +20,22 @@ interface ITokenPredicate {
         address rootToken,
         bytes calldata depositData
     ) external;
+
+    /**
+     * @notice Lock tokens in predicate contract & check whether really locked or not. Returns ABI serialised
+     * deposit data which can be used for state sync event emission in RootChainManager i.e. invoker.
+     * @dev When `depositor` deposits tokens into pos portal, tokens get locked into predicate contract.
+     * @param depositor Address who wants to deposit tokens
+     * @param depositReceiver Address (address) who wants to receive tokens on side chain
+     * @param rootToken Token which gets deposited
+     * @param depositData Extra data for deposit (amount for ERC20, token id for ERC721 etc.) [ABI encoded]
+     */
+    function verifiedLockTokens(
+        address depositor,
+        address depositReceiver,
+        address rootToken,
+        bytes calldata depositData
+    ) external returns(bytes memory);
 
     /**
      * @notice Validates and processes exit while withdraw process
