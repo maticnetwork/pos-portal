@@ -348,33 +348,6 @@ contract RootChainManager is
         );
     }
 
-    function makeArrayWithAddress(address addr, uint256 size)
-        internal
-        pure
-        returns (address[] memory)
-    {
-        require(addr != address(0), "RootChainManager: Invalid address");
-        require(size > 0, "RootChainManager: Invalid resulting array length");
-
-        address[] memory addresses = new address[](size);
-
-        for (uint256 i = 0; i < size; i++) {
-            addresses[i] = addr;
-        }
-
-        return addresses;
-    }
-
-    function calculateLockedAmounts(uint256[] memory oldBalances, uint256[] memory newBalances) internal pure returns(uint256[] memory){
-        uint256[] memory locked = new uint256[](oldBalances.length);
-
-        for(uint256 i; i < oldBalances.length; i++) {
-            locked[i] = newBalances[i] - oldBalances[i];
-        }
-
-        return locked;
-    }
-
     /**
      * @notice exit tokens by providing proof
      * @dev This function verifies if the transaction actually happened on child chain

@@ -105,35 +105,7 @@ contract ERC1155Predicate is ITokenPredicate, ERC1155Receiver, AccessControlMixi
         override
         only(MANAGER_ROLE)
     {
-        // forcing batch deposit since supporting both single and batch deposit introduces too much complexity
-        (
-            uint256[] memory ids,
-            uint256[] memory amounts,
-            bytes memory data
-        ) = abi.decode(depositData, (uint256[], uint256[], bytes));
-
-        IERC1155 token = IERC1155(rootToken);
-
-        address[] memory addrArray = makeArrayWithAddress(address(this), ids.length);
-        uint256[] memory oldBalances = token.balanceOfBatch(addrArray, ids);
-        token.safeBatchTransferFrom(
-            depositor,
-            address(this),
-            ids,
-            amounts,
-            data
-        );
-        uint256[] memory lockedBalances = calculateLockedAmounts(
-            oldBalances, 
-            token.balanceOfBatch(addrArray, ids));
-
-        emit LockedBatchERC1155(
-            depositor,
-            depositReceiver,
-            rootToken,
-            ids,
-            lockedBalances
-        );
+        this.verifiedLockTokens(depositor, depositReceiver, rootToken, depositData);
     }
 
     function verifiedLockTokens(
