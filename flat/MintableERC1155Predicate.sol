@@ -1227,7 +1227,7 @@ pragma solidity 0.6.6;
 interface ITokenPredicate {
 
     /**
-     * @notice Deposit tokens into pos portal
+     * @notice Deposit tokens into pos portal.
      * @dev When `depositor` deposits tokens into pos portal, tokens get locked into predicate contract.
      * @param depositor Address who wants to deposit tokens
      * @param depositReceiver Address (address) who wants to receive tokens on side chain
@@ -1240,6 +1240,22 @@ interface ITokenPredicate {
         address rootToken,
         bytes calldata depositData
     ) external;
+
+    /**
+     * @notice Lock tokens in predicate contract & check whether really locked or not. Returns ABI serialised
+     * deposit data which can be used for state sync event emission in RootChainManager i.e. invoker.
+     * @dev When `depositor` deposits tokens into pos portal, tokens get locked into predicate contract.
+     * @param depositor Address who wants to deposit tokens
+     * @param depositReceiver Address (address) who wants to receive tokens on side chain
+     * @param rootToken Token which gets deposited
+     * @param depositData Extra data for deposit (amount for ERC20, token id for ERC721 etc.) [ABI encoded]
+     */
+    function verifiedLockTokens(
+        address depositor,
+        address depositReceiver,
+        address rootToken,
+        bytes calldata depositData
+    ) external returns(bytes memory);
 
     /**
      * @notice Validates and processes exit while withdraw process
@@ -1395,6 +1411,49 @@ contract MintableERC1155Predicate is
             ids,
             lockedBalances
         );
+    }
+    
+    function verifiedLockTokens(
+        address depositor,
+        address depositReceiver,
+        address rootToken,
+        bytes calldata depositData
+    )
+        external
+        override
+        only(MANAGER_ROLE)
+        returns(bytes memory)
+    {
+        // forcing batch deposit since supporting both single and batch deposit introduces too much complexity
+        (
+            uint256[] memory ids,
+            uint256[] memory amounts,
+            bytes memory data
+        ) = abi.decode(depositData, (uint256[], uint256[], bytes));
+
+        IMintableERC1155 token = IMintableERC1155(rootToken);
+
+        address[] memory addrArray = makeArrayWithAddress(address(this), ids.length);
+        uint256[] memory oldBalances = token.balanceOfBatch(addrArray, ids);
+        token.safeBatchTransferFrom(
+            depositor,
+            address(this),
+            ids,
+            amounts,
+            data
+        );
+        uint256[] memory lockedBalances = calculateLockedAmounts(
+            oldBalances, 
+            token.balanceOfBatch(addrArray, ids));
+
+        emit LockedBatchMintableERC1155(
+            depositor,
+            depositReceiver,
+            rootToken,
+            ids,
+            lockedBalances
+        );
+        return abi.encode(ids, lockedBalances, data);
     }
     
     // Used when attempting to exit with single token, single amount/ id is converted into

@@ -1025,7 +1025,7 @@ pragma solidity 0.6.6;
 interface ITokenPredicate {
 
     /**
-     * @notice Deposit tokens into pos portal
+     * @notice Deposit tokens into pos portal.
      * @dev When `depositor` deposits tokens into pos portal, tokens get locked into predicate contract.
      * @param depositor Address who wants to deposit tokens
      * @param depositReceiver Address (address) who wants to receive tokens on side chain
@@ -1038,6 +1038,22 @@ interface ITokenPredicate {
         address rootToken,
         bytes calldata depositData
     ) external;
+
+    /**
+     * @notice Lock tokens in predicate contract & check whether really locked or not. Returns ABI serialised
+     * deposit data which can be used for state sync event emission in RootChainManager i.e. invoker.
+     * @dev When `depositor` deposits tokens into pos portal, tokens get locked into predicate contract.
+     * @param depositor Address who wants to deposit tokens
+     * @param depositReceiver Address (address) who wants to receive tokens on side chain
+     * @param rootToken Token which gets deposited
+     * @param depositData Extra data for deposit (amount for ERC20, token id for ERC721 etc.) [ABI encoded]
+     */
+    function verifiedLockTokens(
+        address depositor,
+        address depositReceiver,
+        address rootToken,
+        bytes calldata depositData
+    ) external returns(bytes memory);
 
     /**
      * @notice Validates and processes exit while withdraw process
@@ -1127,6 +1143,29 @@ contract MintableERC20Predicate is
         uint256 newBalance = token.balanceOf(address(this));
 
         emit LockedMintableERC20(depositor, depositReceiver, rootToken, newBalance - oldBalance);
+    }
+
+    function verifiedLockTokens(
+        address depositor,
+        address depositReceiver,
+        address rootToken,
+        bytes calldata depositData
+    )
+        external
+        override
+        only(MANAGER_ROLE)
+        returns(bytes memory)
+    {
+        uint256 amount = abi.decode(depositData, (uint256));
+
+        IMintableERC20 token = IMintableERC20(rootToken);
+        uint256 oldBalance = token.balanceOf(address(this));
+        token.transferFrom(depositor, address(this), amount);
+        uint256 newBalance = token.balanceOf(address(this));
+        uint256 locked = newBalance - oldBalance;
+
+        emit LockedMintableERC20(depositor, depositReceiver, rootToken, locked);
+        return abi.encode(locked);
     }
 
     /**
