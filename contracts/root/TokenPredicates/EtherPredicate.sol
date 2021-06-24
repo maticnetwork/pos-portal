@@ -56,6 +56,13 @@ contract EtherPredicate is ITokenPredicate, AccessControlMixin, Initializable {
         this.verifiedLockTokens(depositor, depositReceiver, rootToken, depositData);
     }
 
+    // Affirmative response denotes, `verifiedLockTokens` is to be
+    // prioritised over `lockTokens`, for performing token locking
+    // with stricter checking, by RootChainManager
+    function isVerifiable() pure public returns (bool) {
+        return true;
+    }
+
     function verifiedLockTokens(
         address depositor,
         address depositReceiver,

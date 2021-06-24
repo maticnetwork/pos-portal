@@ -307,45 +307,48 @@ contract RootChainManager is
             "RootChainManager: INVALID_USER"
         );
 
-        // Ether Predicate
-        // (Mintable)ERC20 Predicate
-        // (Mintable)ERC721 Predicate
-        // (Mintable)ERC1155 Predicate
-        if(tokenType == 0xa234e09165f88967a714e2a476288e4c6d88b4b69fe7c300a03190b858990bfc ||
-            tokenType == 0x8ae85d849167ff996c04040c44924fd364217285e4cad818292c7ac37c0a345b || 
-            tokenType == 0x5ffef61af1560b9aefc0e42aaa0f9464854ab113ab7b8bfab271be94cdb1d053 ||
-            tokenType == 0x73ad2146b3d3a286642c794379d750360a2d53a3459a11b3e5d6cc900f55f44a || 
-            tokenType == 0xd4392723c111fcb98b073fe55873efb447bcd23cd3e49ec9ea2581930cd01ddc ||
-            tokenType == 0x973bb64086f173ec8099b7ed3d43da984f4a332e4417a08bc6a286e6402b0586 || 
-            tokenType == 0xb62883a28321b19a93c6657bfb8ea4cec51ed05c3ab26ecec680fa0c7efb31b9) {
-                ITokenPredicate predicate = ITokenPredicate(predicateAddress);
-                bytes memory _depositData = predicate.verifiedLockTokens(
-                    _msgSender(),
-                    user,
-                    rootToken,
-                    depositData
-                );
+        bytes memory lockedAssetData = do_lock(predicateAddress, user, rootToken, depositData);
+        bytes memory syncData = abi.encode(user, rootToken, lockedAssetData);
+        _stateSender.syncState(
+            childChainManagerAddress,
+            abi.encode(DEPOSIT, syncData));
+    }
 
-                bytes memory syncData = abi.encode(user, rootToken, _depositData);
-                _stateSender.syncState(
-                    childChainManagerAddress,
-                    abi.encode(DEPOSIT, syncData)
-                );
-                return;
+    // Affirmative response denotes, `verifiedLockTokens` is to be
+    // prioritised over `lockTokens`, for performing token locking
+    // with stricter checking
+    function isVerifiable(address addr) private returns (bool) {
+        (bool ok, bytes memory ret_val) = addr.call(abi.encodeWithSignature("isVerifiable()"));
+        // Predicate which doesn't implement `verifiedLockTokens`, so
+        // defaulting to `lockTokens`
+        if(!ok) {
+            return false;
         }
-        
-        ITokenPredicate(predicateAddress).lockTokens(
+
+        // This will *probably* be `true` for all cases
+        return abi.decode(ret_val, (bool));
+    }
+
+    // Performs token locking by invoking appropriate method i.e. {lockTokens, verifiedLockTokens}
+    // depending upon supported interface, which is checked by
+    // calling `isVerifiable` using low-level call
+    function do_lock(address predicateAddress, address user, address rootToken, bytes memory depositData) private returns (bytes memory) {
+        ITokenPredicate predicate = ITokenPredicate(predicateAddress);
+        if(isVerifiable(predicateAddress)) {
+            return predicate.verifiedLockTokens(
+                _msgSender(),
+                user,
+                rootToken,
+                depositData);
+        }
+
+        // To be invoked for custom predicates not implementing `verifiedLockTokens` method
+        predicate.lockTokens(
             _msgSender(),
             user,
             rootToken,
-            depositData
-        );
-
-        bytes memory syncData = abi.encode(user, rootToken, depositData);
-        _stateSender.syncState(
-            childChainManagerAddress,
-            abi.encode(DEPOSIT, syncData)
-        );
+            depositData);
+        return depositData;
     }
 
     /**

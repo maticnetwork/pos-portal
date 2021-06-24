@@ -108,6 +108,13 @@ contract ERC1155Predicate is ITokenPredicate, ERC1155Receiver, AccessControlMixi
         this.verifiedLockTokens(depositor, depositReceiver, rootToken, depositData);
     }
 
+    // Affirmative response denotes, `verifiedLockTokens` is to be
+    // prioritised over `lockTokens`, for performing token locking
+    // with stricter checking, by RootChainManager
+    function isVerifiable() pure public returns (bool) {
+        return true;
+    }
+
     function verifiedLockTokens(
         address depositor,
         address depositReceiver,
