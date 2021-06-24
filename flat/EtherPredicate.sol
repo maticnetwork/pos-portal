@@ -1029,6 +1029,20 @@ contract EtherPredicate is ITokenPredicate, AccessControlMixin, Initializable {
      */
     receive() external payable only(MANAGER_ROLE) {}
 
+    // Affirmative response denotes, `verifiedLockTokens` is to be
+    // prioritised over `lockTokens`, for performing token locking
+    // with stricter checking, by RootChainManager
+    function isVerifiable() pure public returns (bool) {
+        return true;
+    }
+
+    // Internal implementation, to be used by both `lockTokens` & `verifiedLockTokens`
+    function do_lock(address depositor, address depositReceiver, address, bytes memory depositData) private returns(bytes memory) {
+        uint256 amount = abi.decode(depositData, (uint256));
+        emit LockedEther(depositor, depositReceiver, amount);
+        return depositData;
+    }
+
     /**
      * @notice handle ether lock, callable only by manager
      * @param depositor Address who wants to deposit tokens
@@ -1045,20 +1059,13 @@ contract EtherPredicate is ITokenPredicate, AccessControlMixin, Initializable {
         override
         only(MANAGER_ROLE)
     {
-        this.verifiedLockTokens(depositor, depositReceiver, rootToken, depositData);
-    }
-
-    // Affirmative response denotes, `verifiedLockTokens` is to be
-    // prioritised over `lockTokens`, for performing token locking
-    // with stricter checking, by RootChainManager
-    function isVerifiable() pure public returns (bool) {
-        return true;
+        do_lock(depositor, depositReceiver, rootToken, depositData);
     }
 
     function verifiedLockTokens(
         address depositor,
         address depositReceiver,
-        address,
+        address rootToken,
         bytes calldata depositData
     )
         external
@@ -1066,9 +1073,7 @@ contract EtherPredicate is ITokenPredicate, AccessControlMixin, Initializable {
         only(MANAGER_ROLE)
         returns (bytes memory)
     {
-        uint256 amount = abi.decode(depositData, (uint256));
-        emit LockedEther(depositor, depositReceiver, amount);
-        return depositData;
+        return do_lock(depositor, depositReceiver, rootToken, depositData);
     }
 
     /**
