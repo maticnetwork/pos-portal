@@ -35,6 +35,27 @@ contract MintableERC20Predicate is
         _setupRole(MANAGER_ROLE, _owner);
     }
 
+    // Affirmative response denotes, `verifiedLockTokens` is to be
+    // prioritised over `lockTokens`, for performing token locking
+    // with stricter checking, by RootChainManager
+    function isVerifiable() pure public returns (bool) {
+        return true;
+    }
+
+    // Internal implementation, to be used by both `lockTokens` & `verifiedLockTokens`
+    function do_lock(address depositor, address depositReceiver, address rootToken, bytes memory depositData) private returns(bytes memory) {
+        uint256 amount = abi.decode(depositData, (uint256));
+
+        IMintableERC20 token = IMintableERC20(rootToken);
+        uint256 oldBalance = token.balanceOf(address(this));
+        token.transferFrom(depositor, address(this), amount);
+        uint256 newBalance = token.balanceOf(address(this));
+        uint256 locked = newBalance - oldBalance;
+
+        emit LockedMintableERC20(depositor, depositReceiver, rootToken, locked);
+        return abi.encode(locked);
+    }
+
     /**
      * @notice Lock ERC20 tokens for deposit, callable only by manager
      * @param depositor Address who wants to deposit tokens
@@ -48,14 +69,7 @@ contract MintableERC20Predicate is
         address rootToken,
         bytes calldata depositData
     ) external override only(MANAGER_ROLE) {
-        this.verifiedLockTokens(depositor, depositReceiver, rootToken, depositData);
-    }
-
-    // Affirmative response denotes, `verifiedLockTokens` is to be
-    // prioritised over `lockTokens`, for performing token locking
-    // with stricter checking, by RootChainManager
-    function isVerifiable() pure public returns (bool) {
-        return true;
+        do_lock(depositor, depositReceiver, rootToken, depositData);
     }
 
     function verifiedLockTokens(
@@ -69,16 +83,7 @@ contract MintableERC20Predicate is
         only(MANAGER_ROLE)
         returns(bytes memory)
     {
-        uint256 amount = abi.decode(depositData, (uint256));
-
-        IMintableERC20 token = IMintableERC20(rootToken);
-        uint256 oldBalance = token.balanceOf(address(this));
-        token.transferFrom(depositor, address(this), amount);
-        uint256 newBalance = token.balanceOf(address(this));
-        uint256 locked = newBalance - oldBalance;
-
-        emit LockedMintableERC20(depositor, depositReceiver, rootToken, locked);
-        return abi.encode(locked);
+        return do_lock(depositor, depositReceiver, rootToken, depositData);
     }
 
     /**

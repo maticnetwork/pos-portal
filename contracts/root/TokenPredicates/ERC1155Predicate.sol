@@ -88,26 +88,6 @@ contract ERC1155Predicate is ITokenPredicate, ERC1155Receiver, AccessControlMixi
         return locked;
     }
 
-    /**
-     * @notice Lock ERC1155 tokens for deposit, callable only by manager
-     * @param depositor Address who wants to deposit tokens
-     * @param depositReceiver Address (address) who wants to receive tokens on child chain
-     * @param rootToken Token which gets deposited
-     * @param depositData ABI encoded id array and amount array
-     */
-    function lockTokens(
-        address depositor,
-        address depositReceiver,
-        address rootToken,
-        bytes calldata depositData
-    )
-        external
-        override
-        only(MANAGER_ROLE)
-    {
-        this.verifiedLockTokens(depositor, depositReceiver, rootToken, depositData);
-    }
-
     // Affirmative response denotes, `verifiedLockTokens` is to be
     // prioritised over `lockTokens`, for performing token locking
     // with stricter checking, by RootChainManager
@@ -115,17 +95,8 @@ contract ERC1155Predicate is ITokenPredicate, ERC1155Receiver, AccessControlMixi
         return true;
     }
 
-    function verifiedLockTokens(
-        address depositor,
-        address depositReceiver,
-        address rootToken,
-        bytes calldata depositData
-    )
-        external
-        override
-        only(MANAGER_ROLE)
-        returns(bytes memory)
-    {
+    // Internal implementation, to be used by both `lockTokens` & `verifiedLockTokens`
+    function do_lock(address depositor, address depositReceiver, address rootToken, bytes memory depositData) private returns(bytes memory) {
         // forcing batch deposit since supporting both single and batch deposit introduces too much complexity
         (
             uint256[] memory ids,
@@ -156,6 +127,40 @@ contract ERC1155Predicate is ITokenPredicate, ERC1155Receiver, AccessControlMixi
             lockedBalances
         );
         return abi.encode(ids, lockedBalances, data);
+    }
+
+    /**
+     * @notice Lock ERC1155 tokens for deposit, callable only by manager
+     * @param depositor Address who wants to deposit tokens
+     * @param depositReceiver Address (address) who wants to receive tokens on child chain
+     * @param rootToken Token which gets deposited
+     * @param depositData ABI encoded id array and amount array
+     */
+    function lockTokens(
+        address depositor,
+        address depositReceiver,
+        address rootToken,
+        bytes calldata depositData
+    )
+        external
+        override
+        only(MANAGER_ROLE)
+    {
+        do_lock(depositor, depositReceiver, rootToken, depositData);
+    }
+
+    function verifiedLockTokens(
+        address depositor,
+        address depositReceiver,
+        address rootToken,
+        bytes calldata depositData
+    )
+        external
+        override
+        only(MANAGER_ROLE)
+        returns(bytes memory)
+    {
+        return do_lock(depositor, depositReceiver, rootToken, depositData);
     }
 
     /**
