@@ -60,6 +60,44 @@ contract ERC721Predicate is ITokenPredicate, AccessControlMixin, Initializable, 
         return IERC721Receiver.onERC721Received.selector;
     }
 
+    // Affirmative response denotes, `verifiedLockTokens` is to be
+    // prioritised over `lockTokens`, for performing token locking
+    // with stricter checking, by RootChainManager
+    function isVerifiable() pure public returns (bool) {
+        return true;
+    }
+
+    // Internal implementation, to be used by both `lockTokens` & `verifiedLockTokens`
+    function do_lock(address depositor, address depositReceiver, address rootToken, bytes memory depositData) private returns(bytes memory) {
+        // deposit single
+        if (depositData.length == 32) {
+            uint256 tokenId = abi.decode(depositData, (uint256));
+            
+            IRootERC721 token = IRootERC721(rootToken);
+            token.safeTransferFrom(depositor, address(this), tokenId);
+
+            require(token.ownerOf(tokenId) == address(this), "ERC721Predicate: TOKEN_NOT_LOCKED");
+            emit LockedERC721(depositor, depositReceiver, rootToken, tokenId);
+
+        // deposit batch
+        } else {
+            uint256[] memory tokenIds = abi.decode(depositData, (uint256[]));
+
+            uint256 length = tokenIds.length;
+            require(length <= BATCH_LIMIT, "ERC721Predicate: EXCEEDS_BATCH_LIMIT");
+
+            IRootERC721 token = IRootERC721(rootToken);
+            for (uint256 i; i < length; i++) {
+                uint256 tokenId = tokenIds[i];
+
+                token.safeTransferFrom(depositor, address(this), tokenId);
+                require(token.ownerOf(tokenId) == address(this), "ERC721Predicate: TOKEN_NOT_LOCKED");
+            }
+            emit LockedERC721Batch(depositor, depositReceiver, rootToken, tokenIds);
+        }
+        return depositData;
+    }
+
     /**
      * @notice Lock ERC721 tokens for deposit, callable only by manager
      * @param depositor Address who wants to deposit token
@@ -77,22 +115,21 @@ contract ERC721Predicate is ITokenPredicate, AccessControlMixin, Initializable, 
         override
         only(MANAGER_ROLE)
     {
-        // deposit single
-        if (depositData.length == 32) {
-            uint256 tokenId = abi.decode(depositData, (uint256));
-            emit LockedERC721(depositor, depositReceiver, rootToken, tokenId);
-            IRootERC721(rootToken).safeTransferFrom(depositor, address(this), tokenId);
+        do_lock(depositor, depositReceiver, rootToken, depositData);
+    }
 
-        // deposit batch
-        } else {
-            uint256[] memory tokenIds = abi.decode(depositData, (uint256[]));
-            emit LockedERC721Batch(depositor, depositReceiver, rootToken, tokenIds);
-            uint256 length = tokenIds.length;
-            require(length <= BATCH_LIMIT, "ERC721Predicate: EXCEEDS_BATCH_LIMIT");
-            for (uint256 i; i < length; i++) {
-                IRootERC721(rootToken).safeTransferFrom(depositor, address(this), tokenIds[i]);
-            }
-        }
+    function verifiedLockTokens(
+        address depositor,
+        address depositReceiver,
+        address rootToken,
+        bytes calldata depositData
+    )
+        external
+        override
+        only(MANAGER_ROLE)
+        returns (bytes memory)
+    {
+        return do_lock(depositor, depositReceiver, rootToken, depositData);
     }
 
     /**

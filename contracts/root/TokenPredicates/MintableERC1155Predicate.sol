@@ -70,6 +70,57 @@ contract MintableERC1155Predicate is
         return ERC1155Receiver(0).onERC1155BatchReceived.selector;
     }
 
+    function calculateLockedAmounts(uint256[] memory oldBalances, uint256[] memory newBalances) internal pure returns(uint256[] memory){
+        uint256[] memory locked = new uint256[](oldBalances.length);
+
+        for(uint256 i; i < oldBalances.length; i++) {
+            locked[i] = newBalances[i] - oldBalances[i];
+        }
+
+        return locked;
+    }
+
+    // Affirmative response denotes, `verifiedLockTokens` is to be
+    // prioritised over `lockTokens`, for performing token locking
+    // with stricter checking, by RootChainManager
+    function isVerifiable() pure public returns (bool) {
+        return true;
+    }
+
+    // Internal implementation, to be used by both `lockTokens` & `verifiedLockTokens`
+    function do_lock(address depositor, address depositReceiver, address rootToken, bytes memory depositData) private returns(bytes memory) {
+        // forcing batch deposit since supporting both single and batch deposit introduces too much complexity
+        (
+            uint256[] memory ids,
+            uint256[] memory amounts,
+            bytes memory data
+        ) = abi.decode(depositData, (uint256[], uint256[], bytes));
+
+        IMintableERC1155 token = IMintableERC1155(rootToken);
+
+        address[] memory addrArray = makeArrayWithAddress(address(this), ids.length);
+        uint256[] memory oldBalances = token.balanceOfBatch(addrArray, ids);
+        token.safeBatchTransferFrom(
+            depositor,
+            address(this),
+            ids,
+            amounts,
+            data
+        );
+        uint256[] memory lockedBalances = calculateLockedAmounts(
+            oldBalances, 
+            token.balanceOfBatch(addrArray, ids));
+
+        emit LockedBatchMintableERC1155(
+            depositor,
+            depositReceiver,
+            rootToken,
+            ids,
+            lockedBalances
+        );
+        return abi.encode(ids, lockedBalances, data);
+    }
+
     /**
      * @notice Lock ERC1155 tokens for deposit, callable only by manager
      * @param depositor Address who wants to deposit tokens
@@ -83,27 +134,21 @@ contract MintableERC1155Predicate is
         address rootToken,
         bytes calldata depositData
     ) external override only(MANAGER_ROLE) {
-        // forcing batch deposit since supporting both single and batch deposit introduces too much complexity
-        (
-            uint256[] memory ids,
-            uint256[] memory amounts,
-            bytes memory data
-        ) = abi.decode(depositData, (uint256[], uint256[], bytes));
-
-        emit LockedBatchMintableERC1155(
-            depositor,
-            depositReceiver,
-            rootToken,
-            ids,
-            amounts
-        );
-        IMintableERC1155(rootToken).safeBatchTransferFrom(
-            depositor,
-            address(this),
-            ids,
-            amounts,
-            data
-        );
+        do_lock(depositor, depositReceiver, rootToken, depositData);
+    }
+    
+    function verifiedLockTokens(
+        address depositor,
+        address depositReceiver,
+        address rootToken,
+        bytes calldata depositData
+    )
+        external
+        override
+        only(MANAGER_ROLE)
+        returns(bytes memory)
+    {
+        return do_lock(depositor, depositReceiver, rootToken, depositData);
     }
     
     // Used when attempting to exit with single token, single amount/ id is converted into

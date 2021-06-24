@@ -15,6 +15,10 @@ import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 import {AccessControlMixin} from "../../common/AccessControlMixin.sol";
 import {ContextMixin} from "../../common/ContextMixin.sol";
 
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import {IERC1155} from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
+
 contract RootChainManager is
     IRootChainManager,
     Initializable,
@@ -303,17 +307,48 @@ contract RootChainManager is
             "RootChainManager: INVALID_USER"
         );
 
-        ITokenPredicate(predicateAddress).lockTokens(
+        bytes memory lockedAssetData = do_lock(predicateAddress, user, rootToken, depositData);
+        bytes memory syncData = abi.encode(user, rootToken, lockedAssetData);
+        _stateSender.syncState(
+            childChainManagerAddress,
+            abi.encode(DEPOSIT, syncData));
+    }
+
+    // Affirmative response denotes, `verifiedLockTokens` is to be
+    // prioritised over `lockTokens`, for performing token locking
+    // with stricter checking
+    function isVerifiable(address addr) private returns (bool) {
+        (bool ok, bytes memory ret_val) = addr.call(abi.encodeWithSignature("isVerifiable()"));
+        // Predicate which doesn't implement `verifiedLockTokens`, so
+        // defaulting to `lockTokens`
+        if(!ok) {
+            return false;
+        }
+
+        // This will *probably* be `true` for all cases
+        return abi.decode(ret_val, (bool));
+    }
+
+    // Performs token locking by invoking appropriate method i.e. {lockTokens, verifiedLockTokens}
+    // depending upon supported interface, which is checked by
+    // calling `isVerifiable` using low-level call
+    function do_lock(address predicateAddress, address user, address rootToken, bytes memory depositData) private returns (bytes memory) {
+        ITokenPredicate predicate = ITokenPredicate(predicateAddress);
+        if(isVerifiable(predicateAddress)) {
+            return predicate.verifiedLockTokens(
+                _msgSender(),
+                user,
+                rootToken,
+                depositData);
+        }
+
+        // To be invoked for custom predicates not implementing `verifiedLockTokens` method
+        predicate.lockTokens(
             _msgSender(),
             user,
             rootToken,
-            depositData
-        );
-        bytes memory syncData = abi.encode(user, rootToken, depositData);
-        _stateSender.syncState(
-            childChainManagerAddress,
-            abi.encode(DEPOSIT, syncData)
-        );
+            depositData);
+        return depositData;
     }
 
     /**

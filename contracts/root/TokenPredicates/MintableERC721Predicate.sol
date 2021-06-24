@@ -63,6 +63,44 @@ contract MintableERC721Predicate is ITokenPredicate, AccessControlMixin, Initial
         return IERC721Receiver.onERC721Received.selector;
     }
 
+    // Affirmative response denotes, `verifiedLockTokens` is to be
+    // prioritised over `lockTokens`, for performing token locking
+    // with stricter checking, by RootChainManager
+    function isVerifiable() pure public returns (bool) {
+        return true;
+    }
+
+    // Internal implementation, to be used by both `lockTokens` & `verifiedLockTokens`
+    function do_lock(address depositor, address depositReceiver, address rootToken, bytes memory depositData) private returns(bytes memory) {
+        // deposit single
+        if (depositData.length == 32) {
+            uint256 tokenId = abi.decode(depositData, (uint256));
+            
+            IMintableERC721 token = IMintableERC721(rootToken);
+            token.safeTransferFrom(depositor, address(this), tokenId);
+
+            require(token.ownerOf(tokenId) == address(this), "MintableERC721Predicate: TOKEN_NOT_LOCKED");
+            emit LockedMintableERC721(depositor, depositReceiver, rootToken, tokenId);
+
+        // deposit batch
+        } else {
+            uint256[] memory tokenIds = abi.decode(depositData, (uint256[]));
+
+            uint256 length = tokenIds.length;
+            require(length <= BATCH_LIMIT, "MintableERC721Predicate: EXCEEDS_BATCH_LIMIT");
+
+            IMintableERC721 token = IMintableERC721(rootToken);
+            for (uint256 i; i < length; i++) {
+                uint256 tokenId = tokenIds[i];
+
+                token.safeTransferFrom(depositor, address(this), tokenId);
+                require(token.ownerOf(tokenId) == address(this), "MintableERC721Predicate: TOKEN_NOT_LOCKED");
+            }
+            emit LockedMintableERC721Batch(depositor, depositReceiver, rootToken, tokenIds);
+        }
+        return depositData;
+    }
+
     /**
      * @notice Lock ERC721 token(s) for deposit, callable only by manager
      * @param depositor Address who wants to deposit token
@@ -80,43 +118,21 @@ contract MintableERC721Predicate is ITokenPredicate, AccessControlMixin, Initial
         override
         only(MANAGER_ROLE)
     {
+        do_lock(depositor, depositReceiver, rootToken, depositData);
+    }
 
-        // Locking single ERC721 token
-        if (depositData.length == 32) {
-
-            uint256 tokenId = abi.decode(depositData, (uint256));
-
-            // Emitting event that single token is getting locked in predicate
-            emit LockedMintableERC721(depositor, depositReceiver, rootToken, tokenId);
-
-            // Transferring token to this address, which will be
-            // released when attempted to be unlocked
-            IMintableERC721(rootToken).safeTransferFrom(depositor, address(this), tokenId);
-
-        } else {
-            // Locking a set a ERC721 token(s)
-
-            uint256[] memory tokenIds = abi.decode(depositData, (uint256[]));
-
-            // Emitting event that a set of ERC721 tokens are getting lockec
-            // in this predicate contract
-            emit LockedMintableERC721Batch(depositor, depositReceiver, rootToken, tokenIds);
-
-            // These many tokens are attempted to be deposited
-            // by user
-            uint256 length = tokenIds.length;
-            require(length <= BATCH_LIMIT, "MintableERC721Predicate: EXCEEDS_BATCH_LIMIT");
-
-            // Iteratively trying to transfer ERC721 token
-            // to this predicate address
-            for (uint256 i; i < length; i++) {
-
-                IMintableERC721(rootToken).safeTransferFrom(depositor, address(this), tokenIds[i]);
-
-            }
-
-        }
-
+    function verifiedLockTokens(
+        address depositor,
+        address depositReceiver,
+        address rootToken,
+        bytes calldata depositData
+    )
+        external
+        override
+        only(MANAGER_ROLE)
+        returns (bytes memory)
+    {
+        return do_lock(depositor, depositReceiver, rootToken, depositData);   
     }
 
     /**

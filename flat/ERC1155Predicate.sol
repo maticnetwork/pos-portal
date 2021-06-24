@@ -1197,7 +1197,7 @@ pragma solidity 0.6.6;
 interface ITokenPredicate {
 
     /**
-     * @notice Deposit tokens into pos portal
+     * @notice Deposit tokens into pos portal.
      * @dev When `depositor` deposits tokens into pos portal, tokens get locked into predicate contract.
      * @param depositor Address who wants to deposit tokens
      * @param depositReceiver Address (address) who wants to receive tokens on side chain
@@ -1210,6 +1210,22 @@ interface ITokenPredicate {
         address rootToken,
         bytes calldata depositData
     ) external;
+
+    /**
+     * @notice Lock tokens in predicate contract & check whether really locked or not. Returns ABI serialised
+     * deposit data which can be used for state sync event emission in RootChainManager i.e. invoker.
+     * @dev When `depositor` deposits tokens into pos portal, tokens get locked into predicate contract.
+     * @param depositor Address who wants to deposit tokens
+     * @param depositReceiver Address (address) who wants to receive tokens on side chain
+     * @param rootToken Token which gets deposited
+     * @param depositData Extra data for deposit (amount for ERC20, token id for ERC721 etc.) [ABI encoded]
+     */
+    function verifiedLockTokens(
+        address depositor,
+        address depositReceiver,
+        address rootToken,
+        bytes calldata depositData
+    ) external returns(bytes memory);
 
     /**
      * @notice Validates and processes exit while withdraw process
@@ -1304,6 +1320,74 @@ contract ERC1155Predicate is ITokenPredicate, ERC1155Receiver, AccessControlMixi
         return ERC1155Receiver(0).onERC1155BatchReceived.selector;
     }
 
+    function makeArrayWithAddress(address addr, uint256 size)
+        internal
+        pure
+        returns (address[] memory)
+    {
+        require(addr != address(0), "ERC1155Predicate: Invalid address");
+        require(size > 0, "ERC1155Predicate: Invalid resulting array length");
+
+        address[] memory addresses = new address[](size);
+
+        for (uint256 i = 0; i < size; i++) {
+            addresses[i] = addr;
+        }
+
+        return addresses;
+    }
+
+    function calculateLockedAmounts(uint256[] memory oldBalances, uint256[] memory newBalances) internal pure returns(uint256[] memory){
+        uint256[] memory locked = new uint256[](oldBalances.length);
+
+        for(uint256 i; i < oldBalances.length; i++) {
+            locked[i] = newBalances[i] - oldBalances[i];
+        }
+
+        return locked;
+    }
+
+    // Affirmative response denotes, `verifiedLockTokens` is to be
+    // prioritised over `lockTokens`, for performing token locking
+    // with stricter checking, by RootChainManager
+    function isVerifiable() pure public returns (bool) {
+        return true;
+    }
+
+    // Internal implementation, to be used by both `lockTokens` & `verifiedLockTokens`
+    function do_lock(address depositor, address depositReceiver, address rootToken, bytes memory depositData) private returns(bytes memory) {
+        // forcing batch deposit since supporting both single and batch deposit introduces too much complexity
+        (
+            uint256[] memory ids,
+            uint256[] memory amounts,
+            bytes memory data
+        ) = abi.decode(depositData, (uint256[], uint256[], bytes));
+
+        IERC1155 token = IERC1155(rootToken);
+
+        address[] memory addrArray = makeArrayWithAddress(address(this), ids.length);
+        uint256[] memory oldBalances = token.balanceOfBatch(addrArray, ids);
+        token.safeBatchTransferFrom(
+            depositor,
+            address(this),
+            ids,
+            amounts,
+            data
+        );
+        uint256[] memory lockedBalances = calculateLockedAmounts(
+            oldBalances, 
+            token.balanceOfBatch(addrArray, ids));
+
+        emit LockedBatchERC1155(
+            depositor,
+            depositReceiver,
+            rootToken,
+            ids,
+            lockedBalances
+        );
+        return abi.encode(ids, lockedBalances, data);
+    }
+
     /**
      * @notice Lock ERC1155 tokens for deposit, callable only by manager
      * @param depositor Address who wants to deposit tokens
@@ -1321,26 +1405,21 @@ contract ERC1155Predicate is ITokenPredicate, ERC1155Receiver, AccessControlMixi
         override
         only(MANAGER_ROLE)
     {
-        // forcing batch deposit since supporting both single and batch deposit introduces too much complexity
-        (
-            uint256[] memory ids,
-            uint256[] memory amounts,
-            bytes memory data
-        ) = abi.decode(depositData, (uint256[], uint256[], bytes));
-        emit LockedBatchERC1155(
-            depositor,
-            depositReceiver,
-            rootToken,
-            ids,
-            amounts
-        );
-        IERC1155(rootToken).safeBatchTransferFrom(
-            depositor,
-            address(this),
-            ids,
-            amounts,
-            data
-        );
+        do_lock(depositor, depositReceiver, rootToken, depositData);
+    }
+
+    function verifiedLockTokens(
+        address depositor,
+        address depositReceiver,
+        address rootToken,
+        bytes calldata depositData
+    )
+        external
+        override
+        only(MANAGER_ROLE)
+        returns(bytes memory)
+    {
+        return do_lock(depositor, depositReceiver, rootToken, depositData);
     }
 
     /**

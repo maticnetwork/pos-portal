@@ -774,7 +774,7 @@ contract('RootChainManager', async(accounts) => {
     let rootChainManager
     let depositTx
     let lockedLog
-    let stateSyncedlog
+    let stateSyncedlogs
 
     before(async() => {
       contracts = await deployer.deployInitializedContracts(accounts)
@@ -847,13 +847,14 @@ contract('RootChainManager', async(accounts) => {
 
     it('Should Emit StateSynced log', () => {
       const logs = logDecoder.decodeLogs(depositTx.receipt.rawLogs)
-      stateSyncedlog = logs.find(l => l.event === 'StateSynced')
-      should.exist(stateSyncedlog)
+      stateSyncedlogs = logs.filter(l => l.event === 'StateSynced')
+      should.exist(stateSyncedlogs)
     })
 
     describe('Correct values should be emitted in StateSynced log', () => {
-      let depositReceiver, rootToken, depositData
+      let depositReceiver, rootToken, depositData, stateSyncedlog
       before(() => {
+        stateSyncedlog = stateSyncedlogs[0]
         const [, syncData] = abi.decode(['bytes32', 'bytes'], stateSyncedlog.args.data)
         const data = abi.decode(['address', 'address', 'bytes'], syncData)
         depositReceiver = data[0]
