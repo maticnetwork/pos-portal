@@ -1290,36 +1290,14 @@ contract MintableERC721Predicate is ITokenPredicate, AccessControlMixin, Initial
         override
         only(MANAGER_ROLE)
     {
+        this.verifiedLockTokens(depositor, depositReceiver, rootToken, depositData);
+    }
 
-        // Locking single ERC721 token
-        if (depositData.length == 32) {
-
-            uint256 tokenId = abi.decode(depositData, (uint256));
-
-            IMintableERC721 token = IMintableERC721(rootToken);
-            token.safeTransferFrom(depositor, address(this), tokenId);
-
-            if(token.ownerOf(tokenId) == address(this)) {
-                emit LockedMintableERC721(depositor, depositReceiver, rootToken, tokenId);
-            }
-
-        } else {
-            // Locking a set a ERC721 token(s)
-            uint256[] memory tokenIds = abi.decode(depositData, (uint256[]));
-
-            uint256 length = tokenIds.length;
-            require(length <= BATCH_LIMIT, "MintableERC721Predicate: EXCEEDS_BATCH_LIMIT");
-
-            IMintableERC721 token = IMintableERC721(rootToken);
-            for (uint256 i; i < length; i++) {
-                uint256 tokenId = tokenIds[i];
-
-                token.safeTransferFrom(depositor, address(this), tokenId);
-                require(token.ownerOf(tokenId) == address(this), "MintableERC721Predicate: TOKEN_NOT_LOCKED");
-            }
-            emit LockedMintableERC721Batch(depositor, depositReceiver, rootToken, tokenIds);
-        }
-
+    // Affirmative response denotes, `verifiedLockTokens` is to be
+    // prioritised over `lockTokens`, for performing token locking
+    // with stricter checking, by RootChainManager
+    function isVerifiable() pure public returns (bool) {
+        return true;
     }
 
     function verifiedLockTokens(

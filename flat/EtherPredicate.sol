@@ -1038,15 +1038,21 @@ contract EtherPredicate is ITokenPredicate, AccessControlMixin, Initializable {
     function lockTokens(
         address depositor,
         address depositReceiver,
-        address,
+        address rootToken,
         bytes calldata depositData
     )
         external
         override
         only(MANAGER_ROLE)
     {
-        uint256 amount = abi.decode(depositData, (uint256));
-        emit LockedEther(depositor, depositReceiver, amount);
+        this.verifiedLockTokens(depositor, depositReceiver, rootToken, depositData);
+    }
+
+    // Affirmative response denotes, `verifiedLockTokens` is to be
+    // prioritised over `lockTokens`, for performing token locking
+    // with stricter checking, by RootChainManager
+    function isVerifiable() pure public returns (bool) {
+        return true;
     }
 
     function verifiedLockTokens(

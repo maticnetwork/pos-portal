@@ -1135,14 +1135,14 @@ contract MintableERC20Predicate is
         address rootToken,
         bytes calldata depositData
     ) external override only(MANAGER_ROLE) {
-        uint256 amount = abi.decode(depositData, (uint256));
+        this.verifiedLockTokens(depositor, depositReceiver, rootToken, depositData);
+    }
 
-        IMintableERC20 token = IMintableERC20(rootToken);
-        uint256 oldBalance = token.balanceOf(address(this));
-        token.transferFrom(depositor, address(this), amount);
-        uint256 newBalance = token.balanceOf(address(this));
-
-        emit LockedMintableERC20(depositor, depositReceiver, rootToken, newBalance - oldBalance);
+    // Affirmative response denotes, `verifiedLockTokens` is to be
+    // prioritised over `lockTokens`, for performing token locking
+    // with stricter checking, by RootChainManager
+    function isVerifiable() pure public returns (bool) {
+        return true;
     }
 
     function verifiedLockTokens(
