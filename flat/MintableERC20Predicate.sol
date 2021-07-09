@@ -79,6 +79,389 @@ interface IERC20 {
     event Approval(address indexed owner, address indexed spender, uint256 value);
 }
 
+// File: @openzeppelin/contracts/math/SafeMath.sol
+
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.6.0;
+
+/**
+ * @dev Wrappers over Solidity's arithmetic operations with added overflow
+ * checks.
+ *
+ * Arithmetic operations in Solidity wrap on overflow. This can easily result
+ * in bugs, because programmers usually assume that an overflow raises an
+ * error, which is the standard behavior in high level programming languages.
+ * `SafeMath` restores this intuition by reverting the transaction when an
+ * operation overflows.
+ *
+ * Using this library instead of the unchecked operations eliminates an entire
+ * class of bugs, so it's recommended to use it always.
+ */
+library SafeMath {
+    /**
+     * @dev Returns the addition of two unsigned integers, reverting on
+     * overflow.
+     *
+     * Counterpart to Solidity's `+` operator.
+     *
+     * Requirements:
+     *
+     * - Addition cannot overflow.
+     */
+    function add(uint256 a, uint256 b) internal pure returns (uint256) {
+        uint256 c = a + b;
+        require(c >= a, "SafeMath: addition overflow");
+
+        return c;
+    }
+
+    /**
+     * @dev Returns the subtraction of two unsigned integers, reverting on
+     * overflow (when the result is negative).
+     *
+     * Counterpart to Solidity's `-` operator.
+     *
+     * Requirements:
+     *
+     * - Subtraction cannot overflow.
+     */
+    function sub(uint256 a, uint256 b) internal pure returns (uint256) {
+        return sub(a, b, "SafeMath: subtraction overflow");
+    }
+
+    /**
+     * @dev Returns the subtraction of two unsigned integers, reverting with custom message on
+     * overflow (when the result is negative).
+     *
+     * Counterpart to Solidity's `-` operator.
+     *
+     * Requirements:
+     *
+     * - Subtraction cannot overflow.
+     */
+    function sub(uint256 a, uint256 b, string memory errorMessage) internal pure returns (uint256) {
+        require(b <= a, errorMessage);
+        uint256 c = a - b;
+
+        return c;
+    }
+
+    /**
+     * @dev Returns the multiplication of two unsigned integers, reverting on
+     * overflow.
+     *
+     * Counterpart to Solidity's `*` operator.
+     *
+     * Requirements:
+     *
+     * - Multiplication cannot overflow.
+     */
+    function mul(uint256 a, uint256 b) internal pure returns (uint256) {
+        // Gas optimization: this is cheaper than requiring 'a' not being zero, but the
+        // benefit is lost if 'b' is also tested.
+        // See: https://github.com/OpenZeppelin/openzeppelin-contracts/pull/522
+        if (a == 0) {
+            return 0;
+        }
+
+        uint256 c = a * b;
+        require(c / a == b, "SafeMath: multiplication overflow");
+
+        return c;
+    }
+
+    /**
+     * @dev Returns the integer division of two unsigned integers. Reverts on
+     * division by zero. The result is rounded towards zero.
+     *
+     * Counterpart to Solidity's `/` operator. Note: this function uses a
+     * `revert` opcode (which leaves remaining gas untouched) while Solidity
+     * uses an invalid opcode to revert (consuming all remaining gas).
+     *
+     * Requirements:
+     *
+     * - The divisor cannot be zero.
+     */
+    function div(uint256 a, uint256 b) internal pure returns (uint256) {
+        return div(a, b, "SafeMath: division by zero");
+    }
+
+    /**
+     * @dev Returns the integer division of two unsigned integers. Reverts with custom message on
+     * division by zero. The result is rounded towards zero.
+     *
+     * Counterpart to Solidity's `/` operator. Note: this function uses a
+     * `revert` opcode (which leaves remaining gas untouched) while Solidity
+     * uses an invalid opcode to revert (consuming all remaining gas).
+     *
+     * Requirements:
+     *
+     * - The divisor cannot be zero.
+     */
+    function div(uint256 a, uint256 b, string memory errorMessage) internal pure returns (uint256) {
+        require(b > 0, errorMessage);
+        uint256 c = a / b;
+        // assert(a == b * c + a % b); // There is no case in which this doesn't hold
+
+        return c;
+    }
+
+    /**
+     * @dev Returns the remainder of dividing two unsigned integers. (unsigned integer modulo),
+     * Reverts when dividing by zero.
+     *
+     * Counterpart to Solidity's `%` operator. This function uses a `revert`
+     * opcode (which leaves remaining gas untouched) while Solidity uses an
+     * invalid opcode to revert (consuming all remaining gas).
+     *
+     * Requirements:
+     *
+     * - The divisor cannot be zero.
+     */
+    function mod(uint256 a, uint256 b) internal pure returns (uint256) {
+        return mod(a, b, "SafeMath: modulo by zero");
+    }
+
+    /**
+     * @dev Returns the remainder of dividing two unsigned integers. (unsigned integer modulo),
+     * Reverts with custom message when dividing by zero.
+     *
+     * Counterpart to Solidity's `%` operator. This function uses a `revert`
+     * opcode (which leaves remaining gas untouched) while Solidity uses an
+     * invalid opcode to revert (consuming all remaining gas).
+     *
+     * Requirements:
+     *
+     * - The divisor cannot be zero.
+     */
+    function mod(uint256 a, uint256 b, string memory errorMessage) internal pure returns (uint256) {
+        require(b != 0, errorMessage);
+        return a % b;
+    }
+}
+
+// File: @openzeppelin/contracts/utils/Address.sol
+
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.6.2;
+
+/**
+ * @dev Collection of functions related to the address type
+ */
+library Address {
+    /**
+     * @dev Returns true if `account` is a contract.
+     *
+     * [IMPORTANT]
+     * ====
+     * It is unsafe to assume that an address for which this function returns
+     * false is an externally-owned account (EOA) and not a contract.
+     *
+     * Among others, `isContract` will return false for the following
+     * types of addresses:
+     *
+     *  - an externally-owned account
+     *  - a contract in construction
+     *  - an address where a contract will be created
+     *  - an address where a contract lived, but was destroyed
+     * ====
+     */
+    function isContract(address account) internal view returns (bool) {
+        // According to EIP-1052, 0x0 is the value returned for not-yet created accounts
+        // and 0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470 is returned
+        // for accounts without code, i.e. `keccak256('')`
+        bytes32 codehash;
+        bytes32 accountHash = 0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470;
+        // solhint-disable-next-line no-inline-assembly
+        assembly { codehash := extcodehash(account) }
+        return (codehash != accountHash && codehash != 0x0);
+    }
+
+    /**
+     * @dev Replacement for Solidity's `transfer`: sends `amount` wei to
+     * `recipient`, forwarding all available gas and reverting on errors.
+     *
+     * https://eips.ethereum.org/EIPS/eip-1884[EIP1884] increases the gas cost
+     * of certain opcodes, possibly making contracts go over the 2300 gas limit
+     * imposed by `transfer`, making them unable to receive funds via
+     * `transfer`. {sendValue} removes this limitation.
+     *
+     * https://diligence.consensys.net/posts/2019/09/stop-using-soliditys-transfer-now/[Learn more].
+     *
+     * IMPORTANT: because control is transferred to `recipient`, care must be
+     * taken to not create reentrancy vulnerabilities. Consider using
+     * {ReentrancyGuard} or the
+     * https://solidity.readthedocs.io/en/v0.5.11/security-considerations.html#use-the-checks-effects-interactions-pattern[checks-effects-interactions pattern].
+     */
+    function sendValue(address payable recipient, uint256 amount) internal {
+        require(address(this).balance >= amount, "Address: insufficient balance");
+
+        // solhint-disable-next-line avoid-low-level-calls, avoid-call-value
+        (bool success, ) = recipient.call{ value: amount }("");
+        require(success, "Address: unable to send value, recipient may have reverted");
+    }
+
+    /**
+     * @dev Performs a Solidity function call using a low level `call`. A
+     * plain`call` is an unsafe replacement for a function call: use this
+     * function instead.
+     *
+     * If `target` reverts with a revert reason, it is bubbled up by this
+     * function (like regular Solidity function calls).
+     *
+     * Returns the raw returned data. To convert to the expected return value,
+     * use https://solidity.readthedocs.io/en/latest/units-and-global-variables.html?highlight=abi.decode#abi-encoding-and-decoding-functions[`abi.decode`].
+     *
+     * Requirements:
+     *
+     * - `target` must be a contract.
+     * - calling `target` with `data` must not revert.
+     *
+     * _Available since v3.1._
+     */
+    function functionCall(address target, bytes memory data) internal returns (bytes memory) {
+      return functionCall(target, data, "Address: low-level call failed");
+    }
+
+    /**
+     * @dev Same as {xref-Address-functionCall-address-bytes-}[`functionCall`], but with
+     * `errorMessage` as a fallback revert reason when `target` reverts.
+     *
+     * _Available since v3.1._
+     */
+    function functionCall(address target, bytes memory data, string memory errorMessage) internal returns (bytes memory) {
+        return _functionCallWithValue(target, data, 0, errorMessage);
+    }
+
+    /**
+     * @dev Same as {xref-Address-functionCall-address-bytes-}[`functionCall`],
+     * but also transferring `value` wei to `target`.
+     *
+     * Requirements:
+     *
+     * - the calling contract must have an ETH balance of at least `value`.
+     * - the called Solidity function must be `payable`.
+     *
+     * _Available since v3.1._
+     */
+    function functionCallWithValue(address target, bytes memory data, uint256 value) internal returns (bytes memory) {
+        return functionCallWithValue(target, data, value, "Address: low-level call with value failed");
+    }
+
+    /**
+     * @dev Same as {xref-Address-functionCallWithValue-address-bytes-uint256-}[`functionCallWithValue`], but
+     * with `errorMessage` as a fallback revert reason when `target` reverts.
+     *
+     * _Available since v3.1._
+     */
+    function functionCallWithValue(address target, bytes memory data, uint256 value, string memory errorMessage) internal returns (bytes memory) {
+        require(address(this).balance >= value, "Address: insufficient balance for call");
+        return _functionCallWithValue(target, data, value, errorMessage);
+    }
+
+    function _functionCallWithValue(address target, bytes memory data, uint256 weiValue, string memory errorMessage) private returns (bytes memory) {
+        require(isContract(target), "Address: call to non-contract");
+
+        // solhint-disable-next-line avoid-low-level-calls
+        (bool success, bytes memory returndata) = target.call{ value: weiValue }(data);
+        if (success) {
+            return returndata;
+        } else {
+            // Look for revert reason and bubble it up if present
+            if (returndata.length > 0) {
+                // The easiest way to bubble the revert reason is using memory via assembly
+
+                // solhint-disable-next-line no-inline-assembly
+                assembly {
+                    let returndata_size := mload(returndata)
+                    revert(add(32, returndata), returndata_size)
+                }
+            } else {
+                revert(errorMessage);
+            }
+        }
+    }
+}
+
+// File: @openzeppelin/contracts/token/ERC20/SafeERC20.sol
+
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.6.0;
+
+
+
+
+/**
+ * @title SafeERC20
+ * @dev Wrappers around ERC20 operations that throw on failure (when the token
+ * contract returns false). Tokens that return no value (and instead revert or
+ * throw on failure) are also supported, non-reverting calls are assumed to be
+ * successful.
+ * To use this library you can add a `using SafeERC20 for IERC20;` statement to your contract,
+ * which allows you to call the safe operations as `token.safeTransfer(...)`, etc.
+ */
+library SafeERC20 {
+    using SafeMath for uint256;
+    using Address for address;
+
+    function safeTransfer(IERC20 token, address to, uint256 value) internal {
+        _callOptionalReturn(token, abi.encodeWithSelector(token.transfer.selector, to, value));
+    }
+
+    function safeTransferFrom(IERC20 token, address from, address to, uint256 value) internal {
+        _callOptionalReturn(token, abi.encodeWithSelector(token.transferFrom.selector, from, to, value));
+    }
+
+    /**
+     * @dev Deprecated. This function has issues similar to the ones found in
+     * {IERC20-approve}, and its usage is discouraged.
+     *
+     * Whenever possible, use {safeIncreaseAllowance} and
+     * {safeDecreaseAllowance} instead.
+     */
+    function safeApprove(IERC20 token, address spender, uint256 value) internal {
+        // safeApprove should only be called when setting an initial allowance,
+        // or when resetting it to zero. To increase and decrease it, use
+        // 'safeIncreaseAllowance' and 'safeDecreaseAllowance'
+        // solhint-disable-next-line max-line-length
+        require((value == 0) || (token.allowance(address(this), spender) == 0),
+            "SafeERC20: approve from non-zero to non-zero allowance"
+        );
+        _callOptionalReturn(token, abi.encodeWithSelector(token.approve.selector, spender, value));
+    }
+
+    function safeIncreaseAllowance(IERC20 token, address spender, uint256 value) internal {
+        uint256 newAllowance = token.allowance(address(this), spender).add(value);
+        _callOptionalReturn(token, abi.encodeWithSelector(token.approve.selector, spender, newAllowance));
+    }
+
+    function safeDecreaseAllowance(IERC20 token, address spender, uint256 value) internal {
+        uint256 newAllowance = token.allowance(address(this), spender).sub(value, "SafeERC20: decreased allowance below zero");
+        _callOptionalReturn(token, abi.encodeWithSelector(token.approve.selector, spender, newAllowance));
+    }
+
+    /**
+     * @dev Imitates a Solidity high-level call (i.e. a regular function call to a contract), relaxing the requirement
+     * on the return value: the return value is optional (but if data is returned, it must not be false).
+     * @param token The token targeted by the call.
+     * @param data The call data (encoded using abi.encode or one of its variants).
+     */
+    function _callOptionalReturn(IERC20 token, bytes memory data) private {
+        // We need to perform a low level call here, to bypass Solidity's return data size checking mechanism, since
+        // we're implementing it ourselves. We use {Address.functionCall} to perform this call, which verifies that
+        // the target address contains contract code and also asserts for success in the low-level call.
+
+        bytes memory returndata = address(token).functionCall(data, "SafeERC20: low-level call failed");
+        if (returndata.length > 0) { // Return data is optional
+            // solhint-disable-next-line max-line-length
+            require(abi.decode(returndata, (bool)), "SafeERC20: ERC20 operation did not succeed");
+        }
+    }
+}
+
 // File: contracts/root/RootToken/IMintableERC20.sol
 
 pragma solidity 0.6.6;
@@ -337,150 +720,6 @@ library EnumerableSet {
     */
     function at(UintSet storage set, uint256 index) internal view returns (uint256) {
         return uint256(_at(set._inner, index));
-    }
-}
-
-// File: @openzeppelin/contracts/utils/Address.sol
-
-// SPDX-License-Identifier: MIT
-
-pragma solidity ^0.6.2;
-
-/**
- * @dev Collection of functions related to the address type
- */
-library Address {
-    /**
-     * @dev Returns true if `account` is a contract.
-     *
-     * [IMPORTANT]
-     * ====
-     * It is unsafe to assume that an address for which this function returns
-     * false is an externally-owned account (EOA) and not a contract.
-     *
-     * Among others, `isContract` will return false for the following
-     * types of addresses:
-     *
-     *  - an externally-owned account
-     *  - a contract in construction
-     *  - an address where a contract will be created
-     *  - an address where a contract lived, but was destroyed
-     * ====
-     */
-    function isContract(address account) internal view returns (bool) {
-        // According to EIP-1052, 0x0 is the value returned for not-yet created accounts
-        // and 0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470 is returned
-        // for accounts without code, i.e. `keccak256('')`
-        bytes32 codehash;
-        bytes32 accountHash = 0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470;
-        // solhint-disable-next-line no-inline-assembly
-        assembly { codehash := extcodehash(account) }
-        return (codehash != accountHash && codehash != 0x0);
-    }
-
-    /**
-     * @dev Replacement for Solidity's `transfer`: sends `amount` wei to
-     * `recipient`, forwarding all available gas and reverting on errors.
-     *
-     * https://eips.ethereum.org/EIPS/eip-1884[EIP1884] increases the gas cost
-     * of certain opcodes, possibly making contracts go over the 2300 gas limit
-     * imposed by `transfer`, making them unable to receive funds via
-     * `transfer`. {sendValue} removes this limitation.
-     *
-     * https://diligence.consensys.net/posts/2019/09/stop-using-soliditys-transfer-now/[Learn more].
-     *
-     * IMPORTANT: because control is transferred to `recipient`, care must be
-     * taken to not create reentrancy vulnerabilities. Consider using
-     * {ReentrancyGuard} or the
-     * https://solidity.readthedocs.io/en/v0.5.11/security-considerations.html#use-the-checks-effects-interactions-pattern[checks-effects-interactions pattern].
-     */
-    function sendValue(address payable recipient, uint256 amount) internal {
-        require(address(this).balance >= amount, "Address: insufficient balance");
-
-        // solhint-disable-next-line avoid-low-level-calls, avoid-call-value
-        (bool success, ) = recipient.call{ value: amount }("");
-        require(success, "Address: unable to send value, recipient may have reverted");
-    }
-
-    /**
-     * @dev Performs a Solidity function call using a low level `call`. A
-     * plain`call` is an unsafe replacement for a function call: use this
-     * function instead.
-     *
-     * If `target` reverts with a revert reason, it is bubbled up by this
-     * function (like regular Solidity function calls).
-     *
-     * Returns the raw returned data. To convert to the expected return value,
-     * use https://solidity.readthedocs.io/en/latest/units-and-global-variables.html?highlight=abi.decode#abi-encoding-and-decoding-functions[`abi.decode`].
-     *
-     * Requirements:
-     *
-     * - `target` must be a contract.
-     * - calling `target` with `data` must not revert.
-     *
-     * _Available since v3.1._
-     */
-    function functionCall(address target, bytes memory data) internal returns (bytes memory) {
-      return functionCall(target, data, "Address: low-level call failed");
-    }
-
-    /**
-     * @dev Same as {xref-Address-functionCall-address-bytes-}[`functionCall`], but with
-     * `errorMessage` as a fallback revert reason when `target` reverts.
-     *
-     * _Available since v3.1._
-     */
-    function functionCall(address target, bytes memory data, string memory errorMessage) internal returns (bytes memory) {
-        return _functionCallWithValue(target, data, 0, errorMessage);
-    }
-
-    /**
-     * @dev Same as {xref-Address-functionCall-address-bytes-}[`functionCall`],
-     * but also transferring `value` wei to `target`.
-     *
-     * Requirements:
-     *
-     * - the calling contract must have an ETH balance of at least `value`.
-     * - the called Solidity function must be `payable`.
-     *
-     * _Available since v3.1._
-     */
-    function functionCallWithValue(address target, bytes memory data, uint256 value) internal returns (bytes memory) {
-        return functionCallWithValue(target, data, value, "Address: low-level call with value failed");
-    }
-
-    /**
-     * @dev Same as {xref-Address-functionCallWithValue-address-bytes-uint256-}[`functionCallWithValue`], but
-     * with `errorMessage` as a fallback revert reason when `target` reverts.
-     *
-     * _Available since v3.1._
-     */
-    function functionCallWithValue(address target, bytes memory data, uint256 value, string memory errorMessage) internal returns (bytes memory) {
-        require(address(this).balance >= value, "Address: insufficient balance for call");
-        return _functionCallWithValue(target, data, value, errorMessage);
-    }
-
-    function _functionCallWithValue(address target, bytes memory data, uint256 weiValue, string memory errorMessage) private returns (bytes memory) {
-        require(isContract(target), "Address: call to non-contract");
-
-        // solhint-disable-next-line avoid-low-level-calls
-        (bool success, bytes memory returndata) = target.call{ value: weiValue }(data);
-        if (success) {
-            return returndata;
-        } else {
-            // Look for revert reason and bubble it up if present
-            if (returndata.length > 0) {
-                // The easiest way to bubble the revert reason is using memory via assembly
-
-                // solhint-disable-next-line no-inline-assembly
-                assembly {
-                    let returndata_size := mload(returndata)
-                    revert(add(32, returndata), returndata_size)
-                }
-            } else {
-                revert(errorMessage);
-            }
-        }
     }
 }
 
@@ -761,26 +1000,51 @@ pragma solidity 0.6.6;
 
 library RLPReader {
     uint8 constant STRING_SHORT_START = 0x80;
-    uint8 constant STRING_LONG_START = 0xb8;
-    uint8 constant LIST_SHORT_START = 0xc0;
-    uint8 constant LIST_LONG_START = 0xf8;
+    uint8 constant STRING_LONG_START  = 0xb8;
+    uint8 constant LIST_SHORT_START   = 0xc0;
+    uint8 constant LIST_LONG_START    = 0xf8;
     uint8 constant WORD_SIZE = 32;
 
     struct RLPItem {
-        uint256 len;
-        uint256 memPtr;
+        uint len;
+        uint memPtr;
+    }
+
+    struct Iterator {
+        RLPItem item;   // Item that's being iterated over.
+        uint nextPtr;   // Position of the next item in the list.
     }
 
     /*
-     * @param item RLP encoded bytes
-     */
-    function toRlpItem(bytes memory item)
-        internal
-        pure
-        returns (RLPItem memory)
-    {
-        require(item.length > 0, "RLPReader: INVALID_BYTES_LENGTH");
-        uint256 memPtr;
+    * @dev Returns the next element in the iteration. Reverts if it has not next element.
+    * @param self The iterator.
+    * @return The next element in the iteration.
+    */
+    function next(Iterator memory self) internal pure returns (RLPItem memory) {
+        require(hasNext(self));
+
+        uint ptr = self.nextPtr;
+        uint itemLength = _itemLength(ptr);
+        self.nextPtr = ptr + itemLength;
+
+        return RLPItem(itemLength, ptr);
+    }
+
+    /*
+    * @dev Returns true if the iteration has more elements.
+    * @param self The iterator.
+    * @return true if the iteration has more elements.
+    */
+    function hasNext(Iterator memory self) internal pure returns (bool) {
+        RLPItem memory item = self.item;
+        return self.nextPtr < item.memPtr + item.len;
+    }
+
+    /*
+    * @param item RLP encoded bytes
+    */
+    function toRlpItem(bytes memory item) internal pure returns (RLPItem memory) {
+        uint memPtr;
         assembly {
             memPtr := add(item, 0x20)
         }
@@ -789,25 +1053,57 @@ library RLPReader {
     }
 
     /*
-     * @param item RLP encoded list in bytes
+    * @dev Create an iterator. Reverts if item is not a list.
+    * @param self The RLP item.
+    * @return An 'Iterator' over the item.
+    */
+    function iterator(RLPItem memory self) internal pure returns (Iterator memory) {
+        require(isList(self));
+
+        uint ptr = self.memPtr + _payloadOffset(self.memPtr);
+        return Iterator(self, ptr);
+    }
+
+    /*
+    * @param the RLP item.
+    */
+    function rlpLen(RLPItem memory item) internal pure returns (uint) {
+        return item.len;
+    }
+
+    /*
+     * @param the RLP item.
+     * @return (memPtr, len) pair: location of the item's payload in memory.
      */
-    function toList(RLPItem memory item)
-        internal
-        pure
-        returns (RLPItem[] memory)
-    {
-        require(isList(item), "RLPReader: ITEM_NOT_LIST");
+    function payloadLocation(RLPItem memory item) internal pure returns (uint, uint) {
+        uint offset = _payloadOffset(item.memPtr);
+        uint memPtr = item.memPtr + offset;
+        uint len = item.len - offset; // data length
+        return (memPtr, len);
+    }
 
-        uint256 items = numItems(item);
+    /*
+    * @param the RLP item.
+    */
+    function payloadLen(RLPItem memory item) internal pure returns (uint) {
+        (, uint len) = payloadLocation(item);
+        return len;
+    }
+
+    /*
+    * @param the RLP item containing the encoded list.
+    */
+    function toList(RLPItem memory item) internal pure returns (RLPItem[] memory) {
+        require(isList(item));
+
+        uint items = numItems(item);
         RLPItem[] memory result = new RLPItem[](items);
-        uint256 listLength = _itemLength(item.memPtr);
-        require(listLength == item.len, "RLPReader: LIST_DECODED_LENGTH_MISMATCH");
 
-        uint256 memPtr = item.memPtr + _payloadOffset(item.memPtr);
-        uint256 dataLen;
-        for (uint256 i = 0; i < items; i++) {
+        uint memPtr = item.memPtr + _payloadOffset(item.memPtr);
+        uint dataLen;
+        for (uint i = 0; i < items; i++) {
             dataLen = _itemLength(memPtr);
-            result[i] = RLPItem(dataLen, memPtr);
+            result[i] = RLPItem(dataLen, memPtr); 
             memPtr = memPtr + dataLen;
         }
 
@@ -816,27 +1112,54 @@ library RLPReader {
 
     // @return indicator whether encoded payload is a list. negate this function call for isData.
     function isList(RLPItem memory item) internal pure returns (bool) {
+        if (item.len == 0) return false;
+
         uint8 byte0;
-        uint256 memPtr = item.memPtr;
+        uint memPtr = item.memPtr;
         assembly {
             byte0 := byte(0, mload(memPtr))
         }
 
-        if (byte0 < LIST_SHORT_START) return false;
+        if (byte0 < LIST_SHORT_START)
+            return false;
         return true;
+    }
+
+    /*
+     * @dev A cheaper version of keccak256(toRlpBytes(item)) that avoids copying memory.
+     * @return keccak256 hash of RLP encoded bytes.
+     */
+    function rlpBytesKeccak256(RLPItem memory item) internal pure returns (bytes32) {
+        uint256 ptr = item.memPtr;
+        uint256 len = item.len;
+        bytes32 result;
+        assembly {
+            result := keccak256(ptr, len)
+        }
+        return result;
+    }
+
+    /*
+     * @dev A cheaper version of keccak256(toBytes(item)) that avoids copying memory.
+     * @return keccak256 hash of the item payload.
+     */
+    function payloadKeccak256(RLPItem memory item) internal pure returns (bytes32) {
+        (uint memPtr, uint len) = payloadLocation(item);
+        bytes32 result;
+        assembly {
+            result := keccak256(memPtr, len)
+        }
+        return result;
     }
 
     /** RLPItem conversions into data types **/
 
     // @returns raw rlp encoding in bytes
-    function toRlpBytes(RLPItem memory item)
-        internal
-        pure
-        returns (bytes memory)
-    {
+    function toRlpBytes(RLPItem memory item) internal pure returns (bytes memory) {
         bytes memory result = new bytes(item.len);
-
-        uint256 ptr;
+        if (result.length == 0) return result;
+        
+        uint ptr;
         assembly {
             ptr := add(0x20, result)
         }
@@ -845,25 +1168,39 @@ library RLPReader {
         return result;
     }
 
+    // any non-zero byte except "0x80" is considered true
+    function toBoolean(RLPItem memory item) internal pure returns (bool) {
+        require(item.len == 1);
+        uint result;
+        uint memPtr = item.memPtr;
+        assembly {
+            result := byte(0, mload(memPtr))
+        }
+
+        // SEE Github Issue #5.
+        // Summary: Most commonly used RLP libraries (i.e Geth) will encode
+        // "0" as "0x80" instead of as "0". We handle this edge case explicitly
+        // here.
+        if (result == 0 || result == STRING_SHORT_START) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+
     function toAddress(RLPItem memory item) internal pure returns (address) {
-        require(!isList(item), "RLPReader: DECODING_LIST_AS_ADDRESS");
         // 1 byte for the length prefix
-        require(item.len == 21, "RLPReader: INVALID_ADDRESS_LENGTH");
+        require(item.len == 21);
 
         return address(toUint(item));
     }
 
-    function toUint(RLPItem memory item) internal pure returns (uint256) {
-        require(!isList(item), "RLPReader: DECODING_LIST_AS_UINT");
-        require(item.len <= 33, "RLPReader: INVALID_UINT_LENGTH");
+    function toUint(RLPItem memory item) internal pure returns (uint) {
+        require(item.len > 0 && item.len <= 33);
 
-        uint256 itemLength = _itemLength(item.memPtr);
-        require(itemLength == item.len, "RLPReader: UINT_DECODED_LENGTH_MISMATCH");
+        (uint memPtr, uint len) = payloadLocation(item);
 
-        uint256 offset = _payloadOffset(item.memPtr);
-        uint256 len = item.len - offset;
-        uint256 result;
-        uint256 memPtr = item.memPtr + offset;
+        uint result;
         assembly {
             result := mload(memPtr)
 
@@ -877,14 +1214,12 @@ library RLPReader {
     }
 
     // enforces 32 byte length
-    function toUintStrict(RLPItem memory item) internal pure returns (uint256) {
-        uint256 itemLength = _itemLength(item.memPtr);
-        require(itemLength == item.len, "RLPReader: UINT_STRICT_DECODED_LENGTH_MISMATCH");
+    function toUintStrict(RLPItem memory item) internal pure returns (uint) {
         // one byte prefix
-        require(item.len == 33, "RLPReader: INVALID_UINT_STRICT_LENGTH");
+        require(item.len == 33);
 
-        uint256 result;
-        uint256 memPtr = item.memPtr + 1;
+        uint result;
+        uint memPtr = item.memPtr + 1;
         assembly {
             result := mload(memPtr)
         }
@@ -893,66 +1228,69 @@ library RLPReader {
     }
 
     function toBytes(RLPItem memory item) internal pure returns (bytes memory) {
-        uint256 listLength = _itemLength(item.memPtr);
-        require(listLength == item.len, "RLPReader: BYTES_DECODED_LENGTH_MISMATCH");
-        uint256 offset = _payloadOffset(item.memPtr);
+        require(item.len > 0);
 
-        uint256 len = item.len - offset; // data length
+        (uint memPtr, uint len) = payloadLocation(item);
         bytes memory result = new bytes(len);
 
-        uint256 destPtr;
+        uint destPtr;
         assembly {
             destPtr := add(0x20, result)
         }
 
-        copy(item.memPtr + offset, destPtr, len);
+        copy(memPtr, destPtr, len);
         return result;
     }
 
     /*
-     * Private Helpers
-     */
+    * Private Helpers
+    */
 
     // @return number of payload items inside an encoded list.
-    function numItems(RLPItem memory item) private pure returns (uint256) {
-        // add `isList` check if `item` is expected to be passsed without a check from calling function
-        // require(isList(item), "RLPReader: NUM_ITEMS_NOT_LIST");
+    function numItems(RLPItem memory item) private pure returns (uint) {
+        if (item.len == 0) return 0;
 
-        uint256 count = 0;
-        uint256 currPtr = item.memPtr + _payloadOffset(item.memPtr);
-        uint256 endPtr = item.memPtr + item.len;
+        uint count = 0;
+        uint currPtr = item.memPtr + _payloadOffset(item.memPtr);
+        uint endPtr = item.memPtr + item.len;
         while (currPtr < endPtr) {
-            currPtr = currPtr + _itemLength(currPtr); // skip over an item
-            require(currPtr <= endPtr, "RLPReader: NUM_ITEMS_DECODED_LENGTH_MISMATCH");
-            count++;
+           currPtr = currPtr + _itemLength(currPtr); // skip over an item
+           count++;
         }
 
         return count;
     }
 
     // @return entire rlp item byte length
-    function _itemLength(uint256 memPtr) private pure returns (uint256) {
-        uint256 itemLen;
-        uint256 byte0;
+    function _itemLength(uint memPtr) private pure returns (uint) {
+        uint itemLen;
+        uint byte0;
         assembly {
             byte0 := byte(0, mload(memPtr))
         }
 
-        if (byte0 < STRING_SHORT_START) itemLen = 1;
+        if (byte0 < STRING_SHORT_START)
+            itemLen = 1;
+        
         else if (byte0 < STRING_LONG_START)
             itemLen = byte0 - STRING_SHORT_START + 1;
+
         else if (byte0 < LIST_SHORT_START) {
             assembly {
                 let byteLen := sub(byte0, 0xb7) // # of bytes the actual length is
                 memPtr := add(memPtr, 1) // skip over the first byte
-
+                
                 /* 32 byte word size */
                 let dataLen := div(mload(memPtr), exp(256, sub(32, byteLen))) // right shifting to get the len
                 itemLen := add(dataLen, add(byteLen, 1))
             }
-        } else if (byte0 < LIST_LONG_START) {
+        }
+
+        else if (byte0 < LIST_LONG_START) {
             itemLen = byte0 - LIST_SHORT_START + 1;
-        } else {
+        } 
+
+        else {
             assembly {
                 let byteLen := sub(byte0, 0xf7)
                 memPtr := add(memPtr, 1)
@@ -966,33 +1304,28 @@ library RLPReader {
     }
 
     // @return number of bytes until the data
-    function _payloadOffset(uint256 memPtr) private pure returns (uint256) {
-        uint256 byte0;
+    function _payloadOffset(uint memPtr) private pure returns (uint) {
+        uint byte0;
         assembly {
             byte0 := byte(0, mload(memPtr))
         }
 
-        if (byte0 < STRING_SHORT_START) return 0;
-        else if (
-            byte0 < STRING_LONG_START ||
-            (byte0 >= LIST_SHORT_START && byte0 < LIST_LONG_START)
-        ) return 1;
-        else if (byte0 < LIST_SHORT_START)
-            // being explicit
+        if (byte0 < STRING_SHORT_START) 
+            return 0;
+        else if (byte0 < STRING_LONG_START || (byte0 >= LIST_SHORT_START && byte0 < LIST_LONG_START))
+            return 1;
+        else if (byte0 < LIST_SHORT_START)  // being explicit
             return byte0 - (STRING_LONG_START - 1) + 1;
-        else return byte0 - (LIST_LONG_START - 1) + 1;
+        else
+            return byte0 - (LIST_LONG_START - 1) + 1;
     }
 
     /*
-     * @param src Pointer to source
-     * @param dest Pointer to destination
-     * @param len Amount of memory to copy from the source
-     */
-    function copy(
-        uint256 src,
-        uint256 dest,
-        uint256 len
-    ) private pure {
+    * @param src Pointer to source
+    * @param dest Pointer to destination
+    * @param len Amount of memory to copy from the source
+    */
+    function copy(uint src, uint dest, uint len) private pure {
         if (len == 0) return;
 
         // copy as many word sizes as possible
@@ -1005,12 +1338,14 @@ library RLPReader {
             dest += WORD_SIZE;
         }
 
-        // left over bytes. Mask is used to remove unwanted bytes from the word
-        uint256 mask = 256**(WORD_SIZE - len) - 1;
-        assembly {
-            let srcpart := and(mload(src), not(mask)) // zero out src
-            let destpart := and(mload(dest), mask) // retrieve the bytes
-            mstore(dest, or(destpart, srcpart))
+        if (len > 0) {
+            // left over bytes. Mask is used to remove unwanted bytes from the word
+            uint mask = 256 ** (WORD_SIZE - len) - 1;
+            assembly {
+                let srcpart := and(mload(src), not(mask)) // zero out src
+                let destpart := and(mload(dest), mask) // retrieve the bytes
+                mstore(dest, or(destpart, srcpart))
+            }
         }
     }
 }
@@ -1077,6 +1412,8 @@ pragma solidity 0.6.6;
 
 
 
+
+
 contract MintableERC20Predicate is
     ITokenPredicate,
     AccessControlMixin,
@@ -1084,6 +1421,7 @@ contract MintableERC20Predicate is
 {
     using RLPReader for bytes;
     using RLPReader for RLPReader.RLPItem;
+    using SafeERC20 for IERC20;
 
     bytes32 public constant MANAGER_ROLE = keccak256("MANAGER_ROLE");
     bytes32 public constant TOKEN_TYPE = keccak256("MintableERC20");
@@ -1119,14 +1457,13 @@ contract MintableERC20Predicate is
         address rootToken,
         bytes calldata depositData
     ) external override only(MANAGER_ROLE) {
-        uint256 amount = abi.decode(depositData, (uint256));
 
+        uint256 amount = abi.decode(depositData, (uint256));
         emit LockedMintableERC20(depositor, depositReceiver, rootToken, amount);
-        IMintableERC20(rootToken).transferFrom(
-            depositor,
-            address(this),
-            amount
-        );
+
+        // Attempt to perform safe transfer from i.e. check function return value
+        // using low-level call & revert if didn't succeed
+        IERC20(rootToken).safeTransferFrom(depositor, address(this), amount);
     }
 
     /**
@@ -1157,7 +1494,6 @@ contract MintableERC20Predicate is
         );
 
         IMintableERC20 token = IMintableERC20(rootToken);
-
         uint256 tokenBalance = token.balanceOf(address(this));
         uint256 amount = logRLPList[2].toUint();
 
@@ -1170,6 +1506,8 @@ contract MintableERC20Predicate is
             token.mint(address(this), amount - tokenBalance);
         }
 
-        token.transfer(withdrawer, amount);
+        // Attempt to perform safe transfer i.e. check function return value
+        // using low-level call & revert if didn't succeed
+        IERC20(rootToken).safeTransfer(withdrawer, amount);
     }
 }

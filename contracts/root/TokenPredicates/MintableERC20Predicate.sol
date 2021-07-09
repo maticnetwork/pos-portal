@@ -1,5 +1,7 @@
 pragma solidity 0.6.6;
 
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import {IMintableERC20} from "../RootToken/IMintableERC20.sol";
 import {AccessControlMixin} from "../../common/AccessControlMixin.sol";
 import {RLPReader} from "../../lib/RLPReader.sol";
@@ -13,6 +15,7 @@ contract MintableERC20Predicate is
 {
     using RLPReader for bytes;
     using RLPReader for RLPReader.RLPItem;
+    using SafeERC20 for IERC20;
 
     bytes32 public constant MANAGER_ROLE = keccak256("MANAGER_ROLE");
     bytes32 public constant TOKEN_TYPE = keccak256("MintableERC20");
@@ -48,14 +51,13 @@ contract MintableERC20Predicate is
         address rootToken,
         bytes calldata depositData
     ) external override only(MANAGER_ROLE) {
-        uint256 amount = abi.decode(depositData, (uint256));
 
+        uint256 amount = abi.decode(depositData, (uint256));
         emit LockedMintableERC20(depositor, depositReceiver, rootToken, amount);
-        IMintableERC20(rootToken).transferFrom(
-            depositor,
-            address(this),
-            amount
-        );
+
+        // Attempt to perform safe transfer from i.e. check function return value
+        // using low-level call & revert if didn't succeed
+        IERC20(rootToken).safeTransferFrom(depositor, address(this), amount);
     }
 
     /**
@@ -86,7 +88,6 @@ contract MintableERC20Predicate is
         );
 
         IMintableERC20 token = IMintableERC20(rootToken);
-
         uint256 tokenBalance = token.balanceOf(address(this));
         uint256 amount = logRLPList[2].toUint();
 
@@ -99,6 +100,8 @@ contract MintableERC20Predicate is
             token.mint(address(this), amount - tokenBalance);
         }
 
-        token.transfer(withdrawer, amount);
+        // Attempt to perform safe transfer i.e. check function return value
+        // using low-level call & revert if didn't succeed
+        IERC20(rootToken).safeTransfer(withdrawer, amount);
     }
 }
