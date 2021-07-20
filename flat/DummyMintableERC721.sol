@@ -2129,6 +2129,9 @@ abstract contract ContextMixin {
 
 // File: contracts/root/RootToken/DummyMintableERC721.sol
 
+// This contract is not supposed to be used in production
+// It's strictly for testing purpose
+
 pragma solidity 0.6.6;
 
 

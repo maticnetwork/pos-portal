@@ -709,7 +709,7 @@ abstract contract BaseChildTunnel is AccessControlMixin {
 
 // File: contracts/tunnel/ChildTunnel.sol
 
-pragma solidity ^0.6.6;
+pragma solidity 0.6.6;
 
 
 

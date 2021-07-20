@@ -1,3 +1,6 @@
+// This contract is not supposed to be used in production
+// It's strictly for testing purpose
+
 pragma solidity 0.6.6;
 
 import {ERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";

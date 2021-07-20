@@ -1758,6 +1758,9 @@ contract AccessControlMixin is AccessControl {
 
 // File: contracts/root/RootToken/DummyMintableERC1155.sol
 
+// This contract is not supposed to be used in production
+// It's strictly for testing purpose
+
 pragma solidity 0.6.6;
 
 
