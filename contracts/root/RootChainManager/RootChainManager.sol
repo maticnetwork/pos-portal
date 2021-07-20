@@ -95,6 +95,7 @@ contract RootChainManager is
         external
         only(DEFAULT_ADMIN_ROLE)
     {
+        require(newStateSender != address(0), "RootChainManager: BAD_NEW_STATE_SENDER");
         _stateSender = IStateSender(newStateSender);
     }
 
@@ -115,6 +116,7 @@ contract RootChainManager is
         external
         only(DEFAULT_ADMIN_ROLE)
     {
+        require(newCheckpointManager != address(0), "RootChainManager: BAD_NEW_CHECKPOINT_MANAGER");
         _checkpointManager = ICheckpointManager(newCheckpointManager);
     }
 
