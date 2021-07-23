@@ -238,7 +238,7 @@ library RLPReader {
         uint256 src,
         uint256 dest,
         uint256 len
-    ) private pure {
+    ) internal pure {
         if (len == 0) return;
 
         // copy as many word sizes as possible

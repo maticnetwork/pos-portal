@@ -6,6 +6,7 @@ import {RootChainManagerStorage} from "./RootChainManagerStorage.sol";
 import {IStateSender} from "../StateSender/IStateSender.sol";
 import {ICheckpointManager} from "../ICheckpointManager.sol";
 import {RLPReader} from "../../lib/RLPReader.sol";
+import {ExitPayloadReader} from "../../lib/ExitPayloadReader.sol";
 import {MerklePatriciaProof} from "../../lib/MerklePatriciaProof.sol";
 import {Merkle} from "../../lib/Merkle.sol";
 import {ITokenPredicate} from "../TokenPredicates/ITokenPredicate.sol";
@@ -24,8 +25,11 @@ contract RootChainManager is
     NativeMetaTransaction,
     ContextMixin
 {
-    using RLPReader for bytes;
-    using RLPReader for RLPReader.RLPItem;
+    using ExitPayloadReader for bytes;
+    using ExitPayloadReader for ExitPayloadReader.ExitPayload;
+    using ExitPayloadReader for ExitPayloadReader.Log;
+    using ExitPayloadReader for ExitPayloadReader.Receipt;
+
     using Merkle for bytes32;
     using SafeMath for uint256;
 
@@ -316,6 +320,28 @@ contract RootChainManager is
         );
     }
 
+    // function parseReceipt(bytes memory receiptOrBytes) internal pure returns(RLPReader.RLPItem[] memory receipt) {
+    //     RLPReader.RLPItem memory receiptItem = receiptOrBytes.toRlpItem();
+
+    //     if (receiptItem.isList()) {
+    //         // legacy tx
+    //         receipt = receiptItem.toList();
+    //     } else {
+    //         // pop first byte before parsting receipt
+    //         bytes memory typedBytes = receiptItem.toBytes();
+    //         bytes memory result = new bytes(typedBytes.length - 1);
+    //         uint256 srcPtr;
+    //         uint256 destPtr;
+    //         assembly {
+    //             srcPtr := add(33, typedBytes)
+    //             destPtr := add(0x20, result)
+    //         }
+
+    //         RLPReader.copy(srcPtr, destPtr, result.length);
+    //         receipt = result.toRlpItem().toList();
+    //     }
+    // }
+
     /**
      * @notice exit tokens by providing proof
      * @dev This function verifies if the transaction actually happened on child chain
@@ -334,40 +360,33 @@ contract RootChainManager is
      *  9 - receiptLogIndex - Log Index to read from the receipt
      */
     function exit(bytes calldata inputData) external override {
-        RLPReader.RLPItem[] memory inputDataRLPList = inputData
-            .toRlpItem()
-            .toList();
+        ExitPayloadReader.ExitPayload memory payload = inputData.toExitPayload();
 
+        bytes memory branchMaskBytes = payload.getBranchMaskAsBytes();
         // checking if exit has already been processed
         // unique exit is identified using hash of (blockNumber, branchMask, receiptLogIndex)
         bytes32 exitHash = keccak256(
             abi.encodePacked(
-                inputDataRLPList[2].toUint(), // blockNumber
+                payload.getBlockNumber(),
                 // first 2 nibbles are dropped while generating nibble array
                 // this allows branch masks that are valid but bypass exitHash check (changing first 2 nibbles only)
                 // so converting to nibble array and then hashing it
-                MerklePatriciaProof._getNibbleArray(inputDataRLPList[8].toBytes()), // branchMask
-                inputDataRLPList[9].toUint() // receiptLogIndex
+                MerklePatriciaProof._getNibbleArray(branchMaskBytes),
+                payload.getReceiptLogIndex()
             )
         );
+
         require(
             processedExits[exitHash] == false,
             "RootChainManager: EXIT_ALREADY_PROCESSED"
         );
         processedExits[exitHash] = true;
 
-        RLPReader.RLPItem[] memory receiptRLPList = inputDataRLPList[6]
-            .toBytes()
-            .toRlpItem()
-            .toList();
-        RLPReader.RLPItem memory logRLP = receiptRLPList[3]
-            .toList()[
-                inputDataRLPList[9].toUint() // receiptLogIndex
-            ];
+        ExitPayloadReader.Receipt memory receipt = payload.getReceipt();
+        ExitPayloadReader.Log memory log = receipt.getLog();
 
-        address childToken = RLPReader.toAddress(logRLP.toList()[0]); // log emitter address field
         // log should be emmited only by the child token
-        address rootToken = childToRootToken[childToken];
+        address rootToken = childToRootToken[log.getEmitter()];
         require(
             rootToken != address(0),
             "RootChainManager: TOKEN_NOT_MAPPED"
@@ -379,37 +398,37 @@ contract RootChainManager is
 
         // branch mask can be maximum 32 bits
         require(
-            inputDataRLPList[8].toUint() &
-                0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF00000000 ==
-                0,
+            payload.getBranchMaskAsUint() &
+            0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF00000000 ==
+            0,
             "RootChainManager: INVALID_BRANCH_MASK"
         );
 
         // verify receipt inclusion
         require(
             MerklePatriciaProof.verify(
-                inputDataRLPList[6].toBytes(), // receipt
-                inputDataRLPList[8].toBytes(), // branchMask
-                inputDataRLPList[7].toBytes(), // receiptProof
-                bytes32(inputDataRLPList[5].toUint()) // receiptRoot
+                receipt.toBytes(),
+                branchMaskBytes,
+                payload.getReceiptProof(),
+                payload.getReceiptRoot()
             ),
             "RootChainManager: INVALID_PROOF"
         );
 
         // verify checkpoint inclusion
         _checkBlockMembershipInCheckpoint(
-            inputDataRLPList[2].toUint(), // blockNumber
-            inputDataRLPList[3].toUint(), // blockTime
-            bytes32(inputDataRLPList[4].toUint()), // txRoot
-            bytes32(inputDataRLPList[5].toUint()), // receiptRoot
-            inputDataRLPList[0].toUint(), // headerNumber
-            inputDataRLPList[1].toBytes() // blockProof
+            payload.getBlockNumber(), 
+            payload.getBlockTime(), 
+            payload.getTxRoot(), 
+            payload.getReceiptRoot(), 
+            payload.getHeaderNumber(), 
+            payload.getBlockProof()
         );
 
         ITokenPredicate(predicateAddress).exitTokens(
             _msgSender(),
             rootToken,
-            logRLP.toRlpBytes()
+            log.toRlpBytes()
         );
     }
 
