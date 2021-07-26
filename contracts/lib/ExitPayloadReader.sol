@@ -18,6 +18,11 @@ library ExitPayloadReader {
 
   struct Log {
     RLPReader.RLPItem data;
+    RLPReader.RLPItem[] list;
+  }
+
+  struct LogTopics {
+    RLPReader.RLPItem[] data;
   }
 
   function toExitPayload(bytes memory data)
@@ -97,21 +102,36 @@ library ExitPayloadReader {
     function getReceiptLogIndex(ExitPayload memory payload) internal pure returns(uint256) {
       return payload.data[9].toUint();
     }
-
+    
+    // Receipt methods
     function toBytes(Receipt memory receipt) internal pure returns(bytes memory) {
         return receipt.raw;
     }
 
     function getLog(Receipt memory receipt) internal pure returns(Log memory) {
         RLPReader.RLPItem memory logData = receipt.data[3].toList()[receipt.logIndex];
-        return Log(logData);
+        return Log(logData, logData.toList());
     }
 
+    // Log methods
     function getEmitter(Log memory log) internal pure returns(address) {
-      return RLPReader.toAddress(log.data.toList()[0]);
+      return RLPReader.toAddress(log.list[0]);
+    }
+
+    function getTopics(Log memory log) internal pure returns(LogTopics memory) {
+        return LogTopics(log.list[1].toList());
+    }
+
+    function getData(Log memory log) internal pure returns(bytes memory) {
+        return log.list[2].toBytes();
     }
 
     function toRlpBytes(Log memory log) internal pure returns(bytes memory) {
       return log.data.toRlpBytes();
+    }
+
+    // LogTopics methods
+    function getField(LogTopics memory topics, uint256 index) internal pure returns(RLPReader.RLPItem memory) {
+      return topics.data[index];
     }
 }
