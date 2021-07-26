@@ -1,8 +1,7 @@
 pragma solidity 0.6.6;
 pragma experimental ABIEncoderV2;
 
-import {RootChainManager} from "./RootChainManager.sol";
-import {ExitPayloadReader} from "../../lib/ExitPayloadReader.sol";
+import {ExitPayloadReader} from "./ExitPayloadReader.sol";
 
 contract ExitPayloadReaderTest {
     using ExitPayloadReader for bytes;
