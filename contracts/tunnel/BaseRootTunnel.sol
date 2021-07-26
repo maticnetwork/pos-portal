@@ -91,11 +91,7 @@ abstract contract BaseRootTunnel is AccessControlMixin {
     }
 
     function _validateAndExtractMessage(bytes memory inputData) internal returns (bytes memory) {
-        // RLPReader.RLPItem[] memory inputDataRLPList = inputData
-        //     .toRlpItem()
-        //     .toList();
-
-        ExitPayloadReader.ExitPayload memory payload = inputData.toExitPayload();
+         ExitPayloadReader.ExitPayload memory payload = inputData.toExitPayload();
 
         bytes memory branchMaskBytes = payload.getBranchMaskAsBytes();
         // checking if exit has already been processed
