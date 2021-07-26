@@ -65,7 +65,7 @@ library ExitPayloadReader {
           receipt.data = receiptItem.toList();
       } else {
           // pop first byte before parsting receipt
-          bytes memory typedBytes = receiptItem.toBytes();
+          bytes memory typedBytes = receipt.raw;
           bytes memory result = new bytes(typedBytes.length - 1);
           uint256 srcPtr;
           uint256 destPtr;
