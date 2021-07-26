@@ -4,11 +4,11 @@ import chaiBN from 'chai-bn'
 import BN from 'bn.js'
 import { defaultAbiCoder as abi } from 'ethers/utils/abi-coder'
 import { expectRevert } from '@openzeppelin/test-helpers'
-import { bufferToHex, rlp } from 'ethereumjs-util'
+import { bufferToHex, rlp, toBuffer } from 'ethereumjs-util'
 
 import * as deployer from '../helpers/deployer'
 import { mockValues } from '../helpers/constants'
-import { childWeb3 } from '../helpers/contracts'
+import contracts, { childWeb3, rootWeb3 as web3 } from '../helpers/contracts'
 import logDecoder from '../helpers/log-decoder'
 import { submitCheckpoint } from '../helpers/checkpoint'
 import { getFakeReceiptBytes, getDiffEncodedReceipt } from '../helpers/proofs'
@@ -38,6 +38,43 @@ function pad(n, width, z) {
 }
 
 contract('RootChainManager', async(accounts) => {
+  describe('Typed transaction', function() {
+    let contracts
+
+    before(async() => {
+      contracts = await deployer.deployInitializedContracts(accounts)
+    })
+
+    it('should parse typed receipt', async function() {
+      const txType = '0x1'
+      const receiptData = Buffer.concat([toBuffer(txType), rlp.encode([
+        toBuffer(txType), // type
+        toBuffer(1000), // cumulative gas
+        toBuffer('0x000000000'), // logs bloom
+        [] // logs
+      ])])
+
+      const data = bufferToHex(
+        rlp.encode([
+          web3.utils.toBN(1),
+          bufferToHex(toBuffer('0x0')),
+          web3.utils.toBN(1),
+          web3.utils.toBN(1),
+          bufferToHex(toBuffer('0x000000000')),
+          bufferToHex(toBuffer('0x000000000')),
+          bufferToHex(receiptData),
+          bufferToHex(toBuffer('0x000000000')),
+          bufferToHex(toBuffer('0x000000000')), // branch mask,
+          web3.utils.toBN(1)
+        ])
+      )
+
+      const parseReceipt = await contracts.root.exitPayloadReaderTest.tryParseReceipt(data)
+
+      should.equal(parseReceipt.raw, bufferToHex(receiptData))
+    })
+  })
+
   describe('Withdraw ERC20', async() => {
     const depositAmount = mockValues.amounts[1]
     let totalDepositedAmount = new BN('0')
