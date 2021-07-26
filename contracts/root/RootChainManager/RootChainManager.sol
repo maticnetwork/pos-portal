@@ -320,28 +320,6 @@ contract RootChainManager is
         );
     }
 
-    // function parseReceipt(bytes memory receiptOrBytes) internal pure returns(RLPReader.RLPItem[] memory receipt) {
-    //     RLPReader.RLPItem memory receiptItem = receiptOrBytes.toRlpItem();
-
-    //     if (receiptItem.isList()) {
-    //         // legacy tx
-    //         receipt = receiptItem.toList();
-    //     } else {
-    //         // pop first byte before parsting receipt
-    //         bytes memory typedBytes = receiptItem.toBytes();
-    //         bytes memory result = new bytes(typedBytes.length - 1);
-    //         uint256 srcPtr;
-    //         uint256 destPtr;
-    //         assembly {
-    //             srcPtr := add(33, typedBytes)
-    //             destPtr := add(0x20, result)
-    //         }
-
-    //         RLPReader.copy(srcPtr, destPtr, result.length);
-    //         receipt = result.toRlpItem().toList();
-    //     }
-    // }
-
     /**
      * @notice exit tokens by providing proof
      * @dev This function verifies if the transaction actually happened on child chain
