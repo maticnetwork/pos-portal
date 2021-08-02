@@ -6,6 +6,8 @@ library ExitPayloadReader {
   using RLPReader for bytes;
   using RLPReader for RLPReader.RLPItem;
 
+  uint8 constant WORD_SIZE = 32;
+
   struct ExitPayload {
     RLPReader.RLPItem[] data;
   }
@@ -24,6 +26,29 @@ library ExitPayloadReader {
   struct LogTopics {
     RLPReader.RLPItem[] data;
   }
+
+  // copy paste of private copy() from RLPReader to avoid changing of existing contracts
+  function copy(uint src, uint dest, uint len) private pure {
+        if (len == 0) return;
+
+        // copy as many word sizes as possible
+        for (; len >= WORD_SIZE; len -= WORD_SIZE) {
+            assembly {
+                mstore(dest, mload(src))
+            }
+
+            src += WORD_SIZE;
+            dest += WORD_SIZE;
+        }
+
+        // left over bytes. Mask is used to remove unwanted bytes from the word
+        uint mask = 256 ** (WORD_SIZE - len) - 1;
+        assembly {
+            let srcpart := and(mload(src), not(mask)) // zero out src
+            let destpart := and(mload(dest), mask) // retrieve the bytes
+            mstore(dest, or(destpart, srcpart))
+        }
+    }
 
   function toExitPayload(bytes memory data)
         internal
@@ -79,7 +104,7 @@ library ExitPayloadReader {
               destPtr := add(0x20, result)
           }
 
-          RLPReader.copy(srcPtr, destPtr, result.length);
+          copy(srcPtr, destPtr, result.length);
           receipt.data = result.toRlpItem().toList();
       }
 
