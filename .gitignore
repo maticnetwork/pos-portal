@@ -19,3 +19,5 @@ contractAddresses.json
 tenderly.yaml
 
 contracts/ChainConstants.sol
+
+contracts/dump.json
