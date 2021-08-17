@@ -1,0 +1,37 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "ProxyTestImplStorageLayoutChange",
+  "sourceName": "contracts/test/ProxyTestImplStorageLayoutChange.sol",
+  "abi": [
+    {
+      "inputs": [],
+      "name": "a",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "b",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x608060405260008060006101000a81548160ff02191690831515021790555034801561002a57600080fd5b5060b1806100396000396000f3fe6080604052348015600f57600080fd5b506004361060325760003560e01c80630dbe671f1460375780634df7e3d0146053575b600080fd5b603d606f565b6040518082815260200191505060405180910390f35b60596075565b6040518082815260200191505060405180910390f35b60025481565b6001548156fea2646970667358221220efcca57c4a561c2746cfe23d80180da05f337413940d83990f57076ffeff7b0564736f6c63430006060033",
+  "deployedBytecode": "0x6080604052348015600f57600080fd5b506004361060325760003560e01c80630dbe671f1460375780634df7e3d0146053575b600080fd5b603d606f565b6040518082815260200191505060405180910390f35b60596075565b6040518082815260200191505060405180910390f35b60025481565b6001548156fea2646970667358221220efcca57c4a561c2746cfe23d80180da05f337413940d83990f57076ffeff7b0564736f6c63430006060033",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

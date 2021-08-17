@@ -40,6 +40,9 @@
     "mnemonics": "clock radar mass judge dismiss just intact mind resemble fringe diary casino"
   },
   "devDependencies": {
+    "@nomiclabs/hardhat-ethers": "^2.0.2",
+    "@nomiclabs/hardhat-truffle5": "^2.0.0",
+    "@nomiclabs/hardhat-web3": "^2.0.0",
     "@openzeppelin/contracts": "^3.1.0",
     "@openzeppelin/test-helpers": "^0.5.5",
     "@truffle/hdwallet-provider": "^1.0.35",
@@ -68,15 +71,17 @@
     "eth-sig-util": "^2.5.2",
     "ethereumjs-tx": "^2.1.2",
     "ethereumjs-util": "^7.0.2",
-    "ethereumjs-wallet": "0.6.2",
+    "ethereumjs-wallet": "^1.0.1",
     "ethers": "^4.0.46",
     "fs": "0.0.1-security",
     "glob": "^7.1.6",
+    "hardhat": "^2.6.0",
     "moonwalker": "github:atvanguard/moonwalker#4c4592e2d6c1744fbcd9452cf0f00e9beb236b21",
     "nunjucks": "^3.2.1",
     "solium": "^1.2.5",
     "truffle": "^5.1.21",
-    "truffle-flattener": "^1.4.4"
+    "truffle-flattener": "^1.4.4",
+    "web3": "^1.5.1"
   },
   "dependencies": {
     "ganache-cli": "^6.9.1"
