@@ -24,24 +24,28 @@ const API_KEY = process.env.API_KEY
  * @type import('hardhat/config').HardhatUserConfig
  */
 module.exports = {
-  defaultNetwork: "hardhat",
+  defaultNetwork: "localhost",
   networks: {
     hardhat: {
       accounts: {mnemonic: MNEMONIC},
       allowUnlimitedContractSize: true,
     },
     localhost: {
+      url: 'http://127.0.0.1:9545',
+      allowUnlimitedContractSize: true,
+    },
+    root: {
       url: "http://127.0.0.1:9545",
       allowUnlimitedContractSize: true,
-      gas: 90000000
     },
-    // development: {
-    //   url: 'localhost',
-    //   port: 9545,
-    //   network_id: '*', // match any network
-    //   skipDryRun: true,
-    //   gas: 7000000
-    // },
+    child: {
+      url: "http://127.0.0.1:8545",
+      allowUnlimitedContractSize: true,
+      gas: 7000000,
+    },
+  },
+  mocha: {
+    timeout: 100000
   },
   solidity: "0.6.6",
   settings: {
@@ -49,5 +53,6 @@ module.exports = {
       enabled: true,
       runs: 200,
     },
+    evmVersion: 'istanbul'
   },
 };

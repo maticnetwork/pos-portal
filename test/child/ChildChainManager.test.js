@@ -26,6 +26,7 @@ contract('ChildChainManager', async(accounts) => {
     before(async() => {
       contracts = await deployer.deployFreshChildContracts(accounts)
     })
+    
 
     it('Can receive map token tx', async() => {
       const mapTx = await contracts.childChainManager.mapToken(mockRootToken, mockChildToken)
@@ -54,7 +55,7 @@ contract('ChildChainManager', async(accounts) => {
     it('Tx should revert with correct reason', async() => {
       await expectRevert(
         contracts.childChainManager.mapToken(mockRootToken, mockChildToken, { from: accounts[1] }),
-        'Transaction has been reverted by the EVM'
+        'ChildChainManager: INSUFFICIENT_PERMISSIONS'
       )
     })
   })
@@ -202,7 +203,7 @@ contract('ChildChainManager', async(accounts) => {
     it('Tx should revert with correct reason', async() => {
       await expectRevert(
         contracts.childChainManager.onStateReceive(syncId, syncState, { from: accounts[1] }),
-        'Transaction has been reverted by the EVM'
+        'ChildChainManager: INSUFFICIENT_PERMISSIONS'
       )
     })
   })
@@ -220,7 +221,7 @@ contract('ChildChainManager', async(accounts) => {
     it('Tx should revert with correct reason', async() => {
       await expectRevert(
         contracts.childChainManager.onStateReceive(syncId, syncState),
-        'Transaction has been reverted by the EVM'
+        'ChildChainManager: INVALID_SYNC_TYPE'
       )
     })
   })
