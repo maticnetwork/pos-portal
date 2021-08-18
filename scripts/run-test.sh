@@ -11,7 +11,7 @@ PWD=$(pwd)
 
 cleanup() {
   echo "Cleaning up"
-  pkill -f ganache-cli
+  # pkill -f ganache-cli
   cd $PWD/test-blockchain
   bash stop-docker.sh
   bash clean.sh
@@ -30,6 +30,7 @@ start_blockchain() {
 }
 
 # process templates
+node --version
 npm run template:process
 
 echo "Starting our own testrpc instance"
