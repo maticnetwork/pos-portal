@@ -1415,7 +1415,7 @@ library Merkle {
 
 // File: contracts/tunnel/BaseRootTunnel.sol
 
-pragma solidity ^0.6.6;
+pragma solidity 0.6.6;
 
 
 
@@ -1458,6 +1458,7 @@ abstract contract BaseRootTunnel is AccessControlMixin {
         external
         only(DEFAULT_ADMIN_ROLE)
     {
+        require(newStateSender != address(0), "RootTunnel: BAD_NEW_STATE_SENDER");
         stateSender = IStateSender(newStateSender);
     }
 
@@ -1470,6 +1471,7 @@ abstract contract BaseRootTunnel is AccessControlMixin {
         external
         only(DEFAULT_ADMIN_ROLE)
     {
+        require(newCheckpointManager != address(0), "RootTunnel: BAD_NEW_CHECKPOINT_MANAGER");
         checkpointManager = ICheckpointManager(newCheckpointManager);
     }
 

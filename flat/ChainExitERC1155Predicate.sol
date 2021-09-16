@@ -1,163 +1,298 @@
 
-// File: @openzeppelin/contracts/math/SafeMath.sol
+// File: @openzeppelin/contracts/introspection/IERC165.sol
 
 // SPDX-License-Identifier: MIT
 
 pragma solidity ^0.6.0;
 
 /**
- * @dev Wrappers over Solidity's arithmetic operations with added overflow
- * checks.
+ * @dev Interface of the ERC165 standard, as defined in the
+ * https://eips.ethereum.org/EIPS/eip-165[EIP].
  *
- * Arithmetic operations in Solidity wrap on overflow. This can easily result
- * in bugs, because programmers usually assume that an overflow raises an
- * error, which is the standard behavior in high level programming languages.
- * `SafeMath` restores this intuition by reverting the transaction when an
- * operation overflows.
+ * Implementers can declare support of contract interfaces, which can then be
+ * queried by others ({ERC165Checker}).
  *
- * Using this library instead of the unchecked operations eliminates an entire
- * class of bugs, so it's recommended to use it always.
+ * For an implementation, see {ERC165}.
  */
-library SafeMath {
+interface IERC165 {
     /**
-     * @dev Returns the addition of two unsigned integers, reverting on
-     * overflow.
+     * @dev Returns true if this contract implements the interface defined by
+     * `interfaceId`. See the corresponding
+     * https://eips.ethereum.org/EIPS/eip-165#how-interfaces-are-identified[EIP section]
+     * to learn more about how these ids are created.
      *
-     * Counterpart to Solidity's `+` operator.
+     * This function call must use less than 30 000 gas.
+     */
+    function supportsInterface(bytes4 interfaceId) external view returns (bool);
+}
+
+// File: @openzeppelin/contracts/token/ERC1155/IERC1155.sol
+
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.6.2;
+
+
+/**
+ * @dev Required interface of an ERC1155 compliant contract, as defined in the
+ * https://eips.ethereum.org/EIPS/eip-1155[EIP].
+ *
+ * _Available since v3.1._
+ */
+interface IERC1155 is IERC165 {
+    /**
+     * @dev Emitted when `value` tokens of token type `id` are transfered from `from` to `to` by `operator`.
+     */
+    event TransferSingle(address indexed operator, address indexed from, address indexed to, uint256 id, uint256 value);
+
+    /**
+     * @dev Equivalent to multiple {TransferSingle} events, where `operator`, `from` and `to` are the same for all
+     * transfers.
+     */
+    event TransferBatch(address indexed operator, address indexed from, address indexed to, uint256[] ids, uint256[] values);
+
+    /**
+     * @dev Emitted when `account` grants or revokes permission to `operator` to transfer their tokens, according to
+     * `approved`.
+     */
+    event ApprovalForAll(address indexed account, address indexed operator, bool approved);
+
+    /**
+     * @dev Emitted when the URI for token type `id` changes to `value`, if it is a non-programmatic URI.
+     *
+     * If an {URI} event was emitted for `id`, the standard
+     * https://eips.ethereum.org/EIPS/eip-1155#metadata-extensions[guarantees] that `value` will equal the value
+     * returned by {IERC1155MetadataURI-uri}.
+     */
+    event URI(string value, uint256 indexed id);
+
+    /**
+     * @dev Returns the amount of tokens of token type `id` owned by `account`.
      *
      * Requirements:
      *
-     * - Addition cannot overflow.
+     * - `account` cannot be the zero address.
      */
-    function add(uint256 a, uint256 b) internal pure returns (uint256) {
-        uint256 c = a + b;
-        require(c >= a, "SafeMath: addition overflow");
+    function balanceOf(address account, uint256 id) external view returns (uint256);
 
-        return c;
+    /**
+     * @dev xref:ROOT:erc1155.adoc#batch-operations[Batched] version of {balanceOf}.
+     *
+     * Requirements:
+     *
+     * - `accounts` and `ids` must have the same length.
+     */
+    function balanceOfBatch(address[] calldata accounts, uint256[] calldata ids) external view returns (uint256[] memory);
+
+    /**
+     * @dev Grants or revokes permission to `operator` to transfer the caller's tokens, according to `approved`,
+     *
+     * Emits an {ApprovalForAll} event.
+     *
+     * Requirements:
+     *
+     * - `operator` cannot be the caller.
+     */
+    function setApprovalForAll(address operator, bool approved) external;
+
+    /**
+     * @dev Returns true if `operator` is approved to transfer ``account``'s tokens.
+     *
+     * See {setApprovalForAll}.
+     */
+    function isApprovedForAll(address account, address operator) external view returns (bool);
+
+    /**
+     * @dev Transfers `amount` tokens of token type `id` from `from` to `to`.
+     *
+     * Emits a {TransferSingle} event.
+     *
+     * Requirements:
+     *
+     * - `to` cannot be the zero address.
+     * - If the caller is not `from`, it must be have been approved to spend ``from``'s tokens via {setApprovalForAll}.
+     * - `from` must have a balance of tokens of type `id` of at least `amount`.
+     * - If `to` refers to a smart contract, it must implement {IERC1155Receiver-onERC1155Received} and return the
+     * acceptance magic value.
+     */
+    function safeTransferFrom(address from, address to, uint256 id, uint256 amount, bytes calldata data) external;
+
+    /**
+     * @dev xref:ROOT:erc1155.adoc#batch-operations[Batched] version of {safeTransferFrom}.
+     *
+     * Emits a {TransferBatch} event.
+     *
+     * Requirements:
+     *
+     * - `ids` and `amounts` must have the same length.
+     * - If `to` refers to a smart contract, it must implement {IERC1155Receiver-onERC1155BatchReceived} and return the
+     * acceptance magic value.
+     */
+    function safeBatchTransferFrom(address from, address to, uint256[] calldata ids, uint256[] calldata amounts, bytes calldata data) external;
+}
+
+// File: contracts/root/RootToken/IMintableERC1155.sol
+
+pragma solidity 0.6.6;
+
+interface IMintableERC1155 is IERC1155 {
+    /**
+     * @notice Creates `amount` tokens of token type `id`, and assigns them to `account`.
+     * @dev Should be callable only by MintableERC1155Predicate
+     * Make sure minting is done only by this function
+     * @param account user address for whom token is being minted
+     * @param id token which is being minted
+     * @param amount amount of token being minted
+     * @param data extra byte data to be accompanied with minted tokens
+     */
+    function mint(address account, uint256 id, uint256 amount, bytes calldata data) external;
+
+    /**
+     * @notice Batched version of singular token minting, where
+     * for each token in `ids` respective amount to be minted from `amounts`
+     * array, for address `to`.
+     * @dev Should be callable only by MintableERC1155Predicate
+     * Make sure minting is done only by this function
+     * @param to user address for whom token is being minted
+     * @param ids tokens which are being minted
+     * @param amounts amount of each token being minted
+     * @param data extra byte data to be accompanied with minted tokens
+     */
+    function mintBatch(address to, uint256[] calldata ids, uint256[] calldata amounts, bytes calldata data) external;
+}
+
+// File: @openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol
+
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.6.0;
+
+
+/**
+ * _Available since v3.1._
+ */
+interface IERC1155Receiver is IERC165 {
+
+    /**
+        @dev Handles the receipt of a single ERC1155 token type. This function is
+        called at the end of a `safeTransferFrom` after the balance has been updated.
+        To accept the transfer, this must return
+        `bytes4(keccak256("onERC1155Received(address,address,uint256,uint256,bytes)"))`
+        (i.e. 0xf23a6e61, or its own function selector).
+        @param operator The address which initiated the transfer (i.e. msg.sender)
+        @param from The address which previously owned the token
+        @param id The ID of the token being transferred
+        @param value The amount of tokens being transferred
+        @param data Additional data with no specified format
+        @return `bytes4(keccak256("onERC1155Received(address,address,uint256,uint256,bytes)"))` if transfer is allowed
+    */
+    function onERC1155Received(
+        address operator,
+        address from,
+        uint256 id,
+        uint256 value,
+        bytes calldata data
+    )
+        external
+        returns(bytes4);
+
+    /**
+        @dev Handles the receipt of a multiple ERC1155 token types. This function
+        is called at the end of a `safeBatchTransferFrom` after the balances have
+        been updated. To accept the transfer(s), this must return
+        `bytes4(keccak256("onERC1155BatchReceived(address,address,uint256[],uint256[],bytes)"))`
+        (i.e. 0xbc197c81, or its own function selector).
+        @param operator The address which initiated the batch transfer (i.e. msg.sender)
+        @param from The address which previously owned the token
+        @param ids An array containing ids of each token being transferred (order and length must match values array)
+        @param values An array containing amounts of each token being transferred (order and length must match ids array)
+        @param data Additional data with no specified format
+        @return `bytes4(keccak256("onERC1155BatchReceived(address,address,uint256[],uint256[],bytes)"))` if transfer is allowed
+    */
+    function onERC1155BatchReceived(
+        address operator,
+        address from,
+        uint256[] calldata ids,
+        uint256[] calldata values,
+        bytes calldata data
+    )
+        external
+        returns(bytes4);
+}
+
+// File: @openzeppelin/contracts/introspection/ERC165.sol
+
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.6.0;
+
+
+/**
+ * @dev Implementation of the {IERC165} interface.
+ *
+ * Contracts may inherit from this and call {_registerInterface} to declare
+ * their support of an interface.
+ */
+contract ERC165 is IERC165 {
+    /*
+     * bytes4(keccak256('supportsInterface(bytes4)')) == 0x01ffc9a7
+     */
+    bytes4 private constant _INTERFACE_ID_ERC165 = 0x01ffc9a7;
+
+    /**
+     * @dev Mapping of interface ids to whether or not it's supported.
+     */
+    mapping(bytes4 => bool) private _supportedInterfaces;
+
+    constructor () internal {
+        // Derived contracts need only register support for their own interfaces,
+        // we register support for ERC165 itself here
+        _registerInterface(_INTERFACE_ID_ERC165);
     }
 
     /**
-     * @dev Returns the subtraction of two unsigned integers, reverting on
-     * overflow (when the result is negative).
+     * @dev See {IERC165-supportsInterface}.
      *
-     * Counterpart to Solidity's `-` operator.
-     *
-     * Requirements:
-     *
-     * - Subtraction cannot overflow.
+     * Time complexity O(1), guaranteed to always use less than 30 000 gas.
      */
-    function sub(uint256 a, uint256 b) internal pure returns (uint256) {
-        return sub(a, b, "SafeMath: subtraction overflow");
+    function supportsInterface(bytes4 interfaceId) public view override returns (bool) {
+        return _supportedInterfaces[interfaceId];
     }
 
     /**
-     * @dev Returns the subtraction of two unsigned integers, reverting with custom message on
-     * overflow (when the result is negative).
+     * @dev Registers the contract as an implementer of the interface defined by
+     * `interfaceId`. Support of the actual ERC165 interface is automatic and
+     * registering its interface id is not required.
      *
-     * Counterpart to Solidity's `-` operator.
+     * See {IERC165-supportsInterface}.
      *
      * Requirements:
      *
-     * - Subtraction cannot overflow.
+     * - `interfaceId` cannot be the ERC165 invalid interface (`0xffffffff`).
      */
-    function sub(uint256 a, uint256 b, string memory errorMessage) internal pure returns (uint256) {
-        require(b <= a, errorMessage);
-        uint256 c = a - b;
-
-        return c;
+    function _registerInterface(bytes4 interfaceId) internal virtual {
+        require(interfaceId != 0xffffffff, "ERC165: invalid interface id");
+        _supportedInterfaces[interfaceId] = true;
     }
+}
 
-    /**
-     * @dev Returns the multiplication of two unsigned integers, reverting on
-     * overflow.
-     *
-     * Counterpart to Solidity's `*` operator.
-     *
-     * Requirements:
-     *
-     * - Multiplication cannot overflow.
-     */
-    function mul(uint256 a, uint256 b) internal pure returns (uint256) {
-        // Gas optimization: this is cheaper than requiring 'a' not being zero, but the
-        // benefit is lost if 'b' is also tested.
-        // See: https://github.com/OpenZeppelin/openzeppelin-contracts/pull/522
-        if (a == 0) {
-            return 0;
-        }
+// File: @openzeppelin/contracts/token/ERC1155/ERC1155Receiver.sol
 
-        uint256 c = a * b;
-        require(c / a == b, "SafeMath: multiplication overflow");
+// SPDX-License-Identifier: MIT
 
-        return c;
-    }
+pragma solidity ^0.6.0;
 
-    /**
-     * @dev Returns the integer division of two unsigned integers. Reverts on
-     * division by zero. The result is rounded towards zero.
-     *
-     * Counterpart to Solidity's `/` operator. Note: this function uses a
-     * `revert` opcode (which leaves remaining gas untouched) while Solidity
-     * uses an invalid opcode to revert (consuming all remaining gas).
-     *
-     * Requirements:
-     *
-     * - The divisor cannot be zero.
-     */
-    function div(uint256 a, uint256 b) internal pure returns (uint256) {
-        return div(a, b, "SafeMath: division by zero");
-    }
 
-    /**
-     * @dev Returns the integer division of two unsigned integers. Reverts with custom message on
-     * division by zero. The result is rounded towards zero.
-     *
-     * Counterpart to Solidity's `/` operator. Note: this function uses a
-     * `revert` opcode (which leaves remaining gas untouched) while Solidity
-     * uses an invalid opcode to revert (consuming all remaining gas).
-     *
-     * Requirements:
-     *
-     * - The divisor cannot be zero.
-     */
-    function div(uint256 a, uint256 b, string memory errorMessage) internal pure returns (uint256) {
-        require(b > 0, errorMessage);
-        uint256 c = a / b;
-        // assert(a == b * c + a % b); // There is no case in which this doesn't hold
 
-        return c;
-    }
-
-    /**
-     * @dev Returns the remainder of dividing two unsigned integers. (unsigned integer modulo),
-     * Reverts when dividing by zero.
-     *
-     * Counterpart to Solidity's `%` operator. This function uses a `revert`
-     * opcode (which leaves remaining gas untouched) while Solidity uses an
-     * invalid opcode to revert (consuming all remaining gas).
-     *
-     * Requirements:
-     *
-     * - The divisor cannot be zero.
-     */
-    function mod(uint256 a, uint256 b) internal pure returns (uint256) {
-        return mod(a, b, "SafeMath: modulo by zero");
-    }
-
-    /**
-     * @dev Returns the remainder of dividing two unsigned integers. (unsigned integer modulo),
-     * Reverts with custom message when dividing by zero.
-     *
-     * Counterpart to Solidity's `%` operator. This function uses a `revert`
-     * opcode (which leaves remaining gas untouched) while Solidity uses an
-     * invalid opcode to revert (consuming all remaining gas).
-     *
-     * Requirements:
-     *
-     * - The divisor cannot be zero.
-     */
-    function mod(uint256 a, uint256 b, string memory errorMessage) internal pure returns (uint256) {
-        require(b != 0, errorMessage);
-        return a % b;
+/**
+ * @dev _Available since v3.1._
+ */
+abstract contract ERC1155Receiver is ERC165, IERC1155Receiver {
+    constructor() public {
+        _registerInterface(
+            ERC1155Receiver(0).onERC1155Received.selector ^
+            ERC1155Receiver(0).onERC1155BatchReceived.selector
+        );
     }
 }
 
@@ -817,14 +952,6 @@ contract AccessControlMixin is AccessControl {
     }
 }
 
-// File: contracts/root/StateSender/IStateSender.sol
-
-pragma solidity 0.6.6;
-
-interface IStateSender {
-    function syncState(address receiver, bytes calldata data) external;
-}
-
 // File: contracts/lib/RLPReader.sol
 
 /*
@@ -836,51 +963,26 @@ pragma solidity 0.6.6;
 
 library RLPReader {
     uint8 constant STRING_SHORT_START = 0x80;
-    uint8 constant STRING_LONG_START  = 0xb8;
-    uint8 constant LIST_SHORT_START   = 0xc0;
-    uint8 constant LIST_LONG_START    = 0xf8;
+    uint8 constant STRING_LONG_START = 0xb8;
+    uint8 constant LIST_SHORT_START = 0xc0;
+    uint8 constant LIST_LONG_START = 0xf8;
     uint8 constant WORD_SIZE = 32;
 
     struct RLPItem {
-        uint len;
-        uint memPtr;
-    }
-
-    struct Iterator {
-        RLPItem item;   // Item that's being iterated over.
-        uint nextPtr;   // Position of the next item in the list.
+        uint256 len;
+        uint256 memPtr;
     }
 
     /*
-    * @dev Returns the next element in the iteration. Reverts if it has not next element.
-    * @param self The iterator.
-    * @return The next element in the iteration.
-    */
-    function next(Iterator memory self) internal pure returns (RLPItem memory) {
-        require(hasNext(self));
-
-        uint ptr = self.nextPtr;
-        uint itemLength = _itemLength(ptr);
-        self.nextPtr = ptr + itemLength;
-
-        return RLPItem(itemLength, ptr);
-    }
-
-    /*
-    * @dev Returns true if the iteration has more elements.
-    * @param self The iterator.
-    * @return true if the iteration has more elements.
-    */
-    function hasNext(Iterator memory self) internal pure returns (bool) {
-        RLPItem memory item = self.item;
-        return self.nextPtr < item.memPtr + item.len;
-    }
-
-    /*
-    * @param item RLP encoded bytes
-    */
-    function toRlpItem(bytes memory item) internal pure returns (RLPItem memory) {
-        uint memPtr;
+     * @param item RLP encoded bytes
+     */
+    function toRlpItem(bytes memory item)
+        internal
+        pure
+        returns (RLPItem memory)
+    {
+        require(item.length > 0, "RLPReader: INVALID_BYTES_LENGTH");
+        uint256 memPtr;
         assembly {
             memPtr := add(item, 0x20)
         }
@@ -889,57 +991,25 @@ library RLPReader {
     }
 
     /*
-    * @dev Create an iterator. Reverts if item is not a list.
-    * @param self The RLP item.
-    * @return An 'Iterator' over the item.
-    */
-    function iterator(RLPItem memory self) internal pure returns (Iterator memory) {
-        require(isList(self));
-
-        uint ptr = self.memPtr + _payloadOffset(self.memPtr);
-        return Iterator(self, ptr);
-    }
-
-    /*
-    * @param the RLP item.
-    */
-    function rlpLen(RLPItem memory item) internal pure returns (uint) {
-        return item.len;
-    }
-
-    /*
-     * @param the RLP item.
-     * @return (memPtr, len) pair: location of the item's payload in memory.
+     * @param item RLP encoded list in bytes
      */
-    function payloadLocation(RLPItem memory item) internal pure returns (uint, uint) {
-        uint offset = _payloadOffset(item.memPtr);
-        uint memPtr = item.memPtr + offset;
-        uint len = item.len - offset; // data length
-        return (memPtr, len);
-    }
+    function toList(RLPItem memory item)
+        internal
+        pure
+        returns (RLPItem[] memory)
+    {
+        require(isList(item), "RLPReader: ITEM_NOT_LIST");
 
-    /*
-    * @param the RLP item.
-    */
-    function payloadLen(RLPItem memory item) internal pure returns (uint) {
-        (, uint len) = payloadLocation(item);
-        return len;
-    }
-
-    /*
-    * @param the RLP item containing the encoded list.
-    */
-    function toList(RLPItem memory item) internal pure returns (RLPItem[] memory) {
-        require(isList(item));
-
-        uint items = numItems(item);
+        uint256 items = numItems(item);
         RLPItem[] memory result = new RLPItem[](items);
+        uint256 listLength = _itemLength(item.memPtr);
+        require(listLength == item.len, "RLPReader: LIST_DECODED_LENGTH_MISMATCH");
 
-        uint memPtr = item.memPtr + _payloadOffset(item.memPtr);
-        uint dataLen;
-        for (uint i = 0; i < items; i++) {
+        uint256 memPtr = item.memPtr + _payloadOffset(item.memPtr);
+        uint256 dataLen;
+        for (uint256 i = 0; i < items; i++) {
             dataLen = _itemLength(memPtr);
-            result[i] = RLPItem(dataLen, memPtr); 
+            result[i] = RLPItem(dataLen, memPtr);
             memPtr = memPtr + dataLen;
         }
 
@@ -948,54 +1018,27 @@ library RLPReader {
 
     // @return indicator whether encoded payload is a list. negate this function call for isData.
     function isList(RLPItem memory item) internal pure returns (bool) {
-        if (item.len == 0) return false;
-
         uint8 byte0;
-        uint memPtr = item.memPtr;
+        uint256 memPtr = item.memPtr;
         assembly {
             byte0 := byte(0, mload(memPtr))
         }
 
-        if (byte0 < LIST_SHORT_START)
-            return false;
+        if (byte0 < LIST_SHORT_START) return false;
         return true;
-    }
-
-    /*
-     * @dev A cheaper version of keccak256(toRlpBytes(item)) that avoids copying memory.
-     * @return keccak256 hash of RLP encoded bytes.
-     */
-    function rlpBytesKeccak256(RLPItem memory item) internal pure returns (bytes32) {
-        uint256 ptr = item.memPtr;
-        uint256 len = item.len;
-        bytes32 result;
-        assembly {
-            result := keccak256(ptr, len)
-        }
-        return result;
-    }
-
-    /*
-     * @dev A cheaper version of keccak256(toBytes(item)) that avoids copying memory.
-     * @return keccak256 hash of the item payload.
-     */
-    function payloadKeccak256(RLPItem memory item) internal pure returns (bytes32) {
-        (uint memPtr, uint len) = payloadLocation(item);
-        bytes32 result;
-        assembly {
-            result := keccak256(memPtr, len)
-        }
-        return result;
     }
 
     /** RLPItem conversions into data types **/
 
     // @returns raw rlp encoding in bytes
-    function toRlpBytes(RLPItem memory item) internal pure returns (bytes memory) {
+    function toRlpBytes(RLPItem memory item)
+        internal
+        pure
+        returns (bytes memory)
+    {
         bytes memory result = new bytes(item.len);
-        if (result.length == 0) return result;
-        
-        uint ptr;
+
+        uint256 ptr;
         assembly {
             ptr := add(0x20, result)
         }
@@ -1004,39 +1047,25 @@ library RLPReader {
         return result;
     }
 
-    // any non-zero byte except "0x80" is considered true
-    function toBoolean(RLPItem memory item) internal pure returns (bool) {
-        require(item.len == 1);
-        uint result;
-        uint memPtr = item.memPtr;
-        assembly {
-            result := byte(0, mload(memPtr))
-        }
-
-        // SEE Github Issue #5.
-        // Summary: Most commonly used RLP libraries (i.e Geth) will encode
-        // "0" as "0x80" instead of as "0". We handle this edge case explicitly
-        // here.
-        if (result == 0 || result == STRING_SHORT_START) {
-            return false;
-        } else {
-            return true;
-        }
-    }
-
     function toAddress(RLPItem memory item) internal pure returns (address) {
+        require(!isList(item), "RLPReader: DECODING_LIST_AS_ADDRESS");
         // 1 byte for the length prefix
-        require(item.len == 21);
+        require(item.len == 21, "RLPReader: INVALID_ADDRESS_LENGTH");
 
         return address(toUint(item));
     }
 
-    function toUint(RLPItem memory item) internal pure returns (uint) {
-        require(item.len > 0 && item.len <= 33);
+    function toUint(RLPItem memory item) internal pure returns (uint256) {
+        require(!isList(item), "RLPReader: DECODING_LIST_AS_UINT");
+        require(item.len <= 33, "RLPReader: INVALID_UINT_LENGTH");
 
-        (uint memPtr, uint len) = payloadLocation(item);
+        uint256 itemLength = _itemLength(item.memPtr);
+        require(itemLength == item.len, "RLPReader: UINT_DECODED_LENGTH_MISMATCH");
 
-        uint result;
+        uint256 offset = _payloadOffset(item.memPtr);
+        uint256 len = item.len - offset;
+        uint256 result;
+        uint256 memPtr = item.memPtr + offset;
         assembly {
             result := mload(memPtr)
 
@@ -1050,12 +1079,14 @@ library RLPReader {
     }
 
     // enforces 32 byte length
-    function toUintStrict(RLPItem memory item) internal pure returns (uint) {
+    function toUintStrict(RLPItem memory item) internal pure returns (uint256) {
+        uint256 itemLength = _itemLength(item.memPtr);
+        require(itemLength == item.len, "RLPReader: UINT_STRICT_DECODED_LENGTH_MISMATCH");
         // one byte prefix
-        require(item.len == 33);
+        require(item.len == 33, "RLPReader: INVALID_UINT_STRICT_LENGTH");
 
-        uint result;
-        uint memPtr = item.memPtr + 1;
+        uint256 result;
+        uint256 memPtr = item.memPtr + 1;
         assembly {
             result := mload(memPtr)
         }
@@ -1064,69 +1095,66 @@ library RLPReader {
     }
 
     function toBytes(RLPItem memory item) internal pure returns (bytes memory) {
-        require(item.len > 0);
+        uint256 listLength = _itemLength(item.memPtr);
+        require(listLength == item.len, "RLPReader: BYTES_DECODED_LENGTH_MISMATCH");
+        uint256 offset = _payloadOffset(item.memPtr);
 
-        (uint memPtr, uint len) = payloadLocation(item);
+        uint256 len = item.len - offset; // data length
         bytes memory result = new bytes(len);
 
-        uint destPtr;
+        uint256 destPtr;
         assembly {
             destPtr := add(0x20, result)
         }
 
-        copy(memPtr, destPtr, len);
+        copy(item.memPtr + offset, destPtr, len);
         return result;
     }
 
     /*
-    * Private Helpers
-    */
+     * Private Helpers
+     */
 
     // @return number of payload items inside an encoded list.
-    function numItems(RLPItem memory item) private pure returns (uint) {
-        if (item.len == 0) return 0;
+    function numItems(RLPItem memory item) private pure returns (uint256) {
+        // add `isList` check if `item` is expected to be passsed without a check from calling function
+        // require(isList(item), "RLPReader: NUM_ITEMS_NOT_LIST");
 
-        uint count = 0;
-        uint currPtr = item.memPtr + _payloadOffset(item.memPtr);
-        uint endPtr = item.memPtr + item.len;
+        uint256 count = 0;
+        uint256 currPtr = item.memPtr + _payloadOffset(item.memPtr);
+        uint256 endPtr = item.memPtr + item.len;
         while (currPtr < endPtr) {
-           currPtr = currPtr + _itemLength(currPtr); // skip over an item
-           count++;
+            currPtr = currPtr + _itemLength(currPtr); // skip over an item
+            require(currPtr <= endPtr, "RLPReader: NUM_ITEMS_DECODED_LENGTH_MISMATCH");
+            count++;
         }
 
         return count;
     }
 
     // @return entire rlp item byte length
-    function _itemLength(uint memPtr) private pure returns (uint) {
-        uint itemLen;
-        uint byte0;
+    function _itemLength(uint256 memPtr) private pure returns (uint256) {
+        uint256 itemLen;
+        uint256 byte0;
         assembly {
             byte0 := byte(0, mload(memPtr))
         }
 
-        if (byte0 < STRING_SHORT_START)
-            itemLen = 1;
-        
+        if (byte0 < STRING_SHORT_START) itemLen = 1;
         else if (byte0 < STRING_LONG_START)
             itemLen = byte0 - STRING_SHORT_START + 1;
-
         else if (byte0 < LIST_SHORT_START) {
             assembly {
                 let byteLen := sub(byte0, 0xb7) // # of bytes the actual length is
                 memPtr := add(memPtr, 1) // skip over the first byte
-                
+
                 /* 32 byte word size */
                 let dataLen := div(mload(memPtr), exp(256, sub(32, byteLen))) // right shifting to get the len
                 itemLen := add(dataLen, add(byteLen, 1))
             }
-        }
-
-        else if (byte0 < LIST_LONG_START) {
+        } else if (byte0 < LIST_LONG_START) {
             itemLen = byte0 - LIST_SHORT_START + 1;
-        } 
-
-        else {
+        } else {
             assembly {
                 let byteLen := sub(byte0, 0xf7)
                 memPtr := add(memPtr, 1)
@@ -1140,28 +1168,33 @@ library RLPReader {
     }
 
     // @return number of bytes until the data
-    function _payloadOffset(uint memPtr) private pure returns (uint) {
-        uint byte0;
+    function _payloadOffset(uint256 memPtr) private pure returns (uint256) {
+        uint256 byte0;
         assembly {
             byte0 := byte(0, mload(memPtr))
         }
 
-        if (byte0 < STRING_SHORT_START) 
-            return 0;
-        else if (byte0 < STRING_LONG_START || (byte0 >= LIST_SHORT_START && byte0 < LIST_LONG_START))
-            return 1;
-        else if (byte0 < LIST_SHORT_START)  // being explicit
+        if (byte0 < STRING_SHORT_START) return 0;
+        else if (
+            byte0 < STRING_LONG_START ||
+            (byte0 >= LIST_SHORT_START && byte0 < LIST_LONG_START)
+        ) return 1;
+        else if (byte0 < LIST_SHORT_START)
+            // being explicit
             return byte0 - (STRING_LONG_START - 1) + 1;
-        else
-            return byte0 - (LIST_LONG_START - 1) + 1;
+        else return byte0 - (LIST_LONG_START - 1) + 1;
     }
 
     /*
-    * @param src Pointer to source
-    * @param dest Pointer to destination
-    * @param len Amount of memory to copy from the source
-    */
-    function copy(uint src, uint dest, uint len) private pure {
+     * @param src Pointer to source
+     * @param dest Pointer to destination
+     * @param len Amount of memory to copy from the source
+     */
+    function copy(
+        uint256 src,
+        uint256 dest,
+        uint256 len
+    ) private pure {
         if (len == 0) return;
 
         // copy as many word sizes as possible
@@ -1174,473 +1207,288 @@ library RLPReader {
             dest += WORD_SIZE;
         }
 
-        if (len > 0) {
-            // left over bytes. Mask is used to remove unwanted bytes from the word
-            uint mask = 256 ** (WORD_SIZE - len) - 1;
-            assembly {
-                let srcpart := and(mload(src), not(mask)) // zero out src
-                let destpart := and(mload(dest), mask) // retrieve the bytes
-                mstore(dest, or(destpart, srcpart))
-            }
+        // left over bytes. Mask is used to remove unwanted bytes from the word
+        uint256 mask = 256**(WORD_SIZE - len) - 1;
+        assembly {
+            let srcpart := and(mload(src), not(mask)) // zero out src
+            let destpart := and(mload(dest), mask) // retrieve the bytes
+            mstore(dest, or(destpart, srcpart))
         }
     }
 }
 
-// File: contracts/lib/MerklePatriciaProof.sol
-
-/*
- * @title MerklePatriciaVerifier
- * @author Sam Mayo (sammayo888@gmail.com)
- *
- * @dev Library for verifing merkle patricia proofs.
- */
-pragma solidity 0.6.6;
-
-
-library MerklePatriciaProof {
-    /*
-     * @dev Verifies a merkle patricia proof.
-     * @param value The terminating value in the trie.
-     * @param encodedPath The path in the trie leading to value.
-     * @param rlpParentNodes The rlp encoded stack of nodes.
-     * @param root The root hash of the trie.
-     * @return The boolean validity of the proof.
-     */
-    function verify(
-        bytes memory value,
-        bytes memory encodedPath,
-        bytes memory rlpParentNodes,
-        bytes32 root
-    ) internal pure returns (bool) {
-        RLPReader.RLPItem memory item = RLPReader.toRlpItem(rlpParentNodes);
-        RLPReader.RLPItem[] memory parentNodes = RLPReader.toList(item);
-
-        bytes memory currentNode;
-        RLPReader.RLPItem[] memory currentNodeList;
-
-        bytes32 nodeKey = root;
-        uint256 pathPtr = 0;
-
-        bytes memory path = _getNibbleArray(encodedPath);
-        if (path.length == 0) {
-            return false;
-        }
-
-        for (uint256 i = 0; i < parentNodes.length; i++) {
-            if (pathPtr > path.length) {
-                return false;
-            }
-
-            currentNode = RLPReader.toRlpBytes(parentNodes[i]);
-            if (nodeKey != keccak256(currentNode)) {
-                return false;
-            }
-            currentNodeList = RLPReader.toList(parentNodes[i]);
-
-            if (currentNodeList.length == 17) {
-                if (pathPtr == path.length) {
-                    if (
-                        keccak256(RLPReader.toBytes(currentNodeList[16])) ==
-                        keccak256(value)
-                    ) {
-                        return true;
-                    } else {
-                        return false;
-                    }
-                }
-
-                uint8 nextPathNibble = uint8(path[pathPtr]);
-                if (nextPathNibble > 16) {
-                    return false;
-                }
-                nodeKey = bytes32(
-                    RLPReader.toUintStrict(currentNodeList[nextPathNibble])
-                );
-                pathPtr += 1;
-            } else if (currentNodeList.length == 2) {
-                uint256 traversed = _nibblesToTraverse(
-                    RLPReader.toBytes(currentNodeList[0]),
-                    path,
-                    pathPtr
-                );
-                if (pathPtr + traversed == path.length) {
-                    //leaf node
-                    if (
-                        keccak256(RLPReader.toBytes(currentNodeList[1])) ==
-                        keccak256(value)
-                    ) {
-                        return true;
-                    } else {
-                        return false;
-                    }
-                }
-
-                //extension node
-                if (traversed == 0) {
-                    return false;
-                }
-
-                pathPtr += traversed;
-                nodeKey = bytes32(RLPReader.toUintStrict(currentNodeList[1]));
-            } else {
-                return false;
-            }
-        }
-    }
-
-    function _nibblesToTraverse(
-        bytes memory encodedPartialPath,
-        bytes memory path,
-        uint256 pathPtr
-    ) private pure returns (uint256) {
-        uint256 len = 0;
-        // encodedPartialPath has elements that are each two hex characters (1 byte), but partialPath
-        // and slicedPath have elements that are each one hex character (1 nibble)
-        bytes memory partialPath = _getNibbleArray(encodedPartialPath);
-        bytes memory slicedPath = new bytes(partialPath.length);
-
-        // pathPtr counts nibbles in path
-        // partialPath.length is a number of nibbles
-        for (uint256 i = pathPtr; i < pathPtr + partialPath.length; i++) {
-            bytes1 pathNibble = path[i];
-            slicedPath[i - pathPtr] = pathNibble;
-        }
-
-        if (keccak256(partialPath) == keccak256(slicedPath)) {
-            len = partialPath.length;
-        } else {
-            len = 0;
-        }
-        return len;
-    }
-
-    // bytes b must be hp encoded
-    function _getNibbleArray(bytes memory b)
-        internal
-        pure
-        returns (bytes memory)
-    {
-        bytes memory nibbles = "";
-        if (b.length > 0) {
-            uint8 offset;
-            uint8 hpNibble = uint8(_getNthNibbleOfBytes(0, b));
-            if (hpNibble == 1 || hpNibble == 3) {
-                nibbles = new bytes(b.length * 2 - 1);
-                bytes1 oddNibble = _getNthNibbleOfBytes(1, b);
-                nibbles[0] = oddNibble;
-                offset = 1;
-            } else {
-                nibbles = new bytes(b.length * 2 - 2);
-                offset = 0;
-            }
-
-            for (uint256 i = offset; i < nibbles.length; i++) {
-                nibbles[i] = _getNthNibbleOfBytes(i - offset + 2, b);
-            }
-        }
-        return nibbles;
-    }
-
-    function _getNthNibbleOfBytes(uint256 n, bytes memory str)
-        private
-        pure
-        returns (bytes1)
-    {
-        return
-            bytes1(
-                n % 2 == 0 ? uint8(str[n / 2]) / 0x10 : uint8(str[n / 2]) % 0x10
-            );
-    }
-}
-
-// File: contracts/root/ICheckpointManager.sol
+// File: contracts/root/TokenPredicates/ITokenPredicate.sol
 
 pragma solidity 0.6.6;
 
-contract ICheckpointManager {
-    struct HeaderBlock {
-        bytes32 root;
-        uint256 start;
-        uint256 end;
-        uint256 createdAt;
-        address proposer;
-    }
+
+/// @title Token predicate interface for all pos portal predicates
+/// @notice Abstract interface that defines methods for custom predicates
+interface ITokenPredicate {
 
     /**
-     * @notice mapping of checkpoint header numbers to block details
-     * @dev These checkpoints are submited by plasma contracts
+     * @notice Deposit tokens into pos portal
+     * @dev When `depositor` deposits tokens into pos portal, tokens get locked into predicate contract.
+     * @param depositor Address who wants to deposit tokens
+     * @param depositReceiver Address (address) who wants to receive tokens on side chain
+     * @param rootToken Token which gets deposited
+     * @param depositData Extra data for deposit (amount for ERC20, token id for ERC721 etc.) [ABI encoded]
      */
-    mapping(uint256 => HeaderBlock) public headerBlocks;
+    function lockTokens(
+        address depositor,
+        address depositReceiver,
+        address rootToken,
+        bytes calldata depositData
+    ) external;
+
+    /**
+     * @notice Validates and processes exit while withdraw process
+     * @dev Validates exit log emitted on sidechain. Reverts if validation fails.
+     * @dev Processes withdraw based on custom logic. Example: transfer ERC20/ERC721, mint ERC721 if mintable withdraw
+     * @param sender Address
+     * @param rootToken Token which gets withdrawn
+     * @param logRLPList Valid sidechain log for data like amount, token id etc.
+     */
+    function exitTokens(
+        address sender,
+        address rootToken,
+        bytes calldata logRLPList
+    ) external;
 }
 
-// File: contracts/lib/Merkle.sol
+// File: contracts/common/Initializable.sol
 
 pragma solidity 0.6.6;
 
-library Merkle {
-    function checkMembership(
-        bytes32 leaf,
-        uint256 index,
-        bytes32 rootHash,
-        bytes memory proof
-    ) internal pure returns (bool) {
-        require(proof.length % 32 == 0, "Invalid proof length");
-        uint256 proofHeight = proof.length / 32;
-        // Proof of size n means, height of the tree is n+1.
-        // In a tree of height n+1, max #leafs possible is 2 ^ n
-        require(index < 2 ** proofHeight, "Leaf index is too big");
+contract Initializable {
+    bool inited = false;
 
-        bytes32 proofElement;
-        bytes32 computedHash = leaf;
-        for (uint256 i = 32; i <= proof.length; i += 32) {
-            assembly {
-                proofElement := mload(add(proof, i))
-            }
-
-            if (index % 2 == 0) {
-                computedHash = keccak256(
-                    abi.encodePacked(computedHash, proofElement)
-                );
-            } else {
-                computedHash = keccak256(
-                    abi.encodePacked(proofElement, computedHash)
-                );
-            }
-
-            index = index / 2;
-        }
-        return computedHash == rootHash;
+    modifier initializer() {
+        require(!inited, "already inited");
+        _;
+        inited = true;
     }
 }
 
-// File: contracts/tunnel/BaseRootTunnel.sol
+// File: contracts/root/TokenPredicates/ChainExitERC1155Predicate.sol
 
 pragma solidity 0.6.6;
 
 
+    ERC1155Receiver
+} from "@openzeppelin/contracts/token/ERC1155/ERC1155Receiver.sol";
 
 
 
 
 
-
-
-abstract contract BaseRootTunnel is AccessControlMixin {
+contract ChainExitERC1155Predicate is
+    ITokenPredicate,
+    ERC1155Receiver,
+    AccessControlMixin,
+    Initializable
+{
     using RLPReader for bytes;
     using RLPReader for RLPReader.RLPItem;
-    using Merkle for bytes32;
-    using SafeMath for uint256;
 
-    // keccak256(MessageSent(bytes))
-    bytes32 public constant SEND_MESSAGE_EVENT_SIG = 0x8c5261668696ce22758910d05bab8f186d6eb247ceac2af2e82c7dc17669b036;
+    bytes32 public constant MANAGER_ROLE = keccak256("MANAGER_ROLE");
+    bytes32 public constant TOKEN_TYPE = keccak256("ChainExitERC1155");
+    // Only this event is considered in exit function : ChainExit(address indexed to, uint256[] tokenId, uint256[] amount, bytes data)
+    bytes32 public constant CHAIN_EXIT_EVENT_SIG = keccak256("ChainExit(address,uint256[],uint256[],bytes)");
 
-    // state sender contract
-    IStateSender public stateSender;
-    // root chain manager
-    ICheckpointManager public checkpointManager;
-    // child tunnel contract which receives and sends messages 
-    address public childTunnel;
-    // storage to avoid duplicate exits
-    mapping(bytes32 => bool) public processedExits;
+    event LockedBatchChainExitERC1155(
+        address indexed depositor,
+        address indexed depositReceiver,
+        address indexed rootToken,
+        uint256[] ids,
+        uint256[] amounts
+    );
 
-    constructor() internal {
-      _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
-      _setupContractId("RootTunnel");
+    constructor() public {}
+
+    function initialize(address _owner) external initializer {
+        _setupContractId("ChainExitERC1155Predicate");
+        _setupRole(DEFAULT_ADMIN_ROLE, _owner);
+        _setupRole(MANAGER_ROLE, _owner);
     }
 
     /**
-     * @notice Set the state sender, callable only by admins
-     * @dev This should be the state sender from plasma contracts
-     * It is used to send bytes from root to child chain
-     * @param newStateSender address of state sender contract
+     * @notice rejects single transfer
      */
-    function setStateSender(address newStateSender)
-        external
-        only(DEFAULT_ADMIN_ROLE)
-    {
-        require(newStateSender != address(0), "RootTunnel: BAD_NEW_STATE_SENDER");
-        stateSender = IStateSender(newStateSender);
+    function onERC1155Received(
+        address,
+        address,
+        uint256,
+        uint256,
+        bytes calldata
+    ) external override returns (bytes4) {
+        return 0;
     }
 
     /**
-     * @notice Set the checkpoint manager, callable only by admins
-     * @dev This should be the plasma contract responsible for keeping track of checkpoints
-     * @param newCheckpointManager address of checkpoint manager contract
+     * @notice accepts batch transfer
      */
-    function setCheckpointManager(address newCheckpointManager)
-        external
-        only(DEFAULT_ADMIN_ROLE)
-    {
-        require(newCheckpointManager != address(0), "RootTunnel: BAD_NEW_CHECKPOINT_MANAGER");
-        checkpointManager = ICheckpointManager(newCheckpointManager);
+    function onERC1155BatchReceived(
+        address,
+        address,
+        uint256[] calldata,
+        uint256[] calldata,
+        bytes calldata
+    ) external override returns (bytes4) {
+        return ERC1155Receiver(0).onERC1155BatchReceived.selector;
     }
 
     /**
-     * @notice Set the child chain tunnel, callable only by admins
-     * @dev This should be the contract responsible to receive data bytes on child chain
-     * @param newChildTunnel address of child tunnel contract
+     * @notice Lock ERC1155 tokens for deposit, callable only by manager
+     * @param depositor Address who wants to deposit tokens
+     * @param depositReceiver Address (address) who wants to receive tokens on child chain
+     * @param rootToken Token which gets deposited
+     * @param depositData ABI encoded id array and amount array
      */
-    function setChildTunnel(address newChildTunnel)
-        external
-        only(DEFAULT_ADMIN_ROLE)
-    {
-        require(newChildTunnel != address(0x0), "RootTunnel: INVALID_CHILD_TUNNEL_ADDRESS");
-        childTunnel = newChildTunnel;
-    }
-
-    /**
-     * @notice Send bytes message to Child Tunnel
-     * @param message bytes message that will be sent to Child Tunnel
-     * some message examples -
-     *   abi.encode(tokenId);
-     *   abi.encode(tokenId, tokenMetadata);
-     *   abi.encode(messageType, messageData);
-     */
-    function _sendMessageToChild(bytes memory message) internal {
-        stateSender.syncState(childTunnel, message);
-    }
-
-    function _validateAndExtractMessage(bytes memory inputData) internal returns (bytes memory) {
-        RLPReader.RLPItem[] memory inputDataRLPList = inputData
-            .toRlpItem()
-            .toList();
-
-        require(inputDataRLPList.length == 10, "RootTunnel: BAD_PAYLOAD");
-        // checking if exit has already been processed
-        // unique exit is identified using hash of (blockNumber, branchMask, receiptLogIndex)
-        bytes32 exitHash = keccak256(
-            abi.encodePacked(
-                inputDataRLPList[2].toUint(), // blockNumber
-                // first 2 nibbles are dropped while generating nibble array
-                // this allows branch masks that are valid but bypass exitHash check (changing first 2 nibbles only)
-                // so converting to nibble array and then hashing it
-                MerklePatriciaProof._getNibbleArray(inputDataRLPList[8].toBytes()), // branchMask
-                inputDataRLPList[9].toUint() // receiptLogIndex
-            )
-        );
-        require(
-            processedExits[exitHash] == false,
-            "RootTunnel: EXIT_ALREADY_PROCESSED"
-        );
-        processedExits[exitHash] = true;
-
-        RLPReader.RLPItem[] memory receiptRLPList = inputDataRLPList[6]
-            .toBytes()
-            .toRlpItem()
-            .toList();
-        RLPReader.RLPItem memory logRLP = receiptRLPList[3]
-            .toList()[
-                inputDataRLPList[9].toUint() // receiptLogIndex
-            ];
-
-        RLPReader.RLPItem[] memory logRLPList = logRLP.toList();
-        
-        // check child tunnel
-        require(childTunnel == RLPReader.toAddress(logRLPList[0]), "RootTunnel: INVALID_CHILD_TUNNEL");
-
-        // verify receipt inclusion
-        require(
-            MerklePatriciaProof.verify(
-                inputDataRLPList[6].toBytes(), // receipt
-                inputDataRLPList[8].toBytes(), // branchMask
-                inputDataRLPList[7].toBytes(), // receiptProof
-                bytes32(inputDataRLPList[5].toUint()) // receiptRoot
-            ),
-            "RootTunnel: INVALID_RECEIPT_PROOF"
-        );
-
-        // verify checkpoint inclusion
-        _checkBlockMembershipInCheckpoint(
-            inputDataRLPList[2].toUint(), // blockNumber
-            inputDataRLPList[3].toUint(), // blockTime
-            bytes32(inputDataRLPList[4].toUint()), // txRoot
-            bytes32(inputDataRLPList[5].toUint()), // receiptRoot
-            inputDataRLPList[0].toUint(), // headerNumber
-            inputDataRLPList[1].toBytes() // blockProof
-        );
-
-        RLPReader.RLPItem[] memory logTopicRLPList = logRLPList[1].toList(); // topics
-
-        require(
-            bytes32(logTopicRLPList[0].toUint()) == SEND_MESSAGE_EVENT_SIG, // topic0 is event sig
-            "RootTunnel: INVALID_SIGNATURE"
-        );
-
-        // received message data
-        bytes memory receivedData = logRLPList[2].toBytes();
-        (bytes memory message) = abi.decode(receivedData, (bytes)); // event decodes params again, so decoding bytes to get message
-        return message;
-    }
-
-    function _checkBlockMembershipInCheckpoint(
-        uint256 blockNumber,
-        uint256 blockTime,
-        bytes32 txRoot,
-        bytes32 receiptRoot,
-        uint256 headerNumber,
-        bytes memory blockProof
-    ) private view returns (uint256) {
+    function lockTokens(
+        address depositor,
+        address depositReceiver,
+        address rootToken,
+        bytes calldata depositData
+    ) external override only(MANAGER_ROLE) {
+        // forcing batch deposit since supporting both single and batch deposit introduces too much complexity
         (
-            bytes32 headerRoot,
-            uint256 startBlock,
-            ,
-            uint256 createdAt,
+            uint256[] memory ids,
+            uint256[] memory amounts,
+            bytes memory data
+        ) = abi.decode(depositData, (uint256[], uint256[], bytes));
 
-        ) = checkpointManager.headerBlocks(headerNumber);
-
-        require(
-            keccak256(
-                abi.encodePacked(blockNumber, blockTime, txRoot, receiptRoot)
-            )
-                .checkMembership(
-                blockNumber.sub(startBlock),
-                headerRoot,
-                blockProof
-            ),
-            "RootTunnel: INVALID_HEADER"
+        emit LockedBatchChainExitERC1155(
+            depositor,
+            depositReceiver,
+            rootToken,
+            ids,
+            amounts
         );
-        return createdAt;
+        IMintableERC1155(rootToken).safeBatchTransferFrom(
+            depositor,
+            address(this),
+            ids,
+            amounts,
+            data
+        );
     }
 
     /**
-     * @notice receive message from  L2 to L1, validated by proof
-     * @dev This function verifies if the transaction actually happened on child chain
-     *
-     * @param inputData RLP encoded data of the reference tx containing following list of fields
-     *  0 - headerNumber - Checkpoint header block number containing the reference tx
-     *  1 - blockProof - Proof that the block header (in the child chain) is a leaf in the submitted merkle root
-     *  2 - blockNumber - Block number containing the reference tx on child chain
-     *  3 - blockTime - Reference tx block time
-     *  4 - txRoot - Transactions root of block
-     *  5 - receiptRoot - Receipts root of block
-     *  6 - receipt - Receipt of the reference transaction
-     *  7 - receiptProof - Merkle proof of the reference receipt
-     *  8 - branchMask - 32 bits denoting the path of receipt in merkle tree
-     *  9 - receiptLogIndex - Log Index to read from the receipt
+     * @notice Creates an array of `size` by repeating provided address,
+     * to be required for passing to batched balance checking function of ERC1155 tokens.
+     * @param addr Address to be repeated `size` times in resulting array
+     * @param size Size of resulting array
      */
-    function receiveMessage(bytes memory inputData) public virtual {
-        bytes memory message = _validateAndExtractMessage(inputData);
-        _processMessageFromChild(message);
+    function makeArrayWithAddress(address addr, uint256 size)
+        internal
+        pure
+        returns (address[] memory)
+    {
+        require(
+            addr != address(0),
+            "ChainExitERC1155Predicate: Invalid address"
+        );
+        require(
+            size > 0,
+            "ChainExitERC1155Predicate: Invalid resulting array length"
+        );
+
+        address[] memory addresses = new address[](size);
+
+        for (uint256 i = 0; i < size; i++) {
+            addresses[i] = addr;
+        }
+
+        return addresses;
     }
 
     /**
-     * @notice Process message received from Child Tunnel
-     * @dev function needs to be implemented to handle message as per requirement
-     * This is called by onStateReceive function.
-     * Since it is called via a system call, any event will not be emitted during its execution.
-     * @param message bytes message that was sent from Child Tunnel
+     * @notice Calculates amount of tokens to be minted, by subtracting available
+     * token balances from amount of tokens to be exited
+     * @param balances Token balances this contract holds for some ordered token ids
+     * @param exitAmounts Amount of tokens being exited
      */
-    function _processMessageFromChild(bytes memory message) virtual internal;
-}
+    function calculateAmountsToBeMinted(
+        uint256[] memory balances,
+        uint256[] memory exitAmounts
+    ) internal pure returns (uint256[] memory, bool, bool) {
+        uint256 count = balances.length;
+        require(
+            count == exitAmounts.length,
+            "ChainExitERC1155Predicate: Array length mismatch found"
+        );
 
-// File: contracts/tunnel/RootTunnel.sol
+        uint256[] memory toBeMinted = new uint256[](count);
+        bool needMintStep;
+        bool needTransferStep;
 
-pragma solidity 0.6.6;
+        for (uint256 i = 0; i < count; i++) {
+            if (balances[i] < exitAmounts[i]) {
+                toBeMinted[i] = exitAmounts[i] - balances[i];
+                needMintStep = true;
+            }
 
+            if(balances[i] != 0) {
+                needTransferStep = true;
+            }
+        }
 
+        return (toBeMinted, needMintStep, needTransferStep);
+    }
 
-contract RootTunnel is BaseRootTunnel {
-    function _processMessageFromChild(bytes memory message) internal override {
-      // implement your core logic here
+    /**
+     * @notice Validates log signature, withdrawer address
+     * then sends the correct tokenId, amount to withdrawer
+     * callable only by manager
+     * @param rootToken Token which gets withdrawn
+     * @param log Valid ChainExit log from child chain
+     */
+    function exitTokens(
+        address,
+        address rootToken,
+        bytes memory log
+    ) public override only(MANAGER_ROLE) {
+        RLPReader.RLPItem[] memory logRLPList = log.toRlpItem().toList();
+        RLPReader.RLPItem[] memory logTopicRLPList = logRLPList[1].toList();
+        bytes memory logData = logRLPList[2].toBytes();
+
+        if (bytes32(logTopicRLPList[0].toUint()) == CHAIN_EXIT_EVENT_SIG) {
+
+            address withdrawer = address(logTopicRLPList[1].toUint());
+            require(withdrawer != address(0), "ChainExitERC1155Predicate: INVALID_RECEIVER");
+
+            (uint256[] memory ids, uint256[] memory amounts, bytes memory data) = abi.decode(
+                logData,
+                (uint256[], uint256[], bytes)
+            );
+
+            IMintableERC1155 token = IMintableERC1155(rootToken);
+
+            uint256[] memory balances = token.balanceOfBatch(makeArrayWithAddress(address(this), ids.length), ids);
+            (uint256[] memory toBeMinted, bool needMintStep, bool needTransferStep) = calculateAmountsToBeMinted(balances, amounts);
+
+            if(needMintStep) {
+                token.mintBatch(
+                    withdrawer,
+                    ids,
+                    toBeMinted,
+                    data // passing data when minting to withdrawer
+                );
+            }
+
+            if(needTransferStep) {
+                token.safeBatchTransferFrom(
+                    address(this),
+                    withdrawer,
+                    ids,
+                    balances,
+                    data // passing data when transferring unlocked tokens to withdrawer
+                );
+            }
+
+        } else {
+            revert("ChainExitERC1155Predicate: INVALID_WITHDRAW_SIG");
+        }
     }
 }

@@ -1838,6 +1838,7 @@ contract RootChainManager is
         external
         only(DEFAULT_ADMIN_ROLE)
     {
+        require(newStateSender != address(0), "RootChainManager: BAD_NEW_STATE_SENDER");
         _stateSender = IStateSender(newStateSender);
     }
 
@@ -1858,6 +1859,7 @@ contract RootChainManager is
         external
         only(DEFAULT_ADMIN_ROLE)
     {
+        require(newCheckpointManager != address(0), "RootChainManager: BAD_NEW_CHECKPOINT_MANAGER");
         _checkpointManager = ICheckpointManager(newCheckpointManager);
     }
 
@@ -1883,7 +1885,7 @@ contract RootChainManager is
     }
 
     /**
-     * @notice Register a token predicate address against its type, callable only by mappers
+     * @notice Register a token predicate address against its type, callable only by ADMIN
      * @dev A predicate is a contract responsible to process the token specific logic while locking or exiting tokens
      * @param tokenType bytes32 unique identifier for the token type
      * @param predicateAddress address of token predicate address
@@ -1935,7 +1937,7 @@ contract RootChainManager is
 
     /**
      * @notice Remap a token that has already been mapped, properly cleans up old mapping
-     * Callable only by mappers
+     * Callable only by ADMIN
      * @param rootToken address of token on root chain
      * @param childToken address of token on child chain
      * @param tokenType bytes32 unique identifier for the token type
