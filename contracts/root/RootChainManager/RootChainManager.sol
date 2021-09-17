@@ -340,6 +340,7 @@ contract RootChainManager is
             .toRlpItem()
             .toList();
 
+        require(inputDataRLPList.length == 10, "RootChainManager: BAD_PAYLOAD");
         // checking if exit has already been processed
         // unique exit is identified using hash of (blockNumber, branchMask, receiptLogIndex)
         bytes32 exitHash = keccak256(

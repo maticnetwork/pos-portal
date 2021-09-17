@@ -89,6 +89,9 @@ contract EtherPredicate is ITokenPredicate, AccessControlMixin, Initializable {
 
         emit ExitedEther(withdrawer, logRLPList[2].toUint());
 
-        payable(withdrawer).transfer(logRLPList[2].toUint());
+        (bool success, /* bytes memory data */) = withdrawer.call{value: logRLPList[2].toUint()}("");
+        if (!success) {
+            revert("EtherPredicate: ETHER_TRANSFER_FAILED");
+        }
     }
 }
