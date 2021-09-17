@@ -20,6 +20,8 @@ const ERC1155Predicate = artifacts.require('ERC1155Predicate')
 const ERC1155PredicateProxy = artifacts.require('ERC1155PredicateProxy')
 const MintableERC1155Predicate = artifacts.require('MintableERC1155Predicate')
 const MintableERC1155PredicateProxy = artifacts.require('MintableERC1155PredicateProxy')
+const ChainExitERC1155Predicate = artifacts.require('ChainExitERC1155Predicate')
+const ChainExitERC1155PredicateProxy = artifacts.require('ChainExitERC1155PredicateProxy')
 const EtherPredicate = artifacts.require('EtherPredicate')
 const EtherPredicateProxy = artifacts.require('EtherPredicateProxy')
 const DummyERC20 = artifacts.require('DummyERC20')
@@ -83,6 +85,8 @@ setWeb3(ERC1155Predicate, rootWeb3)
 setWeb3(ERC1155PredicateProxy, rootWeb3)
 setWeb3(MintableERC1155Predicate, rootWeb3)
 setWeb3(MintableERC1155PredicateProxy, rootWeb3)
+setWeb3(ChainExitERC1155Predicate, rootWeb3)
+setWeb3(ChainExitERC1155PredicateProxy, rootWeb3)
 setWeb3(EtherPredicate, rootWeb3)
 setWeb3(EtherPredicateProxy, rootWeb3)
 setWeb3(DummyERC20, rootWeb3)
@@ -133,6 +137,8 @@ export default {
   ERC1155PredicateProxy,
   MintableERC1155Predicate,
   MintableERC1155PredicateProxy,
+  ChainExitERC1155Predicate,
+  ChainExitERC1155PredicateProxy,
   EtherPredicate,
   EtherPredicateProxy,
   DummyERC20,

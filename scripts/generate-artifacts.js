@@ -19,7 +19,9 @@ const artifactsToGenerate = [
   'BaseRootTunnel.json',
   'BaseChildTunnel.json',
   'RootTunnel.json',
-  'ChildTunnel.json'
+  'ChildTunnel.json',
+  'ChainExitERC1155Predicate.json',
+  'ChainExitERC1155PredicateProxy.json'
 ]
 
 artifactsToGenerate.forEach(a => {

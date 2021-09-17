@@ -9,7 +9,7 @@ import {RLPReader} from "../../lib/RLPReader.sol";
 import {ITokenPredicate} from "./ITokenPredicate.sol";
 import {Initializable} from "../../common/Initializable.sol";
 
-contract MintableERC1155Predicate is
+contract ChainExitERC1155Predicate is
     ITokenPredicate,
     ERC1155Receiver,
     AccessControlMixin,
@@ -19,16 +19,11 @@ contract MintableERC1155Predicate is
     using RLPReader for RLPReader.RLPItem;
 
     bytes32 public constant MANAGER_ROLE = keccak256("MANAGER_ROLE");
-    bytes32 public constant TOKEN_TYPE = keccak256("MintableERC1155");
+    bytes32 public constant TOKEN_TYPE = keccak256("ChainExitERC1155");
+    // Only this event is considered in exit function : ChainExit(address indexed to, uint256[] tokenId, uint256[] amount, bytes data)
+    bytes32 public constant CHAIN_EXIT_EVENT_SIG = keccak256("ChainExit(address,uint256[],uint256[],bytes)");
 
-    bytes32 public constant TRANSFER_SINGLE_EVENT_SIG = keccak256(
-        "TransferSingle(address,address,address,uint256,uint256)"
-    );
-    bytes32 public constant TRANSFER_BATCH_EVENT_SIG = keccak256(
-        "TransferBatch(address,address,address,uint256[],uint256[])"
-    );
-
-    event LockedBatchMintableERC1155(
+    event LockedBatchChainExitERC1155(
         address indexed depositor,
         address indexed depositReceiver,
         address indexed rootToken,
@@ -39,7 +34,7 @@ contract MintableERC1155Predicate is
     constructor() public {}
 
     function initialize(address _owner) external initializer {
-        _setupContractId("MintableERC1155Predicate");
+        _setupContractId("ChainExitERC1155Predicate");
         _setupRole(DEFAULT_ADMIN_ROLE, _owner);
         _setupRole(MANAGER_ROLE, _owner);
     }
@@ -90,7 +85,7 @@ contract MintableERC1155Predicate is
             bytes memory data
         ) = abi.decode(depositData, (uint256[], uint256[], bytes));
 
-        emit LockedBatchMintableERC1155(
+        emit LockedBatchChainExitERC1155(
             depositor,
             depositReceiver,
             rootToken,
@@ -105,28 +100,10 @@ contract MintableERC1155Predicate is
             data
         );
     }
-    
-    // Used when attempting to exit with single token, single amount/ id is converted into
-    // slice of amounts/ ids
-    // Generally size is going to be `1` i.e. single element array, but it's kept generic
-    function makeArrayWithValue(uint256 val, uint size) internal pure returns(uint256[] memory) {
-        require(
-            size > 0,
-            "MintableERC1155Predicate: Invalid resulting array length"
-        );
-
-        uint256[] memory vals = new uint256[](size);
-
-        for (uint256 i = 0; i < size; i++) {
-            vals[i] = val;
-        }
-
-        return vals;
-    }
 
     /**
      * @notice Creates an array of `size` by repeating provided address,
-     * to be required for passing to batch balance checking function of ERC1155 tokens.
+     * to be required for passing to batched balance checking function of ERC1155 tokens.
      * @param addr Address to be repeated `size` times in resulting array
      * @param size Size of resulting array
      */
@@ -137,11 +114,11 @@ contract MintableERC1155Predicate is
     {
         require(
             addr != address(0),
-            "MintableERC1155Predicate: Invalid address"
+            "ChainExitERC1155Predicate: Invalid address"
         );
         require(
             size > 0,
-            "MintableERC1155Predicate: Invalid resulting array length"
+            "ChainExitERC1155Predicate: Invalid resulting array length"
         );
 
         address[] memory addresses = new address[](size);
@@ -156,48 +133,43 @@ contract MintableERC1155Predicate is
     /**
      * @notice Calculates amount of tokens to be minted, by subtracting available
      * token balances from amount of tokens to be exited
-     * @param tokenBalances Token balances this contract holds for some ordered token ids
-     * @param amountsToBeExited Amount of tokens being exited
+     * @param balances Token balances this contract holds for some ordered token ids
+     * @param exitAmounts Amount of tokens being exited
      */
     function calculateAmountsToBeMinted(
-        uint256[] memory tokenBalances,
-        uint256[] memory amountsToBeExited
+        uint256[] memory balances,
+        uint256[] memory exitAmounts
     ) internal pure returns (uint256[] memory, bool, bool) {
+        uint256 count = balances.length;
         require(
-            tokenBalances.length == amountsToBeExited.length,
-            "MintableERC1155Predicate: Array length mismatch found"
+            count == exitAmounts.length,
+            "ChainExitERC1155Predicate: Array length mismatch found"
         );
 
-        uint256[] memory toBeMintedAmounts = new uint256[](
-            tokenBalances.length
-        );
+        uint256[] memory toBeMinted = new uint256[](count);
         bool needMintStep;
         bool needTransferStep;
 
-        // Iteratively calculating amounts of token to be minted
-        //
-        // Please note, in some cases it can be 0, but that will not
-        // be a problem, due to implementation of mint logic for ERC1155
-        for (uint256 i = 0; i < tokenBalances.length; i++) {
-            if (tokenBalances[i] < amountsToBeExited[i]) {
-                toBeMintedAmounts[i] = amountsToBeExited[i] - tokenBalances[i];
+        for (uint256 i = 0; i < count; i++) {
+            if (balances[i] < exitAmounts[i]) {
+                toBeMinted[i] = exitAmounts[i] - balances[i];
                 needMintStep = true;
             }
 
-            if(tokenBalances[i] != 0) {
+            if(balances[i] != 0) {
                 needTransferStep = true;
             }
         }
 
-        return (toBeMintedAmounts, needMintStep, needTransferStep);
+        return (toBeMinted, needMintStep, needTransferStep);
     }
 
     /**
-     * @notice Validates log signature, from and to address
+     * @notice Validates log signature, withdrawer address
      * then sends the correct tokenId, amount to withdrawer
      * callable only by manager
      * @param rootToken Token which gets withdrawn
-     * @param log Valid ERC1155 TransferSingle burn or TransferBatch burn log from child chain
+     * @param log Valid ChainExit log from child chain
      */
     function exitTokens(
         address,
@@ -205,43 +177,17 @@ contract MintableERC1155Predicate is
         bytes memory log
     ) public override only(MANAGER_ROLE) {
         RLPReader.RLPItem[] memory logRLPList = log.toRlpItem().toList();
-        RLPReader.RLPItem[] memory logTopicRLPList = logRLPList[1].toList(); // topics
+        RLPReader.RLPItem[] memory logTopicRLPList = logRLPList[1].toList();
         bytes memory logData = logRLPList[2].toBytes();
 
-        address withdrawer = address(logTopicRLPList[2].toUint()); // topic2 is from address
+        if (bytes32(logTopicRLPList[0].toUint()) == CHAIN_EXIT_EVENT_SIG) {
 
-        require(
-            address(logTopicRLPList[3].toUint()) == address(0), // topic3 is to address
-            "MintableERC1155Predicate: INVALID_RECEIVER"
-        );
+            address withdrawer = address(logTopicRLPList[1].toUint());
+            require(withdrawer != address(0), "ChainExitERC1155Predicate: INVALID_RECEIVER");
 
-        bytes32 eventSig = bytes32(logTopicRLPList[0].toUint());
-        if (eventSig == TRANSFER_SINGLE_EVENT_SIG) {
-            (uint256 id, uint256 amount) = abi.decode(
+            (uint256[] memory ids, uint256[] memory amounts, bytes memory data) = abi.decode(
                 logData,
-                (uint256, uint256)
-            );
-
-            IMintableERC1155 token = IMintableERC1155(rootToken);
-
-            uint256 balance = token.balanceOf(address(this), id);
-            if (balance < amount) {
-                token.mint(withdrawer, id, amount - balance, bytes(""));
-            }
-
-            if(balance != 0) {
-                token.safeTransferFrom(
-                    address(this),
-                    withdrawer,
-                    id,
-                    balance,
-                    bytes("")
-                );
-            }
-        } else if (eventSig == TRANSFER_BATCH_EVENT_SIG) {
-            (uint256[] memory ids, uint256[] memory amounts) = abi.decode(
-                logData,
-                (uint256[], uint256[])
+                (uint256[], uint256[], bytes)
             );
 
             IMintableERC1155 token = IMintableERC1155(rootToken);
@@ -254,7 +200,7 @@ contract MintableERC1155Predicate is
                     withdrawer,
                     ids,
                     toBeMinted,
-                    bytes("")
+                    data // passing data when minting to withdrawer
                 );
             }
 
@@ -264,11 +210,12 @@ contract MintableERC1155Predicate is
                     withdrawer,
                     ids,
                     balances,
-                    bytes("")
+                    data // passing data when transferring unlocked tokens to withdrawer
                 );
             }
+
         } else {
-            revert("MintableERC1155Predicate: INVALID_WITHDRAW_SIG");
+            revert("ChainExitERC1155Predicate: INVALID_WITHDRAW_SIG");
         }
     }
 }
