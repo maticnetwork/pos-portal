@@ -1671,9 +1671,10 @@ abstract contract BaseRootTunnel is AccessControlMixin {
     }
 
     function _validateAndExtractMessage(bytes memory inputData) internal returns (bytes memory) {
-         ExitPayloadReader.ExitPayload memory payload = inputData.toExitPayload();
-
         require(inputData.length == 10, "RootTunnel: BAD_PAYLOAD");
+        
+        ExitPayloadReader.ExitPayload memory payload = inputData.toExitPayload();
+        
         bytes memory branchMaskBytes = payload.getBranchMaskAsBytes();
         // checking if exit has already been processed
         // unique exit is identified using hash of (blockNumber, branchMask, receiptLogIndex)
