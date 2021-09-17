@@ -6,6 +6,7 @@ import Web3 from 'web3'
 const MockCheckpointManager = artifacts.require('MockCheckpointManager')
 const RootChainManager = artifacts.require('RootChainManager')
 const RootChainManagerProxy = artifacts.require('RootChainManagerProxy')
+const ExitPayloadReaderTest = artifacts.require('ExitPayloadReaderTest')
 const DummyStateSender = artifacts.require('DummyStateSender')
 const ERC20Predicate = artifacts.require('ERC20Predicate')
 const ERC20PredicateProxy = artifacts.require('ERC20PredicateProxy')
@@ -69,6 +70,7 @@ const setWeb3 = (contractObj, w3) => {
 // contracts on root chain
 setWeb3(MockCheckpointManager, rootWeb3)
 setWeb3(RootChainManager, rootWeb3)
+setWeb3(ExitPayloadReaderTest, rootWeb3)
 setWeb3(RootChainManagerProxy, rootWeb3)
 setWeb3(DummyStateSender, rootWeb3)
 setWeb3(ERC20Predicate, rootWeb3)
@@ -120,6 +122,7 @@ setWeb3(ChildPotatoToken, childWeb3)
 export default {
   MockCheckpointManager,
   RootChainManager,
+  ExitPayloadReaderTest,
   RootChainManagerProxy,
   DummyStateSender,
   ERC20Predicate,

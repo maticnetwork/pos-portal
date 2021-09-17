@@ -1413,6 +1413,170 @@ library Merkle {
     }
 }
 
+// File: contracts/lib/ExitPayloadReader.sol
+
+pragma solidity 0.6.6;
+
+
+library ExitPayloadReader {
+  using RLPReader for bytes;
+  using RLPReader for RLPReader.RLPItem;
+
+  uint8 constant WORD_SIZE = 32;
+
+  struct ExitPayload {
+    RLPReader.RLPItem[] data;
+  }
+
+  struct Receipt {
+    RLPReader.RLPItem[] data;
+    bytes raw;
+    uint256 logIndex;
+  }
+
+  struct Log {
+    RLPReader.RLPItem data;
+    RLPReader.RLPItem[] list;
+  }
+
+  struct LogTopics {
+    RLPReader.RLPItem[] data;
+  }
+
+  // copy paste of private copy() from RLPReader to avoid changing of existing contracts
+  function copy(uint src, uint dest, uint len) private pure {
+        if (len == 0) return;
+
+        // copy as many word sizes as possible
+        for (; len >= WORD_SIZE; len -= WORD_SIZE) {
+            assembly {
+                mstore(dest, mload(src))
+            }
+
+            src += WORD_SIZE;
+            dest += WORD_SIZE;
+        }
+
+        // left over bytes. Mask is used to remove unwanted bytes from the word
+        uint mask = 256 ** (WORD_SIZE - len) - 1;
+        assembly {
+            let srcpart := and(mload(src), not(mask)) // zero out src
+            let destpart := and(mload(dest), mask) // retrieve the bytes
+            mstore(dest, or(destpart, srcpart))
+        }
+    }
+
+  function toExitPayload(bytes memory data)
+        internal
+        pure
+        returns (ExitPayload memory)
+    {
+        RLPReader.RLPItem[] memory payloadData = data
+            .toRlpItem()
+            .toList();
+
+        return ExitPayload(payloadData);
+    }
+
+    function getHeaderNumber(ExitPayload memory payload) internal pure returns(uint256) {
+      return payload.data[0].toUint();
+    }
+
+    function getBlockProof(ExitPayload memory payload) internal pure returns(bytes memory) {
+      return payload.data[1].toBytes();
+    }
+
+    function getBlockNumber(ExitPayload memory payload) internal pure returns(uint256) {
+      return payload.data[2].toUint();
+    }
+
+    function getBlockTime(ExitPayload memory payload) internal pure returns(uint256) {
+      return payload.data[3].toUint();
+    }
+
+    function getTxRoot(ExitPayload memory payload) internal pure returns(bytes32) {
+      return bytes32(payload.data[4].toUint());
+    }
+
+    function getReceiptRoot(ExitPayload memory payload) internal pure returns(bytes32) {
+      return bytes32(payload.data[5].toUint());
+    }
+
+    function getReceipt(ExitPayload memory payload) internal pure returns(Receipt memory receipt) {
+      receipt.raw = payload.data[6].toBytes();
+      RLPReader.RLPItem memory receiptItem = receipt.raw.toRlpItem();
+
+      if (receiptItem.isList()) {
+          // legacy tx
+          receipt.data = receiptItem.toList();
+      } else {
+          // pop first byte before parsting receipt
+          bytes memory typedBytes = receipt.raw;
+          bytes memory result = new bytes(typedBytes.length - 1);
+          uint256 srcPtr;
+          uint256 destPtr;
+          assembly {
+              srcPtr := add(33, typedBytes)
+              destPtr := add(0x20, result)
+          }
+
+          copy(srcPtr, destPtr, result.length);
+          receipt.data = result.toRlpItem().toList();
+      }
+
+      receipt.logIndex = getReceiptLogIndex(payload);
+      return receipt;
+    }
+
+    function getReceiptProof(ExitPayload memory payload) internal pure returns(bytes memory) {
+      return payload.data[7].toBytes();
+    }
+
+    function getBranchMaskAsBytes(ExitPayload memory payload) internal pure returns(bytes memory) {
+      return payload.data[8].toBytes();
+    }
+
+    function getBranchMaskAsUint(ExitPayload memory payload) internal pure returns(uint256) {
+      return payload.data[8].toUint();
+    }
+
+    function getReceiptLogIndex(ExitPayload memory payload) internal pure returns(uint256) {
+      return payload.data[9].toUint();
+    }
+    
+    // Receipt methods
+    function toBytes(Receipt memory receipt) internal pure returns(bytes memory) {
+        return receipt.raw;
+    }
+
+    function getLog(Receipt memory receipt) internal pure returns(Log memory) {
+        RLPReader.RLPItem memory logData = receipt.data[3].toList()[receipt.logIndex];
+        return Log(logData, logData.toList());
+    }
+
+    // Log methods
+    function getEmitter(Log memory log) internal pure returns(address) {
+      return RLPReader.toAddress(log.list[0]);
+    }
+
+    function getTopics(Log memory log) internal pure returns(LogTopics memory) {
+        return LogTopics(log.list[1].toList());
+    }
+
+    function getData(Log memory log) internal pure returns(bytes memory) {
+        return log.list[2].toBytes();
+    }
+
+    function toRlpBytes(Log memory log) internal pure returns(bytes memory) {
+      return log.data.toRlpBytes();
+    }
+
+    // LogTopics methods
+    function getField(LogTopics memory topics, uint256 index) internal pure returns(RLPReader.RLPItem memory) {
+      return topics.data[index];
+    }
+}
+
 // File: contracts/tunnel/BaseRootTunnel.sol
 
 pragma solidity 0.6.6;
@@ -1425,11 +1589,17 @@ pragma solidity 0.6.6;
 
 
 
+
 abstract contract BaseRootTunnel is AccessControlMixin {
-    using RLPReader for bytes;
-    using RLPReader for RLPReader.RLPItem;
     using Merkle for bytes32;
     using SafeMath for uint256;
+    using RLPReader for RLPReader.RLPItem;
+
+    using ExitPayloadReader for bytes;
+    using ExitPayloadReader for ExitPayloadReader.ExitPayload;
+    using ExitPayloadReader for ExitPayloadReader.Log;
+    using ExitPayloadReader for ExitPayloadReader.LogTopics;
+    using ExitPayloadReader for ExitPayloadReader.Receipt;
 
     // keccak256(MessageSent(bytes))
     bytes32 public constant SEND_MESSAGE_EVENT_SIG = 0x8c5261668696ce22758910d05bab8f186d6eb247ceac2af2e82c7dc17669b036;
@@ -1501,21 +1671,20 @@ abstract contract BaseRootTunnel is AccessControlMixin {
     }
 
     function _validateAndExtractMessage(bytes memory inputData) internal returns (bytes memory) {
-        RLPReader.RLPItem[] memory inputDataRLPList = inputData
-            .toRlpItem()
-            .toList();
+         ExitPayloadReader.ExitPayload memory payload = inputData.toExitPayload();
 
-        require(inputDataRLPList.length == 10, "RootTunnel: BAD_PAYLOAD");
+        require(inputData.length == 10, "RootTunnel: BAD_PAYLOAD");
+        bytes memory branchMaskBytes = payload.getBranchMaskAsBytes();
         // checking if exit has already been processed
         // unique exit is identified using hash of (blockNumber, branchMask, receiptLogIndex)
         bytes32 exitHash = keccak256(
             abi.encodePacked(
-                inputDataRLPList[2].toUint(), // blockNumber
+                payload.getBlockNumber(),
                 // first 2 nibbles are dropped while generating nibble array
                 // this allows branch masks that are valid but bypass exitHash check (changing first 2 nibbles only)
                 // so converting to nibble array and then hashing it
-                MerklePatriciaProof._getNibbleArray(inputDataRLPList[8].toBytes()), // branchMask
-                inputDataRLPList[9].toUint() // receiptLogIndex
+                MerklePatriciaProof._getNibbleArray(branchMaskBytes),
+                payload.getReceiptLogIndex()
             )
         );
         require(
@@ -1524,51 +1693,41 @@ abstract contract BaseRootTunnel is AccessControlMixin {
         );
         processedExits[exitHash] = true;
 
-        RLPReader.RLPItem[] memory receiptRLPList = inputDataRLPList[6]
-            .toBytes()
-            .toRlpItem()
-            .toList();
-        RLPReader.RLPItem memory logRLP = receiptRLPList[3]
-            .toList()[
-                inputDataRLPList[9].toUint() // receiptLogIndex
-            ];
+        ExitPayloadReader.Receipt memory receipt = payload.getReceipt();
+        ExitPayloadReader.Log memory log = receipt.getLog();
 
-        RLPReader.RLPItem[] memory logRLPList = logRLP.toList();
-        
         // check child tunnel
-        require(childTunnel == RLPReader.toAddress(logRLPList[0]), "RootTunnel: INVALID_CHILD_TUNNEL");
+        require(childTunnel == log.getEmitter(), "RootTunnel: INVALID_CHILD_TUNNEL");
 
-        // verify receipt inclusion
         require(
             MerklePatriciaProof.verify(
-                inputDataRLPList[6].toBytes(), // receipt
-                inputDataRLPList[8].toBytes(), // branchMask
-                inputDataRLPList[7].toBytes(), // receiptProof
-                bytes32(inputDataRLPList[5].toUint()) // receiptRoot
+                receipt.toBytes(),
+                branchMaskBytes,
+                payload.getReceiptProof(),
+                payload.getReceiptRoot()
             ),
             "RootTunnel: INVALID_RECEIPT_PROOF"
         );
 
         // verify checkpoint inclusion
         _checkBlockMembershipInCheckpoint(
-            inputDataRLPList[2].toUint(), // blockNumber
-            inputDataRLPList[3].toUint(), // blockTime
-            bytes32(inputDataRLPList[4].toUint()), // txRoot
-            bytes32(inputDataRLPList[5].toUint()), // receiptRoot
-            inputDataRLPList[0].toUint(), // headerNumber
-            inputDataRLPList[1].toBytes() // blockProof
+            payload.getBlockNumber(), 
+            payload.getBlockTime(), 
+            payload.getTxRoot(), 
+            payload.getReceiptRoot(), 
+            payload.getHeaderNumber(), 
+            payload.getBlockProof()
         );
 
-        RLPReader.RLPItem[] memory logTopicRLPList = logRLPList[1].toList(); // topics
+        ExitPayloadReader.LogTopics memory topics = log.getTopics();
 
         require(
-            bytes32(logTopicRLPList[0].toUint()) == SEND_MESSAGE_EVENT_SIG, // topic0 is event sig
+            bytes32(topics.getField(0).toUint()) == SEND_MESSAGE_EVENT_SIG, // topic0 is event sig
             "RootTunnel: INVALID_SIGNATURE"
         );
 
         // received message data
-        bytes memory receivedData = logRLPList[2].toBytes();
-        (bytes memory message) = abi.decode(receivedData, (bytes)); // event decodes params again, so decoding bytes to get message
+        (bytes memory message) = abi.decode(log.getData(), (bytes)); // event decodes params again, so decoding bytes to get message
         return message;
     }
 

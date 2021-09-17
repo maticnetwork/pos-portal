@@ -17,3 +17,7 @@ test-blockchain/start.sh
 contractAddresses.json
 
 tenderly.yaml
+
+contracts/ChainConstants.sol
+
+contracts/dump.json

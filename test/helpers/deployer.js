@@ -19,7 +19,8 @@ export const deployFreshRootContracts = async(accounts) => {
     dummyERC721,
     dummyMintableERC721,
     dummyERC1155,
-    dummyMintableERC1155
+    dummyMintableERC1155,
+    exitPayloadReaderTest
   ] = await Promise.all([
     contracts.MockCheckpointManager.new(),
     contracts.RootChainManager.new(),
@@ -37,7 +38,8 @@ export const deployFreshRootContracts = async(accounts) => {
     contracts.DummyERC721.new('Dummy ERC721', 'DERC721'),
     contracts.DummyMintableERC721.new('Dummy Mintable ERC721', 'DMERC721'),
     contracts.DummyERC1155.new('Dummy ERC1155'),
-    contracts.DummyMintableERC1155.new('Dummy Mintable ERC1155')
+    contracts.DummyMintableERC1155.new('Dummy Mintable ERC1155'),
+    contracts.ExitPayloadReaderTest.new()
   ])
 
   const rootChainManagerProxy = await contracts.RootChainManagerProxy.new('0x0000000000000000000000000000000000000000')
@@ -77,6 +79,7 @@ export const deployFreshRootContracts = async(accounts) => {
   const etherPredicate = await contracts.EtherPredicate.at(etherPredicateProxy.address)
 
   return {
+    exitPayloadReaderTest,
     checkpointManager,
     rootChainManager,
     dummyStateSender,
