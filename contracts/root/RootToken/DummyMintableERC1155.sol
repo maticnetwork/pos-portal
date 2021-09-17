@@ -1,3 +1,6 @@
+// This contract is not supposed to be used in production
+// It's strictly for testing purpose
+
 pragma solidity 0.6.6;
 
 import {ERC1155} from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
