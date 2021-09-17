@@ -12,13 +12,15 @@ export const deployFreshRootContracts = async(accounts) => {
     mintableERC721PredicateLogic,
     erc1155PredicateLogic,
     mintableERC1155PredicateLogic,
+    chainExitERC1155PredicateLogic,
     etherPredicateLogic,
     dummyERC20,
     dummyMintableERC20,
     dummyERC721,
     dummyMintableERC721,
     dummyERC1155,
-    dummyMintableERC1155
+    dummyMintableERC1155,
+    exitPayloadReaderTest
   ] = await Promise.all([
     contracts.MockCheckpointManager.new(),
     contracts.RootChainManager.new(),
@@ -29,13 +31,15 @@ export const deployFreshRootContracts = async(accounts) => {
     contracts.MintableERC721Predicate.new(),
     contracts.ERC1155Predicate.new(),
     contracts.MintableERC1155Predicate.new(),
+    contracts.ChainExitERC1155Predicate.new(),
     contracts.EtherPredicate.new(),
     contracts.DummyERC20.new('Dummy ERC20', 'DERC20'),
     contracts.DummyMintableERC20.new('Dummy Mintable ERC20', 'DMERC20'),
     contracts.DummyERC721.new('Dummy ERC721', 'DERC721'),
     contracts.DummyMintableERC721.new('Dummy Mintable ERC721', 'DMERC721'),
     contracts.DummyERC1155.new('Dummy ERC1155'),
-    contracts.DummyMintableERC1155.new('Dummy Mintable ERC1155')
+    contracts.DummyMintableERC1155.new('Dummy Mintable ERC1155'),
+    contracts.ExitPayloadReaderTest.new()
   ])
 
   const rootChainManagerProxy = await contracts.RootChainManagerProxy.new('0x0000000000000000000000000000000000000000')
@@ -66,11 +70,16 @@ export const deployFreshRootContracts = async(accounts) => {
   await mintableERC1155PredicateProxy.updateAndCall(mintableERC1155PredicateLogic.address, mintableERC1155PredicateLogic.contract.methods.initialize(accounts[0]).encodeABI())
   const mintableERC1155Predicate = await contracts.MintableERC1155Predicate.at(mintableERC1155PredicateProxy.address)
 
+  const chainExitERC1155PredicateProxy = await contracts.ChainExitERC1155PredicateProxy.new('0x0000000000000000000000000000000000000000')
+  await chainExitERC1155PredicateProxy.updateAndCall(chainExitERC1155PredicateLogic.address, chainExitERC1155PredicateLogic.contract.methods.initialize(accounts[0]).encodeABI())
+  const chainExitERC1155Predicate = await contracts.ChainExitERC1155Predicate.at(chainExitERC1155PredicateProxy.address)
+
   const etherPredicateProxy = await contracts.EtherPredicateProxy.new('0x0000000000000000000000000000000000000000')
   await etherPredicateProxy.updateAndCall(etherPredicateLogic.address, etherPredicateLogic.contract.methods.initialize(accounts[0]).encodeABI())
   const etherPredicate = await contracts.EtherPredicate.at(etherPredicateProxy.address)
 
   return {
+    exitPayloadReaderTest,
     checkpointManager,
     rootChainManager,
     dummyStateSender,
@@ -80,6 +89,7 @@ export const deployFreshRootContracts = async(accounts) => {
     mintableERC721Predicate,
     erc1155Predicate,
     mintableERC1155Predicate,
+    chainExitERC1155Predicate,
     etherPredicate,
     dummyERC20,
     dummyMintableERC20,
@@ -183,6 +193,12 @@ export const deployInitializedContracts = async(accounts) => {
   await child.childChainManager.mapToken(root.dummyMintableERC1155.address, child.dummyMintableERC1155.address)
 
   await root.dummyMintableERC1155.grantRole(PREDICATE_ROLE, root.mintableERC1155Predicate.address)
+
+  const ChainExitERC1155Type = await root.chainExitERC1155Predicate.TOKEN_TYPE()
+  await root.chainExitERC1155Predicate.grantRole(MANAGER_ROLE, root.rootChainManager.address)
+  await root.rootChainManager.registerPredicate(ChainExitERC1155Type, root.chainExitERC1155Predicate.address)
+
+  await root.dummyMintableERC1155.grantRole(PREDICATE_ROLE, root.chainExitERC1155Predicate.address)
 
   const EtherType = await root.etherPredicate.TOKEN_TYPE()
   await root.etherPredicate.grantRole(MANAGER_ROLE, root.rootChainManager.address)
