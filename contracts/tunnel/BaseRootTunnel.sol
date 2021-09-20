@@ -92,9 +92,7 @@ abstract contract BaseRootTunnel is AccessControlMixin {
         stateSender.syncState(childTunnel, message);
     }
 
-    function _validateAndExtractMessage(bytes memory inputData) internal returns (bytes memory) {
-        require(inputData.length == 10, "RootTunnel: BAD_PAYLOAD");
-        
+    function _validateAndExtractMessage(bytes memory inputData) internal returns (bytes memory) {    
         ExitPayloadReader.ExitPayload memory payload = inputData.toExitPayload();
         
         bytes memory branchMaskBytes = payload.getBranchMaskAsBytes();
