@@ -340,10 +340,8 @@ contract RootChainManager is
      *  9 - receiptLogIndex - Log Index to read from the receipt
      */
     function exit(bytes calldata inputData) external override {
-        require(inputData.length == 10, "RootChainManager: BAD_PAYLOAD");
-
         ExitPayloadReader.ExitPayload memory payload = inputData.toExitPayload();
-        
+
         bytes memory branchMaskBytes = payload.getBranchMaskAsBytes();
         // checking if exit has already been processed
         // unique exit is identified using hash of (blockNumber, branchMask, receiptLogIndex)
