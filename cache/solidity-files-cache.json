@@ -1,8 +1,8 @@
 {
   "_format": "hh-sol-cache-2",
   "files": {
-    "/home/ubuntu/dev/Polygon/hardhat_pos/pos-portal/contracts/child/ChildChainManager/ChildChainManager.sol": {
-      "lastModificationDate": 1628868421757,
+    "/Users/jdkanani/matic/pos-portal/contracts/child/ChildChainManager/ChildChainManager.sol": {
+      "lastModificationDate": 1626627637936,
       "contentHash": "17d894136ba3fb3d8c4b7cd69cc02c4c",
       "sourceName": "contracts/child/ChildChainManager/ChildChainManager.sol",
       "solcConfig": {
@@ -42,8 +42,8 @@
         "ChildChainManager"
       ]
     },
-    "/home/ubuntu/dev/Polygon/hardhat_pos/pos-portal/node_modules/@openzeppelin/contracts/token/ERC20/IERC20.sol": {
-      "lastModificationDate": 1629193784641,
+    "/Users/jdkanani/matic/pos-portal/node_modules/@openzeppelin/contracts/token/ERC20/IERC20.sol": {
+      "lastModificationDate": 1632218579471,
       "contentHash": "e0a41531d159d3a32f84b7a3ecf9fabb",
       "sourceName": "@openzeppelin/contracts/token/ERC20/IERC20.sol",
       "solcConfig": {
@@ -76,8 +76,8 @@
         "IERC20"
       ]
     },
-    "/home/ubuntu/dev/Polygon/hardhat_pos/pos-portal/contracts/child/ChildChainManager/IChildChainManager.sol": {
-      "lastModificationDate": 1628868421757,
+    "/Users/jdkanani/matic/pos-portal/contracts/child/ChildChainManager/IChildChainManager.sol": {
+      "lastModificationDate": 1626627637936,
       "contentHash": "3e7125ad7ae32fca3fe9045793c41ad4",
       "sourceName": "contracts/child/ChildChainManager/IChildChainManager.sol",
       "solcConfig": {
@@ -110,8 +110,8 @@
         "IChildChainManager"
       ]
     },
-    "/home/ubuntu/dev/Polygon/hardhat_pos/pos-portal/contracts/child/ChildToken/IChildToken.sol": {
-      "lastModificationDate": 1628868421757,
+    "/Users/jdkanani/matic/pos-portal/contracts/child/ChildToken/IChildToken.sol": {
+      "lastModificationDate": 1626627637937,
       "contentHash": "1949aec687b4f0502abc1a94744ab0ff",
       "sourceName": "contracts/child/ChildToken/IChildToken.sol",
       "solcConfig": {
@@ -144,8 +144,8 @@
         "IChildToken"
       ]
     },
-    "/home/ubuntu/dev/Polygon/hardhat_pos/pos-portal/contracts/common/Initializable.sol": {
-      "lastModificationDate": 1628868421761,
+    "/Users/jdkanani/matic/pos-portal/contracts/common/Initializable.sol": {
+      "lastModificationDate": 1626627637939,
       "contentHash": "e08c83ef9a863afc567a9ca3743bf1e9",
       "sourceName": "contracts/common/Initializable.sol",
       "solcConfig": {
@@ -178,8 +178,8 @@
         "Initializable"
       ]
     },
-    "/home/ubuntu/dev/Polygon/hardhat_pos/pos-portal/contracts/common/AccessControlMixin.sol": {
-      "lastModificationDate": 1628868421757,
+    "/Users/jdkanani/matic/pos-portal/contracts/common/AccessControlMixin.sol": {
+      "lastModificationDate": 1626627637938,
       "contentHash": "5a0a987012932754f765526177b2854f",
       "sourceName": "contracts/common/AccessControlMixin.sol",
       "solcConfig": {
@@ -214,8 +214,8 @@
         "AccessControlMixin"
       ]
     },
-    "/home/ubuntu/dev/Polygon/hardhat_pos/pos-portal/contracts/child/IStateReceiver.sol": {
-      "lastModificationDate": 1628868421757,
+    "/Users/jdkanani/matic/pos-portal/contracts/child/IStateReceiver.sol": {
+      "lastModificationDate": 1626627637938,
       "contentHash": "fcc44db70e467eefd5b579a529b2ce83",
       "sourceName": "contracts/child/IStateReceiver.sol",
       "solcConfig": {
@@ -248,8 +248,8 @@
         "IStateReceiver"
       ]
     },
-    "/home/ubuntu/dev/Polygon/hardhat_pos/pos-portal/node_modules/@openzeppelin/contracts/access/AccessControl.sol": {
-      "lastModificationDate": 1629193784449,
+    "/Users/jdkanani/matic/pos-portal/node_modules/@openzeppelin/contracts/access/AccessControl.sol": {
+      "lastModificationDate": 1632218578991,
       "contentHash": "54eb0b53c109558e8312811342e95bf0",
       "sourceName": "@openzeppelin/contracts/access/AccessControl.sol",
       "solcConfig": {
@@ -286,8 +286,8 @@
         "AccessControl"
       ]
     },
-    "/home/ubuntu/dev/Polygon/hardhat_pos/pos-portal/node_modules/@openzeppelin/contracts/utils/EnumerableSet.sol": {
-      "lastModificationDate": 1629193784501,
+    "/Users/jdkanani/matic/pos-portal/node_modules/@openzeppelin/contracts/utils/EnumerableSet.sol": {
+      "lastModificationDate": 1632218579182,
       "contentHash": "db7b1afdb2c204e1e52100b79f0c847e",
       "sourceName": "@openzeppelin/contracts/utils/EnumerableSet.sol",
       "solcConfig": {
@@ -320,8 +320,8 @@
         "EnumerableSet"
       ]
     },
-    "/home/ubuntu/dev/Polygon/hardhat_pos/pos-portal/node_modules/@openzeppelin/contracts/utils/Address.sol": {
-      "lastModificationDate": 1629193784453,
+    "/Users/jdkanani/matic/pos-portal/node_modules/@openzeppelin/contracts/utils/Address.sol": {
+      "lastModificationDate": 1632218579013,
       "contentHash": "7aa46886ff5abe7515496208a5e2ce5a",
       "sourceName": "@openzeppelin/contracts/utils/Address.sol",
       "solcConfig": {
@@ -354,8 +354,8 @@
         "Address"
       ]
     },
-    "/home/ubuntu/dev/Polygon/hardhat_pos/pos-portal/node_modules/@openzeppelin/contracts/utils/Context.sol": {
-      "lastModificationDate": 1629193784481,
+    "/Users/jdkanani/matic/pos-portal/node_modules/@openzeppelin/contracts/utils/Context.sol": {
+      "lastModificationDate": 1632218579143,
       "contentHash": "2adbd82f6d055a4751566d4671512b03",
       "sourceName": "@openzeppelin/contracts/utils/Context.sol",
       "solcConfig": {
@@ -388,8 +388,8 @@
         "Context"
       ]
     },
-    "/home/ubuntu/dev/Polygon/hardhat_pos/pos-portal/contracts/test/PotatoMigration/ChildPotatoMigrator.sol": {
-      "lastModificationDate": 1628868421761,
+    "/Users/jdkanani/matic/pos-portal/contracts/test/PotatoMigration/ChildPotatoMigrator.sol": {
+      "lastModificationDate": 1626627637942,
       "contentHash": "5b572e4dd06d91becaee60145255170b",
       "sourceName": "contracts/test/PotatoMigration/ChildPotatoMigrator.sol",
       "solcConfig": {
@@ -426,8 +426,8 @@
         "ChildPotatoMigrator"
       ]
     },
-    "/home/ubuntu/dev/Polygon/hardhat_pos/pos-portal/contracts/test/PotatoMigration/ChildPotatoFarm.sol": {
-      "lastModificationDate": 1628868421761,
+    "/Users/jdkanani/matic/pos-portal/contracts/test/PotatoMigration/ChildPotatoFarm.sol": {
+      "lastModificationDate": 1626627637942,
       "contentHash": "5d758794a523b222e856d1d340e976c3",
       "sourceName": "contracts/test/PotatoMigration/ChildPotatoFarm.sol",
       "solcConfig": {
@@ -462,8 +462,8 @@
         "ChildPotatoFarm"
       ]
     },
-    "/home/ubuntu/dev/Polygon/hardhat_pos/pos-portal/contracts/test/PotatoMigration/RootPotatoMigrator.sol": {
-      "lastModificationDate": 1628868421761,
+    "/Users/jdkanani/matic/pos-portal/contracts/test/PotatoMigration/RootPotatoMigrator.sol": {
+      "lastModificationDate": 1626627637943,
       "contentHash": "b66e702fce1471168ec4f089350fd799",
       "sourceName": "contracts/test/PotatoMigration/RootPotatoMigrator.sol",
       "solcConfig": {
@@ -500,8 +500,8 @@
         "RootPotatoMigrator"
       ]
     },
-    "/home/ubuntu/dev/Polygon/hardhat_pos/pos-portal/contracts/root/StateSender/IStateSender.sol": {
-      "lastModificationDate": 1628868421761,
+    "/Users/jdkanani/matic/pos-portal/contracts/root/StateSender/IStateSender.sol": {
+      "lastModificationDate": 1626627637941,
       "contentHash": "2566eda9175715a30703e426512d7a0d",
       "sourceName": "contracts/root/StateSender/IStateSender.sol",
       "solcConfig": {
@@ -534,8 +534,8 @@
         "IStateSender"
       ]
     },
-    "/home/ubuntu/dev/Polygon/hardhat_pos/pos-portal/contracts/root/RootChainManager/IRootChainManager.sol": {
-      "lastModificationDate": 1628868421761,
+    "/Users/jdkanani/matic/pos-portal/contracts/root/RootChainManager/IRootChainManager.sol": {
+      "lastModificationDate": 1626627637940,
       "contentHash": "240b1b938a68cda37909107324aa1708",
       "sourceName": "contracts/root/RootChainManager/IRootChainManager.sol",
       "solcConfig": {
@@ -568,9 +568,9 @@
         "IRootChainManager"
       ]
     },
-    "/home/ubuntu/dev/Polygon/hardhat_pos/pos-portal/contracts/root/RootChainManager/RootChainManager.sol": {
-      "lastModificationDate": 1628868421761,
-      "contentHash": "31f80062b737627cce7b228f2fb486f9",
+    "/Users/jdkanani/matic/pos-portal/contracts/root/RootChainManager/RootChainManager.sol": {
+      "lastModificationDate": 1632165789358,
+      "contentHash": "c9604f206ab71da401dfef07d9f79907",
       "sourceName": "contracts/root/RootChainManager/RootChainManager.sol",
       "solcConfig": {
         "version": "0.6.6",
@@ -601,6 +601,7 @@
         "../StateSender/IStateSender.sol",
         "../ICheckpointManager.sol",
         "../../lib/RLPReader.sol",
+        "../../lib/ExitPayloadReader.sol",
         "../../lib/MerklePatriciaProof.sol",
         "../../lib/Merkle.sol",
         "../TokenPredicates/ITokenPredicate.sol",
@@ -617,8 +618,8 @@
         "RootChainManager"
       ]
     },
-    "/home/ubuntu/dev/Polygon/hardhat_pos/pos-portal/node_modules/@openzeppelin/contracts/math/SafeMath.sol": {
-      "lastModificationDate": 1629193784733,
+    "/Users/jdkanani/matic/pos-portal/node_modules/@openzeppelin/contracts/math/SafeMath.sol": {
+      "lastModificationDate": 1632218579630,
       "contentHash": "e03e12206057e809eb76c5f681170c32",
       "sourceName": "@openzeppelin/contracts/math/SafeMath.sol",
       "solcConfig": {
@@ -651,8 +652,8 @@
         "SafeMath"
       ]
     },
-    "/home/ubuntu/dev/Polygon/hardhat_pos/pos-portal/contracts/root/RootChainManager/RootChainManagerStorage.sol": {
-      "lastModificationDate": 1628868421761,
+    "/Users/jdkanani/matic/pos-portal/contracts/root/RootChainManager/RootChainManagerStorage.sol": {
+      "lastModificationDate": 1626627637940,
       "contentHash": "ef07f3e33c646a31f9324465ed19a883",
       "sourceName": "contracts/root/RootChainManager/RootChainManagerStorage.sol",
       "solcConfig": {
@@ -688,8 +689,8 @@
         "RootChainManagerStorage"
       ]
     },
-    "/home/ubuntu/dev/Polygon/hardhat_pos/pos-portal/contracts/root/ICheckpointManager.sol": {
-      "lastModificationDate": 1628868421761,
+    "/Users/jdkanani/matic/pos-portal/contracts/root/ICheckpointManager.sol": {
+      "lastModificationDate": 1626627637939,
       "contentHash": "0775fbe989ca4300899d3648d68afc78",
       "sourceName": "contracts/root/ICheckpointManager.sol",
       "solcConfig": {
@@ -722,9 +723,9 @@
         "ICheckpointManager"
       ]
     },
-    "/home/ubuntu/dev/Polygon/hardhat_pos/pos-portal/contracts/lib/RLPReader.sol": {
-      "lastModificationDate": 1628868421761,
-      "contentHash": "bec0df039387f82108819aa8edf325fa",
+    "/Users/jdkanani/matic/pos-portal/contracts/lib/RLPReader.sol": {
+      "lastModificationDate": 1631888253423,
+      "contentHash": "c684270653e8d42de3f98e9389272302",
       "sourceName": "contracts/lib/RLPReader.sol",
       "solcConfig": {
         "version": "0.6.6",
@@ -756,8 +757,44 @@
         "RLPReader"
       ]
     },
-    "/home/ubuntu/dev/Polygon/hardhat_pos/pos-portal/contracts/lib/MerklePatriciaProof.sol": {
-      "lastModificationDate": 1628868421761,
+    "/Users/jdkanani/matic/pos-portal/contracts/lib/ExitPayloadReader.sol": {
+      "lastModificationDate": 1631888253422,
+      "contentHash": "246bf19086b2a4b6358ea7eecbe76dd1",
+      "sourceName": "contracts/lib/ExitPayloadReader.sol",
+      "solcConfig": {
+        "version": "0.6.6",
+        "settings": {
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "./RLPReader.sol"
+      ],
+      "versionPragmas": [
+        "0.6.6"
+      ],
+      "artifacts": [
+        "ExitPayloadReader"
+      ]
+    },
+    "/Users/jdkanani/matic/pos-portal/contracts/lib/MerklePatriciaProof.sol": {
+      "lastModificationDate": 1626627637939,
       "contentHash": "06697cf66b052f4dc97950915f0fb9be",
       "sourceName": "contracts/lib/MerklePatriciaProof.sol",
       "solcConfig": {
@@ -792,8 +829,8 @@
         "MerklePatriciaProof"
       ]
     },
-    "/home/ubuntu/dev/Polygon/hardhat_pos/pos-portal/contracts/lib/Merkle.sol": {
-      "lastModificationDate": 1628868421761,
+    "/Users/jdkanani/matic/pos-portal/contracts/lib/Merkle.sol": {
+      "lastModificationDate": 1626627637939,
       "contentHash": "73a09d996d09f895bee2c5c549ee7069",
       "sourceName": "contracts/lib/Merkle.sol",
       "solcConfig": {
@@ -826,8 +863,8 @@
         "Merkle"
       ]
     },
-    "/home/ubuntu/dev/Polygon/hardhat_pos/pos-portal/contracts/root/TokenPredicates/ITokenPredicate.sol": {
-      "lastModificationDate": 1628868421761,
+    "/Users/jdkanani/matic/pos-portal/contracts/root/TokenPredicates/ITokenPredicate.sol": {
+      "lastModificationDate": 1626627637942,
       "contentHash": "42ff9715021e1643a218c12b6c00ac4d",
       "sourceName": "contracts/root/TokenPredicates/ITokenPredicate.sol",
       "solcConfig": {
@@ -862,8 +899,8 @@
         "ITokenPredicate"
       ]
     },
-    "/home/ubuntu/dev/Polygon/hardhat_pos/pos-portal/contracts/common/NativeMetaTransaction.sol": {
-      "lastModificationDate": 1628868421761,
+    "/Users/jdkanani/matic/pos-portal/contracts/common/NativeMetaTransaction.sol": {
+      "lastModificationDate": 1626627637939,
       "contentHash": "22354ce2d91a1f91823e4efebc237770",
       "sourceName": "contracts/common/NativeMetaTransaction.sol",
       "solcConfig": {
@@ -899,8 +936,8 @@
         "NativeMetaTransaction"
       ]
     },
-    "/home/ubuntu/dev/Polygon/hardhat_pos/pos-portal/contracts/common/ContextMixin.sol": {
-      "lastModificationDate": 1628868421757,
+    "/Users/jdkanani/matic/pos-portal/contracts/common/ContextMixin.sol": {
+      "lastModificationDate": 1626627637938,
       "contentHash": "ca818c710f313ac674d9e7f2b61c4f04",
       "sourceName": "contracts/common/ContextMixin.sol",
       "solcConfig": {
@@ -933,8 +970,8 @@
         "ContextMixin"
       ]
     },
-    "/home/ubuntu/dev/Polygon/hardhat_pos/pos-portal/contracts/common/EIP712Base.sol": {
-      "lastModificationDate": 1628868421761,
+    "/Users/jdkanani/matic/pos-portal/contracts/common/EIP712Base.sol": {
+      "lastModificationDate": 1626627637938,
       "contentHash": "14cfa19ef0e249df6674fbf1e60cd12f",
       "sourceName": "contracts/common/EIP712Base.sol",
       "solcConfig": {
@@ -969,8 +1006,8 @@
         "EIP712Base"
       ]
     },
-    "/home/ubuntu/dev/Polygon/hardhat_pos/pos-portal/contracts/root/RootToken/DummyMintableERC721.sol": {
-      "lastModificationDate": 1628868421761,
+    "/Users/jdkanani/matic/pos-portal/contracts/root/RootToken/DummyMintableERC721.sol": {
+      "lastModificationDate": 1631888253424,
       "contentHash": "6a4700eef907257896983d3350bec92b",
       "sourceName": "contracts/root/RootToken/DummyMintableERC721.sol",
       "solcConfig": {
@@ -1009,8 +1046,8 @@
         "DummyMintableERC721"
       ]
     },
-    "/home/ubuntu/dev/Polygon/hardhat_pos/pos-portal/node_modules/@openzeppelin/contracts/token/ERC721/ERC721.sol": {
-      "lastModificationDate": 1629193784569,
+    "/Users/jdkanani/matic/pos-portal/node_modules/@openzeppelin/contracts/token/ERC721/ERC721.sol": {
+      "lastModificationDate": 1632218579332,
       "contentHash": "2d9804eb2b6f41ea0a65115e154d90eb",
       "sourceName": "@openzeppelin/contracts/token/ERC721/ERC721.sol",
       "solcConfig": {
@@ -1055,8 +1092,8 @@
         "ERC721"
       ]
     },
-    "/home/ubuntu/dev/Polygon/hardhat_pos/pos-portal/contracts/root/RootToken/IMintableERC721.sol": {
-      "lastModificationDate": 1628868421761,
+    "/Users/jdkanani/matic/pos-portal/contracts/root/RootToken/IMintableERC721.sol": {
+      "lastModificationDate": 1626627637941,
       "contentHash": "4ed3ed7d877eca1bf219b4a642882cf3",
       "sourceName": "contracts/root/RootToken/IMintableERC721.sol",
       "solcConfig": {
@@ -1091,8 +1128,8 @@
         "IMintableERC721"
       ]
     },
-    "/home/ubuntu/dev/Polygon/hardhat_pos/pos-portal/node_modules/@openzeppelin/contracts/token/ERC721/IERC721.sol": {
-      "lastModificationDate": 1629193784649,
+    "/Users/jdkanani/matic/pos-portal/node_modules/@openzeppelin/contracts/token/ERC721/IERC721.sol": {
+      "lastModificationDate": 1632218579475,
       "contentHash": "e82621b83943f11c44988c60e83d6ebc",
       "sourceName": "@openzeppelin/contracts/token/ERC721/IERC721.sol",
       "solcConfig": {
@@ -1127,8 +1164,8 @@
         "IERC721"
       ]
     },
-    "/home/ubuntu/dev/Polygon/hardhat_pos/pos-portal/node_modules/@openzeppelin/contracts/token/ERC721/IERC721Metadata.sol": {
-      "lastModificationDate": 1629193784657,
+    "/Users/jdkanani/matic/pos-portal/node_modules/@openzeppelin/contracts/token/ERC721/IERC721Metadata.sol": {
+      "lastModificationDate": 1632218579478,
       "contentHash": "370e7a48f316401b5063bcb604843e1b",
       "sourceName": "@openzeppelin/contracts/token/ERC721/IERC721Metadata.sol",
       "solcConfig": {
@@ -1163,8 +1200,8 @@
         "IERC721Metadata"
       ]
     },
-    "/home/ubuntu/dev/Polygon/hardhat_pos/pos-portal/node_modules/@openzeppelin/contracts/token/ERC721/IERC721Enumerable.sol": {
-      "lastModificationDate": 1629193784653,
+    "/Users/jdkanani/matic/pos-portal/node_modules/@openzeppelin/contracts/token/ERC721/IERC721Enumerable.sol": {
+      "lastModificationDate": 1632218579476,
       "contentHash": "eaebc3874248c26f6ea0b13b9a140a94",
       "sourceName": "@openzeppelin/contracts/token/ERC721/IERC721Enumerable.sol",
       "solcConfig": {
@@ -1199,8 +1236,8 @@
         "IERC721Enumerable"
       ]
     },
-    "/home/ubuntu/dev/Polygon/hardhat_pos/pos-portal/node_modules/@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol": {
-      "lastModificationDate": 1629193784657,
+    "/Users/jdkanani/matic/pos-portal/node_modules/@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol": {
+      "lastModificationDate": 1632218579481,
       "contentHash": "fad0b3f4424bdbb4b35467b29ea8d334",
       "sourceName": "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol",
       "solcConfig": {
@@ -1233,8 +1270,8 @@
         "IERC721Receiver"
       ]
     },
-    "/home/ubuntu/dev/Polygon/hardhat_pos/pos-portal/node_modules/@openzeppelin/contracts/introspection/ERC165.sol": {
-      "lastModificationDate": 1629193784529,
+    "/Users/jdkanani/matic/pos-portal/node_modules/@openzeppelin/contracts/introspection/ERC165.sol": {
+      "lastModificationDate": 1632218579230,
       "contentHash": "08f854e2dd3c262845bba38c9b48e4e0",
       "sourceName": "@openzeppelin/contracts/introspection/ERC165.sol",
       "solcConfig": {
@@ -1269,8 +1306,8 @@
         "ERC165"
       ]
     },
-    "/home/ubuntu/dev/Polygon/hardhat_pos/pos-portal/node_modules/@openzeppelin/contracts/utils/EnumerableMap.sol": {
-      "lastModificationDate": 1629193784497,
+    "/Users/jdkanani/matic/pos-portal/node_modules/@openzeppelin/contracts/utils/EnumerableMap.sol": {
+      "lastModificationDate": 1632218579179,
       "contentHash": "b1bb8570824c668943149211d74d6c51",
       "sourceName": "@openzeppelin/contracts/utils/EnumerableMap.sol",
       "solcConfig": {
@@ -1303,8 +1340,8 @@
         "EnumerableMap"
       ]
     },
-    "/home/ubuntu/dev/Polygon/hardhat_pos/pos-portal/node_modules/@openzeppelin/contracts/utils/Strings.sol": {
-      "lastModificationDate": 1629193784745,
+    "/Users/jdkanani/matic/pos-portal/node_modules/@openzeppelin/contracts/utils/Strings.sol": {
+      "lastModificationDate": 1632218579641,
       "contentHash": "c86a31bacf868d392eda08a0eccc4735",
       "sourceName": "@openzeppelin/contracts/utils/Strings.sol",
       "solcConfig": {
@@ -1337,8 +1374,8 @@
         "Strings"
       ]
     },
-    "/home/ubuntu/dev/Polygon/hardhat_pos/pos-portal/node_modules/@openzeppelin/contracts/introspection/IERC165.sol": {
-      "lastModificationDate": 1629193784629,
+    "/Users/jdkanani/matic/pos-portal/node_modules/@openzeppelin/contracts/introspection/IERC165.sol": {
+      "lastModificationDate": 1632218579451,
       "contentHash": "0d62a8380952235f135dae91590f90a3",
       "sourceName": "@openzeppelin/contracts/introspection/IERC165.sol",
       "solcConfig": {
@@ -1371,8 +1408,8 @@
         "IERC165"
       ]
     },
-    "/home/ubuntu/dev/Polygon/hardhat_pos/pos-portal/contracts/root/TokenPredicates/MintableERC721Predicate.sol": {
-      "lastModificationDate": 1628868421761,
+    "/Users/jdkanani/matic/pos-portal/contracts/root/TokenPredicates/MintableERC721Predicate.sol": {
+      "lastModificationDate": 1626627637942,
       "contentHash": "c2f3fafe9375ec2939e257a4eb728333",
       "sourceName": "contracts/root/TokenPredicates/MintableERC721Predicate.sol",
       "solcConfig": {
@@ -1412,8 +1449,8 @@
         "MintableERC721Predicate"
       ]
     },
-    "/home/ubuntu/dev/Polygon/hardhat_pos/pos-portal/contracts/test/ProxyTestImplStorageLayoutChange.sol": {
-      "lastModificationDate": 1628868421761,
+    "/Users/jdkanani/matic/pos-portal/contracts/test/ProxyTestImplStorageLayoutChange.sol": {
+      "lastModificationDate": 1626627637943,
       "contentHash": "8b1b002a1ce6ef44bb526982939dbd40",
       "sourceName": "contracts/test/ProxyTestImplStorageLayoutChange.sol",
       "solcConfig": {
@@ -1448,8 +1485,8 @@
         "ProxyTestImplStorageLayoutChange"
       ]
     },
-    "/home/ubuntu/dev/Polygon/hardhat_pos/pos-portal/contracts/test/ProxyTestImpl.sol": {
-      "lastModificationDate": 1628868421761,
+    "/Users/jdkanani/matic/pos-portal/contracts/test/ProxyTestImpl.sol": {
+      "lastModificationDate": 1626627637943,
       "contentHash": "dc5a762b3ef5af405f012b541a6a1163",
       "sourceName": "contracts/test/ProxyTestImpl.sol",
       "solcConfig": {
@@ -1484,9 +1521,9 @@
         "ProxyTestImpl"
       ]
     },
-    "/home/ubuntu/dev/Polygon/hardhat_pos/pos-portal/contracts/root/TokenPredicates/MintableERC20Predicate.sol": {
-      "lastModificationDate": 1628868421761,
-      "contentHash": "237991d46431371793c8eb1e53141d7c",
+    "/Users/jdkanani/matic/pos-portal/contracts/root/TokenPredicates/MintableERC20Predicate.sol": {
+      "lastModificationDate": 1631888253425,
+      "contentHash": "933587b3f5ef46dad714fee2144d5bfa",
       "sourceName": "contracts/root/TokenPredicates/MintableERC20Predicate.sol",
       "solcConfig": {
         "version": "0.6.6",
@@ -1511,6 +1548,8 @@
         }
       },
       "imports": [
+        "@openzeppelin/contracts/token/ERC20/IERC20.sol",
+        "@openzeppelin/contracts/token/ERC20/SafeERC20.sol",
         "../RootToken/IMintableERC20.sol",
         "../../common/AccessControlMixin.sol",
         "../../lib/RLPReader.sol",
@@ -1524,8 +1563,46 @@
         "MintableERC20Predicate"
       ]
     },
-    "/home/ubuntu/dev/Polygon/hardhat_pos/pos-portal/contracts/root/RootToken/IMintableERC20.sol": {
-      "lastModificationDate": 1628868421761,
+    "/Users/jdkanani/matic/pos-portal/node_modules/@openzeppelin/contracts/token/ERC20/SafeERC20.sol": {
+      "lastModificationDate": 1632218579589,
+      "contentHash": "33e22842646d746e5c4124c2fdc051aa",
+      "sourceName": "@openzeppelin/contracts/token/ERC20/SafeERC20.sol",
+      "solcConfig": {
+        "version": "0.6.6",
+        "settings": {
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "./IERC20.sol",
+        "../../math/SafeMath.sol",
+        "../../utils/Address.sol"
+      ],
+      "versionPragmas": [
+        ">=0.6.0 <0.8.0"
+      ],
+      "artifacts": [
+        "SafeERC20"
+      ]
+    },
+    "/Users/jdkanani/matic/pos-portal/contracts/root/RootToken/IMintableERC20.sol": {
+      "lastModificationDate": 1626627637940,
       "contentHash": "7912a585f1f01161bf5e95aab2cf062f",
       "sourceName": "contracts/root/RootToken/IMintableERC20.sol",
       "solcConfig": {
@@ -1560,9 +1637,9 @@
         "IMintableERC20"
       ]
     },
-    "/home/ubuntu/dev/Polygon/hardhat_pos/pos-portal/contracts/root/TokenPredicates/MintableERC1155Predicate.sol": {
-      "lastModificationDate": 1628868421761,
-      "contentHash": "47fc56cbe16d1d2a1d605810f4a1d3fb",
+    "/Users/jdkanani/matic/pos-portal/contracts/root/TokenPredicates/MintableERC1155Predicate.sol": {
+      "lastModificationDate": 1631888253425,
+      "contentHash": "b691e7d688b5ec2b7c9a5448edc185a2",
       "sourceName": "contracts/root/TokenPredicates/MintableERC1155Predicate.sol",
       "solcConfig": {
         "version": "0.6.6",
@@ -1601,8 +1678,8 @@
         "MintableERC1155Predicate"
       ]
     },
-    "/home/ubuntu/dev/Polygon/hardhat_pos/pos-portal/contracts/root/RootToken/IMintableERC1155.sol": {
-      "lastModificationDate": 1628868421761,
+    "/Users/jdkanani/matic/pos-portal/contracts/root/RootToken/IMintableERC1155.sol": {
+      "lastModificationDate": 1626627637940,
       "contentHash": "eac63fdada28aef1bc45492877bbd1a5",
       "sourceName": "contracts/root/RootToken/IMintableERC1155.sol",
       "solcConfig": {
@@ -1637,8 +1714,8 @@
         "IMintableERC1155"
       ]
     },
-    "/home/ubuntu/dev/Polygon/hardhat_pos/pos-portal/node_modules/@openzeppelin/contracts/token/ERC1155/ERC1155Receiver.sol": {
-      "lastModificationDate": 1629193784525,
+    "/Users/jdkanani/matic/pos-portal/node_modules/@openzeppelin/contracts/token/ERC1155/ERC1155Receiver.sol": {
+      "lastModificationDate": 1632218579227,
       "contentHash": "69c3911c0b2e8ed32652765179023865",
       "sourceName": "@openzeppelin/contracts/token/ERC1155/ERC1155Receiver.sol",
       "solcConfig": {
@@ -1674,8 +1751,8 @@
         "ERC1155Receiver"
       ]
     },
-    "/home/ubuntu/dev/Polygon/hardhat_pos/pos-portal/node_modules/@openzeppelin/contracts/token/ERC1155/IERC1155.sol": {
-      "lastModificationDate": 1629193784621,
+    "/Users/jdkanani/matic/pos-portal/node_modules/@openzeppelin/contracts/token/ERC1155/IERC1155.sol": {
+      "lastModificationDate": 1632218579442,
       "contentHash": "cb9dc62067a205eeab4f390c72c7fe14",
       "sourceName": "@openzeppelin/contracts/token/ERC1155/IERC1155.sol",
       "solcConfig": {
@@ -1710,8 +1787,8 @@
         "IERC1155"
       ]
     },
-    "/home/ubuntu/dev/Polygon/hardhat_pos/pos-portal/node_modules/@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol": {
-      "lastModificationDate": 1629193784629,
+    "/Users/jdkanani/matic/pos-portal/node_modules/@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol": {
+      "lastModificationDate": 1632218579448,
       "contentHash": "27af002e8fc1118d099c99fc8852bb73",
       "sourceName": "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol",
       "solcConfig": {
@@ -1746,9 +1823,9 @@
         "IERC1155Receiver"
       ]
     },
-    "/home/ubuntu/dev/Polygon/hardhat_pos/pos-portal/contracts/tunnel/BaseRootTunnel.sol": {
-      "lastModificationDate": 1628868421761,
-      "contentHash": "c30e75836ca9c073115111954f65b3af",
+    "/Users/jdkanani/matic/pos-portal/contracts/tunnel/BaseRootTunnel.sol": {
+      "lastModificationDate": 1632165789358,
+      "contentHash": "145e4e5ab692c179703a0c9fa6a48eb8",
       "sourceName": "contracts/tunnel/BaseRootTunnel.sol",
       "solcConfig": {
         "version": "0.6.6",
@@ -1780,7 +1857,8 @@
         "../lib/MerklePatriciaProof.sol",
         "../root/ICheckpointManager.sol",
         "../lib/RLPReader.sol",
-        "../lib/Merkle.sol"
+        "../lib/Merkle.sol",
+        "../lib/ExitPayloadReader.sol"
       ],
       "versionPragmas": [
         "0.6.6"
@@ -1789,8 +1867,8 @@
         "BaseRootTunnel"
       ]
     },
-    "/home/ubuntu/dev/Polygon/hardhat_pos/pos-portal/contracts/tunnel/RootTunnel.sol": {
-      "lastModificationDate": 1628868421761,
+    "/Users/jdkanani/matic/pos-portal/contracts/tunnel/RootTunnel.sol": {
+      "lastModificationDate": 1631888253426,
       "contentHash": "4168bbdd546729d9f229ff73121730c9",
       "sourceName": "contracts/tunnel/RootTunnel.sol",
       "solcConfig": {
@@ -1825,8 +1903,44 @@
         "RootTunnel"
       ]
     },
-    "/home/ubuntu/dev/Polygon/hardhat_pos/pos-portal/contracts/root/StateSender/DummyStateSender.sol": {
-      "lastModificationDate": 1628868421761,
+    "/Users/jdkanani/matic/pos-portal/contracts/lib/ExitPayloadReaderTest.sol": {
+      "lastModificationDate": 1631888253422,
+      "contentHash": "2873d7a2ff2503837c7684b525ce9a8d",
+      "sourceName": "contracts/lib/ExitPayloadReaderTest.sol",
+      "solcConfig": {
+        "version": "0.6.6",
+        "settings": {
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "./ExitPayloadReader.sol"
+      ],
+      "versionPragmas": [
+        "0.6.6"
+      ],
+      "artifacts": [
+        "ExitPayloadReaderTest"
+      ]
+    },
+    "/Users/jdkanani/matic/pos-portal/contracts/root/StateSender/DummyStateSender.sol": {
+      "lastModificationDate": 1626627637941,
       "contentHash": "0a455253b719dede7104b5271fd938d6",
       "sourceName": "contracts/root/StateSender/DummyStateSender.sol",
       "solcConfig": {
@@ -1861,8 +1975,8 @@
         "DummyStateSender"
       ]
     },
-    "/home/ubuntu/dev/Polygon/hardhat_pos/pos-portal/contracts/root/MockCheckpointManager.sol": {
-      "lastModificationDate": 1628868421761,
+    "/Users/jdkanani/matic/pos-portal/contracts/root/MockCheckpointManager.sol": {
+      "lastModificationDate": 1626627637939,
       "contentHash": "36615bbf8b400caaa49ac80d21983707",
       "sourceName": "contracts/root/MockCheckpointManager.sol",
       "solcConfig": {
@@ -1898,46 +2012,8 @@
         "MockCheckpointManager"
       ]
     },
-    "/home/ubuntu/dev/Polygon/hardhat_pos/pos-portal/node_modules/@openzeppelin/contracts/token/ERC20/SafeERC20.sol": {
-      "lastModificationDate": 1629193784725,
-      "contentHash": "33e22842646d746e5c4124c2fdc051aa",
-      "sourceName": "@openzeppelin/contracts/token/ERC20/SafeERC20.sol",
-      "solcConfig": {
-        "version": "0.6.6",
-        "settings": {
-          "optimizer": {
-            "enabled": false,
-            "runs": 200
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [
-        "./IERC20.sol",
-        "../../math/SafeMath.sol",
-        "../../utils/Address.sol"
-      ],
-      "versionPragmas": [
-        ">=0.6.0 <0.8.0"
-      ],
-      "artifacts": [
-        "SafeERC20"
-      ]
-    },
-    "/home/ubuntu/dev/Polygon/hardhat_pos/pos-portal/contracts/child/ChildToken/UpgradeableChildERC20/ERC20.sol": {
-      "lastModificationDate": 1628868421757,
+    "/Users/jdkanani/matic/pos-portal/contracts/child/ChildToken/UpgradeableChildERC20/ERC20.sol": {
+      "lastModificationDate": 1631888253422,
       "contentHash": "1496c7966e387ea2f0a70a67c3fbf549",
       "sourceName": "contracts/child/ChildToken/UpgradeableChildERC20/ERC20.sol",
       "solcConfig": {
@@ -1975,8 +2051,8 @@
         "ERC20"
       ]
     },
-    "/home/ubuntu/dev/Polygon/hardhat_pos/pos-portal/node_modules/@openzeppelin/contracts/GSN/Context.sol": {
-      "lastModificationDate": 1629193784477,
+    "/Users/jdkanani/matic/pos-portal/node_modules/@openzeppelin/contracts/GSN/Context.sol": {
+      "lastModificationDate": 1632218579142,
       "contentHash": "a02aa4ae53018d92603a3ead2c365958",
       "sourceName": "@openzeppelin/contracts/GSN/Context.sol",
       "solcConfig": {
@@ -2009,8 +2085,8 @@
       ],
       "artifacts": []
     },
-    "/home/ubuntu/dev/Polygon/hardhat_pos/pos-portal/contracts/root/RootToken/DummyERC721.sol": {
-      "lastModificationDate": 1628868421761,
+    "/Users/jdkanani/matic/pos-portal/contracts/root/RootToken/DummyERC721.sol": {
+      "lastModificationDate": 1631888253424,
       "contentHash": "cf79a065d9009319f952317945b749cc",
       "sourceName": "contracts/root/RootToken/DummyERC721.sol",
       "solcConfig": {
@@ -2049,8 +2125,8 @@
         "DummyERC721"
       ]
     },
-    "/home/ubuntu/dev/Polygon/hardhat_pos/pos-portal/contracts/root/RootToken/IRootERC721.sol": {
-      "lastModificationDate": 1628868421761,
+    "/Users/jdkanani/matic/pos-portal/contracts/root/RootToken/IRootERC721.sol": {
+      "lastModificationDate": 1626627637941,
       "contentHash": "10f7204e95cf84db4179ee6db9c48408",
       "sourceName": "contracts/root/RootToken/IRootERC721.sol",
       "solcConfig": {
@@ -2085,8 +2161,8 @@
         "IRootERC721"
       ]
     },
-    "/home/ubuntu/dev/Polygon/hardhat_pos/pos-portal/contracts/root/TokenPredicates/ERC721Predicate.sol": {
-      "lastModificationDate": 1628868421761,
+    "/Users/jdkanani/matic/pos-portal/contracts/root/TokenPredicates/ERC721Predicate.sol": {
+      "lastModificationDate": 1626627637941,
       "contentHash": "4bfe3a4286ad401a94c230c058f46d41",
       "sourceName": "contracts/root/TokenPredicates/ERC721Predicate.sol",
       "solcConfig": {
@@ -2126,8 +2202,8 @@
         "ERC721Predicate"
       ]
     },
-    "/home/ubuntu/dev/Polygon/hardhat_pos/pos-portal/contracts/tunnel/BaseChildTunnel.sol": {
-      "lastModificationDate": 1628868421761,
+    "/Users/jdkanani/matic/pos-portal/contracts/tunnel/BaseChildTunnel.sol": {
+      "lastModificationDate": 1626627637943,
       "contentHash": "3efe9d37af69370b11f9dd113d3ad8a7",
       "sourceName": "contracts/tunnel/BaseChildTunnel.sol",
       "solcConfig": {
@@ -2162,8 +2238,8 @@
         "BaseChildTunnel"
       ]
     },
-    "/home/ubuntu/dev/Polygon/hardhat_pos/pos-portal/contracts/tunnel/ChildTunnel.sol": {
-      "lastModificationDate": 1628868421761,
+    "/Users/jdkanani/matic/pos-portal/contracts/tunnel/ChildTunnel.sol": {
+      "lastModificationDate": 1631888253425,
       "contentHash": "0a936617efcb6abc2d1b7dcf91816477",
       "sourceName": "contracts/tunnel/ChildTunnel.sol",
       "solcConfig": {
@@ -2198,8 +2274,8 @@
         "ChildTunnel"
       ]
     },
-    "/home/ubuntu/dev/Polygon/hardhat_pos/pos-portal/contracts/test/TestChildTunnel.sol": {
-      "lastModificationDate": 1628868421761,
+    "/Users/jdkanani/matic/pos-portal/contracts/test/TestChildTunnel.sol": {
+      "lastModificationDate": 1626627637943,
       "contentHash": "3f345e214d136602c13bcb5b8406b3b7",
       "sourceName": "contracts/test/TestChildTunnel.sol",
       "solcConfig": {
@@ -2234,9 +2310,9 @@
         "TestChildTunnel"
       ]
     },
-    "/home/ubuntu/dev/Polygon/hardhat_pos/pos-portal/contracts/root/TokenPredicates/EtherPredicate.sol": {
-      "lastModificationDate": 1628868421761,
-      "contentHash": "69395ae6ae38de22e58c07feb6c816a7",
+    "/Users/jdkanani/matic/pos-portal/contracts/root/TokenPredicates/EtherPredicate.sol": {
+      "lastModificationDate": 1631888253425,
+      "contentHash": "b523204c9df8d44acb6c0f113bef71eb",
       "sourceName": "contracts/root/TokenPredicates/EtherPredicate.sol",
       "solcConfig": {
         "version": "0.6.6",
@@ -2273,8 +2349,8 @@
         "EtherPredicate"
       ]
     },
-    "/home/ubuntu/dev/Polygon/hardhat_pos/pos-portal/contracts/root/TokenPredicates/ERC20Predicate.sol": {
-      "lastModificationDate": 1628868421761,
+    "/Users/jdkanani/matic/pos-portal/contracts/root/TokenPredicates/ERC20Predicate.sol": {
+      "lastModificationDate": 1626627637941,
       "contentHash": "a486c47208411e0ff3bd0b14a18f9f1d",
       "sourceName": "contracts/root/TokenPredicates/ERC20Predicate.sol",
       "solcConfig": {
@@ -2314,8 +2390,8 @@
         "ERC20Predicate"
       ]
     },
-    "/home/ubuntu/dev/Polygon/hardhat_pos/pos-portal/contracts/root/TokenPredicates/ERC1155Predicate.sol": {
-      "lastModificationDate": 1628868421761,
+    "/Users/jdkanani/matic/pos-portal/contracts/root/TokenPredicates/ERC1155Predicate.sol": {
+      "lastModificationDate": 1626627637941,
       "contentHash": "eb0e58f5fc2c19807f869d5d9302217c",
       "sourceName": "contracts/root/TokenPredicates/ERC1155Predicate.sol",
       "solcConfig": {
@@ -2355,8 +2431,8 @@
         "ERC1155Predicate"
       ]
     },
-    "/home/ubuntu/dev/Polygon/hardhat_pos/pos-portal/node_modules/@openzeppelin/contracts/token/ERC1155/ERC1155.sol": {
-      "lastModificationDate": 1629193784509,
+    "/Users/jdkanani/matic/pos-portal/node_modules/@openzeppelin/contracts/token/ERC1155/ERC1155.sol": {
+      "lastModificationDate": 1632218579198,
       "contentHash": "33407bb7ff4811650cd1c328e646e55d",
       "sourceName": "@openzeppelin/contracts/token/ERC1155/ERC1155.sol",
       "solcConfig": {
@@ -2397,8 +2473,8 @@
         "ERC1155"
       ]
     },
-    "/home/ubuntu/dev/Polygon/hardhat_pos/pos-portal/node_modules/@openzeppelin/contracts/token/ERC1155/IERC1155MetadataURI.sol": {
-      "lastModificationDate": 1629193784625,
+    "/Users/jdkanani/matic/pos-portal/node_modules/@openzeppelin/contracts/token/ERC1155/IERC1155MetadataURI.sol": {
+      "lastModificationDate": 1632218579445,
       "contentHash": "9a313e25e2a837a50f7ae87017539457",
       "sourceName": "@openzeppelin/contracts/token/ERC1155/IERC1155MetadataURI.sol",
       "solcConfig": {
@@ -2433,8 +2509,8 @@
         "IERC1155MetadataURI"
       ]
     },
-    "/home/ubuntu/dev/Polygon/hardhat_pos/pos-portal/contracts/root/RootToken/DummyMintableERC1155.sol": {
-      "lastModificationDate": 1628868421761,
+    "/Users/jdkanani/matic/pos-portal/contracts/root/RootToken/DummyMintableERC1155.sol": {
+      "lastModificationDate": 1631888253424,
       "contentHash": "b45205c9db1620ffe8c9199a44ee0659",
       "sourceName": "contracts/root/RootToken/DummyMintableERC1155.sol",
       "solcConfig": {
@@ -2473,8 +2549,8 @@
         "DummyMintableERC1155"
       ]
     },
-    "/home/ubuntu/dev/Polygon/hardhat_pos/pos-portal/contracts/root/RootToken/DummyMintableERC20.sol": {
-      "lastModificationDate": 1628868421761,
+    "/Users/jdkanani/matic/pos-portal/contracts/root/RootToken/DummyMintableERC20.sol": {
+      "lastModificationDate": 1631888253424,
       "contentHash": "4e61237049bc19bd22fda356999016df",
       "sourceName": "contracts/root/RootToken/DummyMintableERC20.sol",
       "solcConfig": {
@@ -2513,8 +2589,8 @@
         "DummyMintableERC20"
       ]
     },
-    "/home/ubuntu/dev/Polygon/hardhat_pos/pos-portal/node_modules/@openzeppelin/contracts/token/ERC20/ERC20.sol": {
-      "lastModificationDate": 1629193784537,
+    "/Users/jdkanani/matic/pos-portal/node_modules/@openzeppelin/contracts/token/ERC20/ERC20.sol": {
+      "lastModificationDate": 1632218579273,
       "contentHash": "8065b340476f61365c076897199425f1",
       "sourceName": "@openzeppelin/contracts/token/ERC20/ERC20.sol",
       "solcConfig": {
@@ -2551,8 +2627,8 @@
         "ERC20"
       ]
     },
-    "/home/ubuntu/dev/Polygon/hardhat_pos/pos-portal/contracts/test/PotatoMigration/RootPotatoToken.sol": {
-      "lastModificationDate": 1628868421761,
+    "/Users/jdkanani/matic/pos-portal/contracts/test/PotatoMigration/RootPotatoToken.sol": {
+      "lastModificationDate": 1626627637943,
       "contentHash": "d83e8c248f345a94fb2b38d047d75eb4",
       "sourceName": "contracts/test/PotatoMigration/RootPotatoToken.sol",
       "solcConfig": {
@@ -2587,8 +2663,8 @@
         "RootPotatoToken"
       ]
     },
-    "/home/ubuntu/dev/Polygon/hardhat_pos/pos-portal/contracts/root/RootToken/DummyERC20.sol": {
-      "lastModificationDate": 1628868421761,
+    "/Users/jdkanani/matic/pos-portal/contracts/root/RootToken/DummyERC20.sol": {
+      "lastModificationDate": 1631888253423,
       "contentHash": "134d952755b9086c7bbf0b6b60789e02",
       "sourceName": "contracts/root/RootToken/DummyERC20.sol",
       "solcConfig": {
@@ -2625,8 +2701,8 @@
         "DummyERC20"
       ]
     },
-    "/home/ubuntu/dev/Polygon/hardhat_pos/pos-portal/contracts/child/ChildToken/ChildMintableERC20.sol": {
-      "lastModificationDate": 1628868421757,
+    "/Users/jdkanani/matic/pos-portal/contracts/child/ChildToken/ChildMintableERC20.sol": {
+      "lastModificationDate": 1626627637937,
       "contentHash": "9c54a2cad8b783465fab4ac7019234a7",
       "sourceName": "contracts/child/ChildToken/ChildMintableERC20.sol",
       "solcConfig": {
@@ -2665,8 +2741,8 @@
         "ChildMintableERC20"
       ]
     },
-    "/home/ubuntu/dev/Polygon/hardhat_pos/pos-portal/contracts/child/ChildToken/UpgradeableChildERC20/UChildERC20.sol": {
-      "lastModificationDate": 1628868421757,
+    "/Users/jdkanani/matic/pos-portal/contracts/child/ChildToken/UpgradeableChildERC20/UChildERC20.sol": {
+      "lastModificationDate": 1626627637938,
       "contentHash": "9afb58873b84f91e467e54b7e7293d6a",
       "sourceName": "contracts/child/ChildToken/UpgradeableChildERC20/UChildERC20.sol",
       "solcConfig": {
@@ -2705,8 +2781,8 @@
         "UChildERC20"
       ]
     },
-    "/home/ubuntu/dev/Polygon/hardhat_pos/pos-portal/contracts/test/TestUChildERC20.sol": {
-      "lastModificationDate": 1628868421761,
+    "/Users/jdkanani/matic/pos-portal/contracts/test/TestUChildERC20.sol": {
+      "lastModificationDate": 1626627637943,
       "contentHash": "5308c456d3e021fc92c7b648442109e0",
       "sourceName": "contracts/test/TestUChildERC20.sol",
       "solcConfig": {
@@ -2741,8 +2817,8 @@
         "TestUChildERC20"
       ]
     },
-    "/home/ubuntu/dev/Polygon/hardhat_pos/pos-portal/contracts/child/ChildToken/DappTokens/UChildDAI.sol": {
-      "lastModificationDate": 1628868421757,
+    "/Users/jdkanani/matic/pos-portal/contracts/child/ChildToken/DappTokens/UChildDAI.sol": {
+      "lastModificationDate": 1626627637937,
       "contentHash": "ae2aa828939d582f93a826bffe891f6f",
       "sourceName": "contracts/child/ChildToken/DappTokens/UChildDAI.sol",
       "solcConfig": {
@@ -2777,8 +2853,8 @@
         "UChildDAI"
       ]
     },
-    "/home/ubuntu/dev/Polygon/hardhat_pos/pos-portal/contracts/child/ChildToken/ChildMintableERC721.sol": {
-      "lastModificationDate": 1628868421757,
+    "/Users/jdkanani/matic/pos-portal/contracts/child/ChildToken/ChildMintableERC721.sol": {
+      "lastModificationDate": 1626627637937,
       "contentHash": "de17ce957cb45fc39e3c29ad203fc88e",
       "sourceName": "contracts/child/ChildToken/ChildMintableERC721.sol",
       "solcConfig": {
@@ -2817,8 +2893,8 @@
         "ChildMintableERC721"
       ]
     },
-    "/home/ubuntu/dev/Polygon/hardhat_pos/pos-portal/contracts/child/ChildToken/ChildMintableERC1155.sol": {
-      "lastModificationDate": 1628868421757,
+    "/Users/jdkanani/matic/pos-portal/contracts/child/ChildToken/ChildMintableERC1155.sol": {
+      "lastModificationDate": 1626627637937,
       "contentHash": "ac8c85039ae765d1629efadbf93dd035",
       "sourceName": "contracts/child/ChildToken/ChildMintableERC1155.sol",
       "solcConfig": {
@@ -2857,8 +2933,8 @@
         "ChildMintableERC1155"
       ]
     },
-    "/home/ubuntu/dev/Polygon/hardhat_pos/pos-portal/contracts/child/ChildToken/ChildERC721.sol": {
-      "lastModificationDate": 1628868421757,
+    "/Users/jdkanani/matic/pos-portal/contracts/child/ChildToken/ChildERC721.sol": {
+      "lastModificationDate": 1626627637937,
       "contentHash": "91539b8a3257b34567ba5295e97b1228",
       "sourceName": "contracts/child/ChildToken/ChildERC721.sol",
       "solcConfig": {
@@ -2897,8 +2973,8 @@
         "ChildERC721"
       ]
     },
-    "/home/ubuntu/dev/Polygon/hardhat_pos/pos-portal/contracts/child/ChildToken/ChildERC20.sol": {
-      "lastModificationDate": 1628868421757,
+    "/Users/jdkanani/matic/pos-portal/contracts/child/ChildToken/ChildERC20.sol": {
+      "lastModificationDate": 1626627637936,
       "contentHash": "9927c6d244f1c1ae30ceb0d0b7ed9c27",
       "sourceName": "contracts/child/ChildToken/ChildERC20.sol",
       "solcConfig": {
@@ -2937,8 +3013,8 @@
         "ChildERC20"
       ]
     },
-    "/home/ubuntu/dev/Polygon/hardhat_pos/pos-portal/contracts/test/PotatoMigration/ChildPotatoToken.sol": {
-      "lastModificationDate": 1628868421761,
+    "/Users/jdkanani/matic/pos-portal/contracts/test/PotatoMigration/ChildPotatoToken.sol": {
+      "lastModificationDate": 1626627637942,
       "contentHash": "6a248f924a25f6ef6c18923e14a2a34f",
       "sourceName": "contracts/test/PotatoMigration/ChildPotatoToken.sol",
       "solcConfig": {
@@ -2973,8 +3049,8 @@
         "ChildPotatoToken"
       ]
     },
-    "/home/ubuntu/dev/Polygon/hardhat_pos/pos-portal/contracts/child/ChildToken/MaticWETH.sol": {
-      "lastModificationDate": 1628868421757,
+    "/Users/jdkanani/matic/pos-portal/contracts/child/ChildToken/MaticWETH.sol": {
+      "lastModificationDate": 1626627637937,
       "contentHash": "462223e620017b01e5cc1ac5dccc18e8",
       "sourceName": "contracts/child/ChildToken/MaticWETH.sol",
       "solcConfig": {
@@ -3009,8 +3085,8 @@
         "MaticWETH"
       ]
     },
-    "/home/ubuntu/dev/Polygon/hardhat_pos/pos-portal/contracts/child/ChildToken/ChildERC1155.sol": {
-      "lastModificationDate": 1628868421757,
+    "/Users/jdkanani/matic/pos-portal/contracts/child/ChildToken/ChildERC1155.sol": {
+      "lastModificationDate": 1626627637936,
       "contentHash": "2dbfead465266bb49345efd068deac98",
       "sourceName": "contracts/child/ChildToken/ChildERC1155.sol",
       "solcConfig": {
@@ -3049,8 +3125,8 @@
         "ChildERC1155"
       ]
     },
-    "/home/ubuntu/dev/Polygon/hardhat_pos/pos-portal/contracts/root/RootToken/DummyERC1155.sol": {
-      "lastModificationDate": 1628868421761,
+    "/Users/jdkanani/matic/pos-portal/contracts/root/RootToken/DummyERC1155.sol": {
+      "lastModificationDate": 1631888253423,
       "contentHash": "5827d3a3372f1a63683508ac6fbeefb7",
       "sourceName": "contracts/root/RootToken/DummyERC1155.sol",
       "solcConfig": {
@@ -3087,8 +3163,49 @@
         "DummyERC1155"
       ]
     },
-    "/home/ubuntu/dev/Polygon/hardhat_pos/pos-portal/contracts/test/MerklePatriciaTest.sol": {
-      "lastModificationDate": 1628868421761,
+    "/Users/jdkanani/matic/pos-portal/contracts/root/TokenPredicates/ChainExitERC1155Predicate.sol": {
+      "lastModificationDate": 1631888253424,
+      "contentHash": "eb7437e45ce199176e4f9525f19869db",
+      "sourceName": "contracts/root/TokenPredicates/ChainExitERC1155Predicate.sol",
+      "solcConfig": {
+        "version": "0.6.6",
+        "settings": {
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "../RootToken/IMintableERC1155.sol",
+        "@openzeppelin/contracts/token/ERC1155/ERC1155Receiver.sol",
+        "../../common/AccessControlMixin.sol",
+        "../../lib/RLPReader.sol",
+        "./ITokenPredicate.sol",
+        "../../common/Initializable.sol"
+      ],
+      "versionPragmas": [
+        "0.6.6"
+      ],
+      "artifacts": [
+        "ChainExitERC1155Predicate"
+      ]
+    },
+    "/Users/jdkanani/matic/pos-portal/contracts/test/MerklePatriciaTest.sol": {
+      "lastModificationDate": 1626627637942,
       "contentHash": "8154fee8e4cbd807ae39bad5fad8ee3b",
       "sourceName": "contracts/test/MerklePatriciaTest.sol",
       "solcConfig": {
@@ -3124,8 +3241,8 @@
         "MerklePatriciaTest"
       ]
     },
-    "/home/ubuntu/dev/Polygon/hardhat_pos/pos-portal/contracts/test/TestRootTunnel.sol": {
-      "lastModificationDate": 1628868421761,
+    "/Users/jdkanani/matic/pos-portal/contracts/test/TestRootTunnel.sol": {
+      "lastModificationDate": 1626627637943,
       "contentHash": "7e7278147cb9e0c499b6c6d38945c9fa",
       "sourceName": "contracts/test/TestRootTunnel.sol",
       "solcConfig": {
@@ -3160,8 +3277,8 @@
         "TestRootTunnel"
       ]
     },
-    "/home/ubuntu/dev/Polygon/hardhat_pos/pos-portal/contracts/child/ChildChainManager/ChildChainManagerProxy.sol": {
-      "lastModificationDate": 1628868421757,
+    "/Users/jdkanani/matic/pos-portal/contracts/child/ChildChainManager/ChildChainManagerProxy.sol": {
+      "lastModificationDate": 1626627637936,
       "contentHash": "daea55a80e2b7bce2aad6753803522e7",
       "sourceName": "contracts/child/ChildChainManager/ChildChainManagerProxy.sol",
       "solcConfig": {
@@ -3196,8 +3313,8 @@
         "ChildChainManagerProxy"
       ]
     },
-    "/home/ubuntu/dev/Polygon/hardhat_pos/pos-portal/contracts/common/Proxy/UpgradableProxy.sol": {
-      "lastModificationDate": 1628868421761,
+    "/Users/jdkanani/matic/pos-portal/contracts/common/Proxy/UpgradableProxy.sol": {
+      "lastModificationDate": 1626627637939,
       "contentHash": "6c97d1ad2e80a4e7fb37d4ece4d35068",
       "sourceName": "contracts/common/Proxy/UpgradableProxy.sol",
       "solcConfig": {
@@ -3232,8 +3349,8 @@
         "UpgradableProxy"
       ]
     },
-    "/home/ubuntu/dev/Polygon/hardhat_pos/pos-portal/contracts/common/Proxy/Proxy.sol": {
-      "lastModificationDate": 1628868421761,
+    "/Users/jdkanani/matic/pos-portal/contracts/common/Proxy/Proxy.sol": {
+      "lastModificationDate": 1626627637939,
       "contentHash": "f77403cd587b4c3377652440ae17901b",
       "sourceName": "contracts/common/Proxy/Proxy.sol",
       "solcConfig": {
@@ -3268,8 +3385,8 @@
         "Proxy"
       ]
     },
-    "/home/ubuntu/dev/Polygon/hardhat_pos/pos-portal/contracts/common/Proxy/IERCProxy.sol": {
-      "lastModificationDate": 1628868421761,
+    "/Users/jdkanani/matic/pos-portal/contracts/common/Proxy/IERCProxy.sol": {
+      "lastModificationDate": 1626627637939,
       "contentHash": "fadf42f23aad97f16f22311ff6725fc4",
       "sourceName": "contracts/common/Proxy/IERCProxy.sol",
       "solcConfig": {
@@ -3302,8 +3419,8 @@
         "IERCProxy"
       ]
     },
-    "/home/ubuntu/dev/Polygon/hardhat_pos/pos-portal/contracts/root/TokenPredicates/MintableERC721PredicateProxy.sol": {
-      "lastModificationDate": 1628868421761,
+    "/Users/jdkanani/matic/pos-portal/contracts/root/TokenPredicates/MintableERC721PredicateProxy.sol": {
+      "lastModificationDate": 1626627637942,
       "contentHash": "fa65a00467fea7f9027b7b03e2612c1c",
       "sourceName": "contracts/root/TokenPredicates/MintableERC721PredicateProxy.sol",
       "solcConfig": {
@@ -3338,8 +3455,8 @@
         "MintableERC721PredicateProxy"
       ]
     },
-    "/home/ubuntu/dev/Polygon/hardhat_pos/pos-portal/contracts/root/TokenPredicates/MintableERC20PredicateProxy.sol": {
-      "lastModificationDate": 1628868421761,
+    "/Users/jdkanani/matic/pos-portal/contracts/root/TokenPredicates/MintableERC20PredicateProxy.sol": {
+      "lastModificationDate": 1626627637942,
       "contentHash": "8e9209916e973e88ef5cb099c5f2f428",
       "sourceName": "contracts/root/TokenPredicates/MintableERC20PredicateProxy.sol",
       "solcConfig": {
@@ -3374,8 +3491,8 @@
         "MintableERC20PredicateProxy"
       ]
     },
-    "/home/ubuntu/dev/Polygon/hardhat_pos/pos-portal/contracts/root/TokenPredicates/MintableERC1155PredicateProxy.sol": {
-      "lastModificationDate": 1628868421761,
+    "/Users/jdkanani/matic/pos-portal/contracts/root/TokenPredicates/MintableERC1155PredicateProxy.sol": {
+      "lastModificationDate": 1626627637942,
       "contentHash": "57d5ff62cc9c38b0bb50f96cc92c1260",
       "sourceName": "contracts/root/TokenPredicates/MintableERC1155PredicateProxy.sol",
       "solcConfig": {
@@ -3410,8 +3527,8 @@
         "MintableERC1155PredicateProxy"
       ]
     },
-    "/home/ubuntu/dev/Polygon/hardhat_pos/pos-portal/contracts/root/TokenPredicates/EtherPredicateProxy.sol": {
-      "lastModificationDate": 1628868421761,
+    "/Users/jdkanani/matic/pos-portal/contracts/root/TokenPredicates/EtherPredicateProxy.sol": {
+      "lastModificationDate": 1626627637941,
       "contentHash": "d489283e39c27b288a4e065d0747d6c1",
       "sourceName": "contracts/root/TokenPredicates/EtherPredicateProxy.sol",
       "solcConfig": {
@@ -3446,8 +3563,8 @@
         "EtherPredicateProxy"
       ]
     },
-    "/home/ubuntu/dev/Polygon/hardhat_pos/pos-portal/contracts/root/TokenPredicates/ERC721PredicateProxy.sol": {
-      "lastModificationDate": 1628868421761,
+    "/Users/jdkanani/matic/pos-portal/contracts/root/TokenPredicates/ERC721PredicateProxy.sol": {
+      "lastModificationDate": 1626627637941,
       "contentHash": "fd3061b2dc14980f24031e67863a41d8",
       "sourceName": "contracts/root/TokenPredicates/ERC721PredicateProxy.sol",
       "solcConfig": {
@@ -3482,8 +3599,8 @@
         "ERC721PredicateProxy"
       ]
     },
-    "/home/ubuntu/dev/Polygon/hardhat_pos/pos-portal/contracts/root/TokenPredicates/ERC20PredicateProxy.sol": {
-      "lastModificationDate": 1628868421761,
+    "/Users/jdkanani/matic/pos-portal/contracts/root/TokenPredicates/ERC20PredicateProxy.sol": {
+      "lastModificationDate": 1626627637941,
       "contentHash": "d2ee4c55edf4b710cd52c0de6b1936ee",
       "sourceName": "contracts/root/TokenPredicates/ERC20PredicateProxy.sol",
       "solcConfig": {
@@ -3518,8 +3635,8 @@
         "ERC20PredicateProxy"
       ]
     },
-    "/home/ubuntu/dev/Polygon/hardhat_pos/pos-portal/contracts/root/TokenPredicates/ERC1155PredicateProxy.sol": {
-      "lastModificationDate": 1628868421761,
+    "/Users/jdkanani/matic/pos-portal/contracts/root/TokenPredicates/ERC1155PredicateProxy.sol": {
+      "lastModificationDate": 1626627637941,
       "contentHash": "8ca8ca6f63d0cdbb3894b5c754509167",
       "sourceName": "contracts/root/TokenPredicates/ERC1155PredicateProxy.sol",
       "solcConfig": {
@@ -3554,8 +3671,44 @@
         "ERC1155PredicateProxy"
       ]
     },
-    "/home/ubuntu/dev/Polygon/hardhat_pos/pos-portal/contracts/root/RootChainManager/RootChainManagerProxy.sol": {
-      "lastModificationDate": 1628868421761,
+    "/Users/jdkanani/matic/pos-portal/contracts/root/TokenPredicates/ChainExitERC1155PredicateProxy.sol": {
+      "lastModificationDate": 1631888253425,
+      "contentHash": "0ba96087818ff4f3ac0b50cfbf5c551c",
+      "sourceName": "contracts/root/TokenPredicates/ChainExitERC1155PredicateProxy.sol",
+      "solcConfig": {
+        "version": "0.6.6",
+        "settings": {
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "../../common/Proxy/UpgradableProxy.sol"
+      ],
+      "versionPragmas": [
+        "0.6.6"
+      ],
+      "artifacts": [
+        "ChainExitERC1155PredicateProxy"
+      ]
+    },
+    "/Users/jdkanani/matic/pos-portal/contracts/root/RootChainManager/RootChainManagerProxy.sol": {
+      "lastModificationDate": 1626627637940,
       "contentHash": "38c940aa08d1271f100497d5756cfbaf",
       "sourceName": "contracts/root/RootChainManager/RootChainManagerProxy.sol",
       "solcConfig": {
@@ -3590,8 +3743,8 @@
         "RootChainManagerProxy"
       ]
     },
-    "/home/ubuntu/dev/Polygon/hardhat_pos/pos-portal/contracts/child/ChildToken/UpgradeableChildERC20/UChildERC20Proxy.sol": {
-      "lastModificationDate": 1628868421757,
+    "/Users/jdkanani/matic/pos-portal/contracts/child/ChildToken/UpgradeableChildERC20/UChildERC20Proxy.sol": {
+      "lastModificationDate": 1626627637938,
       "contentHash": "a5513018020e9d6403f65c980ba54798",
       "sourceName": "contracts/child/ChildToken/UpgradeableChildERC20/UChildERC20Proxy.sol",
       "solcConfig": {
@@ -3626,8 +3779,8 @@
         "UChildERC20Proxy"
       ]
     },
-    "/home/ubuntu/dev/Polygon/hardhat_pos/pos-portal/contracts/Migrations.sol": {
-      "lastModificationDate": 1628868421757,
+    "/Users/jdkanani/matic/pos-portal/contracts/Migrations.sol": {
+      "lastModificationDate": 1626627637936,
       "contentHash": "f9c44abbfd9fec954a6f7be77e2ca98f",
       "sourceName": "contracts/Migrations.sol",
       "solcConfig": {

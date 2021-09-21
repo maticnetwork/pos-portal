@@ -56,10 +56,9 @@
     "babel-preset-stage-3": "^6.24.1",
     "bip39": "^2.5.0",
     "bluebird": "^3.7.2",
-    "bn.js": "^5.1.1",
+    "bn.js": "^5.2.0",
     "chai": "^4.2.0",
     "chai-as-promised": "^7.1.1",
-    "chai-bn": "^0.2.1",
     "eslint": "^6.8.0",
     "eslint-config-standard": "^14.1.1",
     "eslint-plugin-import": "^2.20.2",
@@ -73,7 +72,7 @@
     "ethereumjs-tx": "^2.1.2",
     "ethereumjs-util": "^7.0.2",
     "ethereumjs-wallet": "^1.0.1",
-    "ethers": "^4.0.46",
+    "ethers": "^5.4.7",
     "fs": "0.0.1-security",
     "glob": "^7.1.6",
     "hardhat": "^2.6.0",
@@ -84,7 +83,5 @@
     "truffle-flattener": "^1.4.4",
     "web3": "^1.5.1"
   },
-  "dependencies": {
-    "ganache-cli": "^6.9.1"
-  }
+  "dependencies": {}
 }
