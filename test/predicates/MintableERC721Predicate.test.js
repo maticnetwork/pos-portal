@@ -151,7 +151,7 @@ contract('MintableERC721Predicate', (accounts) => {
     })
 
     it('Token should not exist', async () => {
-      await expectRevert(dummyMintableERC721.ownerOf(tokenId), 'revert ERC721: owner query for nonexistent token')
+      await expectRevert(dummyMintableERC721.ownerOf(tokenId), 'ERC721: owner query for nonexistent token')
     })
 
     it('alice should be able to send exitTokens tx', async () => {

@@ -109,6 +109,9 @@ module.exports = async(deployer) => {
   await RootChainManagerInstance.registerPredicate(EtherType, EtherPredicateInstance.address)
 
   console.log('Mapping DummyERC20')
+  console.log(contractAddresses.child.DummyERC20)
+  console.log(contractAddresses.root.DummyERC20)
+  console.log(ERC20Type)
   await RootChainManagerInstance.mapToken(contractAddresses.root.DummyERC20, contractAddresses.child.DummyERC20, ERC20Type)
 
   console.log('Mapping DummyMintableERC20')

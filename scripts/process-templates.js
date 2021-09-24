@@ -12,6 +12,7 @@ program.parse(process.argv)
 
 // joining path of directory
 const directoryPath = path.join(__dirname, '..', '**/*.template')
+console.log(directoryPath);
 // passsing directoryPath and callback function
 glob(directoryPath, (err, files) => {
   // handling error
@@ -37,10 +38,13 @@ glob(directoryPath, (err, files) => {
       rootChainIdHex:
         rootChainIdHex.length % 2 !== 0 ? `0${rootChainIdHex}` : rootChainIdHex
     }
-
-    const templateString = fs.readFileSync(file).toString()
-    const resultString = nunjucks.renderString(templateString, data)
-    fs.writeFileSync(file.replace('.template', ''), resultString)
+    
+    if (!file.includes("node_modules")) {
+      const templateString = fs.readFileSync(file).toString()
+      console.log(templateString);
+      const resultString = nunjucks.renderString(templateString, data)
+      fs.writeFileSync(file.replace('.template', ''), resultString)
+    }
   })
 
   console.log('All template files have been processed.')

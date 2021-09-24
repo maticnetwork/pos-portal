@@ -177,7 +177,7 @@ contract('NativeMetaTransaction', (accounts) => {
       const { r, s, v } = getSignatureParameters(sig)
       await expectRevert(
         dummyERC20.executeMetaTransaction(user, functionSignature, r, s, v, { from: admin }),
-        'Transaction has been reverted by the EVM')
+        'Signer and signature do not match')
     })
   })
 

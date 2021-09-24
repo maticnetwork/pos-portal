@@ -8,6 +8,7 @@ import * as deployer from '../helpers/deployer'
 import { mockValues } from '../helpers/constants'
 import logDecoder from '../helpers/log-decoder.js'
 import { expectRevert } from '@openzeppelin/test-helpers'
+import { contract } from 'hardhat'
 
 chai
   .use(chaiAsPromised)
@@ -87,7 +88,7 @@ contract('ChildERC20', (accounts) => {
     it('Tx should revert with proper reason', async() => {
       await expectRevert(
         dummyERC20.deposit(depositReceiver, depositData, { from: accounts[1] }),
-        'Transaction has been reverted by the EVM'
+        'ChildERC20: INSUFFICIENT_PERMISSIONS'
       )
     })
   })

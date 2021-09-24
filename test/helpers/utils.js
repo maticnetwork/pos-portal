@@ -1,7 +1,7 @@
 import BN from 'bn.js'
 import { defaultAbiCoder as abi } from 'ethers/utils/abi-coder'
 import bip39 from 'bip39'
-import hdkey from 'ethereumjs-wallet/hdkey'
+import { hdkey } from 'ethereumjs-wallet'
 import packageJSON from '../../package.json'
 import contracts from './contracts'
 

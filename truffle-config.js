@@ -55,7 +55,7 @@ module.exports = {
       network_id: '*', // match any network
       skipDryRun: true,
       gas: 7000000,
-      gasPrice: '0'
+      gasPrice: '900000000'
     },
     child: {
       host: 'localhost',
@@ -63,7 +63,7 @@ module.exports = {
       network_id: '*', // match any network
       skipDryRun: true,
       gas: 7000000,
-      gasPrice: '0'
+      gasPrice: '900000000'
     },
     mumbaiRoot: {
       provider: () =>

@@ -54,7 +54,7 @@ contract('UChildERC20', (accounts) => {
     it('Joe should not be able to change name', async() => {
       await expectRevert(
         uChildERC20.changeName(clove, { from: joe }),
-        'Transaction has been reverted by the EVM'
+        'ChildCSC: INSUFFICIENT_PERMISSIONS'
       )
       const name = await uChildERC20.name()
       name.should.equal(staranise)
@@ -96,7 +96,7 @@ contract('UChildERC20', (accounts) => {
     it('Joe should not be able to update implementation', async() => {
       await expectRevert(
         uChildERC20Proxy.updateImplementation(newImplementation.address, { from: joe }),
-        'Transaction has been reverted by the EVM'
+        'NOT_OWNER'
       )
     })
 

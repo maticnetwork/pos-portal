@@ -4,19 +4,20 @@
   "description": "Contracts to facilitate transfer of assets between Ethereum Main Network and Matic Network, using security of Matic POS layer",
   "main": "index.js",
   "scripts": {
-    "testrpc": "ganache-cli --hardfork istanbul --mnemonic 'clock radar mass judge dismiss just intact mind resemble fringe diary casino' --gasLimit 8000000 --gasPrice 0 --port 9545 --networkId 53227",
+    "testrpc": "hardhat node --port 9545",
     "template:process": "node scripts/process-templates.js",
     "bor": "cd test-blockchain && bash run-docker.sh",
     "bor:clean": "cd test-blockchain && bash stop-docker.sh",
     "truffle": "truffle",
-    "build": "truffle compile && npm run artifacts && npm run flatten",
+    "hardhat": "hardhat",
+    "build": "hardhat clean && hardhat compile",
     "migrate:2": "truffle migrate --network root --f 2 --to 2",
     "migrate:3": "truffle migrate --network child --f 3 --to 3",
     "migrate:4": "truffle migrate --network root --f 4 --to 4",
     "migrate:5": "truffle migrate --network child --f 5 --to 5",
     "migrate": "npm run migrate:2 && npm run migrate:3 && npm run migrate:4 && npm run migrate:5",
     "change-owners": "truffle exec scripts/change-owners.js",
-    "test": "truffle test",
+    "test": "hardhat test",
     "lint": "npm run lint:sol && npm run lint:js",
     "lint:js": "eslint test/**/*.js",
     "lint:sol:fix": "solium -d contracts/ --fix",
@@ -40,6 +41,9 @@
     "mnemonics": "clock radar mass judge dismiss just intact mind resemble fringe diary casino"
   },
   "devDependencies": {
+    "@nomiclabs/hardhat-ethers": "^2.0.2",
+    "@nomiclabs/hardhat-truffle5": "^2.0.0",
+    "@nomiclabs/hardhat-web3": "^2.0.0",
     "@openzeppelin/contracts": "^3.1.0",
     "@openzeppelin/test-helpers": "^0.5.5",
     "@truffle/hdwallet-provider": "^1.0.35",
@@ -68,15 +72,17 @@
     "eth-sig-util": "^2.5.2",
     "ethereumjs-tx": "^2.1.2",
     "ethereumjs-util": "^7.0.2",
-    "ethereumjs-wallet": "0.6.2",
+    "ethereumjs-wallet": "^1.0.1",
     "ethers": "^4.0.46",
     "fs": "0.0.1-security",
     "glob": "^7.1.6",
+    "hardhat": "^2.6.0",
     "moonwalker": "github:atvanguard/moonwalker#4c4592e2d6c1744fbcd9452cf0f00e9beb236b21",
     "nunjucks": "^3.2.1",
     "solium": "^1.2.5",
     "truffle": "^5.1.21",
-    "truffle-flattener": "^1.4.4"
+    "truffle-flattener": "^1.4.4",
+    "web3": "^1.5.1"
   },
   "dependencies": {
     "ganache-cli": "^6.9.1"
