@@ -175,16 +175,39 @@ contract('ChainExitERC1155Predicate', (accounts) => {
     })
 
     describe('exitTokens', () => {
-        const amount = mockValues.amounts[9]
-        const tokenId = mockValues.numbers[4]
-        const depositData = constructERC1155DepositData([tokenId], [amount])
+        // during deposit [(tokenIdA, amountA), (tokenIdB, amountB), (tokenIdC, amountC)]
+        // pairing used & predicate should have whole balance
+        //
+        // during exit supplied burn log has [(tokenIdA, amountC), (tokenIdB, amountB), (tokenIdC, amountA)]
+        // pairing
+        //
+        // Note, amountA = 1; amountB = 2; amountC = 5
+        //
+        // These combinations cover (almost) all cases !
+
+        const amountA = mockValues.amounts[0]
+        const tokenIdA = mockValues.numbers[0]
+
+        const amountB = mockValues.amounts[1]
+        const tokenIdB = mockValues.numbers[1]
+
+        const amountC = mockValues.amounts[2]
+        const tokenIdC = mockValues.numbers[2]
+
+        const depositData = constructERC1155DepositData([tokenIdA, tokenIdB, tokenIdC], [amountA, amountB, amountC])
         const depositor = accounts[1]
         const withdrawer = mockValues.addresses[8]
+
         let dummyMintableERC1155
         let chainExitERC1155Predicate
         let exitTokensTx
-        let oldAccountBalance
-        let oldContractBalance
+
+        let oldAccountBalanceA
+        let oldContractBalanceA
+        let oldAccountBalanceB
+        let oldContractBalanceB
+        let oldAccountBalanceC
+        let oldContractBalanceC
 
         before(async () => {
             const contracts = await deployer.deployFreshRootContracts(accounts)
@@ -194,23 +217,41 @@ contract('ChainExitERC1155Predicate', (accounts) => {
             const PREDICATE_ROLE = await dummyMintableERC1155.PREDICATE_ROLE()
             await dummyMintableERC1155.grantRole(PREDICATE_ROLE, chainExitERC1155Predicate.address)
 
-            await dummyMintableERC1155.mint(depositor, tokenId, amount, '0x0')
+            await dummyMintableERC1155.mint(depositor, tokenIdA, amountA, '0x0')
+            await dummyMintableERC1155.mint(depositor, tokenIdB, amountB, '0x0')
+            await dummyMintableERC1155.mint(depositor, tokenIdC, amountC, '0x0')
+
             await dummyMintableERC1155.setApprovalForAll(chainExitERC1155Predicate.address, true, { from: depositor })
 
             await chainExitERC1155Predicate.lockTokens(depositor, mockValues.addresses[2], dummyMintableERC1155.address, depositData)
-            oldAccountBalance = await dummyMintableERC1155.balanceOf(withdrawer, tokenId)
-            oldContractBalance = await dummyMintableERC1155.balanceOf(chainExitERC1155Predicate.address, tokenId)
+
+            oldAccountBalanceA = await dummyMintableERC1155.balanceOf(withdrawer, tokenIdA)
+            oldContractBalanceA = await dummyMintableERC1155.balanceOf(chainExitERC1155Predicate.address, tokenIdA)
+
+            oldAccountBalanceB = await dummyMintableERC1155.balanceOf(withdrawer, tokenIdB)
+            oldContractBalanceB = await dummyMintableERC1155.balanceOf(chainExitERC1155Predicate.address, tokenIdB)
+
+            oldAccountBalanceC = await dummyMintableERC1155.balanceOf(withdrawer, tokenIdC)
+            oldContractBalanceC = await dummyMintableERC1155.balanceOf(chainExitERC1155Predicate.address, tokenIdC)
         })
 
-        it('Predicate should have the token', async () => {
-            amount.should.be.a.bignumber.at.most(oldContractBalance)
+        it('Predicate should have all tokens', async () => {
+            amountA.should.be.a.bignumber.at.most(oldContractBalanceA)
+            amountB.should.be.a.bignumber.at.most(oldContractBalanceB)
+            amountC.should.be.a.bignumber.at.most(oldContractBalanceC)
+        })
+
+        it('Withdrawer should have no tokens', async () => {
+            oldAccountBalanceA.should.be.a.bignumber.at.most(new BN(0))
+            oldAccountBalanceB.should.be.a.bignumber.at.most(new BN(0))
+            oldAccountBalanceC.should.be.a.bignumber.at.most(new BN(0))
         })
 
         it('Should be able to receive exitTokens tx', async () => {
             const burnLog = getERC1155ChainExitLog({
                 to: withdrawer,
-                tokenIds: [tokenId],
-                amounts: [amount],
+                tokenIds: [tokenIdA, tokenIdB, tokenIdC],
+                amounts: [amountC, amountB, amountA],
                 data: 'Hello 👋'
             })
 
@@ -218,18 +259,28 @@ contract('ChainExitERC1155Predicate', (accounts) => {
             should.exist(exitTokensTx)
         })
 
-        it('Withdraw amount should be deducted from contract', async () => {
-            const newContractBalance = await dummyMintableERC1155.balanceOf(chainExitERC1155Predicate.address, tokenId)
-            newContractBalance.should.be.a.bignumber.that.equals(
-                oldContractBalance.sub(amount)
-            )
+        it('Correct withdraw amount deduction & credit [tokenIdA]', async () => {
+            const newContractBalanceA = await dummyMintableERC1155.balanceOf(chainExitERC1155Predicate.address, tokenIdA)
+            newContractBalanceA.should.be.a.bignumber.that.equals(amountC.gte(oldContractBalanceA) ? new BN(0) : oldContractBalanceA.sub(amountC))
+
+            const newAccountBalanceA = await dummyMintableERC1155.balanceOf(withdrawer, tokenIdA)
+            newAccountBalanceA.should.be.a.bignumber.that.equals(oldAccountBalanceA.add(amountC))
         })
 
-        it('Withdraw amount should be credited to withdrawer', async () => {
-            const newAccountBalance = await dummyMintableERC1155.balanceOf(withdrawer, tokenId)
-            newAccountBalance.should.be.a.bignumber.that.equals(
-                oldAccountBalance.add(amount)
-            )
+        it('Correct withdraw amount deduction & credit [tokenIdB]', async () => {
+            const newContractBalanceB = await dummyMintableERC1155.balanceOf(chainExitERC1155Predicate.address, tokenIdB)
+            newContractBalanceB.should.be.a.bignumber.that.equals(amountB.gte(oldContractBalanceB) ? new BN(0) : oldContractBalanceB.sub(amountB))
+
+            const newAccountBalanceB = await dummyMintableERC1155.balanceOf(withdrawer, tokenIdB)
+            newAccountBalanceB.should.be.a.bignumber.that.equals(oldAccountBalanceB.add(amountB))
+        })
+
+        it('Correct withdraw amount deduction & credit [tokenIdC]', async () => {
+            const newContractBalanceC = await dummyMintableERC1155.balanceOf(chainExitERC1155Predicate.address, tokenIdC)
+            newContractBalanceC.should.be.a.bignumber.that.equals(amountA.gte(oldContractBalanceC) ? new BN(0) : oldContractBalanceC.sub(amountA))
+
+            const newAccountBalanceC = await dummyMintableERC1155.balanceOf(withdrawer, tokenIdC)
+            newAccountBalanceC.should.be.a.bignumber.that.equals(oldAccountBalanceC.add(amountA))
         })
     })
 
