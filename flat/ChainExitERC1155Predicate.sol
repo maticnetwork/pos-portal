@@ -1500,15 +1500,14 @@ contract ChainExitERC1155Predicate is
     }
 
     /**
-     * @notice Calculates amount of tokens to be minted, by subtracting available
-     * token balances from amount of tokens to be exited
+     * @notice Calculates amount of tokens to be minted and/or transferred
      * @param balances Token balances this contract holds for some ordered token ids
      * @param exitAmounts Amount of tokens being exited
      */
-    function calculateAmountsToBeMinted(
+    function calculateAmountToMintAndTransfer(
         uint256[] memory balances,
         uint256[] memory exitAmounts
-    ) internal pure returns (uint256[] memory, bool, bool) {
+    ) internal pure returns (uint256[] memory, uint256[] memory, bool, bool) {
         uint256 count = balances.length;
         require(
             count == exitAmounts.length,
@@ -1516,21 +1515,26 @@ contract ChainExitERC1155Predicate is
         );
 
         uint256[] memory toBeMinted = new uint256[](count);
+        uint256[] memory toBeTransferred = new uint256[](count);
         bool needMintStep;
         bool needTransferStep;
 
         for (uint256 i = 0; i < count; i++) {
-            if (balances[i] < exitAmounts[i]) {
+            bool needMintStepInner = balances[i] < exitAmounts[i];
+            if (needMintStepInner) {
                 toBeMinted[i] = exitAmounts[i] - balances[i];
                 needMintStep = true;
             }
 
-            if(balances[i] != 0) {
+            if(balances[i] > 0) {
+                toBeTransferred[i] = needMintStepInner ? balances[i] : exitAmounts[i];
                 needTransferStep = true;
             }
+
+            assert(toBeTransferred[i] + toBeMinted[i] == exitAmounts[i]);
         }
 
-        return (toBeMinted, needMintStep, needTransferStep);
+        return (toBeMinted, toBeTransferred, needMintStep, needTransferStep);
     }
 
     /**
@@ -1562,7 +1566,7 @@ contract ChainExitERC1155Predicate is
             IMintableERC1155 token = IMintableERC1155(rootToken);
 
             uint256[] memory balances = token.balanceOfBatch(makeArrayWithAddress(address(this), ids.length), ids);
-            (uint256[] memory toBeMinted, bool needMintStep, bool needTransferStep) = calculateAmountsToBeMinted(balances, amounts);
+            (uint256[] memory toBeMinted, uint256[] memory toBeTransferred, bool needMintStep, bool needTransferStep) = calculateAmountToMintAndTransfer(balances, amounts);
 
             if(needMintStep) {
                 token.mintBatch(
@@ -1578,7 +1582,7 @@ contract ChainExitERC1155Predicate is
                     address(this),
                     withdrawer,
                     ids,
-                    balances,
+                    toBeTransferred,
                     data // passing data when transferring unlocked tokens to withdrawer
                 );
             }
