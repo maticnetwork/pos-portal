@@ -157,7 +157,7 @@ contract ChainExitERC1155Predicate is
                 needMintStep = true;
             }
 
-            if(balances[i] > 0) {
+            if (balances[i] > 0) {
                 toBeTransferred[i] = needMintStepInner ? balances[i] : exitAmounts[i];
                 needTransferStep = true;
             }
@@ -199,7 +199,7 @@ contract ChainExitERC1155Predicate is
             uint256[] memory balances = token.balanceOfBatch(makeArrayWithAddress(address(this), ids.length), ids);
             (uint256[] memory toBeMinted, uint256[] memory toBeTransferred, bool needMintStep, bool needTransferStep) = calculateAmountToMintAndTransfer(balances, amounts);
 
-            if(needMintStep) {
+            if (needMintStep) {
                 token.mintBatch(
                     withdrawer,
                     ids,
@@ -208,7 +208,7 @@ contract ChainExitERC1155Predicate is
                 );
             }
 
-            if(needTransferStep) {
+            if (needTransferStep) {
                 token.safeBatchTransferFrom(
                     address(this),
                     withdrawer,
