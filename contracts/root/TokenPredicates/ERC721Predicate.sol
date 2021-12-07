@@ -77,11 +77,12 @@ contract ERC721Predicate is ITokenPredicate, AccessControlMixin, Initializable, 
         override
         only(MANAGER_ROLE)
     {
+        IRootERC721 token = IRootERC721(rootToken);
         // deposit single
         if (depositData.length == 32) {
             uint256 tokenId = abi.decode(depositData, (uint256));
             emit LockedERC721(depositor, depositReceiver, rootToken, tokenId);
-            IRootERC721(rootToken).safeTransferFrom(depositor, address(this), tokenId);
+            token.safeTransferFrom(token.ownerOf(tokenId), address(this), tokenId);
 
         // deposit batch
         } else {
@@ -90,7 +91,7 @@ contract ERC721Predicate is ITokenPredicate, AccessControlMixin, Initializable, 
             uint256 length = tokenIds.length;
             require(length <= BATCH_LIMIT, "ERC721Predicate: EXCEEDS_BATCH_LIMIT");
             for (uint256 i; i < length; i++) {
-                IRootERC721(rootToken).safeTransferFrom(depositor, address(this), tokenIds[i]);
+                token.safeTransferFrom(token.ownerOf(tokenIds[i]), address(this), tokenIds[i]);
             }
         }
     }
