@@ -30,6 +30,12 @@ contract MintableERC20Predicate is
         uint256 amount
     );
 
+    event ExitedMintableERC20(
+        address indexed exitor,
+        address indexed rootToken,
+        uint256 amount
+    );
+
     constructor() public {}
 
     function initialize(address _owner) external initializer {
@@ -103,5 +109,7 @@ contract MintableERC20Predicate is
         // Attempt to perform safe transfer i.e. check function return value
         // using low-level call & revert if didn't succeed
         IERC20(rootToken).safeTransfer(withdrawer, amount);
+
+        emit ExitedMintableERC20(withdrawer, rootToken, amount);
     }
 }

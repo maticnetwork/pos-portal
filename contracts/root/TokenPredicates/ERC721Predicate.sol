@@ -36,6 +36,18 @@ contract ERC721Predicate is ITokenPredicate, AccessControlMixin, Initializable, 
         uint256[] tokenIds
     );
 
+    event ExitedERC721(
+        address indexed exitor,
+        address indexed rootToken,
+        uint256 tokenId
+    );
+
+    event ExitedERC721Batch(
+        address indexed exitor,
+        address indexed rootToken,
+        uint256[] tokenIds
+    );
+
     constructor() public {}
 
     function initialize(address _owner) external initializer {
@@ -121,11 +133,15 @@ contract ERC721Predicate is ITokenPredicate, AccessControlMixin, Initializable, 
                 "ERC721Predicate: INVALID_RECEIVER"
             );
 
+            uint256 tokenId = logTopicRLPList[3].toUint(); // topic3 is tokenId field
+
             IRootERC721(rootToken).safeTransferFrom(
                 address(this),
                 withdrawer,
-                logTopicRLPList[3].toUint() // topic3 is tokenId field
+                tokenId
             );
+
+            emit ExitedERC721(withdrawer, rootToken, tokenId);
 
         } else if (bytes32(logTopicRLPList[0].toUint()) == WITHDRAW_BATCH_EVENT_SIG) { // topic0 is event sig
             bytes memory logData = logRLPList[2].toBytes();
@@ -134,6 +150,8 @@ contract ERC721Predicate is ITokenPredicate, AccessControlMixin, Initializable, 
             for (uint256 i; i < length; i++) {
                 IRootERC721(rootToken).safeTransferFrom(address(this), withdrawer, tokenIds[i]);
             }
+
+            emit ExitedERC721Batch(withdrawer, rootToken, tokenIds);
 
         } else if (bytes32(logTopicRLPList[0].toUint()) == TRANSFER_WITH_METADATA_EVENT_SIG) { 
             // If this is when NFT exit is done with arbitrary metadata on L2
@@ -157,6 +175,8 @@ contract ERC721Predicate is ITokenPredicate, AccessControlMixin, Initializable, 
             bytes memory metaData = abi.decode(logData, (bytes));
 
             token.setTokenMetadata(tokenId, metaData);
+
+            emit ExitedERC721(withdrawer, rootToken, tokenId);
 
         } else {
             revert("ERC721Predicate: INVALID_SIGNATURE");

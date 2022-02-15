@@ -23,6 +23,12 @@ contract ERC20Predicate is ITokenPredicate, AccessControlMixin, Initializable {
         uint256 amount
     );
 
+    event ExitedERC20(
+        address indexed exitor,
+        address indexed rootToken,
+        uint256 amount
+    );
+
     constructor() public {}
 
     function initialize(address _owner) external initializer {
@@ -84,9 +90,13 @@ contract ERC20Predicate is ITokenPredicate, AccessControlMixin, Initializable {
             "ERC20Predicate: INVALID_RECEIVER"
         );
 
+        uint256 amount = logRLPList[2].toUint(); // log data field is the amount
+
         IERC20(rootToken).safeTransfer(
             withdrawer,
-            logRLPList[2].toUint() // log data field
+            amount
         );
+
+        emit ExitedERC20(withdrawer, rootToken, amount);
     }
 }
