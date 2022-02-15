@@ -1,9 +1,8 @@
-
 // File: @openzeppelin/contracts/introspection/IERC165.sol
 
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.6.0;
+pragma solidity >=0.6.0 <0.8.0;
 
 /**
  * @dev Interface of the ERC165 standard, as defined in the
@@ -30,8 +29,7 @@ interface IERC165 {
 
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.6.2;
-
+pragma solidity >=0.6.2 <0.8.0;
 
 /**
  * @dev Required interface of an ERC1155 compliant contract, as defined in the
@@ -41,7 +39,7 @@ pragma solidity ^0.6.2;
  */
 interface IERC1155 is IERC165 {
     /**
-     * @dev Emitted when `value` tokens of token type `id` are transfered from `from` to `to` by `operator`.
+     * @dev Emitted when `value` tokens of token type `id` are transferred from `from` to `to` by `operator`.
      */
     event TransferSingle(address indexed operator, address indexed from, address indexed to, uint256 id, uint256 value);
 
@@ -135,8 +133,7 @@ interface IERC1155 is IERC165 {
 
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.6.2;
-
+pragma solidity >=0.6.2 <0.8.0;
 
 /**
  * @dev Interface of the optional ERC1155MetadataExtension interface, as defined
@@ -158,8 +155,7 @@ interface IERC1155MetadataURI is IERC1155 {
 
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.6.0;
-
+pragma solidity >=0.6.0 <0.8.0;
 
 /**
  * _Available since v3.1._
@@ -213,11 +209,11 @@ interface IERC1155Receiver is IERC165 {
         returns(bytes4);
 }
 
-// File: @openzeppelin/contracts/GSN/Context.sol
+// File: @openzeppelin/contracts/utils/Context.sol
 
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.6.0;
+pragma solidity >=0.6.0 <0.8.0;
 
 /*
  * @dev Provides information about the current execution context, including the
@@ -244,8 +240,7 @@ abstract contract Context {
 
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.6.0;
-
+pragma solidity >=0.6.0 <0.8.0;
 
 /**
  * @dev Implementation of the {IERC165} interface.
@@ -253,7 +248,7 @@ pragma solidity ^0.6.0;
  * Contracts may inherit from this and call {_registerInterface} to declare
  * their support of an interface.
  */
-contract ERC165 is IERC165 {
+abstract contract ERC165 is IERC165 {
     /*
      * bytes4(keccak256('supportsInterface(bytes4)')) == 0x01ffc9a7
      */
@@ -275,7 +270,7 @@ contract ERC165 is IERC165 {
      *
      * Time complexity O(1), guaranteed to always use less than 30 000 gas.
      */
-    function supportsInterface(bytes4 interfaceId) public view override returns (bool) {
+    function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
         return _supportedInterfaces[interfaceId];
     }
 
@@ -300,7 +295,7 @@ contract ERC165 is IERC165 {
 
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.6.0;
+pragma solidity >=0.6.0 <0.8.0;
 
 /**
  * @dev Wrappers over Solidity's arithmetic operations with added overflow
@@ -317,6 +312,62 @@ pragma solidity ^0.6.0;
  */
 library SafeMath {
     /**
+     * @dev Returns the addition of two unsigned integers, with an overflow flag.
+     *
+     * _Available since v3.4._
+     */
+    function tryAdd(uint256 a, uint256 b) internal pure returns (bool, uint256) {
+        uint256 c = a + b;
+        if (c < a) return (false, 0);
+        return (true, c);
+    }
+
+    /**
+     * @dev Returns the substraction of two unsigned integers, with an overflow flag.
+     *
+     * _Available since v3.4._
+     */
+    function trySub(uint256 a, uint256 b) internal pure returns (bool, uint256) {
+        if (b > a) return (false, 0);
+        return (true, a - b);
+    }
+
+    /**
+     * @dev Returns the multiplication of two unsigned integers, with an overflow flag.
+     *
+     * _Available since v3.4._
+     */
+    function tryMul(uint256 a, uint256 b) internal pure returns (bool, uint256) {
+        // Gas optimization: this is cheaper than requiring 'a' not being zero, but the
+        // benefit is lost if 'b' is also tested.
+        // See: https://github.com/OpenZeppelin/openzeppelin-contracts/pull/522
+        if (a == 0) return (true, 0);
+        uint256 c = a * b;
+        if (c / a != b) return (false, 0);
+        return (true, c);
+    }
+
+    /**
+     * @dev Returns the division of two unsigned integers, with a division by zero flag.
+     *
+     * _Available since v3.4._
+     */
+    function tryDiv(uint256 a, uint256 b) internal pure returns (bool, uint256) {
+        if (b == 0) return (false, 0);
+        return (true, a / b);
+    }
+
+    /**
+     * @dev Returns the remainder of dividing two unsigned integers, with a division by zero flag.
+     *
+     * _Available since v3.4._
+     */
+    function tryMod(uint256 a, uint256 b) internal pure returns (bool, uint256) {
+        if (b == 0) return (false, 0);
+        return (true, a % b);
+    }
+
+    /**
      * @dev Returns the addition of two unsigned integers, reverting on
      * overflow.
      *
@@ -329,7 +380,6 @@ library SafeMath {
     function add(uint256 a, uint256 b) internal pure returns (uint256) {
         uint256 c = a + b;
         require(c >= a, "SafeMath: addition overflow");
-
         return c;
     }
 
@@ -344,24 +394,8 @@ library SafeMath {
      * - Subtraction cannot overflow.
      */
     function sub(uint256 a, uint256 b) internal pure returns (uint256) {
-        return sub(a, b, "SafeMath: subtraction overflow");
-    }
-
-    /**
-     * @dev Returns the subtraction of two unsigned integers, reverting with custom message on
-     * overflow (when the result is negative).
-     *
-     * Counterpart to Solidity's `-` operator.
-     *
-     * Requirements:
-     *
-     * - Subtraction cannot overflow.
-     */
-    function sub(uint256 a, uint256 b, string memory errorMessage) internal pure returns (uint256) {
-        require(b <= a, errorMessage);
-        uint256 c = a - b;
-
-        return c;
+        require(b <= a, "SafeMath: subtraction overflow");
+        return a - b;
     }
 
     /**
@@ -375,21 +409,14 @@ library SafeMath {
      * - Multiplication cannot overflow.
      */
     function mul(uint256 a, uint256 b) internal pure returns (uint256) {
-        // Gas optimization: this is cheaper than requiring 'a' not being zero, but the
-        // benefit is lost if 'b' is also tested.
-        // See: https://github.com/OpenZeppelin/openzeppelin-contracts/pull/522
-        if (a == 0) {
-            return 0;
-        }
-
+        if (a == 0) return 0;
         uint256 c = a * b;
         require(c / a == b, "SafeMath: multiplication overflow");
-
         return c;
     }
 
     /**
-     * @dev Returns the integer division of two unsigned integers. Reverts on
+     * @dev Returns the integer division of two unsigned integers, reverting on
      * division by zero. The result is rounded towards zero.
      *
      * Counterpart to Solidity's `/` operator. Note: this function uses a
@@ -401,12 +428,51 @@ library SafeMath {
      * - The divisor cannot be zero.
      */
     function div(uint256 a, uint256 b) internal pure returns (uint256) {
-        return div(a, b, "SafeMath: division by zero");
+        require(b > 0, "SafeMath: division by zero");
+        return a / b;
     }
 
     /**
-     * @dev Returns the integer division of two unsigned integers. Reverts with custom message on
+     * @dev Returns the remainder of dividing two unsigned integers. (unsigned integer modulo),
+     * reverting when dividing by zero.
+     *
+     * Counterpart to Solidity's `%` operator. This function uses a `revert`
+     * opcode (which leaves remaining gas untouched) while Solidity uses an
+     * invalid opcode to revert (consuming all remaining gas).
+     *
+     * Requirements:
+     *
+     * - The divisor cannot be zero.
+     */
+    function mod(uint256 a, uint256 b) internal pure returns (uint256) {
+        require(b > 0, "SafeMath: modulo by zero");
+        return a % b;
+    }
+
+    /**
+     * @dev Returns the subtraction of two unsigned integers, reverting with custom message on
+     * overflow (when the result is negative).
+     *
+     * CAUTION: This function is deprecated because it requires allocating memory for the error
+     * message unnecessarily. For custom revert reasons use {trySub}.
+     *
+     * Counterpart to Solidity's `-` operator.
+     *
+     * Requirements:
+     *
+     * - Subtraction cannot overflow.
+     */
+    function sub(uint256 a, uint256 b, string memory errorMessage) internal pure returns (uint256) {
+        require(b <= a, errorMessage);
+        return a - b;
+    }
+
+    /**
+     * @dev Returns the integer division of two unsigned integers, reverting with custom message on
      * division by zero. The result is rounded towards zero.
+     *
+     * CAUTION: This function is deprecated because it requires allocating memory for the error
+     * message unnecessarily. For custom revert reasons use {tryDiv}.
      *
      * Counterpart to Solidity's `/` operator. Note: this function uses a
      * `revert` opcode (which leaves remaining gas untouched) while Solidity
@@ -418,31 +484,15 @@ library SafeMath {
      */
     function div(uint256 a, uint256 b, string memory errorMessage) internal pure returns (uint256) {
         require(b > 0, errorMessage);
-        uint256 c = a / b;
-        // assert(a == b * c + a % b); // There is no case in which this doesn't hold
-
-        return c;
+        return a / b;
     }
 
     /**
      * @dev Returns the remainder of dividing two unsigned integers. (unsigned integer modulo),
-     * Reverts when dividing by zero.
+     * reverting with custom message when dividing by zero.
      *
-     * Counterpart to Solidity's `%` operator. This function uses a `revert`
-     * opcode (which leaves remaining gas untouched) while Solidity uses an
-     * invalid opcode to revert (consuming all remaining gas).
-     *
-     * Requirements:
-     *
-     * - The divisor cannot be zero.
-     */
-    function mod(uint256 a, uint256 b) internal pure returns (uint256) {
-        return mod(a, b, "SafeMath: modulo by zero");
-    }
-
-    /**
-     * @dev Returns the remainder of dividing two unsigned integers. (unsigned integer modulo),
-     * Reverts with custom message when dividing by zero.
+     * CAUTION: This function is deprecated because it requires allocating memory for the error
+     * message unnecessarily. For custom revert reasons use {tryMod}.
      *
      * Counterpart to Solidity's `%` operator. This function uses a `revert`
      * opcode (which leaves remaining gas untouched) while Solidity uses an
@@ -453,7 +503,7 @@ library SafeMath {
      * - The divisor cannot be zero.
      */
     function mod(uint256 a, uint256 b, string memory errorMessage) internal pure returns (uint256) {
-        require(b != 0, errorMessage);
+        require(b > 0, errorMessage);
         return a % b;
     }
 }
@@ -462,7 +512,7 @@ library SafeMath {
 
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.6.2;
+pragma solidity >=0.6.2 <0.8.0;
 
 /**
  * @dev Collection of functions related to the address type
@@ -486,14 +536,14 @@ library Address {
      * ====
      */
     function isContract(address account) internal view returns (bool) {
-        // According to EIP-1052, 0x0 is the value returned for not-yet created accounts
-        // and 0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470 is returned
-        // for accounts without code, i.e. `keccak256('')`
-        bytes32 codehash;
-        bytes32 accountHash = 0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470;
+        // This method relies on extcodesize, which returns 0 for contracts in
+        // construction, since the code is only stored at the end of the
+        // constructor execution.
+
+        uint256 size;
         // solhint-disable-next-line no-inline-assembly
-        assembly { codehash := extcodehash(account) }
-        return (codehash != accountHash && codehash != 0x0);
+        assembly { size := extcodesize(account) }
+        return size > 0;
     }
 
     /**
@@ -549,7 +599,7 @@ library Address {
      * _Available since v3.1._
      */
     function functionCall(address target, bytes memory data, string memory errorMessage) internal returns (bytes memory) {
-        return _functionCallWithValue(target, data, 0, errorMessage);
+        return functionCallWithValue(target, data, 0, errorMessage);
     }
 
     /**
@@ -575,14 +625,62 @@ library Address {
      */
     function functionCallWithValue(address target, bytes memory data, uint256 value, string memory errorMessage) internal returns (bytes memory) {
         require(address(this).balance >= value, "Address: insufficient balance for call");
-        return _functionCallWithValue(target, data, value, errorMessage);
-    }
-
-    function _functionCallWithValue(address target, bytes memory data, uint256 weiValue, string memory errorMessage) private returns (bytes memory) {
         require(isContract(target), "Address: call to non-contract");
 
         // solhint-disable-next-line avoid-low-level-calls
-        (bool success, bytes memory returndata) = target.call{ value: weiValue }(data);
+        (bool success, bytes memory returndata) = target.call{ value: value }(data);
+        return _verifyCallResult(success, returndata, errorMessage);
+    }
+
+    /**
+     * @dev Same as {xref-Address-functionCall-address-bytes-}[`functionCall`],
+     * but performing a static call.
+     *
+     * _Available since v3.3._
+     */
+    function functionStaticCall(address target, bytes memory data) internal view returns (bytes memory) {
+        return functionStaticCall(target, data, "Address: low-level static call failed");
+    }
+
+    /**
+     * @dev Same as {xref-Address-functionCall-address-bytes-string-}[`functionCall`],
+     * but performing a static call.
+     *
+     * _Available since v3.3._
+     */
+    function functionStaticCall(address target, bytes memory data, string memory errorMessage) internal view returns (bytes memory) {
+        require(isContract(target), "Address: static call to non-contract");
+
+        // solhint-disable-next-line avoid-low-level-calls
+        (bool success, bytes memory returndata) = target.staticcall(data);
+        return _verifyCallResult(success, returndata, errorMessage);
+    }
+
+    /**
+     * @dev Same as {xref-Address-functionCall-address-bytes-}[`functionCall`],
+     * but performing a delegate call.
+     *
+     * _Available since v3.4._
+     */
+    function functionDelegateCall(address target, bytes memory data) internal returns (bytes memory) {
+        return functionDelegateCall(target, data, "Address: low-level delegate call failed");
+    }
+
+    /**
+     * @dev Same as {xref-Address-functionCall-address-bytes-string-}[`functionCall`],
+     * but performing a delegate call.
+     *
+     * _Available since v3.4._
+     */
+    function functionDelegateCall(address target, bytes memory data, string memory errorMessage) internal returns (bytes memory) {
+        require(isContract(target), "Address: delegate call to non-contract");
+
+        // solhint-disable-next-line avoid-low-level-calls
+        (bool success, bytes memory returndata) = target.delegatecall(data);
+        return _verifyCallResult(success, returndata, errorMessage);
+    }
+
+    function _verifyCallResult(bool success, bytes memory returndata, string memory errorMessage) private pure returns(bytes memory) {
         if (success) {
             return returndata;
         } else {
@@ -606,8 +704,7 @@ library Address {
 
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.6.0;
-
+pragma solidity >=0.6.0 <0.8.0;
 
 
 
@@ -633,7 +730,7 @@ contract ERC1155 is Context, ERC165, IERC1155, IERC1155MetadataURI {
     // Mapping from account to operator approvals
     mapping (address => mapping(address => bool)) private _operatorApprovals;
 
-    // Used as the URI for all token types by relying on ID substition, e.g. https://token-cdn-domain/{id}.json
+    // Used as the URI for all token types by relying on ID substitution, e.g. https://token-cdn-domain/{id}.json
     string private _uri;
 
     /*
@@ -657,8 +754,8 @@ contract ERC1155 is Context, ERC165, IERC1155, IERC1155MetadataURI {
     /**
      * @dev See {_setURI}.
      */
-    constructor (string memory uri) public {
-        _setURI(uri);
+    constructor (string memory uri_) public {
+        _setURI(uri_);
 
         // register the supported interfaces to conform to ERC1155 via ERC165
         _registerInterface(_INTERFACE_ID_ERC1155);
@@ -671,13 +768,13 @@ contract ERC1155 is Context, ERC165, IERC1155, IERC1155MetadataURI {
      * @dev See {IERC1155MetadataURI-uri}.
      *
      * This implementation returns the same URI for *all* token types. It relies
-     * on the token type ID substituion mechanism
+     * on the token type ID substitution mechanism
      * https://eips.ethereum.org/EIPS/eip-1155#metadata[defined in the EIP].
      *
      * Clients calling this function must replace the `\{id\}` substring with the
      * actual token type ID.
      */
-    function uri(uint256) external view override returns (string memory) {
+    function uri(uint256) external view virtual override returns (string memory) {
         return _uri;
     }
 
@@ -688,7 +785,7 @@ contract ERC1155 is Context, ERC165, IERC1155, IERC1155MetadataURI {
      *
      * - `account` cannot be the zero address.
      */
-    function balanceOf(address account, uint256 id) public view override returns (uint256) {
+    function balanceOf(address account, uint256 id) public view virtual override returns (uint256) {
         require(account != address(0), "ERC1155: balance query for the zero address");
         return _balances[id][account];
     }
@@ -706,6 +803,7 @@ contract ERC1155 is Context, ERC165, IERC1155, IERC1155MetadataURI {
     )
         public
         view
+        virtual
         override
         returns (uint256[] memory)
     {
@@ -714,8 +812,7 @@ contract ERC1155 is Context, ERC165, IERC1155, IERC1155MetadataURI {
         uint256[] memory batchBalances = new uint256[](accounts.length);
 
         for (uint256 i = 0; i < accounts.length; ++i) {
-            require(accounts[i] != address(0), "ERC1155: batch balance query for the zero address");
-            batchBalances[i] = _balances[ids[i]][accounts[i]];
+            batchBalances[i] = balanceOf(accounts[i], ids[i]);
         }
 
         return batchBalances;
@@ -734,7 +831,7 @@ contract ERC1155 is Context, ERC165, IERC1155, IERC1155MetadataURI {
     /**
      * @dev See {IERC1155-isApprovedForAll}.
      */
-    function isApprovedForAll(address account, address operator) public view override returns (bool) {
+    function isApprovedForAll(address account, address operator) public view virtual override returns (bool) {
         return _operatorApprovals[account][operator];
     }
 
@@ -813,10 +910,10 @@ contract ERC1155 is Context, ERC165, IERC1155, IERC1155MetadataURI {
 
     /**
      * @dev Sets a new URI for all token types, by relying on the token type ID
-     * substituion mechanism
+     * substitution mechanism
      * https://eips.ethereum.org/EIPS/eip-1155#metadata[defined in the EIP].
      *
-     * By this mechanism, any occurence of the `\{id\}` substring in either the
+     * By this mechanism, any occurrence of the `\{id\}` substring in either the
      * URI or any of the amounts in the JSON file at said URI will be replaced by
      * clients with the token type ID.
      *
@@ -842,7 +939,7 @@ contract ERC1155 is Context, ERC165, IERC1155, IERC1155MetadataURI {
      * Requirements:
      *
      * - `account` cannot be the zero address.
-     * - If `to` refers to a smart contract, it must implement {IERC1155Receiver-onERC1155Received} and return the
+     * - If `account` refers to a smart contract, it must implement {IERC1155Receiver-onERC1155Received} and return the
      * acceptance magic value.
      */
     function _mint(address account, uint256 id, uint256 amount, bytes memory data) internal virtual {
@@ -960,7 +1057,8 @@ contract ERC1155 is Context, ERC165, IERC1155, IERC1155MetadataURI {
         uint256[] memory amounts,
         bytes memory data
     )
-        internal virtual
+        internal
+        virtual
     { }
 
     function _doSafeTransferAcceptanceCheck(
@@ -1034,7 +1132,6 @@ contract Initializable {
 // File: contracts/common/EIP712Base.sol
 
 pragma solidity 0.6.6;
-
 
 contract EIP712Base is Initializable {
     struct EIP712Domain {
@@ -1111,7 +1208,6 @@ contract EIP712Base is Initializable {
 // File: contracts/common/NativeMetaTransaction.sol
 
 pragma solidity 0.6.6;
-
 
 
 contract NativeMetaTransaction is EIP712Base {
@@ -1247,7 +1343,6 @@ abstract contract ContextMixin {
 // It's strictly for testing purpose
 
 pragma solidity 0.6.6;
-
 
 
 

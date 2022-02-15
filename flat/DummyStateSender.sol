@@ -1,4 +1,3 @@
-
 // File: contracts/root/StateSender/IStateSender.sol
 
 pragma solidity 0.6.6;
@@ -10,7 +9,6 @@ interface IStateSender {
 // File: contracts/root/StateSender/DummyStateSender.sol
 
 pragma solidity 0.6.6;
-
 
 /**
 * @notice Dummy State Sender contract to simulate plasma state sender while testing
