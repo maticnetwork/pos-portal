@@ -27,6 +27,21 @@ contract ERC1155Predicate is ITokenPredicate, ERC1155Receiver, AccessControlMixi
         uint256[] amounts
     );
 
+    event ExitedERC1155(
+        address indexed exitor,
+        address indexed rootToken,
+        uint256 id,
+        uint256 amount
+    );
+
+
+    event ExitedBatchERC1155(
+        address indexed exitor,
+        address indexed rootToken,
+        uint256[] ids,
+        uint256[] amounts
+    );
+
     constructor() public {}
 
     function initialize(address _owner) external initializer {
@@ -139,6 +154,8 @@ contract ERC1155Predicate is ITokenPredicate, ERC1155Receiver, AccessControlMixi
                 amount,
                 bytes("")
             );
+            emit ExitedERC1155(withdrawer, rootToken, id, amount);
+
         } else if (bytes32(logTopicRLPList[0].toUint()) == TRANSFER_BATCH_EVENT_SIG) {
             (uint256[] memory ids, uint256[] memory amounts) = abi.decode(
                 logData,
@@ -151,6 +168,8 @@ contract ERC1155Predicate is ITokenPredicate, ERC1155Receiver, AccessControlMixi
                 amounts,
                 bytes("")
             );
+
+            emit ExitedBatchERC1155(withdrawer, rootToken, ids, amounts);
         } else {
             revert("ERC1155Predicate: INVALID_WITHDRAW_SIG");
         }

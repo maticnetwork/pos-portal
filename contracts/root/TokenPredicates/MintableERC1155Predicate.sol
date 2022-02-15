@@ -36,6 +36,21 @@ contract MintableERC1155Predicate is
         uint256[] amounts
     );
 
+    event ExitedMintableERC1155(
+        address indexed exitor,
+        address indexed rootToken,
+        uint256 id,
+        uint256 amount
+    );
+
+
+    event ExitedBatchMintableERC1155(
+        address indexed exitor,
+        address indexed rootToken,
+        uint256[] ids,
+        uint256[] amounts
+    );
+
     constructor() public {}
 
     function initialize(address _owner) external initializer {
@@ -238,6 +253,9 @@ contract MintableERC1155Predicate is
                     bytes("")
                 );
             }
+
+            emit ExitedMintableERC1155(withdrawer, rootToken, id, amount);
+
         } else if (eventSig == TRANSFER_BATCH_EVENT_SIG) {
             (uint256[] memory ids, uint256[] memory amounts) = abi.decode(
                 logData,
@@ -267,6 +285,8 @@ contract MintableERC1155Predicate is
                     bytes("")
                 );
             }
+
+            emit ExitedBatchMintableERC1155(withdrawer, rootToken, ids, amounts);
         } else {
             revert("MintableERC1155Predicate: INVALID_WITHDRAW_SIG");
         }
