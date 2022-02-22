@@ -133,6 +133,7 @@ contract('ERC20Predicate', (accounts) => {
     let oldAccountBalance
     let oldContractBalance
     let exitTokensTx
+    let exitedLog
 
     before(async() => {
       const contracts = await deployer.deployFreshRootContracts(accounts)
@@ -157,6 +158,33 @@ contract('ERC20Predicate', (accounts) => {
       })
       exitTokensTx = await erc20Predicate.exitTokens(withdrawer, dummyERC20.address, burnLog)
       should.exist(exitTokensTx)
+    })
+
+    it('Should emit ExitedERC20 log', () => {
+      const logs = logDecoder.decodeLogs(exitTokensTx.receipt.rawLogs)
+      exitedLog = logs.find(l => l.event === 'ExitedERC20')
+      should.exist(exitedLog)
+    })
+
+    describe('Correct values should be emitted in ExitedERC20 log', () => {
+      it('Event should be emitted by correct contract', () => {
+        exitedLog.address.should.equal(
+          erc20Predicate.address.toLowerCase()
+        )
+      })
+
+      it('Should emit proper withdrawer', () => {
+        exitedLog.args.withdrawer.should.equal(withdrawer)
+      })
+
+      it('Should emit correct amount', () => {
+        const exitedLogAmount = new BN(exitedLog.args.amount.toString())
+        exitedLogAmount.should.be.bignumber.that.equals(withdrawAmount)
+      })
+
+      it('Should emit correct root token', () => {
+        exitedLog.args.rootToken.should.equal(dummyERC20.address)
+      })
     })
 
     it('Withdraw amount should be deducted from contract', async() => {
@@ -184,6 +212,7 @@ contract('ERC20Predicate', (accounts) => {
     let oldAccountBalance
     let oldContractBalance
     let exitTokensTx
+    let exitedLog
 
     before(async() => {
       const contracts = await deployer.deployFreshRootContracts(accounts)
@@ -204,6 +233,33 @@ contract('ERC20Predicate', (accounts) => {
       })
       exitTokensTx = await erc20Predicate.exitTokens(exitCaller, dummyERC20.address, burnLog)
       should.exist(exitTokensTx)
+    })
+
+    it('Should emit ExitedERC20 log', () => {
+      const logs = logDecoder.decodeLogs(exitTokensTx.receipt.rawLogs)
+      exitedLog = logs.find(l => l.event === 'ExitedERC20')
+      should.exist(exitedLog)
+    })
+
+    describe('Correct values should be emitted in ExitedERC20 log', () => {
+      it('Event should be emitted by correct contract', () => {
+        exitedLog.address.should.equal(
+          erc20Predicate.address.toLowerCase()
+        )
+      })
+
+      it('Should emit proper withdrawer', () => {
+        exitedLog.args.withdrawer.should.equal(withdrawer)
+      })
+
+      it('Should emit correct amount', () => {
+        const exitedLogAmount = new BN(exitedLog.args.amount.toString())
+        exitedLogAmount.should.be.bignumber.that.equals(withdrawAmount)
+      })
+
+      it('Should emit correct root token', () => {
+        exitedLog.args.rootToken.should.equal(dummyERC20.address)
+      })
     })
 
     it('Withdraw amount should be deducted from contract', async() => {
