@@ -260,7 +260,7 @@ describe('exitTokens single', () => {
     })
 
     it('Should emit proper withdrawer', () => {
-      exitedLog.args.withdrawer.should.equal(withdrawer)
+      exitedLog.args.exitor.should.equal(withdrawer)
     })
 
     it('Should emit proper root token', () => {
@@ -268,7 +268,7 @@ describe('exitTokens single', () => {
     })
 
     it('Should emit proper token id', () => {
-      const exitedLogTokenId = lockedLog.args.id.toNumber()
+      const exitedLogTokenId = exitedLog.args.id.toNumber()
       exitedLogTokenId.should.equal(tokenId)
     })
 
@@ -372,11 +372,11 @@ describe('exitTokens batch', () => {
     })
 
     it('Should emit proper withdrawer', () => {
-      exitedLog.args.withdrawer.should.equal(withdrawer)
+      exitedLog.args.exitor.should.equal(withdrawer)
     })
 
     it('Should emit proper root token', () => {
-      lockedLog.args.rootToken.should.equal(dummyMintableERC1155.address)
+      exitedLog.args.rootToken.should.equal(dummyMintableERC1155.address)
     })
 
     it('Should emit proper token id for A', () => {
@@ -506,11 +506,11 @@ describe('exitTokens called by different user', () => {
     })
 
     it('Should emit proper withdrawer', () => {
-      exitedLog.args.withdrawer.should.equal(withdrawer)
+      exitedLog.args.exitor.should.equal(withdrawer)
     })
 
     it('Should emit proper root token', () => {
-      lockedLog.args.rootToken.should.equal(dummyMintableERC1155.address)
+      exitedLog.args.rootToken.should.equal(dummyMintableERC1155.address)
     })
 
     it('Should emit proper token id for A', () => {

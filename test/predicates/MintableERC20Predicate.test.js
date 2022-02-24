@@ -283,7 +283,7 @@ contract('MintableERC20Predicate', (accounts) => {
       })
 
       it('Should emit proper withdrawer', () => {
-        exitedLog.args.withdrawer.should.equal(bob)
+        exitedLog.args.exitor.should.equal(bob)
       })
 
       it('Should emit correct root token', () => {

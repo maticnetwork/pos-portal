@@ -261,7 +261,7 @@ contract('ERC721Predicate', (accounts) => {
       })
 
       it('Should emit proper withdrawer', () => {
-        exitedLog.args.withdrawer.should.equal(withdrawer)
+        exitedLog.args.exitor.should.equal(withdrawer)
       })
 
       it('Should emit correct tokenId', () => {
@@ -336,7 +336,7 @@ contract('ERC721Predicate', (accounts) => {
       })
 
       it('Should emit proper withdrawer', () => {
-        exitedLog.args.withdrawer.should.equal(withdrawer)
+        exitedLog.args.exitor.should.equal(withdrawer)
       })
 
       it('Should emit correct tokenId', () => {
@@ -404,7 +404,7 @@ contract('ERC721Predicate', (accounts) => {
       })
 
       it('Should emit proper withdrawer', () => {
-        exitedLog.args.withdrawer.should.equal(withdrawer)
+        exitedLog.args.exitor.should.equal(withdrawer)
       })
 
       it('Should emit correct tokenId', () => {
