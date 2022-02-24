@@ -174,7 +174,7 @@ contract('ERC20Predicate', (accounts) => {
       })
 
       it('Should emit proper withdrawer', () => {
-        exitedLog.args.withdrawer.should.equal(withdrawer)
+        exitedLog.args.exitor.should.equal(withdrawer)
       })
 
       it('Should emit correct amount', () => {
@@ -249,7 +249,7 @@ contract('ERC20Predicate', (accounts) => {
       })
 
       it('Should emit proper withdrawer', () => {
-        exitedLog.args.withdrawer.should.equal(withdrawer)
+        exitedLog.args.exitor.should.equal(withdrawer)
       })
 
       it('Should emit correct amount', () => {

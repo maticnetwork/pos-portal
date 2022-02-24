@@ -220,7 +220,7 @@ contract('ERC1155Predicate', (accounts) => {
       })
 
       it('Should emit proper withdrawer', () => {
-        exitedLog.args.withdrawer.should.equal(withdrawer)
+        exitedLog.args.exitor.should.equal(withdrawer)
       })
 
       it('Should emit proper root token', () => {
@@ -317,7 +317,7 @@ contract('ERC1155Predicate', (accounts) => {
       })
 
       it('Should emit proper withdrawer', () => {
-        exitedLog.args.withdrawer.should.equal(withdrawer)
+        exitedLog.args.exitor.should.equal(withdrawer)
       })
 
       it('Should emit proper root token', () => {
@@ -436,7 +436,7 @@ contract('ERC1155Predicate', (accounts) => {
       })
 
       it('Should emit proper withdrawer', () => {
-        exitedLog.args.withdrawer.should.equal(withdrawer)
+        exitedLog.args.exitor.should.equal(withdrawer)
       })
 
       it('Should emit proper root token', () => {
