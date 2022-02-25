@@ -21,6 +21,7 @@ glob(directoryPath, (err, files) => {
 
   // listing all files using forEach
   files.forEach((file) => {
+    
     const childChainIdHex = parseInt(program.childChainId, 10)
       .toString(16)
       .toUpperCase()
