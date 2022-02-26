@@ -274,7 +274,7 @@ describe('exitTokens single', () => {
 
     it('Should emit proper token amount', () => {
       const exitedLogAmount = new BN(exitedLog.args.amount.toString())
-      exitedLogAmount.should.equal(amount)
+      exitedLogAmount.should.be.a.bignumber.that.equals(amount)
     })
   })
 
