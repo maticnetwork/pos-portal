@@ -108,6 +108,18 @@ module.exports = {
       gas: 7000000,
       gasPrice: 10000000000, // 10 gwei
       skipDryRun: true
+    },
+    rinkeby: {
+      provider: function() {
+        return new HDWalletProvider(
+          MNEMONIC,
+          `https://rinkeby.infura.io/v3/${API_KEY}`
+        )
+      },
+      network_id: 4,
+      gas: 7000000,
+      gasPrice: 20000000000, // 20 gwei
+      skipDryRun: true
     }
   },
 
