@@ -4,6 +4,7 @@ import { AbiCoder, toUtf8Bytes } from 'ethers/utils'
 import {
   erc20TransferEventSig,
   erc721TransferEventSig,
+  erc721WithdrawnBatchEventSig,
   erc721TransferWithMetadataEventSig,
   erc1155TransferSingleEventSig,
   erc1155TransferBatchEventSig,
@@ -43,6 +44,28 @@ export const getERC721TransferLog = ({
       to,
       '0x' + tokenId.toString(16)
     ]
+  ])
+}
+
+export const getERC721WithdrawnBatchLog = ({
+  overrideSig,
+  user,
+  tokenIds
+}) => {
+  return RLP.encode([
+    '0x0',
+    [
+      overrideSig || erc721WithdrawnBatchEventSig,
+      user
+    ],
+    abi.encode(
+      [
+        'uint256[]'
+      ],
+      [
+        tokenIds.map(t => '0x' + t.toString(16))
+      ]
+    )
   ])
 }
 

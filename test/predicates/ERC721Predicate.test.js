@@ -8,7 +8,7 @@ import { expectRevert } from '@openzeppelin/test-helpers'
 import * as deployer from '../helpers/deployer'
 import { mockValues } from '../helpers/constants'
 import logDecoder from '../helpers/log-decoder.js'
-import { getERC721TransferLog, getERC721TransferWithMetadataLog } from '../helpers/logs'
+import { getERC721TransferLog, getERC721WithdrawnBatchLog, getERC721TransferWithMetadataLog } from '../helpers/logs'
 
 // Enable and inject BN dependency
 chai
@@ -276,6 +276,71 @@ contract('ERC721Predicate', (accounts) => {
 
     it('Token should be transferred to withdrawer', async () => {
       const owner = await dummyERC721.ownerOf(tokenId)
+      owner.should.equal(withdrawer)
+    })
+  })
+
+  describe('exitTokens failing with WithdrawnBatch, while passing with Transfer', () => {
+    const tokenIdA = mockValues.numbers[5]
+    const tokenIdB = mockValues.numbers[6]
+    const withdrawer = mockValues.addresses[8]
+    let dummyERC721
+    let erc721Predicate
+    let exitTokensTxA
+    let exitTokensTxB
+
+    before(async () => {
+      const contracts = await deployer.deployFreshRootContracts(accounts)
+
+      dummyERC721 = contracts.dummyERC721
+      erc721Predicate = contracts.erc721Predicate
+
+      await dummyERC721.mint(tokenIdA)
+      await dummyERC721.mint(tokenIdB)
+
+      await dummyERC721.setApprovalForAll(erc721Predicate.address, true);
+
+      const depositData = abi.encode(
+        ['uint256[]'],
+        [
+          [tokenIdA.toString(), tokenIdB.toString()]
+        ]
+      )
+      await erc721Predicate.lockTokens(accounts[0], withdrawer, dummyERC721.address, depositData)
+    })
+
+    it('Predicate should have both tokens', async () => {
+      const ownerA = await dummyERC721.ownerOf(tokenIdA)
+      ownerA.should.equal(erc721Predicate.address)
+
+      const ownerB = await dummyERC721.ownerOf(tokenIdB)
+      ownerB.should.equal(erc721Predicate.address)
+    })
+
+    it('exitTokens should revert with WithdrawnBatch event', async () => {
+      const burnLog = getERC721WithdrawnBatchLog({ user: withdrawer, tokenIds: [tokenIdA, tokenIdB] });
+      await expectRevert(erc721Predicate.exitTokens(withdrawer, dummyERC721.address, burnLog), 'ERC721Predicate: INVALID_SIGNATURE')
+    })
+
+    it('exitTokens should pass with Transfer event', async () => {
+      const burnLog = getERC721TransferLog({ from: withdrawer, to: mockValues.zeroAddress, tokenId: tokenIdA })
+      exitTokensTxA = await erc721Predicate.exitTokens(withdrawer, dummyERC721.address, burnLog)
+      should.exist(exitTokensTxA)
+    })
+
+    it('tokenIdA should be transferred to withdrawer', async () => {
+      const owner = await dummyERC721.ownerOf(tokenIdA)
+      owner.should.equal(withdrawer)
+    })
+
+    it('exitTokens should pass with another Transfer event', async () => {
+      const burnLog = getERC721TransferLog({ from: withdrawer, to: mockValues.zeroAddress, tokenId: tokenIdB })
+      exitTokensTxB = await erc721Predicate.exitTokens(withdrawer, dummyERC721.address, burnLog)
+      should.exist(exitTokensTxA)
+    })
+
+    it('tokenIdB should be transferred to withdrawer', async () => {
+      const owner = await dummyERC721.ownerOf(tokenIdB)
       owner.should.equal(withdrawer)
     })
   })
