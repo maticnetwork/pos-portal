@@ -143,16 +143,6 @@ contract ERC721Predicate is ITokenPredicate, AccessControlMixin, Initializable, 
 
             emit ExitedERC721(withdrawer, rootToken, tokenId);
 
-        } else if (bytes32(logTopicRLPList[0].toUint()) == WITHDRAW_BATCH_EVENT_SIG) { // topic0 is event sig
-            bytes memory logData = logRLPList[2].toBytes();
-            (uint256[] memory tokenIds) = abi.decode(logData, (uint256[])); // data is tokenId list
-            uint256 length = tokenIds.length;
-            for (uint256 i; i < length; i++) {
-                IRootERC721(rootToken).safeTransferFrom(address(this), withdrawer, tokenIds[i]);
-            }
-
-            emit ExitedERC721Batch(withdrawer, rootToken, tokenIds);
-
         } else if (bytes32(logTopicRLPList[0].toUint()) == TRANSFER_WITH_METADATA_EVENT_SIG) { 
             // If this is when NFT exit is done with arbitrary metadata on L2
 
