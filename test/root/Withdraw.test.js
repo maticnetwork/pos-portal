@@ -885,7 +885,9 @@ contract('RootChainManager', async(accounts) => {
     let withdrawTx
     let checkpointData
     let headerNumber
-    let exitTx
+    let exitTx1
+    let exitTx2
+    let exitTx3
 
     before(async() => {
       contracts = await deployer.deployInitializedContracts(accounts)
@@ -982,7 +984,7 @@ contract('RootChainManager', async(accounts) => {
       root.should.equal(headerData.root)
     })
 
-    it('User should be able to exit', async() => {
+    it('User should fail to exit with WithdrawnBatch', async() => {
       const logIndex = withdrawTx.receipt.rawLogs
         .findIndex(log => log.topics[0].toLowerCase() === ERC721_WITHDRAW_BATCH_EVENT_SIG.toLowerCase())
       const data = bufferToHex(
@@ -999,24 +1001,108 @@ contract('RootChainManager', async(accounts) => {
           logIndex
         ])
       )
-      // start exit
-      exitTx = await contracts.root.rootChainManager.exit(data, { from: user })
-      should.exist(exitTx)
+      // attempt exit, but fail due to mismatching event signature
+      // read PR description of https://github.com/maticnetwork/pos-portal-private/pull/1
+      await expectRevert(contracts.root.rootChainManager.exit(data, { from: user }), 'ERC721Predicate: INVALID_SIGNATURE')
     })
 
-    it('User should own tokens on root chain', async() => {
-      {
-        const owner = await rootToken.ownerOf(tokenId1)
-        owner.should.equal(user)
-      }
-      {
-        const owner = await rootToken.ownerOf(tokenId2)
-        owner.should.equal(user)
-      }
-      {
-        const owner = await rootToken.ownerOf(tokenId3)
-        owner.should.equal(user)
-      }
+    it('User should be able to exit tokenId1 with Transfer', async() => {
+      const logIndices = []
+      withdrawTx.receipt.rawLogs.forEach((e, i) => {
+        if (e.topics[0].toLowerCase() === ERC721_TRANSFER_EVENT_SIG.toLowerCase()) {
+          logIndices.push(i)
+        }
+      })
+      chai.assert(logIndices.length == 3, 'three tokens were burnt !')
+
+      const data = bufferToHex(
+        rlp.encode([
+          headerNumber,
+          bufferToHex(Buffer.concat(checkpointData.proof)),
+          checkpointData.number,
+          checkpointData.timestamp,
+          bufferToHex(checkpointData.transactionsRoot),
+          bufferToHex(checkpointData.receiptsRoot),
+          bufferToHex(checkpointData.receipt),
+          bufferToHex(rlp.encode(checkpointData.receiptParentNodes)),
+          bufferToHex(checkpointData.path), // branch mask,
+          logIndices[0]
+        ])
+      )
+      // start exit, must go through
+      exitTx1 = contracts.root.rootChainManager.exit(data, { from: user })
+      should.exist(exitTx1)
+    })
+
+    it('User should own tokenId1 on root chain', async() => {
+      const owner = await rootToken.ownerOf(tokenId1)
+      owner.should.equal(user)
+    })
+
+    it('User should be able to exit tokenId2 with Transfer', async() => {
+      const logIndices = []
+      withdrawTx.receipt.rawLogs.forEach((e, i) => {
+        if (e.topics[0].toLowerCase() === ERC721_TRANSFER_EVENT_SIG.toLowerCase()) {
+          logIndices.push(i)
+        }
+      })
+      chai.assert(logIndices.length == 3, 'three tokens were burnt !')
+
+      const data = bufferToHex(
+        rlp.encode([
+          headerNumber,
+          bufferToHex(Buffer.concat(checkpointData.proof)),
+          checkpointData.number,
+          checkpointData.timestamp,
+          bufferToHex(checkpointData.transactionsRoot),
+          bufferToHex(checkpointData.receiptsRoot),
+          bufferToHex(checkpointData.receipt),
+          bufferToHex(rlp.encode(checkpointData.receiptParentNodes)),
+          bufferToHex(checkpointData.path), // branch mask,
+          logIndices[1]
+        ])
+      )
+      // start exit, must go through
+      exitTx2 = contracts.root.rootChainManager.exit(data, { from: user })
+      should.exist(exitTx2)
+    })
+
+    it('User should own tokenId2 on root chain', async() => {
+      const owner = await rootToken.ownerOf(tokenId2)
+      owner.should.equal(user)
+    })
+
+    it('User should be able to exit tokenId2 with Transfer', async() => {
+      const logIndices = []
+      withdrawTx.receipt.rawLogs.forEach((e, i) => {
+        if (e.topics[0].toLowerCase() === ERC721_TRANSFER_EVENT_SIG.toLowerCase()) {
+          logIndices.push(i)
+        }
+      })
+      chai.assert(logIndices.length == 3, 'three tokens were burnt !')
+
+      const data = bufferToHex(
+        rlp.encode([
+          headerNumber,
+          bufferToHex(Buffer.concat(checkpointData.proof)),
+          checkpointData.number,
+          checkpointData.timestamp,
+          bufferToHex(checkpointData.transactionsRoot),
+          bufferToHex(checkpointData.receiptsRoot),
+          bufferToHex(checkpointData.receipt),
+          bufferToHex(rlp.encode(checkpointData.receiptParentNodes)),
+          bufferToHex(checkpointData.path), // branch mask,
+          logIndices[2]
+        ])
+      )
+      // start exit, must go through
+      exitTx3 = contracts.root.rootChainManager.exit(data, { from: user })
+      should.exist(exitTx3)
+    })
+
+    it('User should own tokenId3 on root chain', async() => {
+      const owner = await rootToken.ownerOf(tokenId3)
+      owner.should.equal(user)
     })
 
     it('Tokens should not exist on child chain', async() => {
@@ -1262,167 +1348,6 @@ contract('RootChainManager', async(accounts) => {
       newContractBalance.should.be.a.bignumber.that.equals(
         contractBalance.sub(withdrawAmount)
       )
-    })
-  })
-
-  describe('Withdraw batch ERC721', async() => {
-    const tokenId1 = mockValues.numbers[4]
-    const tokenId2 = mockValues.numbers[5]
-    const tokenId3 = mockValues.numbers[8]
-    const user = accounts[0]
-    const depositData = abi.encode(
-      ['uint256[]'],
-      [
-        [tokenId1.toString(), tokenId2.toString(), tokenId3.toString()]
-      ]
-    )
-    let contracts
-    let rootToken
-    let childToken
-    let rootChainManager
-    let checkpointManager
-    let erc721Predicate
-    let withdrawTx
-    let checkpointData
-    let headerNumber
-    let exitTx
-
-    before(async() => {
-      contracts = await deployer.deployInitializedContracts(accounts)
-      rootToken = contracts.root.dummyERC721
-      childToken = contracts.child.dummyERC721
-      rootChainManager = contracts.root.rootChainManager
-      checkpointManager = contracts.root.checkpointManager
-      erc721Predicate = contracts.root.erc721Predicate
-      await rootToken.mint(tokenId1)
-      await rootToken.mint(tokenId2)
-      await rootToken.mint(tokenId3)
-    })
-
-    it('User should own tokens on root chain', async() => {
-      {
-        const owner = await rootToken.ownerOf(tokenId1)
-        owner.should.equal(user)
-      }
-      {
-        const owner = await rootToken.ownerOf(tokenId2)
-        owner.should.equal(user)
-      }
-      {
-        const owner = await rootToken.ownerOf(tokenId3)
-        owner.should.equal(user)
-      }
-    })
-
-    it('Tokens should not exist on child chain', async() => {
-      await expectRevert(childToken.ownerOf(tokenId1), 'ERC721: owner query for nonexistent token')
-      await expectRevert(childToken.ownerOf(tokenId2), 'ERC721: owner query for nonexistent token')
-      await expectRevert(childToken.ownerOf(tokenId3), 'ERC721: owner query for nonexistent token')
-    })
-
-    it('User should be able to approve and deposit', async() => {
-      await rootToken.setApprovalForAll(erc721Predicate.address, true)
-      const depositTx = await rootChainManager.depositFor(user, rootToken.address, depositData)
-      should.exist(depositTx)
-      const syncTx = await syncState({ tx: depositTx })
-      should.exist(syncTx)
-    })
-
-    it('Predicate should own tokens on root chain', async() => {
-      {
-        const owner = await rootToken.ownerOf(tokenId1)
-        owner.should.equal(erc721Predicate.address)
-      }
-      {
-        const owner = await rootToken.ownerOf(tokenId2)
-        owner.should.equal(erc721Predicate.address)
-      }
-      {
-        const owner = await rootToken.ownerOf(tokenId3)
-        owner.should.equal(erc721Predicate.address)
-      }
-    })
-
-    it('User should own tokens on child chain', async() => {
-      {
-        const owner = await childToken.ownerOf(tokenId1)
-        owner.should.equal(user)
-      }
-      {
-        const owner = await childToken.ownerOf(tokenId2)
-        owner.should.equal(user)
-      }
-      {
-        const owner = await childToken.ownerOf(tokenId3)
-        owner.should.equal(user)
-      }
-    })
-
-    it('User should be able to start withdraw', async() => {
-      withdrawTx = await childToken.withdrawBatch([tokenId1, tokenId2, tokenId3])
-      should.exist(withdrawTx)
-    })
-
-    it('Should submit checkpoint', async() => {
-      // submit checkpoint including burn (withdraw) tx
-      checkpointData = await submitCheckpoint(checkpointManager, withdrawTx.receipt)
-      should.exist(checkpointData)
-    })
-
-    it('Should match checkpoint details', async() => {
-      const root = bufferToHex(checkpointData.header.root)
-      should.exist(root)
-
-      // fetch latest header number
-      headerNumber = await checkpointManager.currentCheckpointNumber()
-      headerNumber.should.be.bignumber.gt('0')
-
-      // fetch header block details and validate
-      const headerData = await checkpointManager.headerBlocks(headerNumber)
-      root.should.equal(headerData.root)
-    })
-
-    it('User should be able to exit', async() => {
-      const logIndex = withdrawTx.receipt.rawLogs
-        .findIndex(log => log.topics[0].toLowerCase() === ERC721_WITHDRAW_BATCH_EVENT_SIG.toLowerCase())
-      const data = bufferToHex(
-        rlp.encode([
-          headerNumber,
-          bufferToHex(Buffer.concat(checkpointData.proof)),
-          checkpointData.number,
-          checkpointData.timestamp,
-          bufferToHex(checkpointData.transactionsRoot),
-          bufferToHex(checkpointData.receiptsRoot),
-          bufferToHex(checkpointData.receipt),
-          bufferToHex(rlp.encode(checkpointData.receiptParentNodes)),
-          bufferToHex(checkpointData.path), // branch mask,
-          logIndex
-        ])
-      )
-      // start exit
-      exitTx = await contracts.root.rootChainManager.exit(data, { from: user })
-      should.exist(exitTx)
-    })
-
-    it('User should own tokens on root chain', async() => {
-      {
-        const owner = await rootToken.ownerOf(tokenId1)
-        owner.should.equal(user)
-      }
-      {
-        const owner = await rootToken.ownerOf(tokenId2)
-        owner.should.equal(user)
-      }
-      {
-        const owner = await rootToken.ownerOf(tokenId3)
-        owner.should.equal(user)
-      }
-    })
-
-    it('Tokens should not exist on child chain', async() => {
-      await expectRevert(childToken.ownerOf(tokenId1), 'ERC721: owner query for nonexistent token')
-      await expectRevert(childToken.ownerOf(tokenId2), 'ERC721: owner query for nonexistent token')
-      await expectRevert(childToken.ownerOf(tokenId3), 'ERC721: owner query for nonexistent token')
     })
   })
 
