@@ -1,3 +1,4 @@
+
 // File: @openzeppelin/contracts/introspection/IERC165.sol
 
 // SPDX-License-Identifier: MIT
@@ -30,6 +31,7 @@ interface IERC165 {
 // SPDX-License-Identifier: MIT
 
 pragma solidity ^0.6.2;
+
 
 /**
  * @dev Required interface of an ERC721 compliant contract.
@@ -558,6 +560,7 @@ library RLPReader {
 
 pragma solidity 0.6.6;
 
+
 /// @title Token predicate interface for all pos portal predicates
 /// @notice Abstract interface that defines methods for custom predicates
 interface ITokenPredicate {
@@ -1031,6 +1034,7 @@ pragma solidity ^0.6.0;
 
 
 
+
 /**
  * @dev Contract module that allows children to implement role-based access
  * control mechanisms.
@@ -1245,6 +1249,7 @@ abstract contract AccessControl is Context {
 
 pragma solidity 0.6.6;
 
+
 contract AccessControlMixin is AccessControl {
     string private _revertMsg;
     function _setupContractId(string memory contractId) internal {
@@ -1269,6 +1274,7 @@ pragma solidity 0.6.6;
 
 
 
+
 contract ERC721Predicate is ITokenPredicate, AccessControlMixin, Initializable, IERC721Receiver {
     using RLPReader for bytes;
     using RLPReader for RLPReader.RLPItem;
@@ -1277,8 +1283,6 @@ contract ERC721Predicate is ITokenPredicate, AccessControlMixin, Initializable, 
     bytes32 public constant TOKEN_TYPE = keccak256("ERC721");
     // keccak256("Transfer(address,address,uint256)")
     bytes32 public constant TRANSFER_EVENT_SIG = 0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef;
-    // keccak256("WithdrawnBatch(address,uint256[])")
-    bytes32 public constant WITHDRAW_BATCH_EVENT_SIG = 0xf871896b17e9cb7a64941c62c188a4f5c621b86800e3d15452ece01ce56073df;
     // keccak256("TransferWithMetadata(address,address,uint256,bytes)")
     bytes32 public constant TRANSFER_WITH_METADATA_EVENT_SIG = 0xf94915c6d1fd521cee85359239227480c7e8776d7caf1fc3bacad5c269b66a14;
 
@@ -1404,16 +1408,6 @@ contract ERC721Predicate is ITokenPredicate, AccessControlMixin, Initializable, 
             );
 
             emit ExitedERC721(withdrawer, rootToken, tokenId);
-
-        } else if (bytes32(logTopicRLPList[0].toUint()) == WITHDRAW_BATCH_EVENT_SIG) { // topic0 is event sig
-            bytes memory logData = logRLPList[2].toBytes();
-            (uint256[] memory tokenIds) = abi.decode(logData, (uint256[])); // data is tokenId list
-            uint256 length = tokenIds.length;
-            for (uint256 i; i < length; i++) {
-                IRootERC721(rootToken).safeTransferFrom(address(this), withdrawer, tokenIds[i]);
-            }
-
-            emit ExitedERC721Batch(withdrawer, rootToken, tokenIds);
 
         } else if (bytes32(logTopicRLPList[0].toUint()) == TRANSFER_WITH_METADATA_EVENT_SIG) { 
             // If this is when NFT exit is done with arbitrary metadata on L2

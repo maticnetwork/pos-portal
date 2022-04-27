@@ -15,8 +15,6 @@ contract ERC721Predicate is ITokenPredicate, AccessControlMixin, Initializable, 
     bytes32 public constant TOKEN_TYPE = keccak256("ERC721");
     // keccak256("Transfer(address,address,uint256)")
     bytes32 public constant TRANSFER_EVENT_SIG = 0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef;
-    // keccak256("WithdrawnBatch(address,uint256[])")
-    bytes32 public constant WITHDRAW_BATCH_EVENT_SIG = 0xf871896b17e9cb7a64941c62c188a4f5c621b86800e3d15452ece01ce56073df;
     // keccak256("TransferWithMetadata(address,address,uint256,bytes)")
     bytes32 public constant TRANSFER_WITH_METADATA_EVENT_SIG = 0xf94915c6d1fd521cee85359239227480c7e8776d7caf1fc3bacad5c269b66a14;
 
