@@ -1072,7 +1072,7 @@ contract('RootChainManager', async(accounts) => {
       owner.should.equal(user)
     })
 
-    it('User should be able to exit tokenId2 with Transfer', async() => {
+    it('User should be able to exit tokenId3 with Transfer', async() => {
       const logIndices = []
       withdrawTx.receipt.rawLogs.forEach((e, i) => {
         if (e.topics[0].toLowerCase() === ERC721_TRANSFER_EVENT_SIG.toLowerCase()) {

@@ -336,7 +336,7 @@ contract('ERC721Predicate', (accounts) => {
     it('exitTokens should pass with another Transfer event', async () => {
       const burnLog = getERC721TransferLog({ from: withdrawer, to: mockValues.zeroAddress, tokenId: tokenIdB })
       exitTokensTxB = await erc721Predicate.exitTokens(withdrawer, dummyERC721.address, burnLog)
-      should.exist(exitTokensTxA)
+      should.exist(exitTokensTxB)
     })
 
     it('tokenIdB should be transferred to withdrawer', async () => {
@@ -345,8 +345,7 @@ contract('ERC721Predicate', (accounts) => {
     })
   })
 
-  describe('exitTokens with `TransferWithMetadata` event signature', () => {
-
+  describe('exitTokens failing with TransferWithMetadata, while passing with Transfer', () => {
     const tokenId = mockValues.numbers[5]
     const withdrawer = mockValues.addresses[8]
     const metaData = 'https://nft.matic.network'
@@ -375,7 +374,7 @@ contract('ERC721Predicate', (accounts) => {
       owner.should.equal(erc721Predicate.address)
     })
 
-    it('Should be able to receive exitTokens tx', async () => {
+    it('exitTokens should revert with TransferWithMetadata event', async () => {
       const burnLog = getERC721TransferWithMetadataLog({
         from: withdrawer,
         to: mockValues.zeroAddress,
@@ -383,6 +382,11 @@ contract('ERC721Predicate', (accounts) => {
         metaData
       })
 
+      await expectRevert(erc721Predicate.exitTokens(withdrawer, dummyERC721.address, burnLog), 'ERC721Predicate: INVALID_SIGNATURE')
+    })
+
+    it('exitTokens should pass with Transfer event', async () => {
+      const burnLog = getERC721TransferLog({ from: withdrawer, to: mockValues.zeroAddress, tokenId: tokenId })
       exitTokensTx = await erc721Predicate.exitTokens(withdrawer, dummyERC721.address, burnLog)
       should.exist(exitTokensTx)
     })
@@ -418,12 +422,6 @@ contract('ERC721Predicate', (accounts) => {
       const owner = await dummyERC721.ownerOf(tokenId)
       owner.should.equal(withdrawer)
     })
-
-    it('Token URI should match with transferred metadata', async () => {
-      const _metaData = await dummyERC721.tokenURI(tokenId)
-      _metaData.should.equal(metaData)
-    })
-
   })
 
   describe('exitTokens called by different user', () => {
