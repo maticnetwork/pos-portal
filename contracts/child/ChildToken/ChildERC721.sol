@@ -17,9 +17,7 @@ contract ChildERC721 is
 
     // limit batching of tokens due to gas limit restrictions
     uint256 public constant BATCH_LIMIT = 20;
-
     event WithdrawnBatch(address indexed user, uint256[] tokenIds);
-    event TransferWithMetadata(address indexed from, address indexed to, uint256 indexed tokenId, bytes metaData);
 
     constructor(
         string memory name_,
@@ -95,42 +93,5 @@ contract ChildERC721 is
             _burn(tokenId);
         }
         emit WithdrawnBatch(_msgSender(), tokenIds);
-    }
-
-    /**
-     * @notice called when user wants to withdraw token back to root chain with arbitrary metadata
-     * @dev Should handle withraw by burning user's token.
-     * 
-     * This transaction will be verified when exiting on root chain
-     *
-     * @param tokenId tokenId to withdraw
-     */
-    function withdrawWithMetadata(uint256 tokenId) external {
-
-        require(_msgSender() == ownerOf(tokenId), "ChildERC721: INVALID_TOKEN_OWNER");
-
-        // Encoding metadata associated with tokenId & emitting event
-        emit TransferWithMetadata(_msgSender(), address(0), tokenId, this.encodeTokenMetadata(tokenId));
-
-        _burn(tokenId);
-
-    }
-
-    /**
-     * @notice This method is supposed to be called by client when withdrawing token with metadata
-     * and pass return value of this function as second paramter of `withdrawWithMetadata` method
-     *
-     * It can be overridden by clients to encode data in a different form, which needs to
-     * be decoded back by them correctly during exiting
-     *
-     * @param tokenId Token for which URI to be fetched
-     */
-    function encodeTokenMetadata(uint256 tokenId) external view virtual returns (bytes memory) {
-
-        // You're always free to change this default implementation
-        // and pack more data in byte array which can be decoded back
-        // in L1
-        return abi.encode(tokenURI(tokenId));
-
     }
 }
