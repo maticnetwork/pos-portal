@@ -1,3 +1,4 @@
+
 // File: @openzeppelin/contracts/GSN/Context.sol
 
 // SPDX-License-Identifier: MIT
@@ -57,6 +58,7 @@ interface IERC165 {
 // SPDX-License-Identifier: MIT
 
 pragma solidity ^0.6.2;
+
 
 /**
  * @dev Required interface of an ERC721 compliant contract.
@@ -188,6 +190,7 @@ interface IERC721 is IERC165 {
 
 pragma solidity ^0.6.2;
 
+
 /**
  * @title ERC-721 Non-Fungible Token Standard, optional metadata extension
  * @dev See https://eips.ethereum.org/EIPS/eip-721
@@ -215,6 +218,7 @@ interface IERC721Metadata is IERC721 {
 // SPDX-License-Identifier: MIT
 
 pragma solidity ^0.6.2;
+
 
 /**
  * @title ERC-721 Non-Fungible Token Standard, optional enumeration extension
@@ -270,6 +274,7 @@ interface IERC721Receiver {
 // SPDX-License-Identifier: MIT
 
 pragma solidity ^0.6.0;
+
 
 /**
  * @dev Implementation of the {IERC165} interface.
@@ -1165,6 +1170,7 @@ pragma solidity ^0.6.0;
 
 
 
+
 /**
  * @title ERC721 Non-Fungible Token Standard basic implementation
  * @dev see https://eips.ethereum.org/EIPS/eip-721
@@ -1631,6 +1637,7 @@ pragma solidity ^0.6.0;
 
 
 
+
 /**
  * @dev Contract module that allows children to implement role-based access
  * control mechanisms.
@@ -1845,6 +1852,7 @@ abstract contract AccessControl is Context {
 
 pragma solidity 0.6.6;
 
+
 contract AccessControlMixin is AccessControl {
     string private _revertMsg;
     function _setupContractId(string memory contractId) internal {
@@ -1885,6 +1893,7 @@ contract Initializable {
 // File: contracts/common/EIP712Base.sol
 
 pragma solidity 0.6.6;
+
 
 contract EIP712Base is Initializable {
     struct EIP712Domain {
@@ -1961,6 +1970,7 @@ contract EIP712Base is Initializable {
 // File: contracts/common/NativeMetaTransaction.sol
 
 pragma solidity 0.6.6;
+
 
 
 contract NativeMetaTransaction is EIP712Base {
@@ -2098,6 +2108,7 @@ pragma solidity 0.6.6;
 
 
 
+
 contract ChildERC721 is
     ERC721,
     IChildToken,
@@ -2109,9 +2120,7 @@ contract ChildERC721 is
 
     // limit batching of tokens due to gas limit restrictions
     uint256 public constant BATCH_LIMIT = 20;
-
     event WithdrawnBatch(address indexed user, uint256[] tokenIds);
-    event TransferWithMetadata(address indexed from, address indexed to, uint256 indexed tokenId, bytes metaData);
 
     constructor(
         string memory name_,
@@ -2187,42 +2196,5 @@ contract ChildERC721 is
             _burn(tokenId);
         }
         emit WithdrawnBatch(_msgSender(), tokenIds);
-    }
-
-    /**
-     * @notice called when user wants to withdraw token back to root chain with arbitrary metadata
-     * @dev Should handle withraw by burning user's token.
-     * 
-     * This transaction will be verified when exiting on root chain
-     *
-     * @param tokenId tokenId to withdraw
-     */
-    function withdrawWithMetadata(uint256 tokenId) external {
-
-        require(_msgSender() == ownerOf(tokenId), "ChildERC721: INVALID_TOKEN_OWNER");
-
-        // Encoding metadata associated with tokenId & emitting event
-        emit TransferWithMetadata(_msgSender(), address(0), tokenId, this.encodeTokenMetadata(tokenId));
-
-        _burn(tokenId);
-
-    }
-
-    /**
-     * @notice This method is supposed to be called by client when withdrawing token with metadata
-     * and pass return value of this function as second paramter of `withdrawWithMetadata` method
-     *
-     * It can be overridden by clients to encode data in a different form, which needs to
-     * be decoded back by them correctly during exiting
-     *
-     * @param tokenId Token for which URI to be fetched
-     */
-    function encodeTokenMetadata(uint256 tokenId) external view virtual returns (bytes memory) {
-
-        // You're always free to change this default implementation
-        // and pack more data in byte array which can be decoded back
-        // in L1
-        return abi.encode(tokenURI(tokenId));
-
     }
 }
