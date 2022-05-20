@@ -1811,6 +1811,36 @@ contract ChildMintableERC1155 is
         _burnBatch(_msgSender(), ids, amounts);
     }
 
+     /**
+     * @notice called when user wants to withdraw single token back to root chain
+     * @dev Should transfer and burn user's tokens. This transaction will be verified when exiting on root chain
+     * @param recipient address that will receive the token on the root chain
+     * @param id id to withdraw
+     * @param amount amount to withdraw
+     */
+    function withdrawForSingle(address recipient, uint256 id, uint256 amount) external {
+        address sender = _msgSender();
+
+        safeTransferFrom(sender, recipient, id, amount, bytes(""));
+        _burn(recipient, id, amount);
+    }
+
+    /**
+     * @notice called when user wants to batch withdraw tokens back to root chain
+     * @dev Should transfer burn user's tokens. This transaction will be verified when exiting on root chain
+     * @param recipient address that will receive the token on the root chain
+     * @param ids ids to withdraw
+     * @param amounts amounts to withdraw
+     */
+    function withdrawForBatch(address recipient, uint256[] calldata ids, uint256[] calldata amounts)
+        external
+    {
+         address sender = _msgSender();
+
+        safeBatchTransferFrom(sender, recipient, ids, amounts, bytes(""));
+        _burnBatch(recipient, ids, amounts);
+    }
+
     /**
      * @notice See definition of `_mint` in ERC1155 contract
      * @dev This implementation only allows admins to mint tokens
