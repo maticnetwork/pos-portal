@@ -1,4 +1,3 @@
-
 // File: @openzeppelin/contracts/token/ERC721/IERC721Receiver.sol
 
 // SPDX-License-Identifier: MIT
@@ -449,7 +448,6 @@ pragma solidity ^0.6.0;
 
 
 
-
 /**
  * @dev Contract module that allows children to implement role-based access
  * control mechanisms.
@@ -663,7 +661,6 @@ abstract contract AccessControl is Context {
 // File: contracts/common/AccessControlMixin.sol
 
 pragma solidity 0.6.6;
-
 
 contract AccessControlMixin is AccessControl {
     string private _revertMsg;
@@ -1074,7 +1071,6 @@ interface IERC165 {
 
 pragma solidity ^0.6.2;
 
-
 /**
  * @dev Required interface of an ERC721 compliant contract.
  */
@@ -1238,7 +1234,6 @@ interface IMintableERC721 is IERC721 {
 
 pragma solidity 0.6.6;
 
-
 /// @title Token predicate interface for all pos portal predicates
 /// @notice Abstract interface that defines methods for custom predicates
 interface ITokenPredicate {
@@ -1296,7 +1291,6 @@ pragma solidity 0.6.6;
 
 
 
-
 contract MintableERC721Predicate is ITokenPredicate, AccessControlMixin, Initializable, IERC721Receiver {
     using RLPReader for bytes;
     using RLPReader for RLPReader.RLPItem;
@@ -1325,6 +1319,18 @@ contract MintableERC721Predicate is ITokenPredicate, AccessControlMixin, Initial
     event LockedMintableERC721Batch(
         address indexed depositor,
         address indexed depositReceiver,
+        address indexed rootToken,
+        uint256[] tokenIds
+    );
+
+    event ExitedMintableERC721(
+        address indexed exitor,
+        address indexed rootToken,
+        uint256 tokenId
+    );
+
+    event ExitedMintableERC721Batch(
+        address indexed exitor,
         address indexed rootToken,
         uint256[] tokenIds
     );
@@ -1453,6 +1459,8 @@ contract MintableERC721Predicate is ITokenPredicate, AccessControlMixin, Initial
                 token.mint(withdrawer, tokenId);
             }
 
+            emit ExitedMintableERC721(withdrawer, rootToken, tokenId);
+
         } else if (bytes32(logTopicRLPList[0].toUint()) == WITHDRAW_BATCH_EVENT_SIG) { // topic0 is event sig
             // If it's a simple batch exit, where a set of
             // ERC721s were burnt in child chain with event signature
@@ -1493,6 +1501,8 @@ contract MintableERC721Predicate is ITokenPredicate, AccessControlMixin, Initial
 
             }
 
+            emit ExitedMintableERC721Batch(withdrawer, rootToken, tokenIds);
+
         } else if (bytes32(logTopicRLPList[0].toUint()) == TRANSFER_WITH_METADATA_EVENT_SIG) { 
             // If this is NFT exit with metadata i.e. URI 👆
             //
@@ -1530,6 +1540,8 @@ contract MintableERC721Predicate is ITokenPredicate, AccessControlMixin, Initial
                 
                 token.mint(withdrawer, tokenId, metaData);
             }
+
+            emit ExitedMintableERC721(withdrawer, rootToken, tokenId);
 
         } else {
             // Attempting to exit with some event signature from L2, which is

@@ -1,4 +1,3 @@
-
 // File: @openzeppelin/contracts/token/ERC20/IERC20.sol
 
 // SPDX-License-Identifier: MIT
@@ -537,7 +536,6 @@ pragma solidity ^0.6.0;
 
 
 
-
 /**
  * @dev Contract module that allows children to implement role-based access
  * control mechanisms.
@@ -752,7 +750,6 @@ abstract contract AccessControl is Context {
 
 pragma solidity 0.6.6;
 
-
 contract AccessControlMixin is AccessControl {
     string private _revertMsg;
     function _setupContractId(string memory contractId) internal {
@@ -779,8 +776,6 @@ interface IStateReceiver {
 // File: contracts/child/ChildChainManager/ChildChainManager.sol
 
 pragma solidity 0.6.6;
-
-
 
 
 

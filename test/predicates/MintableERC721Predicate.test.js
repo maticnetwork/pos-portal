@@ -153,6 +153,7 @@ contract('MintableERC721Predicate', (accounts) => {
     let dummyMintableERC721
     let mintableERC721Predicate
     let exitTokensTx
+    let exitedLog
 
     before(async () => {
       const contracts = await deployer.deployFreshRootContracts(accounts)
@@ -174,6 +175,33 @@ contract('MintableERC721Predicate', (accounts) => {
       })
       exitTokensTx = await mintableERC721Predicate.exitTokens(alice, dummyMintableERC721.address, burnLog)
       should.exist(exitTokensTx)
+    })
+
+    it('Should emit ExitedMintableERC721 log', () => {
+      const logs = logDecoder.decodeLogs(exitTokensTx.receipt.rawLogs)
+      exitedLog = logs.find(l => l.event === 'ExitedMintableERC721')
+      should.exist(exitedLog)
+    })
+
+    describe('Correct values should be emitted in ExitedMintableERC721 log', () => {
+      it('Event should be emitted by correct contract', () => {
+        exitedLog.address.should.equal(
+          mintableERC721Predicate.address.toLowerCase()
+        )
+      })
+
+      it('Should emit proper withdrawer', () => {
+        exitedLog.args.exitor.should.equal(alice)
+      })
+
+      it('Should emit correct tokenId', () => {
+        const exitedLogTokenId = exitedLog.args.tokenId.toNumber()
+        exitedLogTokenId.should.equal(tokenId)
+      })
+
+      it('Should emit correct root token', () => {
+        exitedLog.args.rootToken.should.equal(dummyMintableERC721.address)
+      })
     })
 
     it('Token should be minted for alice', async () => {
@@ -218,6 +246,8 @@ contract('MintableERC721Predicate', (accounts) => {
     let dummyMintableERC721
     let mintableERC721Predicate
     let exitTokensTx
+    let exitedLog0
+    let exitedLog1
 
     before(async () => {
       const contracts = await deployer.deployFreshRootContracts(accounts)
@@ -235,6 +265,33 @@ contract('MintableERC721Predicate', (accounts) => {
       })
       exitTokensTx = await mintableERC721Predicate.exitTokens(exitCaller, dummyMintableERC721.address, burnLog)
       should.exist(exitTokensTx)
+    })
+
+    it('Should emit ExitedMintableERC721 log', () => {
+      const logs = logDecoder.decodeLogs(exitTokensTx.receipt.rawLogs)
+      exitedLog0 = logs.find(l => l.event === 'ExitedMintableERC721')
+      should.exist(exitedLog0)
+    })
+
+    describe('Correct values should be emitted in ExitedMintableERC721 log', () => {
+      it('Event should be emitted by correct contract', () => {
+        exitedLog0.address.should.equal(
+          mintableERC721Predicate.address.toLowerCase()
+        )
+      })
+
+      it('Should emit proper withdrawer', () => {
+        exitedLog0.args.exitor.should.equal(alice)
+      })
+
+      it('Should emit correct tokenId', () => {
+        const exitedLogTokenId = exitedLog0.args.tokenId.toNumber()
+        exitedLogTokenId.should.equal(tokenId)
+      })
+
+      it('Should emit correct root token', () => {
+        exitedLog0.args.rootToken.should.equal(dummyMintableERC721.address)
+      })
     })
 
     it('Token should be minted for alice', async () => {
@@ -264,6 +321,33 @@ contract('MintableERC721Predicate', (accounts) => {
       should.exist(exitTokensTx)
     })
 
+    it('Should emit ExitedMintableERC721 log', () => {
+      const logs = logDecoder.decodeLogs(exitTokensTx.receipt.rawLogs)
+      exitedLog1 = logs.find(l => l.event === 'ExitedMintableERC721')
+      should.exist(exitedLog1)
+    })
+
+    describe('Correct values should be emitted in ExitedMintableERC721 log', () => {
+      it('Event should be emitted by correct contract', () => {
+        exitedLog1.address.should.equal(
+          mintableERC721Predicate.address.toLowerCase()
+        )
+      })
+
+      it('Should emit proper withdrawer', () => {
+        exitedLog1.args.exitor.should.equal(bob)
+      })
+
+      it('Should emit correct tokenId', () => {
+        const exitedLogTokenId = exitedLog1.args.tokenId.toNumber()
+        exitedLogTokenId.should.equal(tokenId)
+      })
+
+      it('Should emit correct root token', () => {
+        exitedLog1.args.rootToken.should.equal(dummyMintableERC721.address)
+      })
+    })
+
     it('Token should be transfered to bob', async () => {
       const owner = await dummyMintableERC721.ownerOf(tokenId)
       owner.should.equal(bob)
@@ -279,6 +363,7 @@ contract('MintableERC721Predicate', (accounts) => {
     let dummyMintableERC721
     let mintableERC721Predicate
     let exitTokensTx
+    let exitedLog
 
     before(async () => {
       const contracts = await deployer.deployFreshRootContracts(accounts)
@@ -298,6 +383,33 @@ contract('MintableERC721Predicate', (accounts) => {
 
       exitTokensTx = await mintableERC721Predicate.exitTokens(withdrawer, dummyMintableERC721.address, burnLog)
       should.exist(exitTokensTx)
+    })
+
+    it('Should emit ExitedMintableERC721 log', () => {
+      const logs = logDecoder.decodeLogs(exitTokensTx.receipt.rawLogs)
+      exitedLog = logs.find(l => l.event === 'ExitedMintableERC721')
+      should.exist(exitedLog)
+    })
+
+    describe('Correct values should be emitted in ExitedMintableERC721 log', () => {
+      it('Event should be emitted by correct contract', () => {
+        exitedLog.address.should.equal(
+          mintableERC721Predicate.address.toLowerCase()
+        )
+      })
+
+      it('Should emit proper withdrawer', () => {
+        exitedLog.args.exitor.should.equal(withdrawer)
+      })
+
+      it('Should emit correct tokenId', () => {
+        const exitedLogTokenId = exitedLog.args.tokenId.toNumber()
+        exitedLogTokenId.should.equal(tokenId)
+      })
+
+      it('Should emit correct root token', () => {
+        exitedLog.args.rootToken.should.equal(dummyMintableERC721.address)
+      })
     })
 
     it('Token should be transfered to withdrawer', async () => {

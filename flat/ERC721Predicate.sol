@@ -1,4 +1,3 @@
-
 // File: @openzeppelin/contracts/introspection/IERC165.sol
 
 // SPDX-License-Identifier: MIT
@@ -31,7 +30,6 @@ interface IERC165 {
 // SPDX-License-Identifier: MIT
 
 pragma solidity ^0.6.2;
-
 
 /**
  * @dev Required interface of an ERC721 compliant contract.
@@ -560,7 +558,6 @@ library RLPReader {
 
 pragma solidity 0.6.6;
 
-
 /// @title Token predicate interface for all pos portal predicates
 /// @notice Abstract interface that defines methods for custom predicates
 interface ITokenPredicate {
@@ -1034,7 +1031,6 @@ pragma solidity ^0.6.0;
 
 
 
-
 /**
  * @dev Contract module that allows children to implement role-based access
  * control mechanisms.
@@ -1249,7 +1245,6 @@ abstract contract AccessControl is Context {
 
 pragma solidity 0.6.6;
 
-
 contract AccessControlMixin is AccessControl {
     string private _revertMsg;
     function _setupContractId(string memory contractId) internal {
@@ -1268,7 +1263,6 @@ contract AccessControlMixin is AccessControl {
 // File: contracts/root/TokenPredicates/ERC721Predicate.sol
 
 pragma solidity 0.6.6;
-
 
 
 
@@ -1300,6 +1294,18 @@ contract ERC721Predicate is ITokenPredicate, AccessControlMixin, Initializable, 
     event LockedERC721Batch(
         address indexed depositor,
         address indexed depositReceiver,
+        address indexed rootToken,
+        uint256[] tokenIds
+    );
+
+    event ExitedERC721(
+        address indexed exitor,
+        address indexed rootToken,
+        uint256 tokenId
+    );
+
+    event ExitedERC721Batch(
+        address indexed exitor,
         address indexed rootToken,
         uint256[] tokenIds
     );
@@ -1389,11 +1395,15 @@ contract ERC721Predicate is ITokenPredicate, AccessControlMixin, Initializable, 
                 "ERC721Predicate: INVALID_RECEIVER"
             );
 
+            uint256 tokenId = logTopicRLPList[3].toUint(); // topic3 is tokenId field
+
             IRootERC721(rootToken).safeTransferFrom(
                 address(this),
                 withdrawer,
-                logTopicRLPList[3].toUint() // topic3 is tokenId field
+                tokenId
             );
+
+            emit ExitedERC721(withdrawer, rootToken, tokenId);
 
         } else if (bytes32(logTopicRLPList[0].toUint()) == WITHDRAW_BATCH_EVENT_SIG) { // topic0 is event sig
             bytes memory logData = logRLPList[2].toBytes();
@@ -1402,6 +1412,8 @@ contract ERC721Predicate is ITokenPredicate, AccessControlMixin, Initializable, 
             for (uint256 i; i < length; i++) {
                 IRootERC721(rootToken).safeTransferFrom(address(this), withdrawer, tokenIds[i]);
             }
+
+            emit ExitedERC721Batch(withdrawer, rootToken, tokenIds);
 
         } else if (bytes32(logTopicRLPList[0].toUint()) == TRANSFER_WITH_METADATA_EVENT_SIG) { 
             // If this is when NFT exit is done with arbitrary metadata on L2
@@ -1425,6 +1437,8 @@ contract ERC721Predicate is ITokenPredicate, AccessControlMixin, Initializable, 
             bytes memory metaData = abi.decode(logData, (bytes));
 
             token.setTokenMetadata(tokenId, metaData);
+
+            emit ExitedERC721(withdrawer, rootToken, tokenId);
 
         } else {
             revert("ERC721Predicate: INVALID_SIGNATURE");

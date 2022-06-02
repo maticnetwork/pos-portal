@@ -1,4 +1,3 @@
-
 // File: @openzeppelin/contracts/math/SafeMath.sol
 
 // SPDX-License-Identifier: MIT
@@ -239,7 +238,6 @@ contract ICheckpointManager {
 // File: contracts/root/RootChainManager/RootChainManagerStorage.sol
 
 pragma solidity 0.6.6;
-
 
 
 abstract contract RootChainManagerStorage {
@@ -618,7 +616,6 @@ library RLPReader {
 
 pragma solidity 0.6.6;
 
-
 library ExitPayloadReader {
   using RLPReader for bytes;
   using RLPReader for RLPReader.RLPItem;
@@ -787,7 +784,6 @@ library ExitPayloadReader {
  * @dev Library for verifing merkle patricia proofs.
  */
 pragma solidity 0.6.6;
-
 
 library MerklePatriciaProof {
     /*
@@ -989,7 +985,6 @@ library Merkle {
 
 pragma solidity 0.6.6;
 
-
 /// @title Token predicate interface for all pos portal predicates
 /// @notice Abstract interface that defines methods for custom predicates
 interface ITokenPredicate {
@@ -1041,7 +1036,6 @@ contract Initializable {
 // File: contracts/common/EIP712Base.sol
 
 pragma solidity 0.6.6;
-
 
 contract EIP712Base is Initializable {
     struct EIP712Domain {
@@ -1118,7 +1112,6 @@ contract EIP712Base is Initializable {
 // File: contracts/common/NativeMetaTransaction.sol
 
 pragma solidity 0.6.6;
-
 
 
 contract NativeMetaTransaction is EIP712Base {
@@ -1646,7 +1639,6 @@ pragma solidity ^0.6.0;
 
 
 
-
 /**
  * @dev Contract module that allows children to implement role-based access
  * control mechanisms.
@@ -1861,7 +1853,6 @@ abstract contract AccessControl is Context {
 
 pragma solidity 0.6.6;
 
-
 contract AccessControlMixin is AccessControl {
     string private _revertMsg;
     function _setupContractId(string memory contractId) internal {
@@ -1907,7 +1898,6 @@ abstract contract ContextMixin {
 // File: contracts/root/RootChainManager/RootChainManager.sol
 
 pragma solidity 0.6.6;
-
 
 
 

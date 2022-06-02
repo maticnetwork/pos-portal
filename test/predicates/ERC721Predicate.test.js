@@ -232,6 +232,7 @@ contract('ERC721Predicate', (accounts) => {
     let dummyERC721
     let erc721Predicate
     let exitTokensTx
+    let exitedLog
 
     before(async () => {
       const contracts = await deployer.deployFreshRootContracts(accounts)
@@ -258,6 +259,33 @@ contract('ERC721Predicate', (accounts) => {
       should.exist(exitTokensTx)
     })
 
+    it('Should emit ExitedERC721 log', () => {
+      const logs = logDecoder.decodeLogs(exitTokensTx.receipt.rawLogs)
+      exitedLog = logs.find(l => l.event === 'ExitedERC721')
+      should.exist(exitedLog)
+    })
+
+    describe('Correct values should be emitted in ExitedERC721 log', () => {
+      it('Event should be emitted by correct contract', () => {
+        exitedLog.address.should.equal(
+          erc721Predicate.address.toLowerCase()
+        )
+      })
+
+      it('Should emit proper withdrawer', () => {
+        exitedLog.args.exitor.should.equal(withdrawer)
+      })
+
+      it('Should emit correct tokenId', () => {
+        const exitedLogTokenId = exitedLog.args.tokenId.toNumber()
+        exitedLogTokenId.should.equal(tokenId)
+      })
+
+      it('Should emit correct root token', () => {
+        exitedLog.args.rootToken.should.equal(dummyERC721.address)
+      })
+    })
+
     it('Token should be transferred to withdrawer', async () => {
       const owner = await dummyERC721.ownerOf(tokenId)
       owner.should.equal(withdrawer)
@@ -273,6 +301,7 @@ contract('ERC721Predicate', (accounts) => {
     let dummyERC721
     let erc721Predicate
     let exitTokensTx
+    let exitedLog
 
     before(async () => {
       const contracts = await deployer.deployFreshRootContracts(accounts)
@@ -305,6 +334,33 @@ contract('ERC721Predicate', (accounts) => {
       should.exist(exitTokensTx)
     })
 
+    it('Should emit ExitedERC721 log', () => {
+      const logs = logDecoder.decodeLogs(exitTokensTx.receipt.rawLogs)
+      exitedLog = logs.find(l => l.event === 'ExitedERC721')
+      should.exist(exitedLog)
+    })
+
+    describe('Correct values should be emitted in ExitedERC721 log', () => {
+      it('Event should be emitted by correct contract', () => {
+        exitedLog.address.should.equal(
+          erc721Predicate.address.toLowerCase()
+        )
+      })
+
+      it('Should emit proper withdrawer', () => {
+        exitedLog.args.exitor.should.equal(withdrawer)
+      })
+
+      it('Should emit correct tokenId', () => {
+        const exitedLogTokenId = exitedLog.args.tokenId.toNumber()
+        exitedLogTokenId.should.equal(tokenId)
+      })
+
+      it('Should emit correct root token', () => {
+        exitedLog.args.rootToken.should.equal(dummyERC721.address)
+      })
+    })
+
     it('Token should be transferred to withdrawer', async () => {
       const owner = await dummyERC721.ownerOf(tokenId)
       owner.should.equal(withdrawer)
@@ -324,6 +380,7 @@ contract('ERC721Predicate', (accounts) => {
     let dummyERC721
     let erc721Predicate
     let exitTokensTx
+    let exitedLog
 
     before(async () => {
       const contracts = await deployer.deployFreshRootContracts(accounts)
@@ -343,6 +400,33 @@ contract('ERC721Predicate', (accounts) => {
       })
       exitTokensTx = await erc721Predicate.exitTokens(exitCaller, dummyERC721.address, burnLog)
       should.exist(exitTokensTx)
+    })
+
+    it('Should emit ExitedERC721 log', () => {
+      const logs = logDecoder.decodeLogs(exitTokensTx.receipt.rawLogs)
+      exitedLog = logs.find(l => l.event === 'ExitedERC721')
+      should.exist(exitedLog)
+    })
+
+    describe('Correct values should be emitted in ExitedERC721 log', () => {
+      it('Event should be emitted by correct contract', () => {
+        exitedLog.address.should.equal(
+          erc721Predicate.address.toLowerCase()
+        )
+      })
+
+      it('Should emit proper withdrawer', () => {
+        exitedLog.args.exitor.should.equal(withdrawer)
+      })
+
+      it('Should emit correct tokenId', () => {
+        const exitedLogTokenId = exitedLog.args.tokenId.toNumber()
+        exitedLogTokenId.should.equal(tokenId)
+      })
+
+      it('Should emit correct root token', () => {
+        exitedLog.args.rootToken.should.equal(dummyERC721.address)
+      })
     })
 
     it('Token should be transferred to withdrawer', async () => {

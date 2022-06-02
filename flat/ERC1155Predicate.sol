@@ -1,4 +1,3 @@
-
 // File: @openzeppelin/contracts/introspection/IERC165.sol
 
 // SPDX-License-Identifier: MIT
@@ -31,7 +30,6 @@ interface IERC165 {
 // SPDX-License-Identifier: MIT
 
 pragma solidity ^0.6.2;
-
 
 /**
  * @dev Required interface of an ERC1155 compliant contract, as defined in the
@@ -137,7 +135,6 @@ interface IERC1155 is IERC165 {
 
 pragma solidity ^0.6.0;
 
-
 /**
  * _Available since v3.1._
  */
@@ -196,7 +193,6 @@ interface IERC1155Receiver is IERC165 {
 
 pragma solidity ^0.6.0;
 
-
 /**
  * @dev Implementation of the {IERC165} interface.
  *
@@ -251,7 +247,6 @@ contract ERC165 is IERC165 {
 // SPDX-License-Identifier: MIT
 
 pragma solidity ^0.6.0;
-
 
 
 /**
@@ -691,7 +686,6 @@ pragma solidity ^0.6.0;
 
 
 
-
 /**
  * @dev Contract module that allows children to implement role-based access
  * control mechanisms.
@@ -905,7 +899,6 @@ abstract contract AccessControl is Context {
 // File: contracts/common/AccessControlMixin.sol
 
 pragma solidity 0.6.6;
-
 
 contract AccessControlMixin is AccessControl {
     string private _revertMsg;
@@ -1287,7 +1280,6 @@ library RLPReader {
 
 pragma solidity 0.6.6;
 
-
 /// @title Token predicate interface for all pos portal predicates
 /// @notice Abstract interface that defines methods for custom predicates
 interface ITokenPredicate {
@@ -1345,7 +1337,6 @@ pragma solidity 0.6.6;
 
 
 
-
 contract ERC1155Predicate is ITokenPredicate, ERC1155Receiver, AccessControlMixin, Initializable {
     using RLPReader for bytes;
     using RLPReader for RLPReader.RLPItem;
@@ -1361,6 +1352,21 @@ contract ERC1155Predicate is ITokenPredicate, ERC1155Receiver, AccessControlMixi
     event LockedBatchERC1155(
         address indexed depositor,
         address indexed depositReceiver,
+        address indexed rootToken,
+        uint256[] ids,
+        uint256[] amounts
+    );
+
+    event ExitedERC1155(
+        address indexed exitor,
+        address indexed rootToken,
+        uint256 id,
+        uint256 amount
+    );
+
+
+    event ExitedBatchERC1155(
+        address indexed exitor,
         address indexed rootToken,
         uint256[] ids,
         uint256[] amounts
@@ -1478,6 +1484,8 @@ contract ERC1155Predicate is ITokenPredicate, ERC1155Receiver, AccessControlMixi
                 amount,
                 bytes("")
             );
+            emit ExitedERC1155(withdrawer, rootToken, id, amount);
+
         } else if (bytes32(logTopicRLPList[0].toUint()) == TRANSFER_BATCH_EVENT_SIG) {
             (uint256[] memory ids, uint256[] memory amounts) = abi.decode(
                 logData,
@@ -1490,6 +1498,8 @@ contract ERC1155Predicate is ITokenPredicate, ERC1155Receiver, AccessControlMixi
                 amounts,
                 bytes("")
             );
+
+            emit ExitedBatchERC1155(withdrawer, rootToken, ids, amounts);
         } else {
             revert("ERC1155Predicate: INVALID_WITHDRAW_SIG");
         }
