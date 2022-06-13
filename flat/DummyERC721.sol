@@ -1,3 +1,4 @@
+
 // File: @openzeppelin/contracts/GSN/Context.sol
 
 // SPDX-License-Identifier: MIT
@@ -57,6 +58,7 @@ interface IERC165 {
 // SPDX-License-Identifier: MIT
 
 pragma solidity ^0.6.2;
+
 
 /**
  * @dev Required interface of an ERC721 compliant contract.
@@ -188,6 +190,7 @@ interface IERC721 is IERC165 {
 
 pragma solidity ^0.6.2;
 
+
 /**
  * @title ERC-721 Non-Fungible Token Standard, optional metadata extension
  * @dev See https://eips.ethereum.org/EIPS/eip-721
@@ -215,6 +218,7 @@ interface IERC721Metadata is IERC721 {
 // SPDX-License-Identifier: MIT
 
 pragma solidity ^0.6.2;
+
 
 /**
  * @title ERC-721 Non-Fungible Token Standard, optional enumeration extension
@@ -270,6 +274,7 @@ interface IERC721Receiver {
 // SPDX-License-Identifier: MIT
 
 pragma solidity ^0.6.0;
+
 
 /**
  * @dev Implementation of the {IERC165} interface.
@@ -1165,6 +1170,7 @@ pragma solidity ^0.6.0;
 
 
 
+
 /**
  * @title ERC721 Non-Fungible Token Standard basic implementation
  * @dev see https://eips.ethereum.org/EIPS/eip-721
@@ -1631,6 +1637,7 @@ pragma solidity ^0.6.0;
 
 
 
+
 /**
  * @dev Contract module that allows children to implement role-based access
  * control mechanisms.
@@ -1845,6 +1852,7 @@ abstract contract AccessControl is Context {
 
 pragma solidity 0.6.6;
 
+
 contract AccessControlMixin is AccessControl {
     string private _revertMsg;
     function _setupContractId(string memory contractId) internal {
@@ -1877,6 +1885,7 @@ contract Initializable {
 // File: contracts/common/EIP712Base.sol
 
 pragma solidity 0.6.6;
+
 
 contract EIP712Base is Initializable {
     struct EIP712Domain {
@@ -1953,6 +1962,7 @@ contract EIP712Base is Initializable {
 // File: contracts/common/NativeMetaTransaction.sol
 
 pragma solidity 0.6.6;
+
 
 
 contract NativeMetaTransaction is EIP712Base {
@@ -2055,19 +2065,6 @@ contract NativeMetaTransaction is EIP712Base {
     }
 }
 
-// File: contracts/root/RootToken/IRootERC721.sol
-
-pragma solidity 0.6.6;
-
-interface IRootERC721 is IERC721 {
-
-    // Make sure you implement this method is root ERC721
-    // contract when you're interested in transferring
-    // metadata from L2 to L1
-    function setTokenMetadata(uint256 tokenId, bytes calldata data) external;
-
-}
-
 // File: contracts/common/ContextMixin.sol
 
 pragma solidity 0.6.6;
@@ -2110,7 +2107,6 @@ contract DummyERC721 is
     ERC721,
     AccessControlMixin,
     NativeMetaTransaction,
-    IRootERC721,
     ContextMixin
 {
     bytes32 public constant PREDICATE_ROLE = keccak256("PREDICATE_ROLE");
@@ -2126,30 +2122,6 @@ contract DummyERC721 is
 
     function mint(uint256 tokenId) public {
         _mint(_msgSender(), tokenId);
-    }
-
-    /**
-     * If you're attempting to bring metadata associated with token
-     * from L2 to L1, you must implement this method
-     *
-     * To be invoked when attempting to exit ERC721 with metadata from L2
-     *
-     * `data` is nothing but arbitrary byte array which
-     * is brought in L1, by event emitted in L2, during withdraw
-     *
-     * Make sure this method is always callable by Predicate contract
-     * who will invoke it when attempting to exit with metadata
-     */
-    function setTokenMetadata(uint256 tokenId, bytes calldata data) external override only(PREDICATE_ROLE) {
-        // This function should decode metadata obtained from L2
-        // and attempt to set it for this `tokenId`
-        //
-        // Following is just a default implementation, feel
-        // free to define your own encoding/ decoding scheme
-        // for L2 -> L1 token metadata transfer
-        string memory uri = abi.decode(data, (string));
-
-        _setTokenURI(tokenId, uri);
     }
 
     function _msgSender()
