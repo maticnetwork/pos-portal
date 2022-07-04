@@ -41,6 +41,8 @@ library ExitPayloadReader {
             dest += WORD_SIZE;
         }
 
+        if (len == 0) return;
+
         // left over bytes. Mask is used to remove unwanted bytes from the word
         uint mask = 256 ** (WORD_SIZE - len) - 1;
         assembly {
