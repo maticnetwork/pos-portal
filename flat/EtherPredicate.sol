@@ -1,3 +1,4 @@
+
 // File: @openzeppelin/contracts/utils/EnumerableSet.sol
 
 // SPDX-License-Identifier: MIT
@@ -423,6 +424,7 @@ pragma solidity ^0.6.0;
 
 
 
+
 /**
  * @dev Contract module that allows children to implement role-based access
  * control mechanisms.
@@ -636,6 +638,7 @@ abstract contract AccessControl is Context {
 // File: contracts/common/AccessControlMixin.sol
 
 pragma solidity 0.6.6;
+
 
 contract AccessControlMixin is AccessControl {
     string private _revertMsg;
@@ -1017,6 +1020,7 @@ library RLPReader {
 
 pragma solidity 0.6.6;
 
+
 /// @title Token predicate interface for all pos portal predicates
 /// @notice Abstract interface that defines methods for custom predicates
 interface ITokenPredicate {
@@ -1068,6 +1072,7 @@ contract Initializable {
 // File: contracts/root/TokenPredicates/EtherPredicate.sol
 
 pragma solidity 0.6.6;
+
 
 
 

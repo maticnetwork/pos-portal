@@ -1,3 +1,4 @@
+
 // File: @openzeppelin/contracts/token/ERC721/IERC721Receiver.sol
 
 // SPDX-License-Identifier: MIT
@@ -448,6 +449,7 @@ pragma solidity ^0.6.0;
 
 
 
+
 /**
  * @dev Contract module that allows children to implement role-based access
  * control mechanisms.
@@ -661,6 +663,7 @@ abstract contract AccessControl is Context {
 // File: contracts/common/AccessControlMixin.sol
 
 pragma solidity 0.6.6;
+
 
 contract AccessControlMixin is AccessControl {
     string private _revertMsg;
@@ -1071,6 +1074,7 @@ interface IERC165 {
 
 pragma solidity ^0.6.2;
 
+
 /**
  * @dev Required interface of an ERC721 compliant contract.
  */
@@ -1234,6 +1238,7 @@ interface IMintableERC721 is IERC721 {
 
 pragma solidity 0.6.6;
 
+
 /// @title Token predicate interface for all pos portal predicates
 /// @notice Abstract interface that defines methods for custom predicates
 interface ITokenPredicate {
@@ -1285,6 +1290,7 @@ contract Initializable {
 // File: contracts/root/TokenPredicates/MintableERC721Predicate.sol
 
 pragma solidity 0.6.6;
+
 
 
 

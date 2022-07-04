@@ -1,3 +1,4 @@
+
 // File: @openzeppelin/contracts/introspection/IERC165.sol
 
 // SPDX-License-Identifier: MIT
@@ -30,6 +31,7 @@ interface IERC165 {
 // SPDX-License-Identifier: MIT
 
 pragma solidity ^0.6.2;
+
 
 /**
  * @dev Required interface of an ERC1155 compliant contract, as defined in the
@@ -135,6 +137,7 @@ interface IERC1155 is IERC165 {
 
 pragma solidity ^0.6.2;
 
+
 /**
  * @dev Interface of the optional ERC1155MetadataExtension interface, as defined
  * in the https://eips.ethereum.org/EIPS/eip-1155#metadata-extensions[EIP].
@@ -156,6 +159,7 @@ interface IERC1155MetadataURI is IERC1155 {
 // SPDX-License-Identifier: MIT
 
 pragma solidity ^0.6.0;
+
 
 /**
  * _Available since v3.1._
@@ -241,6 +245,7 @@ abstract contract Context {
 // SPDX-License-Identifier: MIT
 
 pragma solidity ^0.6.0;
+
 
 /**
  * @dev Implementation of the {IERC165} interface.
@@ -602,6 +607,7 @@ library Address {
 // SPDX-License-Identifier: MIT
 
 pragma solidity ^0.6.0;
+
 
 
 
@@ -1265,6 +1271,7 @@ pragma solidity ^0.6.0;
 
 
 
+
 /**
  * @dev Contract module that allows children to implement role-based access
  * control mechanisms.
@@ -1479,6 +1486,7 @@ abstract contract AccessControl is Context {
 
 pragma solidity 0.6.6;
 
+
 contract AccessControlMixin is AccessControl {
     string private _revertMsg;
     function _setupContractId(string memory contractId) internal {
@@ -1519,6 +1527,7 @@ contract Initializable {
 // File: contracts/common/EIP712Base.sol
 
 pragma solidity 0.6.6;
+
 
 contract EIP712Base is Initializable {
     struct EIP712Domain {
@@ -1595,6 +1604,7 @@ contract EIP712Base is Initializable {
 // File: contracts/common/NativeMetaTransaction.sol
 
 pragma solidity 0.6.6;
+
 
 
 contract NativeMetaTransaction is EIP712Base {
@@ -1727,6 +1737,7 @@ abstract contract ContextMixin {
 // File: contracts/child/ChildToken/ChildMintableERC1155.sol
 
 pragma solidity 0.6.6;
+
 
 
 

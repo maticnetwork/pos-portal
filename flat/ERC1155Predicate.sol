@@ -1,3 +1,4 @@
+
 // File: @openzeppelin/contracts/introspection/IERC165.sol
 
 // SPDX-License-Identifier: MIT
@@ -30,6 +31,7 @@ interface IERC165 {
 // SPDX-License-Identifier: MIT
 
 pragma solidity ^0.6.2;
+
 
 /**
  * @dev Required interface of an ERC1155 compliant contract, as defined in the
@@ -135,6 +137,7 @@ interface IERC1155 is IERC165 {
 
 pragma solidity ^0.6.0;
 
+
 /**
  * _Available since v3.1._
  */
@@ -193,6 +196,7 @@ interface IERC1155Receiver is IERC165 {
 
 pragma solidity ^0.6.0;
 
+
 /**
  * @dev Implementation of the {IERC165} interface.
  *
@@ -247,6 +251,7 @@ contract ERC165 is IERC165 {
 // SPDX-License-Identifier: MIT
 
 pragma solidity ^0.6.0;
+
 
 
 /**
@@ -686,6 +691,7 @@ pragma solidity ^0.6.0;
 
 
 
+
 /**
  * @dev Contract module that allows children to implement role-based access
  * control mechanisms.
@@ -899,6 +905,7 @@ abstract contract AccessControl is Context {
 // File: contracts/common/AccessControlMixin.sol
 
 pragma solidity 0.6.6;
+
 
 contract AccessControlMixin is AccessControl {
     string private _revertMsg;
@@ -1280,6 +1287,7 @@ library RLPReader {
 
 pragma solidity 0.6.6;
 
+
 /// @title Token predicate interface for all pos portal predicates
 /// @notice Abstract interface that defines methods for custom predicates
 interface ITokenPredicate {
@@ -1331,6 +1339,7 @@ contract Initializable {
 // File: contracts/root/TokenPredicates/ERC1155Predicate.sol
 
 pragma solidity 0.6.6;
+
 
 
 

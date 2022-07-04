@@ -1,3 +1,4 @@
+
 // File: contracts/common/Proxy/IERCProxy.sol
 
 pragma solidity 0.6.6;
@@ -11,6 +12,7 @@ interface IERCProxy {
 // File: contracts/common/Proxy/Proxy.sol
 
 pragma solidity 0.6.6;
+
 
 abstract contract Proxy is IERCProxy {
     function delegatedFwd(address _dst, bytes memory _calldata) internal {
@@ -52,6 +54,7 @@ abstract contract Proxy is IERCProxy {
 // File: contracts/common/Proxy/UpgradableProxy.sol
 
 pragma solidity 0.6.6;
+
 
 contract UpgradableProxy is Proxy {
     event ProxyUpdated(address indexed _new, address indexed _old);
@@ -156,6 +159,7 @@ contract UpgradableProxy is Proxy {
 // File: contracts/root/TokenPredicates/EtherPredicateProxy.sol
 
 pragma solidity 0.6.6;
+
 
 contract EtherPredicateProxy is UpgradableProxy {
     constructor(address _proxyTo)

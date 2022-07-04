@@ -1,3 +1,4 @@
+
 // File: @openzeppelin/contracts/math/SafeMath.sol
 
 // SPDX-License-Identifier: MIT
@@ -585,6 +586,7 @@ pragma solidity ^0.6.0;
 
 
 
+
 /**
  * @dev Contract module that allows children to implement role-based access
  * control mechanisms.
@@ -798,6 +800,7 @@ abstract contract AccessControl is Context {
 // File: contracts/common/AccessControlMixin.sol
 
 pragma solidity 0.6.6;
+
 
 contract AccessControlMixin is AccessControl {
     string private _revertMsg;
@@ -1193,6 +1196,7 @@ library RLPReader {
  */
 pragma solidity 0.6.6;
 
+
 library MerklePatriciaProof {
     /*
      * @dev Verifies a merkle patricia proof.
@@ -1413,6 +1417,7 @@ library Merkle {
 
 pragma solidity 0.6.6;
 
+
 library ExitPayloadReader {
   using RLPReader for bytes;
   using RLPReader for RLPReader.RLPItem;
@@ -1451,6 +1456,8 @@ library ExitPayloadReader {
             src += WORD_SIZE;
             dest += WORD_SIZE;
         }
+
+        if (len == 0) return;
 
         // left over bytes. Mask is used to remove unwanted bytes from the word
         uint mask = 256 ** (WORD_SIZE - len) - 1;
@@ -1575,6 +1582,8 @@ library ExitPayloadReader {
 // File: contracts/tunnel/BaseRootTunnel.sol
 
 pragma solidity 0.6.6;
+
+
 
 
 
@@ -1787,6 +1796,8 @@ abstract contract BaseRootTunnel is AccessControlMixin {
 // File: contracts/tunnel/RootTunnel.sol
 
 pragma solidity 0.6.6;
+
+
 
 contract RootTunnel is BaseRootTunnel {
     function _processMessageFromChild(bytes memory message) internal override {

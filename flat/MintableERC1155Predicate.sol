@@ -1368,6 +1368,16 @@ contract Initializable {
 
 // File: contracts/root/TokenPredicates/MintableERC1155Predicate.sol
 
+pragma solidity 0.6.6;
+
+
+    ERC1155Receiver
+} from "@openzeppelin/contracts/token/ERC1155/ERC1155Receiver.sol";
+
+
+
+
+
 contract MintableERC1155Predicate is
     ITokenPredicate,
     ERC1155Receiver,
