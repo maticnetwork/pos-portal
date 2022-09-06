@@ -79,6 +79,6 @@
     "truffle-flattener": "^1.4.4"
   },
   "dependencies": {
-    "ganache-cli": "^6.9.1"
+    "ganache-cli": "^6.12.2"
   }
 }
