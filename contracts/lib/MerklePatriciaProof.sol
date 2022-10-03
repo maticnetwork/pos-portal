@@ -97,6 +97,7 @@ library MerklePatriciaProof {
                 return false;
             }
         }
+        return false; // default
     }
 
     function _nibblesToTraverse(
