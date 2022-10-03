@@ -28,6 +28,8 @@ contract UChildDAI is UChildERC20 {
         bytes32 r,
         bytes32 s
     ) external {
+        require(holder != address(0), "UChildDAI: HOLDER-ZERO");
+
         bytes32 digest = keccak256(
             abi.encodePacked(
                 "\x19\x01",
