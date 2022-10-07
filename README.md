@@ -1,8 +1,8 @@
-# Matic PoS (Proof-of-Stake) portal contracts
+# Shibarium PoS (Proof-of-Stake) portal contracts
 
 ![Build Status](https://github.com/maticnetwork/pos-portal/workflows/CI/badge.svg)
 
-Smart contracts that powers the PoS (proof-of-stake) based bridge mechanism for [Matic Network](https://matic.network). 
+Smart contracts that powers the PoS (proof-of-stake) based bridge mechanism for [Shibarium Network](https://matic.network). 
 
 Audit - [Matic Audit CertiK Report.pdf](https://github.com/maticnetwork/pos-portal/files/5404262/Matic.Audit.CertiK.Report.pdf)
 
