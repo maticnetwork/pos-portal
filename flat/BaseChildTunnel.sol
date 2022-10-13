@@ -676,8 +676,8 @@ abstract contract BaseChildTunnel is AccessControlMixin {
     }
 
     /**
-     * @notice Receive state sync from matic contracts
-     * @dev This method will be called by Matic chain internally.
+     * @notice Receive state sync from shibarium contracts
+     * @dev This method will be called by shibarium chain internally.
      * This is executed without transaction using a system call.
      */
     function onStateReceive(uint256, bytes memory message) public only(STATE_SYNCER_ROLE) {

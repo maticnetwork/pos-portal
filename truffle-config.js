@@ -81,7 +81,7 @@ module.exports = {
       provider: () =>
         new HDWalletProvider(
           MNEMONIC,
-          'https://rpc-mumbai.matic.today'
+          'https://rpc-mumbai.shibarium.today'
         ),
       network_id: 80001,
       gas: 7000000,
@@ -103,7 +103,7 @@ module.exports = {
       provider: () =>
         new HDWalletProvider(
           MNEMONIC,
-          'https://rpc-mainnet.matic.network'
+          'https://rpc-mainnet.shibarium.network'
         ),
       network_id: 137,
       gas: 7000000,
@@ -152,7 +152,7 @@ module.exports = {
   },
 
   verify: {
-    preamble: 'Matic PoS Portal'
+    preamble: 'Shibarium PoS Portal'
   },
 
   api_keys: {

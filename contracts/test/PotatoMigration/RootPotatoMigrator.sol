@@ -7,7 +7,7 @@ import "../../root/RootChainManager/IRootChainManager.sol";
 // This contract enables deposit and plant deom single tx on ethereum chain
 // First potatoes are transferred to this contract
 // Then they are deposited to ChildPotatoMigrator contract
-// Then a custom state sync is sent to ChildPotatoMigrator, using this the potatoes will be planted on matic chain
+// Then a custom state sync is sent to ChildPotatoMigrator, using this the potatoes will be planted on shibarium chain
 contract RootPotatoMigrator {
   IStateSender stateSender;
   IERC20 potato;

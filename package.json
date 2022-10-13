@@ -1,7 +1,7 @@
 {
-  "name": "@maticnetwork/pos-portal",
+  "name": "@shibarmy/pos-portal",
   "version": "1.5.2",
-  "description": "Contracts to facilitate transfer of assets between Ethereum Main Network and Matic Network, using security of Matic POS layer",
+  "description": "Contracts to facilitate transfer of assets between Ethereum Main Network and Shibarium Network, using security of Shibarium POS layer",
   "main": "index.js",
   "scripts": {
     "testrpc": "ganache-cli --hardfork istanbul --mnemonic 'clock radar mass judge dismiss just intact mind resemble fringe diary casino' --gasLimit 8000000 --gasPrice 0 --port 9545 --networkId 53227",
@@ -28,14 +28,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/maticnetwork/pos-portal.git"
+    "url": "git+https://github.com/shibarmy/pos-portal.git"
   },
   "author": "",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/maticnetwork/pos-portal/issues"
+    "url": "https://github.com/shibarmy/pos-portal/issues"
   },
-  "homepage": "https://github.com/maticnetwork/pos-portal#readme",
+  "homepage": "https://github.com/shibarmy/pos-portal#readme",
   "config": {
     "mnemonics": "clock radar mass judge dismiss just intact mind resemble fringe diary casino"
   },

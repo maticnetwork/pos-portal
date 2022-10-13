@@ -67,7 +67,7 @@ contract ChildMintableERC20 is
     }
 
     /**
-     * @notice Example function to handle minting tokens on matic chain
+     * @notice Example function to handle minting tokens on shibarium chain
      * @dev Minting can be done as per requirement,
      * This implementation allows only admin to mint tokens but it can be changed as per requirement
      * @param user user for whom tokens are being minted
