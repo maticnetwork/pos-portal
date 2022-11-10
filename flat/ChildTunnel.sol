@@ -709,6 +709,6 @@ pragma solidity 0.6.6;
 
 contract ChildTunnel is BaseChildTunnel {
     function _processMessageFromRoot(bytes memory message) internal override {
-      // implement your core logic here
+      // you can implement custom message processing logic here
     }
 }
