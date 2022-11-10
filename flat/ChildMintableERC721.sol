@@ -2007,7 +2007,7 @@ contract NativeMetaTransaction is EIP712Base {
         );
 
         // increase nonce for user (to avoid re-use)
-        nonces[userAddress] = nonces[userAddress].add(1);
+        ++nonces[userAddress];
 
         emit MetaTransactionExecuted(
             userAddress,
