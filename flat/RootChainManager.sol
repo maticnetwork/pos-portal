@@ -2148,7 +2148,7 @@ contract RootChainManager is
     /**
      * @notice Move ether from root to child chain, accepts ether transfer
      * Keep in mind this ether cannot be used to pay gas on child chain
-     * Use Matic tokens deposited using plasma mechanism for that
+     * Use Bone tokens deposited using plasma mechanism for that
      * @param user address of account that should receive WETH on child chain
      */
     function depositEtherFor(address user) external override payable {

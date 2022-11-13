@@ -1,17 +1,17 @@
-# Matic PoS (Proof-of-Stake) portal contracts
+# Shibarium PoS (Proof-of-Stake) portal contracts
 
-![Build Status](https://github.com/maticnetwork/pos-portal/workflows/CI/badge.svg)
+![Build Status](https://github.com/shibarmy/pos-portal/workflows/CI/badge.svg)
 
-Smart contracts that powers the PoS (proof-of-stake) based bridge mechanism for [Matic Network](https://matic.network). 
+Smart contracts that powers the PoS (proof-of-stake) based bridge mechanism for [Shibarium Network](https://shibarium.network). 
 
-Audit - [Matic Audit CertiK Report.pdf](https://github.com/maticnetwork/pos-portal/files/5404262/Matic.Audit.CertiK.Report.pdf)
+Audit - [Shibarium Audit CertiK Report.pdf](https://github.com/shibarmy/pos-portal/files/5404262/Shibarium.Audit.CertiK.Report.pdf)
 
 ## Usage
 
 Install package from **NPM** using
 
 ```bash
-npm i @maticnetwork/pos-portal
+npm i @shibarmy/pos-portal
 ```
 
 ## Develop
@@ -29,7 +29,7 @@ user:pos-portal anjan$ npm --version
 Clone repository & install all dependencies
 
 ```bash
-git clone https://github.com/maticnetwork/pos-portal
+git clone https://github.com/shibarmy/pos-portal
 cd pos-portal
 
 npm i
@@ -55,28 +55,28 @@ If you prefer not using docker for compiling contracts, consider setting `docker
 ...
 ```
 
-For deploying all contracts in `pos-portal`, we need to have at least two chains running --- simulating RootChain ( Ethereum ) & ChildChain ( Polygon ). There are various ways of building this multichain setup, though two of them are majorly used
+For deploying all contracts in `pos-portal`, we need to have at least two chains running --- simulating RootChain ( Ethereum ) & ChildChain ( Shibarium ). There are various ways of building this multichain setup, though two of them are majorly used
 
-1. With `matic-cli`
-2. Without `matic-cli`
+1. With `shibarium-cli`
+2. Without `shibarium-cli`
 
-`matic-cli` is a project, which makes setting up all components of Ethereum <-> Polygon multichain ecosystem easier. Three components matic-cli sets up for you
+`shibarium-cli` is a project, which makes setting up all components of Ethereum <-> Shibarium multichain ecosystem easier. Three components shibarium-cli sets up for you
 
 - Ganache ( simulating RootChain )
-- Heimdall ( validator node of Polygon )
-- Bor ( block production layer of Polygon i.e. ChildChain )
+- Heimdall ( validator node of Shibarium )
+- Bor ( block production layer of Shibarium i.e. ChildChain )
 
-You may want to check [matic-cli](https://github.com/maticnetwork/matic-cli).
+You may want to check [shibarium-cli](https://github.com/shibarmy/shibarium-cli).
 
 ---
 
-### 1. With `matic-cli`
+### 1. With `-cli`
 
-Assuming you've installed `matic-cli` & set up single node local network by following [this guide](https://github.com/maticnetwork/matic-cli#usage), it's good time to start all components seperately as mentioned in `matic-cli` README.
+Assuming you've installed `shibarium-cli` & set up single node local network by following [this guide](https://github.com/shibarmy/shibarium-cli#usage), it's good time to start all components seperately as mentioned in `shibarium-cli` README.
 
 This should give you RPC listen addresses for both RootChain ( read Ganache ) & ChildChain ( read Bor ), which need to updated in `pos-portal/truffle-config.js`. Also note Mnemonic you used when setting up local network, we'll make use of it for migrating pos-portal contracts.
 
-`matic-cli` generates `~/localnet/config/contractAddresses.json`, given you decided to put network setup in `~/localnet` directory, which contains deployed Plasma contract addresses. We're primarily interested in Plasma RootChain ( deployed on RootChain, as name suggests aka *Checkpoint contract* ) & StateReceiver contract ( deployed on Bor ). These two contract addresses need to be updated [here](migrations/config.js).
+`shibarium-cli` generates `~/localnet/config/contractAddresses.json`, given you decided to put network setup in `~/localnet` directory, which contains deployed Plasma contract addresses. We're primarily interested in Plasma RootChain ( deployed on RootChain, as name suggests aka *Checkpoint contract* ) & StateReceiver contract ( deployed on Bor ). These two contract addresses need to be updated [here](migrations/config.js).
 
 > You may not need to change `stateReceiver` field, because that's where Bor deploys respective contract, by default.
 
@@ -147,9 +147,9 @@ You've deployed all contracts required for pos-portal to work properly. All thes
 
 ---
 
-### 2. Without `matic-cli`
+### 2. Without `shibarium-cli`
 
-You can always independently start a Ganache instance to act as RootChain & Bor node as ChildChain, without using `matic-cli`. But in this case no Heimdall nodes will be there --- depriving you of StateSync/ Checkpointing etc. where validator nodes are required.
+You can always independently start a Ganache instance to act as RootChain & Bor node as ChildChain, without using `shibarium-cli`. But in this case no Heimdall nodes will be there --- depriving you of StateSync/ Checkpointing etc. where validator nodes are required.
 
 Start RootChain by
 

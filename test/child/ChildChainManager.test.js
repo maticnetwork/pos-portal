@@ -302,7 +302,7 @@ contract('ChildChainManager', async(accounts) => {
       oldAccountBalance = await contracts.child.maticWETH.balanceOf(depositReceiver)
     })
 
-    it('Can receive MaticWETH deposit sync', async() => {
+    it('Can receive ShibWETH deposit sync', async() => {
       const depositData = abi.encode(['uint256'], [depositAmount.toString()])
       const syncData = abi.encode(
         ['address', 'address', 'bytes'],

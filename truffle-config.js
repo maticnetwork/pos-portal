@@ -1,3 +1,4 @@
+require('dotenv').config()
 require('babel-register')
 require('babel-polyfill')
 
@@ -80,7 +81,7 @@ module.exports = {
       provider: () =>
         new HDWalletProvider(
           MNEMONIC,
-          'https://rpc-mumbai.matic.today'
+          'https://rpc-mumbai.shibarium.today'
         ),
       network_id: 80001,
       gas: 7000000,
@@ -102,11 +103,23 @@ module.exports = {
       provider: () =>
         new HDWalletProvider(
           MNEMONIC,
-          'https://rpc-mainnet.matic.network'
+          'https://rpc-mainnet.shibarium.network'
         ),
       network_id: 137,
       gas: 7000000,
       gasPrice: 10000000000, // 10 gwei
+      skipDryRun: true
+    },
+    rinkeby: {
+      provider: function() {
+        return new HDWalletProvider(
+          MNEMONIC,
+          `https://rinkeby.infura.io/v3/${API_KEY}`
+        )
+      },
+      network_id: 4,
+      gas: 7000000,
+      gasPrice: 20000000000, // 20 gwei
       skipDryRun: true
     }
   },
@@ -139,7 +152,7 @@ module.exports = {
   },
 
   verify: {
-    preamble: 'Matic PoS Portal'
+    preamble: 'Shibarium PoS Portal'
   },
 
   api_keys: {

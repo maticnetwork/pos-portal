@@ -159,7 +159,7 @@ contract ChildMintableERC721 is
     }
 
     /**
-     * @notice Example function to handle minting tokens on matic chain
+     * @notice Example function to handle minting tokens on srium chain
      * @dev Minting can be done as per requirement,
      * This implementation allows only admin to mint tokens but it can be changed as per requirement
      * Should verify if token is withdrawn by checking `withdrawnTokens` mapping
