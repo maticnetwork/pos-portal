@@ -4,7 +4,12 @@
 
 Smart contracts that powers the PoS (proof-of-stake) based bridge mechanism for [Matic Network](https://matic.network). 
 
-Audit - [Matic Audit CertiK Report.pdf](https://github.com/maticnetwork/pos-portal/files/5404262/Matic.Audit.CertiK.Report.pdf)
+## Audits
+
+- [Hexens](audits/Matic_PoS_upd.pdf)
+- [Halborn](audits/Pos-portal-halborn-audit-07-07-2021.pdf)
+- [CertiK](audits/Matic.Audit.CertiK.Report.pdf)
+- [PeckShield](audits/Pos-portal-peckshield-audit-30-07-2021.pdf)
 
 ## Usage
 
