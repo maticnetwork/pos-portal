@@ -571,12 +571,10 @@ interface ITokenPredicate {
      * @notice Validates and processes exit while withdraw process
      * @dev Validates exit log emitted on sidechain. Reverts if validation fails.
      * @dev Processes withdraw based on custom logic. Example: transfer ERC20/ERC721, mint ERC721 if mintable withdraw
-     * @param sender Address
      * @param rootToken Token which gets withdrawn
      * @param logRLPList Valid sidechain log for data like amount, token id etc.
      */
     function exitTokens(
-        address sender,
         address rootToken,
         bytes calldata logRLPList
     ) external;
@@ -1293,12 +1291,6 @@ contract ERC721Predicate is ITokenPredicate, AccessControlMixin, Initializable, 
         uint256 tokenId
     );
 
-    event ExitedERC721Batch(
-        address indexed exitor,
-        address indexed rootToken,
-        uint256[] tokenIds
-    );
-
     constructor() public {}
 
     function initialize(address _owner) external initializer {
@@ -1366,11 +1358,10 @@ contract ERC721Predicate is ITokenPredicate, AccessControlMixin, Initializable, 
      * @param log Valid ERC721 burn log from child chain
      */
     function exitTokens(
-        address,
         address rootToken,
-        bytes memory log
+        bytes calldata log
     )
-        public
+        external
         override
         only(MANAGER_ROLE)
     {

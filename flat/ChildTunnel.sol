@@ -1,3 +1,4 @@
+
 // File: @openzeppelin/contracts/utils/EnumerableSet.sol
 
 // SPDX-License-Identifier: MIT
@@ -423,6 +424,7 @@ pragma solidity ^0.6.0;
 
 
 
+
 /**
  * @dev Contract module that allows children to implement role-based access
  * control mechanisms.
@@ -637,6 +639,7 @@ abstract contract AccessControl is Context {
 
 pragma solidity 0.6.6;
 
+
 contract AccessControlMixin is AccessControl {
     string private _revertMsg;
     function _setupContractId(string memory contractId) internal {
@@ -655,6 +658,7 @@ contract AccessControlMixin is AccessControl {
 // File: contracts/tunnel/BaseChildTunnel.sol
 
 pragma solidity 0.6.6;
+
 
 /**
 * @notice Mock child tunnel contract to receive and send message from L2
@@ -676,7 +680,7 @@ abstract contract BaseChildTunnel is AccessControlMixin {
      * @dev This method will be called by Matic chain internally.
      * This is executed without transaction using a system call.
      */
-    function onStateReceive(uint256, bytes memory message) public only(STATE_SYNCER_ROLE) {
+    function onStateReceive(uint256, bytes calldata message) external only(STATE_SYNCER_ROLE) {
         _processMessageFromRoot(message);
     }
 
@@ -706,6 +710,8 @@ abstract contract BaseChildTunnel is AccessControlMixin {
 // File: contracts/tunnel/ChildTunnel.sol
 
 pragma solidity 0.6.6;
+
+
 
 contract ChildTunnel is BaseChildTunnel {
     function _processMessageFromRoot(bytes memory message) internal override {

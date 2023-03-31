@@ -1,3 +1,4 @@
+
 // File: @openzeppelin/contracts/math/SafeMath.sol
 
 // SPDX-License-Identifier: MIT
@@ -585,6 +586,7 @@ pragma solidity ^0.6.0;
 
 
 
+
 /**
  * @dev Contract module that allows children to implement role-based access
  * control mechanisms.
@@ -798,6 +800,7 @@ abstract contract AccessControl is Context {
 // File: contracts/common/AccessControlMixin.sol
 
 pragma solidity 0.6.6;
+
 
 contract AccessControlMixin is AccessControl {
     string private _revertMsg;
@@ -1193,6 +1196,7 @@ library RLPReader {
  */
 pragma solidity 0.6.6;
 
+
 library MerklePatriciaProof {
     /*
      * @dev Verifies a merkle patricia proof.
@@ -1413,6 +1417,7 @@ library Merkle {
 
 pragma solidity 0.6.6;
 
+
 library ExitPayloadReader {
   using RLPReader for bytes;
   using RLPReader for RLPReader.RLPItem;
@@ -1583,6 +1588,8 @@ pragma solidity 0.6.6;
 
 
 
+
+
 abstract contract BaseRootTunnel is AccessControlMixin {
     using Merkle for bytes32;
     using SafeMath for uint256;
@@ -1601,7 +1608,7 @@ abstract contract BaseRootTunnel is AccessControlMixin {
     IStateSender public stateSender;
     // root chain manager
     ICheckpointManager public checkpointManager;
-    // child tunnel contract which receives and sends messages 
+    // child tunnel contract which receives and sends messages
     address public childTunnel;
     // storage to avoid duplicate exits
     mapping(bytes32 => bool) public processedExits;
@@ -1663,9 +1670,9 @@ abstract contract BaseRootTunnel is AccessControlMixin {
         stateSender.syncState(childTunnel, message);
     }
 
-    function _validateAndExtractMessage(bytes memory inputData) internal returns (bytes memory) {    
+    function _validateAndExtractMessage(bytes memory inputData) internal returns (bytes memory) {
         ExitPayloadReader.ExitPayload memory payload = inputData.toExitPayload();
-        
+
         bytes memory branchMaskBytes = payload.getBranchMaskAsBytes();
         // checking if exit has already been processed
         // unique exit is identified using hash of (blockNumber, branchMask, receiptLogIndex)
@@ -1703,11 +1710,11 @@ abstract contract BaseRootTunnel is AccessControlMixin {
 
         // verify checkpoint inclusion
         _checkBlockMembershipInCheckpoint(
-            payload.getBlockNumber(), 
-            payload.getBlockTime(), 
-            payload.getTxRoot(), 
-            payload.getReceiptRoot(), 
-            payload.getHeaderNumber(), 
+            payload.getBlockNumber(),
+            payload.getBlockTime(),
+            payload.getTxRoot(),
+            payload.getReceiptRoot(),
+            payload.getHeaderNumber(),
             payload.getBlockProof()
         );
 
@@ -1769,7 +1776,7 @@ abstract contract BaseRootTunnel is AccessControlMixin {
      *  8 - branchMask - 32 bits denoting the path of receipt in merkle tree
      *  9 - receiptLogIndex - Log Index to read from the receipt
      */
-    function receiveMessage(bytes memory inputData) public virtual {
+    function receiveMessage(bytes calldata inputData) external virtual {
         bytes memory message = _validateAndExtractMessage(inputData);
         _processMessageFromChild(message);
     }
@@ -1777,9 +1784,9 @@ abstract contract BaseRootTunnel is AccessControlMixin {
     /**
      * @notice Process message received from Child Tunnel
      * @dev function needs to be implemented to handle message as per requirement
-     * This is called by onStateReceive function.
+     * This is called by the receiveMessage() function.
      * Since it is called via a system call, any event will not be emitted during its execution.
-     * @param message bytes message that was sent from Child Tunnel
+     * @param message bytes message that was sent from child tunnel
      */
     function _processMessageFromChild(bytes memory message) virtual internal;
 }

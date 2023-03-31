@@ -1981,8 +1981,8 @@ contract NativeMetaTransaction is EIP712Base {
         )
     );
     event MetaTransactionExecuted(
-        address userAddress,
-        address payable relayerAddress,
+        address indexed userAddress,
+        address payable indexed relayerAddress,
         bytes functionSignature
     );
     mapping(address => uint256) nonces;
@@ -2000,11 +2000,11 @@ contract NativeMetaTransaction is EIP712Base {
 
     function executeMetaTransaction(
         address userAddress,
-        bytes memory functionSignature,
+        bytes calldata functionSignature,
         bytes32 sigR,
         bytes32 sigS,
         uint8 sigV
-    ) public payable returns (bytes memory) {
+    ) external payable returns (bytes memory) {
         MetaTransaction memory metaTx = MetaTransaction({
             nonce: nonces[userAddress],
             from: userAddress,
@@ -2034,6 +2034,10 @@ contract NativeMetaTransaction is EIP712Base {
         return returnData;
     }
 
+    function getNonce(address user) external view returns (uint256 nonce) {
+        nonce = nonces[user];
+    }
+
     function hashMetaTransaction(MetaTransaction memory metaTx)
         internal
         pure
@@ -2048,10 +2052,6 @@ contract NativeMetaTransaction is EIP712Base {
                     keccak256(metaTx.functionSignature)
                 )
             );
-    }
-
-    function getNonce(address user) public view returns (uint256 nonce) {
-        nonce = nonces[user];
     }
 
     function verify(

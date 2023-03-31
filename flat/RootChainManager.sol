@@ -1,3 +1,4 @@
+
 // File: @openzeppelin/contracts/math/SafeMath.sol
 
 // SPDX-License-Identifier: MIT
@@ -238,6 +239,7 @@ contract ICheckpointManager {
 // File: contracts/root/RootChainManager/RootChainManagerStorage.sol
 
 pragma solidity 0.6.6;
+
 
 
 abstract contract RootChainManagerStorage {
@@ -616,6 +618,7 @@ library RLPReader {
 
 pragma solidity 0.6.6;
 
+
 library ExitPayloadReader {
   using RLPReader for bytes;
   using RLPReader for RLPReader.RLPItem;
@@ -784,6 +787,7 @@ library ExitPayloadReader {
  * @dev Library for verifing merkle patricia proofs.
  */
 pragma solidity 0.6.6;
+
 
 library MerklePatriciaProof {
     /*
@@ -985,6 +989,7 @@ library Merkle {
 
 pragma solidity 0.6.6;
 
+
 /// @title Token predicate interface for all pos portal predicates
 /// @notice Abstract interface that defines methods for custom predicates
 interface ITokenPredicate {
@@ -1008,12 +1013,10 @@ interface ITokenPredicate {
      * @notice Validates and processes exit while withdraw process
      * @dev Validates exit log emitted on sidechain. Reverts if validation fails.
      * @dev Processes withdraw based on custom logic. Example: transfer ERC20/ERC721, mint ERC721 if mintable withdraw
-     * @param sender Address
      * @param rootToken Token which gets withdrawn
      * @param logRLPList Valid sidechain log for data like amount, token id etc.
      */
     function exitTokens(
-        address sender,
         address rootToken,
         bytes calldata logRLPList
     ) external;
@@ -1036,6 +1039,7 @@ contract Initializable {
 // File: contracts/common/EIP712Base.sol
 
 pragma solidity 0.6.6;
+
 
 contract EIP712Base is Initializable {
     struct EIP712Domain {
@@ -1114,6 +1118,7 @@ contract EIP712Base is Initializable {
 pragma solidity 0.6.6;
 
 
+
 contract NativeMetaTransaction is EIP712Base {
     using SafeMath for uint256;
     bytes32 private constant META_TRANSACTION_TYPEHASH = keccak256(
@@ -1122,8 +1127,8 @@ contract NativeMetaTransaction is EIP712Base {
         )
     );
     event MetaTransactionExecuted(
-        address userAddress,
-        address payable relayerAddress,
+        address indexed userAddress,
+        address payable indexed relayerAddress,
         bytes functionSignature
     );
     mapping(address => uint256) nonces;
@@ -1141,11 +1146,11 @@ contract NativeMetaTransaction is EIP712Base {
 
     function executeMetaTransaction(
         address userAddress,
-        bytes memory functionSignature,
+        bytes calldata functionSignature,
         bytes32 sigR,
         bytes32 sigS,
         uint8 sigV
-    ) public payable returns (bytes memory) {
+    ) external payable returns (bytes memory) {
         MetaTransaction memory metaTx = MetaTransaction({
             nonce: nonces[userAddress],
             from: userAddress,
@@ -1175,6 +1180,10 @@ contract NativeMetaTransaction is EIP712Base {
         return returnData;
     }
 
+    function getNonce(address user) external view returns (uint256 nonce) {
+        nonce = nonces[user];
+    }
+
     function hashMetaTransaction(MetaTransaction memory metaTx)
         internal
         pure
@@ -1189,10 +1198,6 @@ contract NativeMetaTransaction is EIP712Base {
                     keccak256(metaTx.functionSignature)
                 )
             );
-    }
-
-    function getNonce(address user) public view returns (uint256 nonce) {
-        nonce = nonces[user];
     }
 
     function verify(
@@ -1639,6 +1644,7 @@ pragma solidity ^0.6.0;
 
 
 
+
 /**
  * @dev Contract module that allows children to implement role-based access
  * control mechanisms.
@@ -1853,6 +1859,7 @@ abstract contract AccessControl is Context {
 
 pragma solidity 0.6.6;
 
+
 contract AccessControlMixin is AccessControl {
     string private _revertMsg;
     function _setupContractId(string memory contractId) internal {
@@ -1898,6 +1905,7 @@ abstract contract ContextMixin {
 // File: contracts/root/RootChainManager/RootChainManager.sol
 
 pragma solidity 0.6.6;
+
 
 
 
@@ -2079,7 +2087,7 @@ contract RootChainManager is
 
     /**
      * @notice Clean polluted token mapping
-     * @param rootToken address of token on root chain. Since rename token was introduced later stage, 
+     * @param rootToken address of token on root chain. Since rename token was introduced later stage,
      * clean method is used to clean pollulated mapping
      */
     function cleanMapToken(
@@ -2294,16 +2302,15 @@ contract RootChainManager is
 
         // verify checkpoint inclusion
         _checkBlockMembershipInCheckpoint(
-            payload.getBlockNumber(), 
-            payload.getBlockTime(), 
-            payload.getTxRoot(), 
-            payload.getReceiptRoot(), 
-            payload.getHeaderNumber(), 
+            payload.getBlockNumber(),
+            payload.getBlockTime(),
+            payload.getTxRoot(),
+            payload.getReceiptRoot(),
+            payload.getHeaderNumber(),
             payload.getBlockProof()
         );
 
         ITokenPredicate(predicateAddress).exitTokens(
-            _msgSender(),
             rootToken,
             log.toRlpBytes()
         );

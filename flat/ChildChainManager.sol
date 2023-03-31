@@ -1,3 +1,4 @@
+
 // File: @openzeppelin/contracts/token/ERC20/IERC20.sol
 
 // SPDX-License-Identifier: MIT
@@ -84,6 +85,7 @@ pragma solidity 0.6.6;
 
 interface IChildChainManager {
     event TokenMapped(address indexed rootToken, address indexed childToken);
+    event TokenUnmapped(address indexed rootToken, address indexed childToken);
 
     function mapToken(address rootToken, address childToken) external;
     function cleanMapToken(address rootToken, address childToken) external;
@@ -536,6 +538,7 @@ pragma solidity ^0.6.0;
 
 
 
+
 /**
  * @dev Contract module that allows children to implement role-based access
  * control mechanisms.
@@ -750,6 +753,7 @@ abstract contract AccessControl is Context {
 
 pragma solidity 0.6.6;
 
+
 contract AccessControlMixin is AccessControl {
     string private _revertMsg;
     function _setupContractId(string memory contractId) internal {
@@ -776,6 +780,8 @@ interface IStateReceiver {
 // File: contracts/child/ChildChainManager/ChildChainManager.sol
 
 pragma solidity 0.6.6;
+
+
 
 
 
@@ -863,7 +869,7 @@ contract ChildChainManager is
         rootToChildToken[rootToken] = address(0);
         childToRootToken[childToken] = address(0);
 
-        emit TokenMapped(rootToken, childToken);
+        emit TokenUnmapped(rootToken, childToken);
     }
 
     function _mapToken(address rootToken, address childToken) private {

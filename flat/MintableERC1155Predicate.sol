@@ -1341,12 +1341,10 @@ interface ITokenPredicate {
      * @notice Validates and processes exit while withdraw process
      * @dev Validates exit log emitted on sidechain. Reverts if validation fails.
      * @dev Processes withdraw based on custom logic. Example: transfer ERC20/ERC721, mint ERC721 if mintable withdraw
-     * @param sender Address
      * @param rootToken Token which gets withdrawn
      * @param logRLPList Valid sidechain log for data like amount, token id etc.
      */
     function exitTokens(
-        address sender,
         address rootToken,
         bytes calldata logRLPList
     ) external;
@@ -1367,6 +1365,16 @@ contract Initializable {
 }
 
 // File: contracts/root/TokenPredicates/MintableERC1155Predicate.sol
+
+pragma solidity 0.6.6;
+
+
+    ERC1155Receiver
+} from "@openzeppelin/contracts/token/ERC1155/ERC1155Receiver.sol";
+
+
+
+
 
 contract MintableERC1155Predicate is
     ITokenPredicate,
@@ -1479,7 +1487,7 @@ contract MintableERC1155Predicate is
             data
         );
     }
-    
+
     // Used when attempting to exit with single token, single amount/ id is converted into
     // slice of amounts/ ids
     // Generally size is going to be `1` i.e. single element array, but it's kept generic
@@ -1577,10 +1585,9 @@ contract MintableERC1155Predicate is
      * @param log Valid ERC1155 TransferSingle burn or TransferBatch burn log from child chain
      */
     function exitTokens(
-        address,
         address rootToken,
-        bytes memory log
-    ) public override only(MANAGER_ROLE) {
+        bytes calldata log
+    ) external override only(MANAGER_ROLE) {
         RLPReader.RLPItem[] memory logRLPList = log.toRlpItem().toList();
         RLPReader.RLPItem[] memory logTopicRLPList = logRLPList[1].toList(); // topics
         bytes memory logData = logRLPList[2].toBytes();

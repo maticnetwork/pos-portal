@@ -1,3 +1,4 @@
+
 // File: @openzeppelin/contracts/token/ERC20/IERC20.sol
 
 // SPDX-License-Identifier: MIT
@@ -392,6 +393,7 @@ pragma solidity ^0.6.0;
 
 
 
+
 /**
  * @title SafeERC20
  * @dev Wrappers around ERC20 operations that throw on failure (when the token
@@ -756,6 +758,7 @@ pragma solidity ^0.6.0;
 
 
 
+
 /**
  * @dev Contract module that allows children to implement role-based access
  * control mechanisms.
@@ -969,6 +972,7 @@ abstract contract AccessControl is Context {
 // File: contracts/common/AccessControlMixin.sol
 
 pragma solidity 0.6.6;
+
 
 contract AccessControlMixin is AccessControl {
     string private _revertMsg;
@@ -1350,6 +1354,7 @@ library RLPReader {
 
 pragma solidity 0.6.6;
 
+
 /// @title Token predicate interface for all pos portal predicates
 /// @notice Abstract interface that defines methods for custom predicates
 interface ITokenPredicate {
@@ -1373,12 +1378,10 @@ interface ITokenPredicate {
      * @notice Validates and processes exit while withdraw process
      * @dev Validates exit log emitted on sidechain. Reverts if validation fails.
      * @dev Processes withdraw based on custom logic. Example: transfer ERC20/ERC721, mint ERC721 if mintable withdraw
-     * @param sender Address
      * @param rootToken Token which gets withdrawn
      * @param logRLPList Valid sidechain log for data like amount, token id etc.
      */
     function exitTokens(
-        address sender,
         address rootToken,
         bytes calldata logRLPList
     ) external;
@@ -1401,6 +1404,7 @@ contract Initializable {
 // File: contracts/root/TokenPredicates/MintableERC20Predicate.sol
 
 pragma solidity 0.6.6;
+
 
 
 
@@ -1474,10 +1478,9 @@ contract MintableERC20Predicate is
      * @param log Valid ERC20 burn log from child chain
      */
     function exitTokens(
-        address,
         address rootToken,
-        bytes memory log
-    ) public override only(MANAGER_ROLE) {
+        bytes calldata log
+    ) external override only(MANAGER_ROLE) {
         RLPReader.RLPItem[] memory logRLPList = log.toRlpItem().toList();
         RLPReader.RLPItem[] memory logTopicRLPList = logRLPList[1].toList(); // topics
 
