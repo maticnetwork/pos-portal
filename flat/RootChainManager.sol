@@ -878,6 +878,7 @@ library MerklePatriciaProof {
                 return false;
             }
         }
+        return false; // default
     }
 
     function _nibblesToTraverse(
@@ -1163,7 +1164,7 @@ contract NativeMetaTransaction is EIP712Base {
         );
 
         // increase nonce for user (to avoid re-use)
-        nonces[userAddress] = nonces[userAddress].add(1);
+        ++nonces[userAddress];
 
         emit MetaTransactionExecuted(
             userAddress,
@@ -2323,12 +2324,12 @@ contract RootChainManager is
         bytes32 receiptRoot,
         uint256 headerNumber,
         bytes memory blockProof
-    ) private view returns (uint256) {
+    ) private view {
         (
             bytes32 headerRoot,
             uint256 startBlock,
             ,
-            uint256 createdAt,
+            ,
 
         ) = _checkpointManager.headerBlocks(headerNumber);
 
@@ -2343,6 +2344,5 @@ contract RootChainManager is
             ),
             "RootChainManager: INVALID_HEADER"
         );
-        return createdAt;
     }
 }

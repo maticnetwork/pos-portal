@@ -1286,6 +1286,7 @@ library MerklePatriciaProof {
                 return false;
             }
         }
+        return false; // default
     }
 
     function _nibblesToTraverse(
@@ -1737,12 +1738,12 @@ abstract contract BaseRootTunnel is AccessControlMixin {
         bytes32 receiptRoot,
         uint256 headerNumber,
         bytes memory blockProof
-    ) private view returns (uint256) {
+    ) private view {
         (
             bytes32 headerRoot,
             uint256 startBlock,
             ,
-            uint256 createdAt,
+            ,
 
         ) = checkpointManager.headerBlocks(headerNumber);
 
@@ -1757,7 +1758,6 @@ abstract contract BaseRootTunnel is AccessControlMixin {
             ),
             "RootTunnel: INVALID_HEADER"
         );
-        return createdAt;
     }
 
     /**

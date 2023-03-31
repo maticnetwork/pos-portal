@@ -418,12 +418,12 @@ contract RootChainManager is
         bytes32 receiptRoot,
         uint256 headerNumber,
         bytes memory blockProof
-    ) private view returns (uint256) {
+    ) private view {
         (
             bytes32 headerRoot,
             uint256 startBlock,
             ,
-            uint256 createdAt,
+            ,
 
         ) = _checkpointManager.headerBlocks(headerNumber);
 
@@ -438,6 +438,5 @@ contract RootChainManager is
             ),
             "RootChainManager: INVALID_HEADER"
         );
-        return createdAt;
     }
 }
