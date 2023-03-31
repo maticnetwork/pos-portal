@@ -1,3 +1,10 @@
+// +-----------------------------------------+
+// |                                         |
+// |     DEPRECATION NOTICE                  |
+// |     This contract is deprecated and     |
+// |     will not be supported.              |
+// |                                         |
+// +-----------------------------------------+
 pragma solidity 0.6.6;
 
 import {IMintableERC1155} from "../RootToken/IMintableERC1155.sol";
@@ -172,10 +179,9 @@ contract ChainExitERC1155Predicate is
      * @param log Valid ChainExit log from child chain
      */
     function exitTokens(
-        address,
         address rootToken,
-        bytes memory log
-    ) public override only(MANAGER_ROLE) {
+        bytes calldata log
+    ) external override only(MANAGER_ROLE) {
         RLPReader.RLPItem[] memory logRLPList = log.toRlpItem().toList();
         RLPReader.RLPItem[] memory logTopicRLPList = logRLPList[1].toList();
         bytes memory logData = logRLPList[2].toBytes();

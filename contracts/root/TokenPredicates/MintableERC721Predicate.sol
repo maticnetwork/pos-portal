@@ -141,11 +141,10 @@ contract MintableERC721Predicate is ITokenPredicate, AccessControlMixin, Initial
      * @param log Valid ERC721 burn log from child chain
      */
     function exitTokens(
-        address,
         address rootToken,
-        bytes memory log
+        bytes calldata log
     )
-        public
+        external
         override
         only(MANAGER_ROLE)
     {
@@ -219,7 +218,7 @@ contract MintableERC721Predicate is ITokenPredicate, AccessControlMixin, Initial
 
             emit ExitedMintableERC721Batch(withdrawer, rootToken, tokenIds);
 
-        } else if (bytes32(logTopicRLPList[0].toUint()) == TRANSFER_WITH_METADATA_EVENT_SIG) { 
+        } else if (bytes32(logTopicRLPList[0].toUint()) == TRANSFER_WITH_METADATA_EVENT_SIG) {
             // If this is NFT exit with metadata i.e. URI 👆
             //
             // Note: If your token is only minted in L2, you can exit
@@ -253,7 +252,7 @@ contract MintableERC721Predicate is ITokenPredicate, AccessControlMixin, Initial
                 // by event `TransferWithMetadata` during burning
                 bytes memory logData = logRLPList[2].toBytes();
                 bytes memory metaData = abi.decode(logData, (bytes));
-                
+
                 token.mint(withdrawer, tokenId, metaData);
             }
 
@@ -264,6 +263,6 @@ contract MintableERC721Predicate is ITokenPredicate, AccessControlMixin, Initial
             // not ( yet ) supported by L1 exit manager
             revert("MintableERC721Predicate: INVALID_SIGNATURE");
         }
-        
+
     }
 }

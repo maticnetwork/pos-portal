@@ -89,7 +89,7 @@ contract ChildChainManager is
         rootToChildToken[rootToken] = address(0);
         childToRootToken[childToken] = address(0);
 
-        emit TokenMapped(rootToken, childToken);
+        emit TokenUnmapped(rootToken, childToken);
     }
 
     function _mapToken(address rootToken, address childToken) private {

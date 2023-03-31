@@ -74,10 +74,9 @@ contract MintableERC20Predicate is
      * @param log Valid ERC20 burn log from child chain
      */
     function exitTokens(
-        address,
         address rootToken,
-        bytes memory log
-    ) public override only(MANAGER_ROLE) {
+        bytes calldata log
+    ) external override only(MANAGER_ROLE) {
         RLPReader.RLPItem[] memory logRLPList = log.toRlpItem().toList();
         RLPReader.RLPItem[] memory logTopicRLPList = logRLPList[1].toList(); // topics
 

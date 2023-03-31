@@ -23,7 +23,7 @@ abstract contract BaseChildTunnel is AccessControlMixin {
      * @dev This method will be called by Matic chain internally.
      * This is executed without transaction using a system call.
      */
-    function onStateReceive(uint256, bytes memory message) public only(STATE_SYNCER_ROLE) {
+    function onStateReceive(uint256, bytes calldata message) external only(STATE_SYNCER_ROLE) {
         _processMessageFromRoot(message);
     }
 

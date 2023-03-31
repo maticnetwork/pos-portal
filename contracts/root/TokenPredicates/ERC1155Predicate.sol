@@ -123,11 +123,10 @@ contract ERC1155Predicate is ITokenPredicate, ERC1155Receiver, AccessControlMixi
      * @param log Valid ERC1155 TransferSingle burn or TransferBatch burn log from child chain
      */
     function exitTokens(
-        address,
         address rootToken,
-        bytes memory log
+        bytes calldata log
     )
-        public
+        external
         override
         only(MANAGER_ROLE)
     {

@@ -65,10 +65,9 @@ contract EtherPredicate is ITokenPredicate, AccessControlMixin, Initializable {
      */
     function exitTokens(
         address,
-        address,
-        bytes memory log
+        bytes calldata log
     )
-        public
+        external
         override
         only(MANAGER_ROLE)
     {

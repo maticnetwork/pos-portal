@@ -38,12 +38,6 @@ contract ERC721Predicate is ITokenPredicate, AccessControlMixin, Initializable, 
         uint256 tokenId
     );
 
-    event ExitedERC721Batch(
-        address indexed exitor,
-        address indexed rootToken,
-        uint256[] tokenIds
-    );
-
     constructor() public {}
 
     function initialize(address _owner) external initializer {
@@ -111,11 +105,10 @@ contract ERC721Predicate is ITokenPredicate, AccessControlMixin, Initializable, 
      * @param log Valid ERC721 burn log from child chain
      */
     function exitTokens(
-        address,
         address rootToken,
-        bytes memory log
+        bytes calldata log
     )
-        public
+        external
         override
         only(MANAGER_ROLE)
     {
