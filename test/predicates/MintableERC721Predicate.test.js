@@ -43,7 +43,7 @@ contract('MintableERC721Predicate', (accounts) => {
         to: mockValues.zeroAddress,
         tokenId: tokenId
       })
-      await mintableERC721Predicate.exitTokens(depositor, dummyMintableERC721.address, burnLog)
+      await mintableERC721Predicate.exitTokens(dummyMintableERC721.address, burnLog)
       await dummyMintableERC721.approve(mintableERC721Predicate.address, tokenId, { from: depositor })
     })
 
@@ -122,7 +122,7 @@ contract('MintableERC721Predicate', (accounts) => {
         to: mockValues.zeroAddress,
         tokenId: tokenId
       })
-      await mintableERC721Predicate.exitTokens(depositor, dummyMintableERC721.address, burnLog)
+      await mintableERC721Predicate.exitTokens(dummyMintableERC721.address, burnLog)
       await dummyMintableERC721.approve(mintableERC721Predicate.address, tokenId, { from: depositor })
     })
 
@@ -161,7 +161,7 @@ contract('MintableERC721Predicate', (accounts) => {
         to: mockValues.zeroAddress,
         tokenId: tokenId
       })
-      exitTokensTx = await mintableERC721Predicate.exitTokens(alice, dummyMintableERC721.address, burnLog)
+      exitTokensTx = await mintableERC721Predicate.exitTokens(dummyMintableERC721.address, burnLog)
       should.exist(exitTokensTx)
     })
 
@@ -215,7 +215,7 @@ contract('MintableERC721Predicate', (accounts) => {
         to: mockValues.zeroAddress,
         tokenId: tokenId
       })
-      exitTokensTx = await mintableERC721Predicate.exitTokens(bob, dummyMintableERC721.address, burnLog)
+      exitTokensTx = await mintableERC721Predicate.exitTokens(dummyMintableERC721.address, burnLog)
       should.exist(exitTokensTx)
     })
 
@@ -251,7 +251,7 @@ contract('MintableERC721Predicate', (accounts) => {
         to: mockValues.zeroAddress,
         tokenId: tokenId
       })
-      exitTokensTx = await mintableERC721Predicate.exitTokens(exitCaller, dummyMintableERC721.address, burnLog)
+      exitTokensTx = await mintableERC721Predicate.exitTokens(dummyMintableERC721.address, burnLog)
       should.exist(exitTokensTx)
     })
 
@@ -305,7 +305,7 @@ contract('MintableERC721Predicate', (accounts) => {
         to: mockValues.zeroAddress,
         tokenId: tokenId
       })
-      exitTokensTx = await mintableERC721Predicate.exitTokens(exitCaller, dummyMintableERC721.address, burnLog)
+      exitTokensTx = await mintableERC721Predicate.exitTokens(dummyMintableERC721.address, burnLog)
       should.exist(exitTokensTx)
     })
 
@@ -369,7 +369,7 @@ contract('MintableERC721Predicate', (accounts) => {
         metaData
       })
 
-      exitTokensTx = await mintableERC721Predicate.exitTokens(withdrawer, dummyMintableERC721.address, burnLog)
+      exitTokensTx = await mintableERC721Predicate.exitTokens(dummyMintableERC721.address, burnLog)
       should.exist(exitTokensTx)
     })
 
@@ -433,7 +433,7 @@ contract('MintableERC721Predicate', (accounts) => {
         to: mockValues.zeroAddress,
         tokenId
       })
-      await expectRevert(mintableERC721Predicate.exitTokens(withdrawer, dummyMintableERC721.address, burnLog), 'MintableERC721Predicate: INVALID_SIGNATURE')
+      await expectRevert(mintableERC721Predicate.exitTokens(dummyMintableERC721.address, burnLog), 'MintableERC721Predicate: INVALID_SIGNATURE')
     })
   })
 
@@ -457,7 +457,7 @@ contract('MintableERC721Predicate', (accounts) => {
         to: mockValues.addresses[8],
         tokenId
       })
-      await expectRevert(mintableERC721Predicate.exitTokens(withdrawer, dummyMintableERC721.address, burnLog), 'MintableERC721Predicate: INVALID_RECEIVER')
+      await expectRevert(mintableERC721Predicate.exitTokens(dummyMintableERC721.address, burnLog), 'MintableERC721Predicate: INVALID_RECEIVER')
     })
   })
 
@@ -482,7 +482,7 @@ contract('MintableERC721Predicate', (accounts) => {
         tokenId
       })
       await expectRevert(
-        mintableERC721Predicate.exitTokens(withdrawer, dummyMintableERC721.address, burnLog, { from: accounts[2] }),
+        mintableERC721Predicate.exitTokens(dummyMintableERC721.address, burnLog, { from: accounts[2] }),
         'MintableERC721Predicate: INSUFFICIENT_PERMISSIONS')
     })
   })

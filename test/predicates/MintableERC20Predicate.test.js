@@ -49,7 +49,7 @@ contract('MintableERC20Predicate', (accounts) => {
             // predicate will mint that much amount for us and send it back
             // to `depositor`, which is going to be approved to predicate, so that
             // it can get it transferred to itself
-            await mintableERC20Predicate.exitTokens(depositor, dummyMintableERC20.address, burnLog)
+            await mintableERC20Predicate.exitTokens(dummyMintableERC20.address, burnLog)
             await dummyMintableERC20.approve(mintableERC20Predicate.address, depositAmount, { from: depositor })
 
             oldAccountBalance = await dummyMintableERC20.balanceOf(depositor)
@@ -138,7 +138,7 @@ contract('MintableERC20Predicate', (accounts) => {
         to: mockValues.zeroAddress,
         amount: depositAmount
       })
-      await mintableERC20Predicate.exitTokens(depositor, dummyMintableERC20.address, burnLog)
+      await mintableERC20Predicate.exitTokens(dummyMintableERC20.address, burnLog)
       await dummyMintableERC20.approve(mintableERC20Predicate.address, depositAmount, { from: depositor })
 
       await dummyMintableERC20.approve(mintableERC20Predicate.address, depositAmount, { from: depositor })
@@ -155,12 +155,12 @@ contract('MintableERC20Predicate', (accounts) => {
     const amount = mockValues.amounts[2]
     const alice = accounts[2]
     const bob = mockValues.addresses[8]
-    
+
     let dummyMintableERC20
     let mintableERC20Predicate
     let exitTokensTx
     let exitedLog
-    
+
     before(async() => {
       const contracts = await deployer.deployFreshRootContracts(accounts)
       dummyMintableERC20 = contracts.dummyMintableERC20
@@ -169,46 +169,46 @@ contract('MintableERC20Predicate', (accounts) => {
       const PREDICATE_ROLE = await dummyMintableERC20.PREDICATE_ROLE()
       await dummyMintableERC20.grantRole(PREDICATE_ROLE, mintableERC20Predicate.address)
     })
-    
+
     it('Predicate should have 0 balance', async() => {
       (await dummyMintableERC20.balanceOf(mintableERC20Predicate.address)).should.be.a.bignumber.equals(new BN(0))
     })
-    
+
     it('Alice should be able to send exitTokens tx', async() => {
       const burnLog = getERC20TransferLog({
         from: alice,
         to: mockValues.zeroAddress,
         amount: amount
       })
-      exitTokensTx = await mintableERC20Predicate.exitTokens(alice, dummyMintableERC20.address, burnLog)
+      exitTokensTx = await mintableERC20Predicate.exitTokens(dummyMintableERC20.address, burnLog)
       should.exist(exitTokensTx)
     })
-    
+
     it('Amount should be minted for Alice', async() => {
       (await dummyMintableERC20.balanceOf(alice)).should.be.a.bignumber.equals(amount)
     })
-    
+
     it('Alice should be able to deposit amount back', async() => {
       await dummyMintableERC20.approve(mintableERC20Predicate.address, amount, { from: alice })
       const depositData = abi.encode(['uint256'], [amount.toString()])
       const lockTokensTx = await mintableERC20Predicate.lockTokens(alice, alice, dummyMintableERC20.address, depositData)
       should.exist(lockTokensTx)
     })
-    
+
     it('Amount should be transfered to mintableERC20Predicate', async() => {
       (await dummyMintableERC20.balanceOf(mintableERC20Predicate.address)).should.be.a.bignumber.equals(amount)
     })
-    
+
     it('Bob should be able to send exitTokens tx', async() => {
       const burnLog = getERC20TransferLog({
         from: bob,
         to: mockValues.zeroAddress,
         amount: amount
       })
-      exitTokensTx = await mintableERC20Predicate.exitTokens(bob, dummyMintableERC20.address, burnLog)
+      exitTokensTx = await mintableERC20Predicate.exitTokens(dummyMintableERC20.address, burnLog)
       should.exist(exitTokensTx)
     })
-    
+
     it('Amount should be transfered to Bob', async() => {
       (await dummyMintableERC20.balanceOf(bob)).should.be.a.bignumber.equals(amount)
     })
@@ -219,12 +219,12 @@ contract('MintableERC20Predicate', (accounts) => {
     const alice = accounts[2]
     const bob = mockValues.addresses[8]
     const exitCaller = mockValues.addresses[3]
-    
+
     let dummyMintableERC20
     let mintableERC20Predicate
     let exitTokensTx
     let exitedLog
-    
+
     before(async() => {
       const contracts = await deployer.deployFreshRootContracts(accounts)
       dummyMintableERC20 = contracts.dummyMintableERC20
@@ -233,39 +233,39 @@ contract('MintableERC20Predicate', (accounts) => {
       const PREDICATE_ROLE = await dummyMintableERC20.PREDICATE_ROLE()
       await dummyMintableERC20.grantRole(PREDICATE_ROLE, mintableERC20Predicate.address)
     })
-    
+
     it('exitCaller should be able to send exitTokens tx', async() => {
       const burnLog = getERC20TransferLog({
         from: alice,
         to: mockValues.zeroAddress,
         amount: amount
       })
-      exitTokensTx = await mintableERC20Predicate.exitTokens(exitCaller, dummyMintableERC20.address, burnLog)
+      exitTokensTx = await mintableERC20Predicate.exitTokens(dummyMintableERC20.address, burnLog)
       should.exist(exitTokensTx)
     })
-    
+
     it('Amount should be minted for alice', async() => {
       (await dummyMintableERC20.balanceOf(alice)).should.be.a.bignumber.equals(amount)
     })
-    
+
     it('Alice should be able to deposit token back', async() => {
       await dummyMintableERC20.approve(mintableERC20Predicate.address, amount, { from: alice })
       const depositData = abi.encode(['uint256'], [amount.toString()])
       const lockTokensTx = await mintableERC20Predicate.lockTokens(alice, alice, dummyMintableERC20.address, depositData)
       should.exist(lockTokensTx)
     })
-    
+
     it('Amount should be transfered to mintableERC20Predicate', async() => {
       (await dummyMintableERC20.balanceOf(mintableERC20Predicate.address)).should.be.a.bignumber.equals(amount)
     })
-    
+
     it('exitCaller should be able to send exitTokens tx', async() => {
       const burnLog = getERC20TransferLog({
         from: bob,
         to: mockValues.zeroAddress,
         amount: amount
       })
-      exitTokensTx = await mintableERC20Predicate.exitTokens(exitCaller, dummyMintableERC20.address, burnLog)
+      exitTokensTx = await mintableERC20Predicate.exitTokens(dummyMintableERC20.address, burnLog)
       should.exist(exitTokensTx)
     })
 
@@ -295,7 +295,7 @@ contract('MintableERC20Predicate', (accounts) => {
         exitedLogAmount.should.be.bignumber.that.equals(amount)
       })
     })
-    
+
     it('Token should be transfered to bob', async() => {
       (await dummyMintableERC20.balanceOf(bob)).should.be.a.bignumber.equals(amount)
     })
@@ -306,7 +306,7 @@ contract('MintableERC20Predicate', (accounts) => {
     const withdrawer = mockValues.addresses[8]
     let dummyMintableERC20
     let mintableERC20Predicate
-    
+
     before(async() => {
       const contracts = await deployer.deployFreshRootContracts(accounts)
       dummyMintableERC20 = contracts.dummyMintableERC20
@@ -323,7 +323,7 @@ contract('MintableERC20Predicate', (accounts) => {
         to: mockValues.zeroAddress,
         amount: amount
       })
-      await expectRevert(mintableERC20Predicate.exitTokens(withdrawer, dummyMintableERC20.address, burnLog), 'MintableERC20Predicate: INVALID_SIGNATURE')
+      await expectRevert(mintableERC20Predicate.exitTokens(dummyMintableERC20.address, burnLog), 'MintableERC20Predicate: INVALID_SIGNATURE')
     })
   })
 
@@ -332,7 +332,7 @@ contract('MintableERC20Predicate', (accounts) => {
     const withdrawer = mockValues.addresses[8]
     let dummyMintableERC20
     let mintableERC20Predicate
-    
+
     before(async() => {
       const contracts = await deployer.deployFreshRootContracts(accounts)
       dummyMintableERC20 = contracts.dummyMintableERC20
@@ -341,14 +341,14 @@ contract('MintableERC20Predicate', (accounts) => {
       const PREDICATE_ROLE = await dummyMintableERC20.PREDICATE_ROLE()
       await dummyMintableERC20.grantRole(PREDICATE_ROLE, mintableERC20Predicate.address)
     })
-    
+
     it('Should revert with correct reason', async() => {
       const burnLog = getERC20TransferLog({
         from: withdrawer,
         to: mockValues.addresses[8],
         amount: amount
       })
-      await expectRevert(mintableERC20Predicate.exitTokens(withdrawer, dummyMintableERC20.address, burnLog), 'MintableERC20Predicate: INVALID_RECEIVER')
+      await expectRevert(mintableERC20Predicate.exitTokens(dummyMintableERC20.address, burnLog), 'MintableERC20Predicate: INVALID_RECEIVER')
     })
   })
 
@@ -357,7 +357,7 @@ contract('MintableERC20Predicate', (accounts) => {
     const withdrawer = mockValues.addresses[8]
     let dummyMintableERC20
     let mintableERC20Predicate
-    
+
     before(async() => {
       const contracts = await deployer.deployFreshRootContracts(accounts)
       dummyMintableERC20 = contracts.dummyMintableERC20
@@ -366,7 +366,7 @@ contract('MintableERC20Predicate', (accounts) => {
       const PREDICATE_ROLE = await dummyMintableERC20.PREDICATE_ROLE()
       await dummyMintableERC20.grantRole(PREDICATE_ROLE, mintableERC20Predicate.address)
     })
-    
+
     it('Should revert with correct reason', async() => {
       const burnLog = getERC20TransferLog({
         from: withdrawer,
@@ -374,7 +374,7 @@ contract('MintableERC20Predicate', (accounts) => {
         amount: amount
       })
       await expectRevert(
-        mintableERC20Predicate.exitTokens(withdrawer, dummyMintableERC20.address, burnLog, { from: accounts[2] }),
+        mintableERC20Predicate.exitTokens(dummyMintableERC20.address, burnLog, { from: accounts[2] }),
         'MintableERC20Predicate: INSUFFICIENT_PERMISSIONS')
     })
   })

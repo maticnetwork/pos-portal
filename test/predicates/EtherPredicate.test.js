@@ -135,7 +135,7 @@ contract('EtherPredicate', (accounts) => {
         to: mockValues.zeroAddress,
         amount: withdrawAmount
       })
-      exitTokensTx = await etherPredicate.exitTokens(withdrawer, etherAddress, burnLog)
+      exitTokensTx = await etherPredicate.exitTokens(etherAddress, burnLog)
       should.exist(exitTokensTx)
     })
 
@@ -178,7 +178,7 @@ contract('EtherPredicate', (accounts) => {
         to: mockValues.zeroAddress,
         amount: withdrawAmount
       })
-      exitTokensTx = await etherPredicate.exitTokens(exitCaller, etherAddress, burnLog)
+      exitTokensTx = await etherPredicate.exitTokens(etherAddress, burnLog)
       should.exist(exitTokensTx)
     })
 
@@ -216,7 +216,7 @@ contract('EtherPredicate', (accounts) => {
         to: mockValues.zeroAddress,
         amount: withdrawAmount
       })
-      await expectRevert(etherPredicate.exitTokens(withdrawer, etherAddress, burnLog), 'EtherPredicate: INVALID_SIGNATURE')
+      await expectRevert(etherPredicate.exitTokens(etherAddress, burnLog), 'EtherPredicate: INVALID_SIGNATURE')
     })
   })
 
@@ -238,7 +238,7 @@ contract('EtherPredicate', (accounts) => {
         to: mockValues.addresses[8],
         amount: withdrawAmount
       })
-      await expectRevert(etherPredicate.exitTokens(withdrawer, etherAddress, burnLog), 'EtherPredicate: INVALID_RECEIVER')
+      await expectRevert(etherPredicate.exitTokens(etherAddress, burnLog), 'EtherPredicate: INVALID_RECEIVER')
     })
   })
 
@@ -261,7 +261,7 @@ contract('EtherPredicate', (accounts) => {
         amount: withdrawAmount
       })
       await expectRevert(
-        etherPredicate.exitTokens(withdrawer, etherAddress, burnLog, { from: accounts[2] }),
+        etherPredicate.exitTokens(etherAddress, burnLog, { from: accounts[2] }),
         'EtherPredicate: INSUFFICIENT_PERMISSIONS')
     })
   })

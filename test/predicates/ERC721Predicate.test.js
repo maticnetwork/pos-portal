@@ -243,7 +243,7 @@ contract('ERC721Predicate', (accounts) => {
         to: mockValues.zeroAddress,
         tokenId: tokenId
       })
-      exitTokensTx = await erc721Predicate.exitTokens(withdrawer, dummyERC721.address, burnLog)
+      exitTokensTx = await erc721Predicate.exitTokens(dummyERC721.address, burnLog)
       should.exist(exitTokensTx)
     })
 
@@ -319,12 +319,12 @@ contract('ERC721Predicate', (accounts) => {
 
     it('exitTokens should revert with WithdrawnBatch event', async () => {
       const burnLog = getERC721WithdrawnBatchLog({ user: withdrawer, tokenIds: [tokenIdA, tokenIdB] });
-      await expectRevert(erc721Predicate.exitTokens(withdrawer, dummyERC721.address, burnLog), 'ERC721Predicate: INVALID_SIGNATURE')
+      await expectRevert(erc721Predicate.exitTokens(dummyERC721.address, burnLog), 'ERC721Predicate: INVALID_SIGNATURE')
     })
 
     it('exitTokens should pass with Transfer event', async () => {
       const burnLog = getERC721TransferLog({ from: withdrawer, to: mockValues.zeroAddress, tokenId: tokenIdA })
-      exitTokensTxA = await erc721Predicate.exitTokens(withdrawer, dummyERC721.address, burnLog)
+      exitTokensTxA = await erc721Predicate.exitTokens(dummyERC721.address, burnLog)
       should.exist(exitTokensTxA)
     })
 
@@ -335,7 +335,7 @@ contract('ERC721Predicate', (accounts) => {
 
     it('exitTokens should pass with another Transfer event', async () => {
       const burnLog = getERC721TransferLog({ from: withdrawer, to: mockValues.zeroAddress, tokenId: tokenIdB })
-      exitTokensTxB = await erc721Predicate.exitTokens(withdrawer, dummyERC721.address, burnLog)
+      exitTokensTxB = await erc721Predicate.exitTokens(dummyERC721.address, burnLog)
       should.exist(exitTokensTxB)
     })
 
@@ -382,12 +382,12 @@ contract('ERC721Predicate', (accounts) => {
         metaData
       })
 
-      await expectRevert(erc721Predicate.exitTokens(withdrawer, dummyERC721.address, burnLog), 'ERC721Predicate: INVALID_SIGNATURE')
+      await expectRevert(erc721Predicate.exitTokens(dummyERC721.address, burnLog), 'ERC721Predicate: INVALID_SIGNATURE')
     })
 
     it('exitTokens should pass with Transfer event', async () => {
       const burnLog = getERC721TransferLog({ from: withdrawer, to: mockValues.zeroAddress, tokenId: tokenId })
-      exitTokensTx = await erc721Predicate.exitTokens(withdrawer, dummyERC721.address, burnLog)
+      exitTokensTx = await erc721Predicate.exitTokens(dummyERC721.address, burnLog)
       should.exist(exitTokensTx)
     })
 
@@ -449,7 +449,7 @@ contract('ERC721Predicate', (accounts) => {
         to: mockValues.zeroAddress,
         tokenId
       })
-      exitTokensTx = await erc721Predicate.exitTokens(exitCaller, dummyERC721.address, burnLog)
+      exitTokensTx = await erc721Predicate.exitTokens(dummyERC721.address, burnLog)
       should.exist(exitTokensTx)
     })
 
@@ -509,7 +509,7 @@ contract('ERC721Predicate', (accounts) => {
         to: mockValues.zeroAddress,
         tokenId
       })
-      await expectRevert(erc721Predicate.exitTokens(withdrawer, dummyERC721.address, burnLog), 'ERC721Predicate: INVALID_SIGNATURE')
+      await expectRevert(erc721Predicate.exitTokens(dummyERC721.address, burnLog), 'ERC721Predicate: INVALID_SIGNATURE')
     })
   })
 
@@ -535,7 +535,7 @@ contract('ERC721Predicate', (accounts) => {
         to: mockValues.addresses[8],
         tokenId
       })
-      await expectRevert(erc721Predicate.exitTokens(withdrawer, dummyERC721.address, burnLog), 'ERC721Predicate: INVALID_RECEIVER')
+      await expectRevert(erc721Predicate.exitTokens(dummyERC721.address, burnLog), 'ERC721Predicate: INVALID_RECEIVER')
     })
   })
 
@@ -562,7 +562,7 @@ contract('ERC721Predicate', (accounts) => {
         tokenId
       })
       await expectRevert(
-        erc721Predicate.exitTokens(withdrawer, dummyERC721.address, burnLog, { from: accounts[2] }),
+        erc721Predicate.exitTokens(dummyERC721.address, burnLog, { from: accounts[2] }),
         'ERC721Predicate: INSUFFICIENT_PERMISSIONS')
     })
   })

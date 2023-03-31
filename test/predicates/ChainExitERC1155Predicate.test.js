@@ -214,7 +214,7 @@ contract('ChainExitERC1155Predicate', (accounts) => {
                 data: 'Hello 👋'
             })
 
-            exitTokensTx = await chainExitERC1155Predicate.exitTokens(withdrawer, dummyMintableERC1155.address, burnLog)
+            exitTokensTx = await chainExitERC1155Predicate.exitTokens(dummyMintableERC1155.address, burnLog)
             should.exist(exitTokensTx)
         })
 
@@ -264,7 +264,7 @@ contract('ChainExitERC1155Predicate', (accounts) => {
                 amounts: [amount],
                 data: 'Hello 👋'
             })
-            await expectRevert(chainExitERC1155Predicate.exitTokens(withdrawer, dummyMintableERC1155.address, burnLog), 'ChainExitERC1155Predicate: INVALID_RECEIVER')
+            await expectRevert(chainExitERC1155Predicate.exitTokens(dummyMintableERC1155.address, burnLog), 'ChainExitERC1155Predicate: INVALID_RECEIVER')
         })
     })
 
@@ -300,7 +300,7 @@ contract('ChainExitERC1155Predicate', (accounts) => {
                 amounts: [amount],
                 data: 'Hello 👋'
             })
-            await expectRevert(chainExitERC1155Predicate.exitTokens(withdrawer, dummyMintableERC1155.address, burnLog), 'ChainExitERC1155Predicate: INVALID_WITHDRAW_SIG')
+            await expectRevert(chainExitERC1155Predicate.exitTokens(dummyMintableERC1155.address, burnLog), 'ChainExitERC1155Predicate: INVALID_WITHDRAW_SIG')
         })
     })
 })
