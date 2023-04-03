@@ -182,7 +182,7 @@ contract RootChainManager is
 
     /**
      * @notice Clean polluted token mapping
-     * @param rootToken address of token on root chain. Since rename token was introduced later stage, 
+     * @param rootToken address of token on root chain. Since rename token was introduced later stage,
      * clean method is used to clean pollulated mapping
      */
     function cleanMapToken(
@@ -397,16 +397,15 @@ contract RootChainManager is
 
         // verify checkpoint inclusion
         _checkBlockMembershipInCheckpoint(
-            payload.getBlockNumber(), 
-            payload.getBlockTime(), 
-            payload.getTxRoot(), 
-            payload.getReceiptRoot(), 
-            payload.getHeaderNumber(), 
+            payload.getBlockNumber(),
+            payload.getBlockTime(),
+            payload.getTxRoot(),
+            payload.getReceiptRoot(),
+            payload.getHeaderNumber(),
             payload.getBlockProof()
         );
 
         ITokenPredicate(predicateAddress).exitTokens(
-            _msgSender(),
             rootToken,
             log.toRlpBytes()
         );

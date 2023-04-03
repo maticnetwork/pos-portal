@@ -1,3 +1,4 @@
+
 // File: @openzeppelin/contracts/introspection/IERC165.sol
 
 // SPDX-License-Identifier: MIT
@@ -30,6 +31,7 @@ interface IERC165 {
 // SPDX-License-Identifier: MIT
 
 pragma solidity ^0.6.2;
+
 
 /**
  * @dev Required interface of an ERC721 compliant contract.
@@ -545,6 +547,7 @@ library RLPReader {
 
 pragma solidity 0.6.6;
 
+
 /// @title Token predicate interface for all pos portal predicates
 /// @notice Abstract interface that defines methods for custom predicates
 interface ITokenPredicate {
@@ -568,12 +571,10 @@ interface ITokenPredicate {
      * @notice Validates and processes exit while withdraw process
      * @dev Validates exit log emitted on sidechain. Reverts if validation fails.
      * @dev Processes withdraw based on custom logic. Example: transfer ERC20/ERC721, mint ERC721 if mintable withdraw
-     * @param sender Address
      * @param rootToken Token which gets withdrawn
      * @param logRLPList Valid sidechain log for data like amount, token id etc.
      */
     function exitTokens(
-        address sender,
         address rootToken,
         bytes calldata logRLPList
     ) external;
@@ -1018,6 +1019,7 @@ pragma solidity ^0.6.0;
 
 
 
+
 /**
  * @dev Contract module that allows children to implement role-based access
  * control mechanisms.
@@ -1232,6 +1234,7 @@ abstract contract AccessControl is Context {
 
 pragma solidity 0.6.6;
 
+
 contract AccessControlMixin is AccessControl {
     string private _revertMsg;
     function _setupContractId(string memory contractId) internal {
@@ -1250,6 +1253,7 @@ contract AccessControlMixin is AccessControl {
 // File: contracts/root/TokenPredicates/ERC721Predicate.sol
 
 pragma solidity 0.6.6;
+
 
 
 
@@ -1285,12 +1289,6 @@ contract ERC721Predicate is ITokenPredicate, AccessControlMixin, Initializable, 
         address indexed exitor,
         address indexed rootToken,
         uint256 tokenId
-    );
-
-    event ExitedERC721Batch(
-        address indexed exitor,
-        address indexed rootToken,
-        uint256[] tokenIds
     );
 
     constructor() public {}
@@ -1360,11 +1358,10 @@ contract ERC721Predicate is ITokenPredicate, AccessControlMixin, Initializable, 
      * @param log Valid ERC721 burn log from child chain
      */
     function exitTokens(
-        address,
         address rootToken,
-        bytes memory log
+        bytes calldata log
     )
-        public
+        external
         override
         only(MANAGER_ROLE)
     {

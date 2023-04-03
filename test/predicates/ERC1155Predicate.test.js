@@ -202,7 +202,7 @@ contract('ERC1155Predicate', (accounts) => {
         tokenId: tokenId,
         amount: withdrawAmount
       })
-      exitTokensTx = await erc1155Predicate.exitTokens(withdrawer, dummyERC1155.address, burnLog)
+      exitTokensTx = await erc1155Predicate.exitTokens(dummyERC1155.address, burnLog)
       should.exist(exitTokensTx)
     })
 
@@ -299,7 +299,7 @@ contract('ERC1155Predicate', (accounts) => {
         tokenIds: [tokenIdA, tokenIdB],
         amounts: [withdrawAmountA, withdrawAmountB]
       })
-      exitTokensTx = await erc1155Predicate.exitTokens(withdrawer, dummyERC1155.address, burnLog)
+      exitTokensTx = await erc1155Predicate.exitTokens(dummyERC1155.address, burnLog)
       should.exist(exitTokensTx)
     })
 
@@ -418,7 +418,7 @@ contract('ERC1155Predicate', (accounts) => {
         tokenIds: [tokenIdA, tokenIdB],
         amounts: [withdrawAmountA, withdrawAmountB]
       })
-      exitTokensTx = await erc1155Predicate.exitTokens(exitCaller, dummyERC1155.address, burnLog)
+      exitTokensTx = await erc1155Predicate.exitTokens(dummyERC1155.address, burnLog)
       should.exist(exitTokensTx)
     })
 
@@ -523,7 +523,7 @@ contract('ERC1155Predicate', (accounts) => {
         tokenId: tokenId,
         amount: withdrawAmount
       })
-      await expectRevert(erc1155Predicate.exitTokens(withdrawer, dummyERC1155.address, burnLog), 'ERC1155Predicate: INVALID_WITHDRAW_SIG')
+      await expectRevert(erc1155Predicate.exitTokens(dummyERC1155.address, burnLog), 'ERC1155Predicate: INVALID_WITHDRAW_SIG')
     })
   })
 
@@ -554,7 +554,7 @@ contract('ERC1155Predicate', (accounts) => {
         tokenId: tokenId,
         amount: withdrawAmount
       })
-      await expectRevert(erc1155Predicate.exitTokens(withdrawer, dummyERC1155.address, burnLog), 'ERC1155Predicate: INVALID_RECEIVER')
+      await expectRevert(erc1155Predicate.exitTokens(dummyERC1155.address, burnLog), 'ERC1155Predicate: INVALID_RECEIVER')
     })
   })
 
@@ -586,7 +586,7 @@ contract('ERC1155Predicate', (accounts) => {
         amount: withdrawAmount
       })
       await expectRevert(
-        erc1155Predicate.exitTokens(withdrawer, dummyERC1155.address, burnLog, { from: accounts[2] }),
+        erc1155Predicate.exitTokens(dummyERC1155.address, burnLog, { from: accounts[2] }),
         'ERC1155Predicate: INSUFFICIENT_PERMISSIONS')
     })
   })

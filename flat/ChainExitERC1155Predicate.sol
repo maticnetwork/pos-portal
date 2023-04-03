@@ -1,3 +1,4 @@
+
 // File: @openzeppelin/contracts/introspection/IERC165.sol
 
 // SPDX-License-Identifier: MIT
@@ -30,6 +31,7 @@ interface IERC165 {
 // SPDX-License-Identifier: MIT
 
 pragma solidity ^0.6.2;
+
 
 /**
  * @dev Required interface of an ERC1155 compliant contract, as defined in the
@@ -165,6 +167,7 @@ interface IMintableERC1155 is IERC1155 {
 
 pragma solidity ^0.6.0;
 
+
 /**
  * _Available since v3.1._
  */
@@ -223,6 +226,7 @@ interface IERC1155Receiver is IERC165 {
 
 pragma solidity ^0.6.0;
 
+
 /**
  * @dev Implementation of the {IERC165} interface.
  *
@@ -277,6 +281,7 @@ contract ERC165 is IERC165 {
 // SPDX-License-Identifier: MIT
 
 pragma solidity ^0.6.0;
+
 
 
 /**
@@ -716,6 +721,7 @@ pragma solidity ^0.6.0;
 
 
 
+
 /**
  * @dev Contract module that allows children to implement role-based access
  * control mechanisms.
@@ -929,6 +935,7 @@ abstract contract AccessControl is Context {
 // File: contracts/common/AccessControlMixin.sol
 
 pragma solidity 0.6.6;
+
 
 contract AccessControlMixin is AccessControl {
     string private _revertMsg;
@@ -1310,6 +1317,7 @@ library RLPReader {
 
 pragma solidity 0.6.6;
 
+
 /// @title Token predicate interface for all pos portal predicates
 /// @notice Abstract interface that defines methods for custom predicates
 interface ITokenPredicate {
@@ -1333,12 +1341,10 @@ interface ITokenPredicate {
      * @notice Validates and processes exit while withdraw process
      * @dev Validates exit log emitted on sidechain. Reverts if validation fails.
      * @dev Processes withdraw based on custom logic. Example: transfer ERC20/ERC721, mint ERC721 if mintable withdraw
-     * @param sender Address
      * @param rootToken Token which gets withdrawn
      * @param logRLPList Valid sidechain log for data like amount, token id etc.
      */
     function exitTokens(
-        address sender,
         address rootToken,
         bytes calldata logRLPList
     ) external;
@@ -1360,8 +1366,18 @@ contract Initializable {
 
 // File: contracts/root/TokenPredicates/ChainExitERC1155Predicate.sol
 
+// +-----------------------------------------+
+// |                                         |
+// |     DEPRECATION NOTICE                  |
+// |     This contract is deprecated and     |
+// |     will not be supported.              |
+// |                                         |
+// +-----------------------------------------+
 pragma solidity 0.6.6;
 
+
+    ERC1155Receiver
+} from "@openzeppelin/contracts/token/ERC1155/ERC1155Receiver.sol";
 
 
 
@@ -1530,10 +1546,9 @@ contract ChainExitERC1155Predicate is
      * @param log Valid ChainExit log from child chain
      */
     function exitTokens(
-        address,
         address rootToken,
-        bytes memory log
-    ) public override only(MANAGER_ROLE) {
+        bytes calldata log
+    ) external override only(MANAGER_ROLE) {
         RLPReader.RLPItem[] memory logRLPList = log.toRlpItem().toList();
         RLPReader.RLPItem[] memory logTopicRLPList = logRLPList[1].toList();
         bytes memory logData = logRLPList[2].toBytes();

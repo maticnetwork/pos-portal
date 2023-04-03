@@ -1,3 +1,4 @@
+
 // File: @openzeppelin/contracts/GSN/Context.sol
 
 // SPDX-License-Identifier: MIT
@@ -57,6 +58,7 @@ interface IERC165 {
 // SPDX-License-Identifier: MIT
 
 pragma solidity ^0.6.2;
+
 
 /**
  * @dev Required interface of an ERC721 compliant contract.
@@ -188,6 +190,7 @@ interface IERC721 is IERC165 {
 
 pragma solidity ^0.6.2;
 
+
 /**
  * @title ERC-721 Non-Fungible Token Standard, optional metadata extension
  * @dev See https://eips.ethereum.org/EIPS/eip-721
@@ -215,6 +218,7 @@ interface IERC721Metadata is IERC721 {
 // SPDX-License-Identifier: MIT
 
 pragma solidity ^0.6.2;
+
 
 /**
  * @title ERC-721 Non-Fungible Token Standard, optional enumeration extension
@@ -270,6 +274,7 @@ interface IERC721Receiver {
 // SPDX-License-Identifier: MIT
 
 pragma solidity ^0.6.0;
+
 
 /**
  * @dev Implementation of the {IERC165} interface.
@@ -1165,6 +1170,7 @@ pragma solidity ^0.6.0;
 
 
 
+
 /**
  * @title ERC721 Non-Fungible Token Standard basic implementation
  * @dev see https://eips.ethereum.org/EIPS/eip-721
@@ -1631,6 +1637,7 @@ pragma solidity ^0.6.0;
 
 
 
+
 /**
  * @dev Contract module that allows children to implement role-based access
  * control mechanisms.
@@ -1845,6 +1852,7 @@ abstract contract AccessControl is Context {
 
 pragma solidity 0.6.6;
 
+
 contract AccessControlMixin is AccessControl {
     string private _revertMsg;
     function _setupContractId(string memory contractId) internal {
@@ -1877,6 +1885,7 @@ contract Initializable {
 // File: contracts/common/EIP712Base.sol
 
 pragma solidity 0.6.6;
+
 
 contract EIP712Base is Initializable {
     struct EIP712Domain {
@@ -1955,6 +1964,7 @@ contract EIP712Base is Initializable {
 pragma solidity 0.6.6;
 
 
+
 contract NativeMetaTransaction is EIP712Base {
     using SafeMath for uint256;
     bytes32 private constant META_TRANSACTION_TYPEHASH = keccak256(
@@ -1963,8 +1973,8 @@ contract NativeMetaTransaction is EIP712Base {
         )
     );
     event MetaTransactionExecuted(
-        address userAddress,
-        address payable relayerAddress,
+        address indexed userAddress,
+        address payable indexed relayerAddress,
         bytes functionSignature
     );
     mapping(address => uint256) nonces;
@@ -1982,11 +1992,11 @@ contract NativeMetaTransaction is EIP712Base {
 
     function executeMetaTransaction(
         address userAddress,
-        bytes memory functionSignature,
+        bytes calldata functionSignature,
         bytes32 sigR,
         bytes32 sigS,
         uint8 sigV
-    ) public payable returns (bytes memory) {
+    ) external payable returns (bytes memory) {
         MetaTransaction memory metaTx = MetaTransaction({
             nonce: nonces[userAddress],
             from: userAddress,
@@ -2016,6 +2026,10 @@ contract NativeMetaTransaction is EIP712Base {
         return returnData;
     }
 
+    function getNonce(address user) external view returns (uint256 nonce) {
+        nonce = nonces[user];
+    }
+
     function hashMetaTransaction(MetaTransaction memory metaTx)
         internal
         pure
@@ -2030,10 +2044,6 @@ contract NativeMetaTransaction is EIP712Base {
                     keccak256(metaTx.functionSignature)
                 )
             );
-    }
-
-    function getNonce(address user) public view returns (uint256 nonce) {
-        nonce = nonces[user];
     }
 
     function verify(
@@ -2088,6 +2098,7 @@ abstract contract ContextMixin {
 // It's strictly for testing purpose
 
 pragma solidity 0.6.6;
+
 
 
 

@@ -1,3 +1,4 @@
+
 // File: contracts/common/Proxy/IERCProxy.sol
 
 pragma solidity 0.6.6;
@@ -11,6 +12,7 @@ interface IERCProxy {
 // File: contracts/common/Proxy/Proxy.sol
 
 pragma solidity 0.6.6;
+
 
 abstract contract Proxy is IERCProxy {
     function delegatedFwd(address _dst, bytes memory _calldata) internal {
@@ -52,6 +54,7 @@ abstract contract Proxy is IERCProxy {
 // File: contracts/common/Proxy/UpgradableProxy.sol
 
 pragma solidity 0.6.6;
+
 
 contract UpgradableProxy is Proxy {
     event ProxyUpdated(address indexed _new, address indexed _old);
@@ -118,15 +121,14 @@ contract UpgradableProxy is Proxy {
     }
 
     function updateImplementation(address _newProxyTo) public onlyProxyOwner {
-        require(_newProxyTo != address(0x0), "INVALID_PROXY_ADDRESS");
         require(isContract(_newProxyTo), "DESTINATION_ADDRESS_IS_NOT_A_CONTRACT");
 
         emit ProxyUpdated(_newProxyTo, loadImplementation());
-        
+
         setImplementation(_newProxyTo);
     }
 
-    function updateAndCall(address _newProxyTo, bytes memory data) payable public onlyProxyOwner {
+    function updateAndCall(address _newProxyTo, bytes calldata data) payable external onlyProxyOwner {
         updateImplementation(_newProxyTo);
 
         (bool success, bytes memory returnData) = address(this).call{value: msg.value}(data);
@@ -139,7 +141,7 @@ contract UpgradableProxy is Proxy {
             sstore(position, _newProxyTo)
         }
     }
-    
+
     function isContract(address _target) internal view returns (bool) {
         if (_target == address(0)) {
             return false;
@@ -156,6 +158,7 @@ contract UpgradableProxy is Proxy {
 // File: contracts/root/TokenPredicates/ERC20PredicateProxy.sol
 
 pragma solidity 0.6.6;
+
 
 contract ERC20PredicateProxy is UpgradableProxy {
     constructor(address _proxyTo)

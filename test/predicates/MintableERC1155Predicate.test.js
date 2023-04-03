@@ -55,7 +55,7 @@ contract('MintableERC1155Predicate', (accounts) => {
 
             // because it's a mintable token, burning it first then
             // brining it to root chain by making predicate contract mint it for us
-            await mintableERC1155Predicate.exitTokens(depositor, dummyMintableERC1155.address, burnLog)
+            await mintableERC1155Predicate.exitTokens(dummyMintableERC1155.address, burnLog)
             await dummyMintableERC1155.setApprovalForAll(mintableERC1155Predicate.address, true, { from: depositor })
 
             oldAccountBalanceA = await dummyMintableERC1155.balanceOf(depositor, tokenIdA)
@@ -181,7 +181,7 @@ describe('lockTokens called by non manager', () => {
       amounts: [amount]
     })
 
-    await mintableERC1155Predicate.exitTokens(depositor, dummyMintableERC1155.address, burnLog)
+    await mintableERC1155Predicate.exitTokens(dummyMintableERC1155.address, burnLog)
     await dummyMintableERC1155.setApprovalForAll(mintableERC1155Predicate.address, true, { from: depositor })
   })
 
@@ -223,7 +223,7 @@ describe('exitTokens single', () => {
       amount
     })
 
-    await mintableERC1155Predicate.exitTokens(depositor, dummyMintableERC1155.address, burnLog)
+    await mintableERC1155Predicate.exitTokens(dummyMintableERC1155.address, burnLog)
     await dummyMintableERC1155.setApprovalForAll(mintableERC1155Predicate.address, true, { from: depositor })
 
     await mintableERC1155Predicate.lockTokens(depositor, mockValues.addresses[2], dummyMintableERC1155.address, depositData)
@@ -243,7 +243,7 @@ describe('exitTokens single', () => {
       tokenId: tokenId,
       amount: exitAmount
     })
-    exitTokensTx = await mintableERC1155Predicate.exitTokens(withdrawer, dummyMintableERC1155.address, burnLog)
+    exitTokensTx = await mintableERC1155Predicate.exitTokens(dummyMintableERC1155.address, burnLog)
     should.exist(exitTokensTx)
   })
 
@@ -332,7 +332,7 @@ describe('exitTokens batch', () => {
       amounts: [amountA, amountB]
     })
 
-    await mintableERC1155Predicate.exitTokens(depositor, dummyMintableERC1155.address, burnLog)
+    await mintableERC1155Predicate.exitTokens(dummyMintableERC1155.address, burnLog)
     await dummyMintableERC1155.setApprovalForAll(mintableERC1155Predicate.address, true, { from: depositor })
 
     await mintableERC1155Predicate.lockTokens(depositor, mockValues.addresses[2], dummyMintableERC1155.address, depositData)
@@ -357,7 +357,7 @@ describe('exitTokens batch', () => {
       tokenIds: [tokenIdA, tokenIdB],
       amounts: [burnAmountA, burnAmountB]
     })
-    exitTokensTx = await mintableERC1155Predicate.exitTokens(withdrawer, dummyMintableERC1155.address, burnLog)
+    exitTokensTx = await mintableERC1155Predicate.exitTokens(dummyMintableERC1155.address, burnLog)
     should.exist(exitTokensTx)
   })
 
@@ -471,7 +471,7 @@ describe('exitTokens called by different user', () => {
       amounts: [amountA, amountB]
     })
 
-    await mintableERC1155Predicate.exitTokens(depositor, dummyMintableERC1155.address, burnLog)
+    await mintableERC1155Predicate.exitTokens(dummyMintableERC1155.address, burnLog)
     await dummyMintableERC1155.setApprovalForAll(mintableERC1155Predicate.address, true, { from: depositor })
 
     await mintableERC1155Predicate.lockTokens(depositor, mockValues.addresses[2], dummyMintableERC1155.address, depositData)
@@ -491,7 +491,7 @@ describe('exitTokens called by different user', () => {
       tokenIds: [tokenIdA, tokenIdB],
       amounts: [amountA, amountB]
     })
-    exitTokensTx = await mintableERC1155Predicate.exitTokens(exitCaller, dummyMintableERC1155.address, burnLog)
+    exitTokensTx = await mintableERC1155Predicate.exitTokens(dummyMintableERC1155.address, burnLog)
     should.exist(exitTokensTx)
   })
 
@@ -594,7 +594,7 @@ describe('exitTokens with incorrect burn transaction signature', () => {
       amount
     })
 
-    await mintableERC1155Predicate.exitTokens(depositor, dummyMintableERC1155.address, burnLog)
+    await mintableERC1155Predicate.exitTokens(dummyMintableERC1155.address, burnLog)
     await dummyMintableERC1155.setApprovalForAll(mintableERC1155Predicate.address, true, { from: depositor })
 
     await mintableERC1155Predicate.lockTokens(depositor, mockValues.addresses[2], dummyMintableERC1155.address, depositData)
@@ -609,7 +609,7 @@ describe('exitTokens with incorrect burn transaction signature', () => {
       tokenId,
       amount
     })
-    await expectRevert(mintableERC1155Predicate.exitTokens(withdrawer, dummyMintableERC1155.address, burnLog), 'MintableERC1155Predicate: INVALID_WITHDRAW_SIG')
+    await expectRevert(mintableERC1155Predicate.exitTokens(dummyMintableERC1155.address, burnLog), 'MintableERC1155Predicate: INVALID_WITHDRAW_SIG')
   })
 })
 
@@ -639,7 +639,7 @@ describe('exitTokens called using normal transfer log instead of burn', () => {
       amounts: [amount]
     })
 
-    await mintableERC1155Predicate.exitTokens(depositor, dummyMintableERC1155.address, burnLog)
+    await mintableERC1155Predicate.exitTokens(dummyMintableERC1155.address, burnLog)
     await dummyMintableERC1155.setApprovalForAll(mintableERC1155Predicate.address, true, { from: depositor })
 
     await mintableERC1155Predicate.lockTokens(depositor, mockValues.addresses[2], dummyMintableERC1155.address, depositData)
@@ -653,7 +653,7 @@ describe('exitTokens called using normal transfer log instead of burn', () => {
       tokenId: tokenId,
       amount: amount
     })
-    await expectRevert(mintableERC1155Predicate.exitTokens(withdrawer, dummyMintableERC1155.address, burnLog), 'MintableERC1155Predicate: INVALID_RECEIVER')
+    await expectRevert(mintableERC1155Predicate.exitTokens(dummyMintableERC1155.address, burnLog), 'MintableERC1155Predicate: INVALID_RECEIVER')
   })
 })
 
@@ -683,7 +683,7 @@ describe('exitTokens called by non manager', () => {
       amount
     })
 
-    await mintableERC1155Predicate.exitTokens(depositor, dummyMintableERC1155.address, burnLog)
+    await mintableERC1155Predicate.exitTokens(dummyMintableERC1155.address, burnLog)
     await dummyMintableERC1155.setApprovalForAll(mintableERC1155Predicate.address, true, { from: depositor })
 
     await mintableERC1155Predicate.lockTokens(depositor, mockValues.addresses[2], dummyMintableERC1155.address, depositData)
@@ -698,7 +698,7 @@ describe('exitTokens called by non manager', () => {
       amount
     })
     await expectRevert(
-      mintableERC1155Predicate.exitTokens(withdrawer, dummyMintableERC1155.address, burnLog, { from: accounts[2] }),
+      mintableERC1155Predicate.exitTokens(dummyMintableERC1155.address, burnLog, { from: accounts[2] }),
       'MintableERC1155Predicate: INSUFFICIENT_PERMISSIONS')
   })
 })

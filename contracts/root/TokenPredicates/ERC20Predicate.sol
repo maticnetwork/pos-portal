@@ -67,11 +67,10 @@ contract ERC20Predicate is ITokenPredicate, AccessControlMixin, Initializable {
      * @param log Valid ERC20 burn log from child chain
      */
     function exitTokens(
-        address,
         address rootToken,
-        bytes memory log
+        bytes calldata log
     )
-        public
+        external
         override
         only(MANAGER_ROLE)
     {

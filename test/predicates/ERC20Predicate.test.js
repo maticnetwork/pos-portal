@@ -156,7 +156,7 @@ contract('ERC20Predicate', (accounts) => {
         to: mockValues.zeroAddress,
         amount: withdrawAmount
       })
-      exitTokensTx = await erc20Predicate.exitTokens(withdrawer, dummyERC20.address, burnLog)
+      exitTokensTx = await erc20Predicate.exitTokens(dummyERC20.address, burnLog)
       should.exist(exitTokensTx)
     })
 
@@ -231,7 +231,7 @@ contract('ERC20Predicate', (accounts) => {
         to: mockValues.zeroAddress,
         amount: withdrawAmount
       })
-      exitTokensTx = await erc20Predicate.exitTokens(exitCaller, dummyERC20.address, burnLog)
+      exitTokensTx = await erc20Predicate.exitTokens(dummyERC20.address, burnLog)
       should.exist(exitTokensTx)
     })
 
@@ -300,7 +300,7 @@ contract('ERC20Predicate', (accounts) => {
         to: mockValues.zeroAddress,
         amount: withdrawAmount
       })
-      await expectRevert(erc20Predicate.exitTokens(withdrawer, dummyERC20.address, burnLog), 'ERC20Predicate: INVALID_SIGNATURE')
+      await expectRevert(erc20Predicate.exitTokens(dummyERC20.address, burnLog), 'ERC20Predicate: INVALID_SIGNATURE')
     })
   })
 
@@ -326,7 +326,7 @@ contract('ERC20Predicate', (accounts) => {
         to: mockValues.addresses[8],
         amount: withdrawAmount
       })
-      await expectRevert(erc20Predicate.exitTokens(withdrawer, dummyERC20.address, burnLog), 'ERC20Predicate: INVALID_RECEIVER')
+      await expectRevert(erc20Predicate.exitTokens(dummyERC20.address, burnLog), 'ERC20Predicate: INVALID_RECEIVER')
     })
   })
 
@@ -353,7 +353,7 @@ contract('ERC20Predicate', (accounts) => {
         amount: withdrawAmount
       })
       await expectRevert(
-        erc20Predicate.exitTokens(withdrawer, dummyERC20.address, burnLog, { from: accounts[2] }),
+        erc20Predicate.exitTokens(dummyERC20.address, burnLog, { from: accounts[2] }),
         'ERC20Predicate: INSUFFICIENT_PERMISSIONS')
     })
   })
