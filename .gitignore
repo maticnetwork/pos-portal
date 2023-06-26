@@ -21,3 +21,26 @@ tenderly.yaml
 contracts/ChainConstants.sol
 
 contracts/dump.json
+
+.env
+coverage
+coverage.json
+typechain-types
+
+#Hardhat files
+cache
+artifacts
+
+#openzeppelin
+.openzeppelin/*
+!.openzeppelin/unknown-137.json
+!.openzeppelin/mainnet.json
+
+.DS_Store
+# Foundry
+forge-cache/
+out/
+forge-coverage/
+lcov.info
+
+artifacts/

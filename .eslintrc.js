@@ -1,17 +1,18 @@
 module.exports = {
-  parser: 'babel-eslint',
-  extends: 'standard',
   env: {
+    browser: false,
+    es2021: true,
+    mocha: true,
     node: true,
-    es6: true,
-    mocha: true
+  },
+  plugins: ['@typescript-eslint'],
+  extends: ['standard', 'plugin:prettier/recommended', 'plugin:node/recommended'],
+  parser: '@typescript-eslint/parser',
+  parserOptions: {
+    ecmaVersion: 12,
   },
   rules: {
-    'space-before-function-paren': ['error', 'never']
+    'node/no-unsupported-features/es-syntax': ['error', { ignores: ['modules'] }],
+    'node/no-unpublished-import': ['error', { devDependencies: true }],
   },
-  globals: {
-    contract: true,
-    web3: true,
-    assert: true
-  }
-}
+};
