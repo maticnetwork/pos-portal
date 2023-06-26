@@ -1,6 +1,12 @@
 [profile.default]
-src = 'contracts'
-out = 'out'
-libs = ['node_modules', 'lib']
-test = 'hardhat'
-cache_path  = 'forge-cache'
+src = "contracts"
+test = 'test/forge'
+out = "artifacts"
+libs = [
+    "lib",
+    "node_modules",
+]`
+
+verbosity = 2
+
+# See more config options https://github.com/foundry-rs/foundry/tree/master/config
