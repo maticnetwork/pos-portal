@@ -42,5 +42,3 @@ forge-cache/
 out/
 forge-coverage/
 lcov.info
-
-artifacts/
