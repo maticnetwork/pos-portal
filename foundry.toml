@@ -1,12 +1,11 @@
 [profile.default]
 src = "contracts"
-test = 'test/forge'
+test = "test/forge"
 out = "artifacts"
 libs = [
     "lib",
     "node_modules",
-]`
-
+]
+cache_path  = "forge-cache"
 verbosity = 2
-
-# See more config options https://github.com/foundry-rs/foundry/tree/master/config
+ffi = true
