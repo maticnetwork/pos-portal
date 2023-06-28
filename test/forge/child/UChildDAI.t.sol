@@ -287,6 +287,8 @@ contract UChildDAITest is Test {
         assertEq(uChildDAI.balanceOf(holder.addr), holderBalance);
         assertEq(uChildDAI.balanceOf(recipient), recipientBalance);
 
+        vm.stopPrank();
+
         // to self
 
         vm.startPrank(spender);
@@ -301,6 +303,8 @@ contract UChildDAITest is Test {
 
         // arbitrary
 
+        vm.stopPrank();
+
         vm.startPrank(spender);
 
         uChildDAI.move(holder.addr, recipient, amount);
@@ -310,5 +314,7 @@ contract UChildDAITest is Test {
 
         assertEq(uChildDAI.balanceOf(holder.addr), holderBalance);
         assertEq(uChildDAI.balanceOf(recipient), recipientBalance);
+
+        vm.stopPrank();
     }
 }
