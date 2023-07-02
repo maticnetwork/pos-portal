@@ -273,3 +273,4 @@ Set `MNEMONIC` and `API_KEY` as env variables
 ```bash
 npm run change-owners -- --network <network-name>
 ```
+auto search and fix network 
