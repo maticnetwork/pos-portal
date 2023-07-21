@@ -30,15 +30,10 @@ contract UpgradableProxyTest is Test {
     }
 
     function testFallback() public {
-        bytes memory msgData = abi.encodeWithSelector(
-            implementation.mirror.selector,
-            "anything"
-        );
+        bytes memory msgData = abi.encodeWithSelector(implementation.mirror.selector, "anything");
         uint256 value = 1 ether;
 
-        (bool succ, bytes memory retData) = address(upgradableProxy).call{
-            value: value
-        }(msgData);
+        (bool succ, bytes memory retData) = address(upgradableProxy).call{value: value}(msgData);
         require(succ);
 
         bytes memory mirroredRetData = abi.decode(retData, (bytes));
@@ -50,9 +45,7 @@ contract UpgradableProxyTest is Test {
     function testReceive() public {
         uint256 value = 1 ether;
 
-        (bool succ, bytes memory retData) = address(upgradableProxy).call{
-            value: value
-        }("");
+        (bool succ, bytes memory retData) = address(upgradableProxy).call{value: value}("");
         require(succ);
 
         assertEq(retData.length, 0);
@@ -90,7 +83,7 @@ contract UpgradableProxyTest is Test {
         upgradableProxy.updateImplementation(address(0));
     }
 
-    function cannotUpdateImplementation_NotContract() public {
+    function testCannotUpdateImplementation_NotContract() public {
         vm.expectRevert("DESTINATION_ADDRESS_IS_NOT_A_CONTRACT");
 
         upgradableProxy.updateImplementation(address(0));
@@ -123,18 +116,13 @@ contract UpgradableProxyTest is Test {
     function testUpdateAndCall() public {
         DummyImplementation newImplementation = new DummyImplementation();
 
-        bytes memory msgData = abi.encodeWithSelector(
-            implementation.mirror.selector
-        );
+        bytes memory msgData = abi.encodeWithSelector(implementation.mirror.selector);
         uint256 value = 1 ether;
 
         vm.expectEmit();
         emit ProxyUpdated(address(newImplementation), address(implementation));
 
-        upgradableProxy.updateAndCall{value: value}(
-            address(newImplementation),
-            msgData
-        );
+        upgradableProxy.updateAndCall{value: value}(address(newImplementation), msgData);
 
         assertEq(upgradableProxy.implementation(), address(newImplementation));
         assertTrue(DummyImplementation(address(upgradableProxy)).mirrored());
