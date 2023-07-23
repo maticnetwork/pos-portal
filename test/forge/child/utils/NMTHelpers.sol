@@ -21,38 +21,24 @@ interface INMTContract {
 
 abstract contract NMTHelpers is Script {
     event MetaTransactionExecuted(
-        address indexed userAddress,
-        address payable indexed relayerAddress,
-        bytes functionSignature
+        address indexed userAddress, address payable indexed relayerAddress, bytes functionSignature
     );
 
     bytes32 private constant META_TRANSACTION_TYPEHASH =
-        keccak256(
-            bytes(
-                "MetaTransaction(uint256 nonce,address from,bytes functionSignature)"
-            )
-        );
+        keccak256(bytes("MetaTransaction(uint256 nonce,address from,bytes functionSignature)"));
 
     INMTContract internal nmtContract;
 
-    function executeMetaTransaction(
-        address contractAddr,
-        bytes memory funcSigAndParams,
-        Account memory signer
-    ) internal returns (bytes memory returnData) {
-        returnData = _executeMetaTransaction(
-            contractAddr,
-            funcSigAndParams,
-            signer,
-            false
-        );
+    function executeMetaTransaction(address contractAddr, bytes memory funcSigAndParams, Account memory signer)
+        internal
+        returns (bytes memory returnData)
+    {
+        returnData = _executeMetaTransaction(contractAddr, funcSigAndParams, signer, false);
     }
 
-    function expectMetaTransactionRevert(
-        address contractAddr,
-        bytes memory funcSigAndParams,
-        Account memory signer
-    ) internal {
+    function expectMetaTransactionRevert(address contractAddr, bytes memory funcSigAndParams, Account memory signer)
+        internal
+    {
         _executeMetaTransaction(contractAddr, funcSigAndParams, signer, true);
     }
 
@@ -69,12 +55,11 @@ abstract contract NMTHelpers is Script {
     ) private returns (bytes memory returnData) {
         nmtContract = INMTContract(contractAddr);
 
-        NativeMetaTransaction.MetaTransaction
-            memory metaTx = NativeMetaTransaction.MetaTransaction({
-                nonce: nmtContract.getNonce(signer.addr),
-                from: signer.addr,
-                functionSignature: funcSigAndParams
-            });
+        NativeMetaTransaction.MetaTransaction memory metaTx = NativeMetaTransaction.MetaTransaction({
+            nonce: nmtContract.getNonce(signer.addr),
+            from: signer.addr,
+            functionSignature: funcSigAndParams
+        });
 
         bytes32 digest = _toTypedMessageHash(_hashMetaTransaction(metaTx));
 
@@ -84,39 +69,16 @@ abstract contract NMTHelpers is Script {
             vm.expectRevert("Function call not successful");
         }
 
-        returnData = nmtContract.executeMetaTransaction(
-            signer.addr,
-            funcSigAndParams,
-            r,
-            s,
-            v
+        returnData = nmtContract.executeMetaTransaction(signer.addr, funcSigAndParams, r, s, v);
+    }
+
+    function _hashMetaTransaction(NativeMetaTransaction.MetaTransaction memory metaTx) private pure returns (bytes32) {
+        return keccak256(
+            abi.encode(META_TRANSACTION_TYPEHASH, metaTx.nonce, metaTx.from, keccak256(metaTx.functionSignature))
         );
     }
 
-    function _hashMetaTransaction(
-        NativeMetaTransaction.MetaTransaction memory metaTx
-    ) private pure returns (bytes32) {
-        return
-            keccak256(
-                abi.encode(
-                    META_TRANSACTION_TYPEHASH,
-                    metaTx.nonce,
-                    metaTx.from,
-                    keccak256(metaTx.functionSignature)
-                )
-            );
-    }
-
-    function _toTypedMessageHash(
-        bytes32 messageHash
-    ) private view returns (bytes32) {
-        return
-            keccak256(
-                abi.encodePacked(
-                    "\x19\x01",
-                    nmtContract.getDomainSeperator(),
-                    messageHash
-                )
-            );
+    function _toTypedMessageHash(bytes32 messageHash) private view returns (bytes32) {
+        return keccak256(abi.encodePacked("\x19\x01", nmtContract.getDomainSeperator(), messageHash));
     }
 }
