@@ -7,8 +7,12 @@ contract TestRootTunnel is BaseRootTunnel {
 
     event MessageReceivedFromChild(uint256);
 
+    function sendMessageToChild(bytes calldata message) external {
+        _sendMessageToChild(message);
+    }
+
     function _processMessageFromChild(bytes memory message) internal override {
-        (uint256 n) = abi.decode(message, (uint256));
+        uint256 n = abi.decode(message, (uint256));
         emit MessageReceivedFromChild(n);
         receivedNumber = n;
     }
