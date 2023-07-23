@@ -5,13 +5,14 @@
     "strict": true,
     "esModuleInterop": true,
     "outDir": "dist",
-    "declaration": true
+    "declaration": true,
+    "resolveJsonModule": true
   },
   "exclude": ["node_modules"],
   "include": [
     "scripts/**/*",
     "tasks/**/*",
-    "test/**/*",
+    "test/hh/*",
     "hardhat/**/*",
     "typechain/**/*",
     "types/**/*",

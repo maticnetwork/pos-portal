@@ -52,7 +52,7 @@ export default {
       gasPrice: 10000000000, // 10 gwei
     },
   },
-  paths: { tests: "hardhat" },
+  paths: { tests: "test/hh" },
   solidity: {
     compilers: [
       {
