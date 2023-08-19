@@ -1,16 +1,13 @@
 pragma solidity 0.6.6;
 
 import {UChildERC20} from "./UChildERC20.sol";
-import {EIP712Base} from "../../../common/EIP712Base.sol";
-import {ECDSA} from "@openzeppelin/contracts/cryptography/ECDSA.sol";
 
 /**
  * @title UChildERC20 EIP3009
  * @author sepyke.eth
  * @notice UChildERC20 template with EIP-3009 (https://eips.ethereum.org/EIPS/eip-3009)
  */
-contract UChildERC20EIP3009 is EIP712Base, UChildERC20 {
-    using ECDSA for bytes32;
+contract UChildERC20EIP3009 is UChildERC20 {
 
     /// @dev EIP3009: Transfer type hash
     bytes32 public constant TRANSFER_WITH_AUTHORIZATION_TYPEHASH = 0x7c7c6cdb67a18743f49ec6fa9b35f50d52ed05cbed4cc592e13b44501c1a2267;
@@ -39,23 +36,12 @@ contract UChildERC20EIP3009 is EIP712Base, UChildERC20 {
     /// @dev EIP3009: This event is emitted when authorization is cancelled
     event AuthorizationCanceled(address indexed authorizer, bytes32 indexed nonce);
 
-    /// @dev Contract initializer
-    function initialize(
-        string memory name_,
-        string memory symbol_,
-        uint8 decimals_,
-        address childChainManager
-    ) override public initializer {
-        _initializeEIP712(name_);
-        super.initialize(name_, symbol_, decimals_, childChainManager);
-    }
-
     /// @dev EIP3009: Validate signed transfer authorization payload
     function _checkAndUseAuthorization(
         bytes32 typeHash,
         address from,
         address to,
-        uint256 amount,
+        uint256 value,
         uint256 validAfter,
         uint256 validBefore,
         bytes32 nonce,
@@ -67,18 +53,17 @@ contract UChildERC20EIP3009 is EIP712Base, UChildERC20 {
         require(now < validBefore, AUTHORIZATION_INVALID);
         require(!_eip3009_states[from][nonce], AUTHORIZATION_INVALID);
 
-        bytes memory authorization = abi.encode(
+        bytes32 authorization = keccak256(abi.encode(
             typeHash,
             from,
             to,
-            amount,
+            value,
             validAfter,
             validBefore,
             nonce
-        );
-        bytes32 digest = toTypedMessageHash(keccak256(authorization));
-        bytes memory signature = abi.encodePacked(r,s,v);
-        address signer = digest.recover(signature);
+        ));
+        bytes32 digest = toTypedMessageHash(authorization);
+        address signer = ecrecover(digest, v, r, s);
         require(signer == from, SIGNATURE_INVALID);
 
         _eip3009_states[from][nonce] = true;
@@ -98,7 +83,7 @@ contract UChildERC20EIP3009 is EIP712Base, UChildERC20 {
     function transferWithAuthorization(
         address from,
         address to,
-        uint256 amount,
+        uint256 value,
         uint256 validAfter,
         uint256 validBefore,
         bytes32 nonce,
@@ -111,21 +96,22 @@ contract UChildERC20EIP3009 is EIP712Base, UChildERC20 {
             TRANSFER_WITH_AUTHORIZATION_TYPEHASH,
             from,
             to,
-            amount,
+            value,
             validAfter,
             validBefore,
             nonce,
             v,
             r,
-            s);
-        _transfer(from, to, amount);
+            s
+        );
+        _transfer(from, to, value);
     }
 
     /// @dev EIP3009: Pull token from `from` with authorization signed by `from`
     function receiveWithAuthorization(
         address from,
         address to,
-        uint256 amount,
+        uint256 value,
         uint256 validAfter,
         uint256 validBefore,
         bytes32 nonce,
@@ -139,38 +125,38 @@ contract UChildERC20EIP3009 is EIP712Base, UChildERC20 {
             RECEIVE_WITH_AUTHORIZATION_TYPEHASH,
             from,
             to,
-            amount,
+            value,
             validAfter,
             validBefore,
             nonce,
             v,
             r,
-            s);
-        _transfer(from, to, amount);
+            s
+        );
+        _transfer(from, to, value);
     }
 
     /// @dev EIP3009(OPTIONAL): Revoke authorization
     function cancelAuthorization(
-        address account,
+        address authorizer,
         bytes32 nonce,
         uint8 v,
         bytes32 r,
         bytes32 s
     ) external {
-        require(!_eip3009_states[account][nonce], AUTHORIZATION_INVALID);
+        require(!_eip3009_states[authorizer][nonce], AUTHORIZATION_INVALID);
 
-        bytes memory authorization = abi.encode(
+        bytes32 authorization = keccak256(abi.encode(
             CANCEL_AUTHORIZATION_TYPEHASH,
-            account,
+            authorizer,
             nonce
-        );
-        bytes32 digest = toTypedMessageHash(keccak256(authorization));
-        bytes memory signature = abi.encodePacked(r,s,v);
-        address signer = digest.recover(signature);
-        require(signer == account, SIGNATURE_INVALID);
+        ));
+        bytes32 digest = toTypedMessageHash(authorization);
+        address signer = ecrecover(digest, v, r, s);
+        require(signer == authorizer, SIGNATURE_INVALID);
 
-        _eip3009_states[account][nonce] = true;
-        emit AuthorizationCanceled(account, nonce);
+        _eip3009_states[authorizer][nonce] = true;
+        emit AuthorizationCanceled(authorizer, nonce);
     }
 
 }
