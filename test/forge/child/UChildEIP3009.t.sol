@@ -11,14 +11,9 @@ import {UChildEIP3009} from "contracts/child/ChildToken/UpgradeableChildERC20/UC
  * @notice UChildERC20 template with EIP-3009 (https://eips.ethereum.org/EIPS/eip-3009)
  */
 contract UChildEIP3009Test is Test {
-
     UChildEIP3009 internal uChildEIP3009;
-
     Account holder;
     address spender;
-
-    uint256 expiry;
-    bool allowed;
 
     bytes32 public constant TRANSFER_WITH_AUTHORIZATION_TYPEHASH = keccak256(
         "TransferWithAuthorization(address from,address to,uint256 value,uint256 validAfter,uint256 validBefore,bytes32 nonce)"
@@ -39,8 +34,6 @@ contract UChildEIP3009Test is Test {
 
         holder = makeAccount("holder");
         spender = makeAddr("spender");
-        expiry = block.timestamp + 1 days;
-        allowed = true;
     }
 
     function testTypeHash() public {
@@ -361,6 +354,4 @@ contract UChildEIP3009Test is Test {
         );
         vm.stopPrank();
     }
-
-
 }
