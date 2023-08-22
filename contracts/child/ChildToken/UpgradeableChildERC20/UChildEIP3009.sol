@@ -70,7 +70,7 @@ contract UChildEIP3009 is UChildERC20 {
         emit AuthorizationUsed(from, nonce);
     }
 
-    /// @dev EIP3009: Check wethere nonce is used or not
+    /// @dev EIP3009: Check wether nonce is used or not
     function authorizationState(address account, bytes32 nonce)
         external
         view
