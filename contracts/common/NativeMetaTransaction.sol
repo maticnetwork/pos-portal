@@ -15,7 +15,7 @@ contract NativeMetaTransaction is EIP712Base {
         address payable indexed relayerAddress,
         bytes functionSignature
     );
-    mapping(address => uint256) nonces;
+    mapping(address => uint256) public nonces;
 
     /*
      * Meta transaction structure.
