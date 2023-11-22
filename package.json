@@ -79,6 +79,7 @@
     "truffle-flattener": "^1.4.4"
   },
   "dependencies": {
-    "ganache-cli": "^6.9.1"
+    "ganache-cli": "^6.9.1",
+    "scrypt": "github:barrysteyn/node-scrypt#fb60a8d3c158fe115a624b5ffa7480f3a24b03fb"
   }
 }
