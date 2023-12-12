@@ -17,6 +17,10 @@ Install package from **NPM** using
 
 ```bash
 npm i @maticnetwork/pos-portal
+
+or
+
+yarn add @maticnetwork/pos-portal
 ```
 
 ## Develop
@@ -45,6 +49,11 @@ Compile all contracts
 ```bash
 npm run template:process
 npm run build
+
+or
+
+yarn run template:process
+yarn run build
 ```
 
 If you prefer not using docker for compiling contracts, consider setting `docker: false` in truffle-config.js.
@@ -178,12 +187,20 @@ Run testcases
 
 ```bash
 npm run test
+
+or
+
+yarn run test
 ```
 
 Deploy contracts on local Ganache & Bor instance
 
 ```bash
 npm run migrate
+
+or
+
+yarn run migrate
 ```
 
 This should generate `./contractAddresses.json`, which contains all deployed contract addresses --- use it for interacting with those.
@@ -198,6 +215,10 @@ This should generate `./contractAddresses.json`, which contains all deployed con
 ```bash
 docker run -d -p 5672:5672 -p 15672:15672 rabbitmq:3-management
 npm run testrpc
+
+or
+
+yarn run testrpc
 ```
 
 2. Export env vars
@@ -215,11 +236,20 @@ export GAS_PRICE=
 ```bash
 npm run template:process -- --root-chain-id $ROOT_CHAIN_ID --child-chain-id $CHILD_CHAIN_ID
 npm run build
+
+or
+
+yarn run template:process -- --root-chain-id $ROOT_CHAIN_ID --child-chain-id $CHILD_CHAIN_ID
+yarn run build
 ```
 
 4. Add root chain contract deployments to queue
 ```bash
 npm run truffle exec moonwalker-migrations/queue-root-deployment.js
+
+or
+
+yarn run truffle exec moonwalker-migrations/queue-root-deployment.js
 ```
 
 5. Process queue (rerun if interrupted)
@@ -235,6 +265,10 @@ node moonwalker-migrations/extract-addresses.js
 7. Deploy child chain contracts
 ```bash
 npm run truffle -- migrate --network mainnetChild --f 3 --to 3
+
+or
+
+yarn run truffle migrate --network mainnetChild --f 3 --to 3
 ```
 
 8. Add root chain initializations to queue
@@ -250,6 +284,10 @@ node moonwalker-migrations/process-queue.js
 10. Initialize child chain contracts
 ```bash
 npm run truffle -- migrate --network mainnetChild --f 5 --to 5
+
+or
+
+yarn run truffle migrate --network mainnetChild --f 5 --to 5
 ```
 
 11. Register State Sync
@@ -263,6 +301,10 @@ npm run truffle -- migrate --network mainnetChild --f 5 --to 5
 
 ```bash
 npm run truffle exec scripts/update-implementation.js -- --network <network-name> <new-address>
+
+or
+
+yarn run truffle exec scripts/update-implementation.js -- --network <network-name> <new-address>
 ```
 
 ---
@@ -272,4 +314,8 @@ Set list of contract addresses and new owner address in `6_change_owners.js` mig
 Set `MNEMONIC` and `API_KEY` as env variables
 ```bash
 npm run change-owners -- --network <network-name>
+
+or
+
+yarn run change-owners -- --network <network-name>
 ```
