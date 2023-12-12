@@ -24,6 +24,7 @@ contract('MintableERC721Predicate', (accounts) => {
     const tokenId = mockValues.numbers[2]
     const depositReceiver = mockValues.addresses[7]
     const depositor = accounts[1]
+    const depositor2 = accounts[2];
     let dummyMintableERC721
     let mintableERC721Predicate
     let lockTokensTx
@@ -97,6 +98,17 @@ contract('MintableERC721Predicate', (accounts) => {
     it('token should be transferred to correct contract', async () => {
       const owner = await dummyMintableERC721.ownerOf(tokenId)
       owner.should.equal(mintableERC721Predicate.address)
+    })
+
+    it('Should be able to receive lockTokens tx from address that does not own a token', async () => {
+      const depositData = abi.encode(['uint256'], [tokenId])
+      lockTokensTx = await mintableERC721Predicate.lockTokens(
+        depositor2,
+        depositReceiver,
+        dummyMintableERC721.address,
+        depositData,
+      )
+      should.exist(lockTokensTx)
     })
   })
 
