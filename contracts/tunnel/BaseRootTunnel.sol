@@ -8,7 +8,6 @@ import {IStateSender} from "../root/StateSender/IStateSender.sol";
 import {RLPReader} from "../lib/RLPReader.sol";
 import {MerklePatriciaProof} from "../lib/MerklePatriciaProof.sol";
 import {ICheckpointManager} from "../root/ICheckpointManager.sol";
-import {RLPReader} from "../lib/RLPReader.sol";
 import {Merkle} from "../lib/Merkle.sol";
 import {ExitPayloadReader} from "../lib/ExitPayloadReader.sol";
 
