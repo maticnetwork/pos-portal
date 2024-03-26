@@ -2245,7 +2245,7 @@ contract ChildMintableERC721 is
 
     /**
      * @notice This method is supposed to be called by client when withdrawing token with metadata
-     * and pass return value of this function as second paramter of `withdrawWithMetadata` method
+     * and pass return value of this function as second parameter of `withdrawWithMetadata` method
      *
      * It can be overridden by clients to encode data in a different form, which needs to
      * be decoded back by them correctly during exiting
