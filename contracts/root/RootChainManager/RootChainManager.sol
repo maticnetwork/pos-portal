@@ -39,6 +39,11 @@ contract RootChainManager is
     address public constant ETHER_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
     bytes32 public constant MAPPER_ROLE = keccak256("MAPPER_ROLE");
 
+    constructor() public {
+        // Disable initializer on implementation contract
+        _disableInitializer();
+    }
+
     function _msgSender()
         internal
         override
