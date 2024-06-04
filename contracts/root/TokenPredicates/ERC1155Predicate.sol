@@ -42,7 +42,10 @@ contract ERC1155Predicate is ITokenPredicate, ERC1155Receiver, AccessControlMixi
         uint256[] amounts
     );
 
-    constructor() public {}
+    constructor() public {
+        // Disable initializer on implementation contract
+        _disableInitializer();
+    }
 
     function initialize(address _owner) external initializer {
         _setupContractId("ERC1155Predicate");
