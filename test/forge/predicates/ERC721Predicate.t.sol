@@ -4,10 +4,12 @@ pragma experimental ABIEncoderV2;
 
 import "test/forge/utils/Test.sol";
 import {ERC721Predicate} from "contracts/root/TokenPredicates/ERC721Predicate.sol";
+import {ERC721PredicateProxy} from "contracts/root/TokenPredicates/ERC721PredicateProxy.sol";
 import {DummyERC721} from "contracts/root/RootToken/DummyERC721.sol";
 
 contract ERC721PredicateTest is Test {
     ERC721Predicate internal erc721Predicate;
+    ERC721Predicate internal erc721PredicateImpl;
     DummyERC721 internal erc721Token;
     address internal manager = makeAddr("manager");
     address internal alice = makeAddr("alice");
@@ -45,9 +47,13 @@ contract ERC721PredicateTest is Test {
     );
 
     function setUp() public {
-        erc721Predicate = new ERC721Predicate();
         erc721Token = new DummyERC721("Test", "TST");
         vm.prank(manager);
+
+        erc721PredicateImpl = new ERC721Predicate();
+        address erc721PredicateProxy = address(new ERC721PredicateProxy(address(erc721PredicateImpl)));
+        erc721Predicate = ERC721Predicate(erc721PredicateProxy);
+
         erc721Predicate.initialize(manager);
 
         vm.startPrank(alice);
@@ -71,7 +77,8 @@ contract ERC721PredicateTest is Test {
         vm.expectRevert("already inited");
         erc721Predicate.initialize(manager);
 
-        erc721Predicate = new ERC721Predicate();
+        address erc721PredicateProxy = address(new ERC721PredicateProxy(address(erc721PredicateImpl)));
+        erc721Predicate = ERC721Predicate(erc721PredicateProxy);
 
         vm.expectEmit();
         emit RoleGranted(
@@ -87,6 +94,16 @@ contract ERC721PredicateTest is Test {
         );
 
         erc721Predicate.initialize(manager);
+    }
+
+    function testInitializeImpl() public {
+        vm.expectRevert("already inited");
+        erc721PredicateImpl.initialize(manager);
+
+        erc721PredicateImpl = new ERC721Predicate();
+
+        vm.expectRevert("already inited");
+        erc721PredicateImpl.initialize(manager);
     }
 
     function testLockTokensInvalidSender() public {

@@ -4,10 +4,12 @@ pragma experimental ABIEncoderV2;
 
 import "test/forge/utils/Test.sol";
 import {ERC20Predicate} from "contracts/root/TokenPredicates/ERC20Predicate.sol";
+import {ERC20PredicateProxy} from "contracts/root/TokenPredicates/ERC20PredicateProxy.sol";
 import {DummyERC20} from "contracts/root/RootToken/DummyERC20.sol";
 
 contract ERC20PredicateTest is Test {
     ERC20Predicate internal erc20Predicate;
+    ERC20Predicate internal erc20PredicateImpl;
     DummyERC20 internal erc20Token;
     address internal manager = makeAddr("manager");
     address internal alice = makeAddr("alice");
@@ -34,9 +36,13 @@ contract ERC20PredicateTest is Test {
     event Transfer(address indexed from, address indexed to, uint256 value);
 
     function setUp() public {
-        erc20Predicate = new ERC20Predicate();
         erc20Token = new DummyERC20("Test", "TST");
         vm.prank(manager);
+
+        erc20PredicateImpl = new ERC20Predicate();
+        address erc20PredicateProxy = address(new ERC20PredicateProxy(address(erc20PredicateImpl)));
+        erc20Predicate = ERC20Predicate(erc20PredicateProxy);
+
         erc20Predicate.initialize(manager);
 
         vm.startPrank(alice);
@@ -56,7 +62,8 @@ contract ERC20PredicateTest is Test {
         vm.expectRevert("already inited");
         erc20Predicate.initialize(manager);
 
-        erc20Predicate = new ERC20Predicate();
+        address erc20PredicateProxy = address(new ERC20PredicateProxy(address(erc20PredicateImpl)));
+        erc20Predicate = ERC20Predicate(erc20PredicateProxy);
 
         vm.expectEmit();
         emit RoleGranted(
@@ -68,6 +75,16 @@ contract ERC20PredicateTest is Test {
         emit RoleGranted(erc20Predicate.MANAGER_ROLE(), manager, address(this));
 
         erc20Predicate.initialize(manager);
+    }
+
+    function testInitializeImpl() public {
+        vm.expectRevert("already inited");
+        erc20PredicateImpl.initialize(manager);
+
+        erc20PredicateImpl = new ERC20Predicate();
+
+        vm.expectRevert("already inited");
+        erc20PredicateImpl.initialize(manager);
     }
 
     function testLockTokensInvalidSender() public {
