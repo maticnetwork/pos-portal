@@ -9,6 +9,7 @@ contract Initializable {
         inited = true;
     }
 
-    function _disableInitializer() internal initializer {
+    function _disableInitializer() internal {
+        inited = true;
     }
 }
