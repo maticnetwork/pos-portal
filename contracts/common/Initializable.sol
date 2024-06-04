@@ -8,4 +8,8 @@ contract Initializable {
         _;
         inited = true;
     }
+
+    function _disableInitializer() internal {
+        inited = true;
+    }
 }

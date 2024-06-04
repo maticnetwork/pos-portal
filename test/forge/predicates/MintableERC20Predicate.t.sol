@@ -3,11 +3,15 @@ pragma solidity ^0.6.2;
 pragma experimental ABIEncoderV2;
 
 import "test/forge/utils/Test.sol";
+import {MintableERC20PredicateProxy} from "contracts/root/TokenPredicates/MintableERC20PredicateProxy.sol";
 import {MintableERC20Predicate} from "contracts/root/TokenPredicates/MintableERC20Predicate.sol";
+
 import {DummyMintableERC20} from "contracts/root/RootToken/DummyMintableERC20.sol";
 
 contract MintableERC20PredicateTest is Test {
     MintableERC20Predicate internal erc20Predicate;
+    MintableERC20Predicate internal erc20PredicateImpl;
+
     DummyMintableERC20 internal erc20Token;
     address internal manager = makeAddr("manager");
     address internal alice = makeAddr("alice");
@@ -35,7 +39,11 @@ contract MintableERC20PredicateTest is Test {
 
     function setUp() public {
         vm.startPrank(manager);
-        erc20Predicate = new MintableERC20Predicate();
+
+        erc20PredicateImpl = new MintableERC20Predicate();
+        address erc20PredicateProxy = address(new MintableERC20PredicateProxy(address(erc20PredicateImpl)));
+        erc20Predicate = MintableERC20Predicate(erc20PredicateProxy);
+
         erc20Token = new DummyMintableERC20("Test", "TST");
         erc20Predicate.initialize(manager);
 
@@ -80,7 +88,8 @@ contract MintableERC20PredicateTest is Test {
         vm.expectRevert("already inited");
         erc20Predicate.initialize(manager);
 
-        erc20Predicate = new MintableERC20Predicate();
+        address erc20PredicateProxy = address(new MintableERC20PredicateProxy(address(erc20PredicateImpl)));
+        erc20Predicate = MintableERC20Predicate(erc20PredicateProxy);
 
         vm.expectEmit();
         emit RoleGranted(
@@ -91,6 +100,16 @@ contract MintableERC20PredicateTest is Test {
         vm.expectEmit();
         emit RoleGranted(erc20Predicate.MANAGER_ROLE(), manager, address(this));
         erc20Predicate.initialize(manager);
+    }
+
+    function testInitializeImpl() public {
+        vm.expectRevert("already inited");
+        erc20PredicateImpl.initialize(manager);
+
+        erc20PredicateImpl = new MintableERC20Predicate();
+
+        vm.expectRevert("already inited");
+        erc20PredicateImpl.initialize(manager);
     }
 
     function testLockTokensInvalidSender() public {

@@ -4,10 +4,12 @@ pragma experimental ABIEncoderV2;
 
 import "test/forge/utils/Test.sol";
 import {MintableERC1155Predicate} from "contracts/root/TokenPredicates/MintableERC1155Predicate.sol";
+import {MintableERC1155PredicateProxy} from "contracts/root/TokenPredicates/MintableERC1155PredicateProxy.sol";
 import {DummyMintableERC1155} from "contracts/root/RootToken/DummyMintableERC1155.sol";
 
 contract MintableERC1155PredicateTest is Test {
     MintableERC1155Predicate internal erc1155Predicate;
+    MintableERC1155Predicate internal erc1155PredicateImpl;
     DummyMintableERC1155 internal erc1155Token;
     address internal manager = makeAddr("manager");
     address internal alice = makeAddr("alice");
@@ -53,7 +55,11 @@ contract MintableERC1155PredicateTest is Test {
         amts[1] = amt;
 
         vm.startPrank(manager);
-        erc1155Predicate = new MintableERC1155Predicate();
+
+        erc1155PredicateImpl = new MintableERC1155Predicate();
+        address erc1155PredicateProxy = address(new MintableERC1155PredicateProxy(address(erc1155PredicateImpl)));
+        erc1155Predicate = MintableERC1155Predicate(erc1155PredicateProxy);
+
         erc1155Token = new DummyMintableERC1155("ipfs://");
         erc1155Predicate.initialize(manager);
 
@@ -102,7 +108,8 @@ contract MintableERC1155PredicateTest is Test {
         vm.expectRevert("already inited");
         erc1155Predicate.initialize(manager);
 
-        erc1155Predicate = new MintableERC1155Predicate();
+        address erc1155PredicateProxy = address(new MintableERC1155PredicateProxy(address(erc1155PredicateImpl)));
+        erc1155Predicate = MintableERC1155Predicate(erc1155PredicateProxy);
 
         vm.expectEmit();
         emit RoleGranted(
@@ -118,6 +125,16 @@ contract MintableERC1155PredicateTest is Test {
         );
 
         erc1155Predicate.initialize(manager);
+    }
+
+     function testInitializeImpl() public {
+        vm.expectRevert("already inited");
+        erc1155PredicateImpl.initialize(manager);
+
+        erc1155PredicateImpl = new MintableERC1155Predicate();
+
+        vm.expectRevert("already inited");
+        erc1155PredicateImpl.initialize(manager);
     }
 
     function testLockTokensInvalidSender() public {

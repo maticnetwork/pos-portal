@@ -4,10 +4,14 @@ pragma experimental ABIEncoderV2;
 
 import "test/forge/utils/Test.sol";
 import {MintableERC721Predicate} from "contracts/root/TokenPredicates/MintableERC721Predicate.sol";
+import {MintableERC721PredicateProxy} from "contracts/root/TokenPredicates/MintableERC721PredicateProxy.sol";
+
 import {DummyMintableERC721} from "contracts/root/RootToken/DummyMintableERC721.sol";
 
 contract MintableERC721PredicateTest is Test {
     MintableERC721Predicate internal erc721Predicate;
+    MintableERC721Predicate internal erc721PredicateImpl;
+
     DummyMintableERC721 internal erc721Token;
     address internal manager = makeAddr("manager");
     address internal alice = makeAddr("alice");
@@ -46,7 +50,10 @@ contract MintableERC721PredicateTest is Test {
 
     function setUp() public {
         vm.startPrank(manager);
-        erc721Predicate = new MintableERC721Predicate();
+        erc721PredicateImpl = new MintableERC721Predicate();
+        address erc721PredicateProxy = address(new MintableERC721PredicateProxy(address(erc721PredicateImpl)));
+        erc721Predicate = MintableERC721Predicate(erc721PredicateProxy);
+
         erc721Token = new DummyMintableERC721("Test", "TST");
         erc721Predicate.initialize(manager);
 
@@ -94,7 +101,8 @@ contract MintableERC721PredicateTest is Test {
         vm.expectRevert("already inited");
         erc721Predicate.initialize(manager);
 
-        erc721Predicate = new MintableERC721Predicate();
+        address erc721PredicateProxy = address(new MintableERC721PredicateProxy(address(erc721PredicateImpl)));
+        erc721Predicate = MintableERC721Predicate(erc721PredicateProxy);
 
         vm.expectEmit();
         emit RoleGranted(
@@ -108,8 +116,17 @@ contract MintableERC721PredicateTest is Test {
             manager,
             address(this)
         );
-
         erc721Predicate.initialize(manager);
+    }
+
+     function testInitializeImpl() public {
+        vm.expectRevert("already inited");
+        erc721PredicateImpl.initialize(manager);
+
+        erc721PredicateImpl = new MintableERC721Predicate();
+
+        vm.expectRevert("already inited");
+        erc721PredicateImpl.initialize(manager);
     }
 
     function testLockTokensInvalidSender() public {

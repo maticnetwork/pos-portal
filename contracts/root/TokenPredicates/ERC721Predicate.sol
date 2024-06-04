@@ -38,7 +38,10 @@ contract ERC721Predicate is ITokenPredicate, AccessControlMixin, Initializable, 
         uint256 tokenId
     );
 
-    constructor() public {}
+    constructor() public {
+        // Disable initializer on implementation contract
+        _disableInitializer();
+    }
 
     function initialize(address _owner) external initializer {
         _setupContractId("ERC721Predicate");

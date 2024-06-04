@@ -4,10 +4,12 @@ pragma experimental ABIEncoderV2;
 
 import "test/forge/utils/Test.sol";
 import {ERC1155Predicate} from "contracts/root/TokenPredicates/ERC1155Predicate.sol";
+import {ERC1155PredicateProxy} from "contracts/root/TokenPredicates/ERC1155PredicateProxy.sol";
 import {DummyERC1155} from "contracts/root/RootToken/DummyERC1155.sol";
 
 contract ERC1155PredicateTest is Test {
     ERC1155Predicate internal erc1155Predicate;
+    ERC1155Predicate internal erc1155PredicateImpl;
     DummyERC1155 internal erc1155Token;
     address internal manager = makeAddr("manager");
     address internal alice = makeAddr("alice");
@@ -47,9 +49,13 @@ contract ERC1155PredicateTest is Test {
     );
 
     function setUp() public {
-        erc1155Predicate = new ERC1155Predicate();
         erc1155Token = new DummyERC1155("ipfs://");
         vm.prank(manager);
+
+        erc1155PredicateImpl = new ERC1155Predicate();
+        address erc1155PredicateProxy = address(new ERC1155PredicateProxy(address(erc1155PredicateImpl)));
+        erc1155Predicate = ERC1155Predicate(erc1155PredicateProxy);
+
         erc1155Predicate.initialize(manager);
 
         vm.startPrank(alice);
@@ -79,7 +85,8 @@ contract ERC1155PredicateTest is Test {
         vm.expectRevert("already inited");
         erc1155Predicate.initialize(manager);
 
-        erc1155Predicate = new ERC1155Predicate();
+        address erc1155PredicateProxy = address(new ERC1155PredicateProxy(address(erc1155PredicateImpl)));
+        erc1155Predicate = ERC1155Predicate(erc1155PredicateProxy);
 
         vm.expectEmit();
         emit RoleGranted(
@@ -95,6 +102,16 @@ contract ERC1155PredicateTest is Test {
         );
 
         erc1155Predicate.initialize(manager);
+    }
+
+    function testInitializeImpl() public {
+        vm.expectRevert("already inited");
+        erc1155PredicateImpl.initialize(manager);
+
+        erc1155PredicateImpl = new ERC1155Predicate();
+
+        vm.expectRevert("already inited");
+        erc1155PredicateImpl.initialize(manager);
     }
 
     function testLockTokensInvalidSender() public {

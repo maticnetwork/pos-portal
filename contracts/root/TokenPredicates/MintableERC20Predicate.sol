@@ -36,7 +36,10 @@ contract MintableERC20Predicate is
         uint256 amount
     );
 
-    constructor() public {}
+    constructor() public {
+        // Disable initializer on implementation contract
+        _disableInitializer();
+    }
 
     function initialize(address _owner) external initializer {
         _setupContractId("MintableERC20Predicate");

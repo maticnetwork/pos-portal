@@ -4,9 +4,11 @@ pragma experimental ABIEncoderV2;
 
 import "test/forge/utils/Test.sol";
 import {EtherPredicate} from "contracts/root/TokenPredicates/EtherPredicate.sol";
+import {EtherPredicateProxy} from "contracts/root/TokenPredicates/EtherPredicateProxy.sol";
 
 contract EtherPredicateTest is Test {
     EtherPredicate internal etherPredicate;
+    EtherPredicate internal etherPredicateImpl;
     address internal etherAddress = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
     address internal manager = makeAddr("manager");
     address internal alice = makeAddr("alice");
@@ -27,7 +29,10 @@ contract EtherPredicateTest is Test {
     event ExitedEther(address indexed exitor, uint256 amount);
 
     function setUp() public {
-        etherPredicate = new EtherPredicate();
+        etherPredicateImpl = new EtherPredicate();
+        address payable etherPredicateProxy = payable(new EtherPredicateProxy(address(etherPredicateImpl)));
+        etherPredicate = EtherPredicate(etherPredicateProxy);
+
         vm.prank(manager);
         etherPredicate.initialize(manager);
     }
@@ -36,7 +41,8 @@ contract EtherPredicateTest is Test {
         vm.expectRevert("already inited");
         etherPredicate.initialize(manager);
 
-        etherPredicate = new EtherPredicate();
+        address payable etherPredicateProxy = payable(new EtherPredicateProxy(address(etherPredicateImpl)));
+        etherPredicate = EtherPredicate(etherPredicateProxy);
 
         vm.expectEmit();
         emit RoleGranted(
@@ -48,6 +54,16 @@ contract EtherPredicateTest is Test {
         emit RoleGranted(etherPredicate.MANAGER_ROLE(), manager, address(this));
 
         etherPredicate.initialize(manager);
+    }
+
+     function testInitializeImpl() public {
+        vm.expectRevert("already inited");
+        etherPredicateImpl.initialize(manager);
+
+        etherPredicateImpl = new EtherPredicate();
+
+        vm.expectRevert("already inited");
+        etherPredicateImpl.initialize(manager);
     }
 
     function testLockTokensInvalidSender() public {
