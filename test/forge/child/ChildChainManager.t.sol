@@ -4,6 +4,7 @@ pragma solidity ^0.6.2;
 import "test/forge/utils/Test.sol";
 
 import {ChildChainManager} from "contracts/child/ChildChainManager/ChildChainManager.sol";
+import {ChildChainManagerProxy} from "contracts/child/ChildChainManager/ChildChainManagerProxy.sol";
 import {ChildERC20} from "contracts/child/ChildToken/ChildERC20.sol";
 
 abstract contract UninitializedState is Test {
@@ -14,11 +15,14 @@ abstract contract UninitializedState is Test {
     );
 
     ChildChainManager internal childChainManager;
+    ChildChainManager internal childChainManagerImpl;
 
     bytes internal revertMsg = "ChildChainManager: INSUFFICIENT_PERMISSIONS";
 
     function setUp() public virtual {
-        childChainManager = new ChildChainManager();
+        childChainManagerImpl = new ChildChainManager();
+        address childChainManagerProxy = address(new ChildChainManagerProxy(address(childChainManagerImpl)));
+        childChainManager = ChildChainManager(childChainManagerProxy);
     }
 }
 
@@ -56,6 +60,16 @@ contract ChildChainManagerTest_Uninitialized is UninitializedState {
         );
 
         childChainManager.initialize(address(this));
+    }
+
+    function testInitializeImpl() public {
+        vm.expectRevert("already inited");
+        childChainManagerImpl.initialize(address(this));
+
+        childChainManagerImpl = new ChildChainManager();
+
+        vm.expectRevert("already inited");
+        childChainManagerImpl.initialize(address(this));
     }
 }
 

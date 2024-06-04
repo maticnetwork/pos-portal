@@ -22,6 +22,11 @@ contract ChildChainManager is
     mapping(address => address) public rootToChildToken;
     mapping(address => address) public childToRootToken;
 
+    constructor() public {
+        // Disable initializer on implementation contract
+        _disableInitializer();
+    }
+
     function initialize(address _owner) external initializer {
         _setupContractId("ChildChainManager");
         _setupRole(DEFAULT_ADMIN_ROLE, _owner);
