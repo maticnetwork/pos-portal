@@ -2,7 +2,7 @@
 
 ![Build Status](https://github.com/maticnetwork/pos-portal/workflows/CI/badge.svg)
 
-Smart contracts that powers the PoS (proof-of-stake) based bridge mechanism for [Matic Network](https://matic.network). 
+Smart contracts that powers the PoS (proof-of-stake) based bridge mechanism for [Matic Network](https://docs.polygon.technology/innovation-design/security/smartcontracts/?h=smart). 
 
 ## Audits
 
