@@ -1,6 +1,6 @@
 [profile.default]
-src = "src"
-out = "artifacts"
+src = "contracts"
+out = "out"
 libs = [
     "lib",
     "node_modules",

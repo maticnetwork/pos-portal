@@ -21,3 +21,7 @@ tenderly.yaml
 contracts/ChainConstants.sol
 
 contracts/dump.json
+
+artifacts
+out
+scripts/helpers/interfaces
