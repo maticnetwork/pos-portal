@@ -1,0 +1,18 @@
+[profile.default]
+src = "src"
+out = "artifacts"
+libs = [
+    "lib",
+    "node_modules",
+]
+remappings = [
+    "@ensdomains/=node_modules/@ensdomains/",
+    "@openzeppelin/=node_modules/@openzeppelin/",
+    "ds-test/=lib/forge-std/lib/ds-test/src/",
+    "eth-gas-reporter/=node_modules/eth-gas-reporter/",
+    "forge-std/=lib/forge-std/src/",
+    "hardhat/=node_modules/hardhat/",
+    "truffle/=node_modules/truffle/",
+]
+
+# See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options

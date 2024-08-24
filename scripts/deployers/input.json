@@ -1,0 +1,26 @@
+{
+    "1": {
+        "registry": "0x33a02E6cC863D393d6Bf231B697b82F6e499cA71",
+        "stakeManagerProxy": "0x5e3Ef299fDDf15eAa0432E6e66473ace8c13D908",
+        "depositManagerProxy": "0x401F6c983eA34274ec46f84D70b31C151321188b",
+        "governance": "0x6e7a5820baD6cebA8Ef5ea69c0C92EbbDAc9CE48",
+        "timelock": "0xCaf0aa768A3AE1297DF20072419Db8Bb8b5C8cEf",
+        "polToken": "0x455e53CBB86018Ac2B8092FdCd39d8444aFFC3F6",
+        "matic": "0x7D1AfA7B718fb893dB30A3aBc0Cfc608AaCfeBB0",
+        "migration": "0x29e7DF7b6A1B2b07b731457f499E1696c60E2C4e",
+        "nativGasToken": "0x0000000000000000000000000000000000001010",
+        "gSafe": "0xFa7D2a996aC6350f4b56C043112Da0366a59b74c"
+    },
+    "11155111": {
+        "registry": "0xfE92F7c3a701e43d8479738c8844bCc555b9e5CD",
+        "stakeManagerProxy": "0x4ae8f648b1ec892b6cc68c89cc088583964d08be",
+        "depositManagerProxy": "0x44Ad17990F9128C6d823Ee10dB7F0A5d40a731A4",
+        "timelock": "onlyMainnet",
+        "governance": "0xB7086eda3180c728C1536B35c4d54F6A2B33D6aC",
+        "polToken": "0x44499312f493F62f2DFd3C6435Ca3603EbFCeeBa",
+        "matic": "0x3fd0A53F4Bf853985a95F4Eb3F9C9FDE1F8e2b53",
+        "migration": "0x3A3B750E7d4d389Bc1d0be20E5D09530F82B9911",
+        "nativGasToken": "0x0000000000000000000000000000000000001010",
+        "gSafe": "onlyMainnet"
+    }
+}
