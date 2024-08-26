@@ -411,6 +411,7 @@ contract RootChainManager is
         );
 
         ITokenPredicate(predicateAddress).exitTokens(
+            _msgSender(),
             rootToken,
             log.toRlpBytes()
         );

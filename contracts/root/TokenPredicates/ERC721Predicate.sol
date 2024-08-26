@@ -104,10 +104,12 @@ contract ERC721Predicate is ITokenPredicate, AccessControlMixin, Initializable, 
      * @notice Validates log signature, from and to address
      * then sends the correct tokenId to withdrawer
      * callable only by manager
+     * @notice address unused, being kept for abi compatability
      * @param rootToken Token which gets withdrawn
      * @param log Valid ERC721 burn log from child chain
      */
     function exitTokens(
+        address,
         address rootToken,
         bytes calldata log
     )
