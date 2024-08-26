@@ -217,7 +217,7 @@ contract ERC721PredicateTest is Test {
     function testExitTokensInvalidSender() public {
         bytes memory depositData = abi.encode(tokenId);
         vm.expectRevert("ERC721Predicate: INSUFFICIENT_PERMISSIONS");
-        erc721Predicate.exitTokens(address(erc721Token), "0x");
+        erc721Predicate.exitTokens(address(0x00), address(erc721Token), "0x");
     }
 
     function testExitTokensInsufficientTokensLocked() public {
@@ -238,7 +238,7 @@ contract ERC721PredicateTest is Test {
 
         vm.expectRevert("ERC721: transfer of token that is not own");
         vm.prank(manager);
-        erc721Predicate.exitTokens(address(erc721Token), res);
+        erc721Predicate.exitTokens(address(0x00), address(erc721Token), res);
     }
 
     function testExitTokensInvalidSignature() public {
@@ -267,7 +267,7 @@ contract ERC721PredicateTest is Test {
 
         vm.expectRevert("ERC721Predicate: INVALID_SIGNATURE");
         vm.prank(manager);
-        erc721Predicate.exitTokens(address(erc721Token), res);
+        erc721Predicate.exitTokens(address(0x00), address(erc721Token), res);
     }
 
     function testExitTokensInvalidReceiver() public {
@@ -296,7 +296,7 @@ contract ERC721PredicateTest is Test {
 
         vm.expectRevert("ERC721Predicate: INVALID_RECEIVER");
         vm.prank(manager);
-        erc721Predicate.exitTokens(address(erc721Token), res);
+        erc721Predicate.exitTokens(address(0x00), address(erc721Token), res);
     }
 
     function testExitTokens() public {
@@ -332,7 +332,7 @@ contract ERC721PredicateTest is Test {
         vm.expectEmit();
         emit ExitedERC721(alice, address(erc721Token), tokenId);
         vm.prank(manager);
-        erc721Predicate.exitTokens(address(erc721Token), res);
+        erc721Predicate.exitTokens(address(0x00), address(erc721Token), res);
 
         assertEq(erc721Token.ownerOf(tokenId), alice);
         assertEq(erc721Token.balanceOf(address(erc721Predicate)), 0);

@@ -86,7 +86,7 @@ contract MintableERC1155PredicateTest is Test {
             )
         );
         bytes memory burnLog = vm.ffi(inputs);
-        erc1155Predicate.exitTokens(address(erc1155Token), burnLog);
+        erc1155Predicate.exitTokens(address(0x00), address(erc1155Token), burnLog);
 
         vm.stopPrank();
         vm.prank(alice);
@@ -205,7 +205,7 @@ contract MintableERC1155PredicateTest is Test {
     function testExitTokensInvalidSender() public {
         bytes memory depositData = abi.encode(tokenIds, amts, new bytes(0));
         vm.expectRevert("MintableERC1155Predicate: INSUFFICIENT_PERMISSIONS");
-        erc1155Predicate.exitTokens(address(erc1155Token), "0x");
+        erc1155Predicate.exitTokens(address(0x00), address(erc1155Token), "0x");
     }
 
     function testExitTokensInsufficientTokensLocked() public {
@@ -227,7 +227,7 @@ contract MintableERC1155PredicateTest is Test {
         bytes memory res = vm.ffi(inputs);
 
         vm.prank(manager);
-        erc1155Predicate.exitTokens(address(erc1155Token), res);
+        erc1155Predicate.exitTokens(address(0x00), address(erc1155Token), res);
     }
 
     function testExitTokensInvalidSignature() public {
@@ -258,7 +258,7 @@ contract MintableERC1155PredicateTest is Test {
 
         vm.expectRevert("MintableERC1155Predicate: INVALID_WITHDRAW_SIG");
         vm.prank(manager);
-        erc1155Predicate.exitTokens(address(erc1155Token), res);
+        erc1155Predicate.exitTokens(address(0x00), address(erc1155Token), res);
     }
 
     function testExitTokensInvalidReceiver() public {
@@ -289,7 +289,7 @@ contract MintableERC1155PredicateTest is Test {
 
         vm.expectRevert("MintableERC1155Predicate: INVALID_RECEIVER");
         vm.prank(manager);
-        erc1155Predicate.exitTokens(address(erc1155Token), res);
+        erc1155Predicate.exitTokens(address(0x00), address(erc1155Token), res);
     }
 
     function testExitTokens() public {
@@ -340,7 +340,7 @@ contract MintableERC1155PredicateTest is Test {
         vm.expectEmit();
         emit ExitedMintableERC1155(alice, address(erc1155Token), tokenId, amt);
         vm.prank(manager);
-        erc1155Predicate.exitTokens(address(erc1155Token), res);
+        erc1155Predicate.exitTokens(address(0x00), address(erc1155Token), res);
 
         assertEq(erc1155Token.balanceOf(alice, tokenId), amt);
         assertEq(erc1155Token.balanceOf(alice, tokenId2), 0);
@@ -404,7 +404,7 @@ contract MintableERC1155PredicateTest is Test {
             amts
         );
         vm.prank(manager);
-        erc1155Predicate.exitTokens(address(erc1155Token), res);
+        erc1155Predicate.exitTokens(address(0x00), address(erc1155Token), res);
 
         assertEq(erc1155Token.balanceOf(alice, tokenId), amt);
         assertEq(erc1155Token.balanceOf(alice, tokenId2), amt);

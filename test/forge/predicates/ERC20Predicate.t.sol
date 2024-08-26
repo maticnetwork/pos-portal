@@ -147,7 +147,7 @@ contract ERC20PredicateTest is Test {
     function testExitTokensInvalidSender() public {
         bytes memory depositData = abi.encode(amt);
         vm.expectRevert("ERC20Predicate: INSUFFICIENT_PERMISSIONS");
-        erc20Predicate.exitTokens(address(erc20Token), "0x");
+        erc20Predicate.exitTokens(address(0x00), address(erc20Token), "0x");
     }
 
     function testExitTokensInsufficientTokensLocked() public {
@@ -168,7 +168,7 @@ contract ERC20PredicateTest is Test {
 
         vm.expectRevert("ERC20: transfer amount exceeds balance"); // transfer from erc20Predicate to alice
         vm.prank(manager);
-        erc20Predicate.exitTokens(address(erc20Token), res);
+        erc20Predicate.exitTokens(address(0x00), address(erc20Token), res);
     }
 
     function testExitTokensInvalidSignature() public {
@@ -197,7 +197,7 @@ contract ERC20PredicateTest is Test {
 
         vm.expectRevert("ERC20Predicate: INVALID_SIGNATURE");
         vm.prank(manager);
-        erc20Predicate.exitTokens(address(erc20Token), res);
+        erc20Predicate.exitTokens(address(0x00), address(erc20Token), res);
     }
 
     function testExitTokensInvalidReceiver() public {
@@ -226,7 +226,7 @@ contract ERC20PredicateTest is Test {
 
         vm.expectRevert("ERC20Predicate: INVALID_RECEIVER");
         vm.prank(manager);
-        erc20Predicate.exitTokens(address(erc20Token), res);
+        erc20Predicate.exitTokens(address(0x00), address(erc20Token), res);
     }
 
     function testExitTokens() public {
@@ -262,7 +262,7 @@ contract ERC20PredicateTest is Test {
         vm.expectEmit();
         emit ExitedERC20(alice, address(erc20Token), amt);
         vm.prank(manager);
-        erc20Predicate.exitTokens(address(erc20Token), res);
+        erc20Predicate.exitTokens(address(0x00), address(erc20Token), res);
 
         assertEq(erc20Token.balanceOf(alice), amt);
         assertEq(erc20Token.balanceOf(address(erc20Predicate)), 0);
