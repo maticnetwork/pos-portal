@@ -24,6 +24,7 @@ contracts/dump.json
 
 .env
 cache
+forge-cache
 artifacts
 out
 scripts/helpers/interfaces
