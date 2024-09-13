@@ -22,6 +22,8 @@ contracts/ChainConstants.sol
 
 contracts/dump.json
 
+.env
+cache
 artifacts
 out
 scripts/helpers/interfaces
