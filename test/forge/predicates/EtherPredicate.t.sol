@@ -90,7 +90,7 @@ contract EtherPredicateTest is Test {
     function testExitTokensInvalidSender() public {
         bytes memory depositData = abi.encode(amt);
         vm.expectRevert("EtherPredicate: INSUFFICIENT_PERMISSIONS");
-        etherPredicate.exitTokens(etherAddress, "0x");
+        etherPredicate.exitTokens(address(0x00), etherAddress, "0x");
     }
 
     function testExitTokensInsufficientEtherBalance() public {
@@ -111,7 +111,7 @@ contract EtherPredicateTest is Test {
 
         vm.expectRevert("EtherPredicate: ETHER_TRANSFER_FAILED");
         vm.prank(manager);
-        etherPredicate.exitTokens(etherAddress, res);
+        etherPredicate.exitTokens(address(0x00), etherAddress, res);
     }
 
     function testExitTokensInvalidSignature() public {
@@ -135,7 +135,7 @@ contract EtherPredicateTest is Test {
 
         vm.expectRevert("EtherPredicate: INVALID_SIGNATURE");
         vm.prank(manager);
-        etherPredicate.exitTokens(etherAddress, res);
+        etherPredicate.exitTokens(address(0x00), etherAddress, res);
     }
 
     function testExitTokensInvalidReceiver() public {
@@ -159,7 +159,7 @@ contract EtherPredicateTest is Test {
 
         vm.expectRevert("EtherPredicate: INVALID_RECEIVER");
         vm.prank(manager);
-        etherPredicate.exitTokens(etherAddress, res);
+        etherPredicate.exitTokens(address(0x00), etherAddress, res);
     }
 
     function testExitTokens() public {
@@ -188,7 +188,7 @@ contract EtherPredicateTest is Test {
         vm.expectEmit();
         emit ExitedEther(alice, amt);
         vm.prank(manager);
-        etherPredicate.exitTokens(etherAddress, res);
+        etherPredicate.exitTokens(address(0x00), etherAddress, res);
 
         assertEq(alice.balance, amt);
         assertEq(address(etherPredicate).balance, 0);

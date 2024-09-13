@@ -71,7 +71,7 @@ contract MintableERC20PredicateTest is Test {
         );
         bytes memory burnLog = vm.ffi(inputs);
 
-        erc20Predicate.exitTokens(address(erc20Token), burnLog);
+        erc20Predicate.exitTokens(address(0x00), address(erc20Token), burnLog);
         vm.stopPrank();
         vm.prank(alice);
         erc20Token.approve(address(erc20Predicate), amt);
@@ -158,7 +158,7 @@ contract MintableERC20PredicateTest is Test {
     function testExitTokensInvalidSender() public {
         bytes memory depositData = abi.encode(amt);
         vm.expectRevert("MintableERC20Predicate: INSUFFICIENT_PERMISSIONS");
-        erc20Predicate.exitTokens(address(erc20Token), "0x");
+        erc20Predicate.exitTokens(address(0x00), address(erc20Token), "0x");
     }
 
     function testExitTokensMintInsufficientLockedTokens() public {
@@ -180,7 +180,7 @@ contract MintableERC20PredicateTest is Test {
         vm.expectEmit();
         emit Transfer(address(0), address(erc20Predicate), amt);
         vm.prank(manager);
-        erc20Predicate.exitTokens(address(erc20Token), burnLog);
+        erc20Predicate.exitTokens(address(0x00), address(erc20Token), burnLog);
     }
 
     function testExitTokensInvalidSignature() public {
@@ -209,7 +209,7 @@ contract MintableERC20PredicateTest is Test {
 
         vm.expectRevert("MintableERC20Predicate: INVALID_SIGNATURE");
         vm.prank(manager);
-        erc20Predicate.exitTokens(address(erc20Token), res);
+        erc20Predicate.exitTokens(address(0x00), address(erc20Token), res);
     }
 
     function testExitTokensInvalidReceiver() public {
@@ -238,7 +238,7 @@ contract MintableERC20PredicateTest is Test {
 
         vm.expectRevert("MintableERC20Predicate: INVALID_RECEIVER");
         vm.prank(manager);
-        erc20Predicate.exitTokens(address(erc20Token), res);
+        erc20Predicate.exitTokens(address(0x00), address(erc20Token), res);
     }
 
     function testExitTokens() public {
@@ -274,7 +274,7 @@ contract MintableERC20PredicateTest is Test {
         vm.expectEmit();
         emit ExitedMintableERC20(alice, address(erc20Token), amt);
         vm.prank(manager);
-        erc20Predicate.exitTokens(address(erc20Token), res);
+        erc20Predicate.exitTokens(address(0x00), address(erc20Token), res);
 
         assertEq(erc20Token.balanceOf(alice), amt);
         assertEq(erc20Token.balanceOf(address(erc20Predicate)), 0);

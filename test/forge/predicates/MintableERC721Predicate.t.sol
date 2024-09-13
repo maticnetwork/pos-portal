@@ -78,7 +78,7 @@ contract MintableERC721PredicateTest is Test {
         );
         bytes memory burnLog = vm.ffi(inputs);
 
-        erc721Predicate.exitTokens(address(erc721Token), burnLog);
+        erc721Predicate.exitTokens(address(0x00), address(erc721Token), burnLog);
 
         vm.stopPrank();
 
@@ -245,7 +245,7 @@ contract MintableERC721PredicateTest is Test {
     function testExitTokensInvalidSender() public {
         bytes memory depositData = abi.encode(tokenId);
         vm.expectRevert("MintableERC721Predicate: INSUFFICIENT_PERMISSIONS");
-        erc721Predicate.exitTokens(address(erc721Token), "0x");
+        erc721Predicate.exitTokens(address(0x00), address(erc721Token), "0x");
     }
 
     function testExitTokensInsufficientTokensLocked() public {
@@ -266,7 +266,7 @@ contract MintableERC721PredicateTest is Test {
 
         vm.expectRevert("ERC721: transfer of token that is not own");
         vm.prank(manager);
-        erc721Predicate.exitTokens(address(erc721Token), res);
+        erc721Predicate.exitTokens(address(0x00), address(erc721Token), res);
     }
 
     function testExitTokensInvalidSignature() public {
@@ -295,7 +295,7 @@ contract MintableERC721PredicateTest is Test {
 
         vm.expectRevert("MintableERC721Predicate: INVALID_SIGNATURE");
         vm.prank(manager);
-        erc721Predicate.exitTokens(address(erc721Token), res);
+        erc721Predicate.exitTokens(address(0x00), address(erc721Token), res);
     }
 
     function testExitTokensInvalidReceiver() public {
@@ -324,7 +324,7 @@ contract MintableERC721PredicateTest is Test {
 
         vm.expectRevert("MintableERC721Predicate: INVALID_RECEIVER");
         vm.prank(manager);
-        erc721Predicate.exitTokens(address(erc721Token), res);
+        erc721Predicate.exitTokens(address(0x00), address(erc721Token), res);
     }
 
     function testExitTokens() public {
@@ -360,7 +360,7 @@ contract MintableERC721PredicateTest is Test {
         vm.expectEmit();
         emit ExitedMintableERC721(alice, address(erc721Token), tokenId);
         vm.prank(manager);
-        erc721Predicate.exitTokens(address(erc721Token), res);
+        erc721Predicate.exitTokens(address(0x00), address(erc721Token), res);
 
         assertEq(erc721Token.ownerOf(tokenId), alice);
         assertEq(erc721Token.balanceOf(address(erc721Predicate)), 0);
@@ -403,7 +403,7 @@ contract MintableERC721PredicateTest is Test {
         vm.expectEmit();
         emit ExitedMintableERC721(alice, address(erc721Token), tokenId3);
         vm.prank(manager);
-        erc721Predicate.exitTokens(address(erc721Token), burnLog);
+        erc721Predicate.exitTokens(address(0x00), address(erc721Token), burnLog);
 
         assertEq(erc721Token.tokenURI(tokenId3), string(metaData));
 
