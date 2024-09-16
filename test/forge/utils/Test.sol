@@ -14,9 +14,9 @@ import {Vm} from "forge-std/Vm.sol";
 
 // 📦 BOILERPLATE
 import {TestBase} from "forge-std/Base.sol";
-import {DSTest} from "ds-test/test.sol";
+//import {DSTest} from "ds-test/test.sol";
 
 // ⭐️ TEST
-abstract contract Test is DSTest, StdAssertions, StdCheats, StdUtils, TestBase {
+abstract contract Test is  StdAssertions, StdCheats, StdUtils, TestBase {
 
 }
