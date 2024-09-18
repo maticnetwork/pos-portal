@@ -2,15 +2,15 @@
 pragma solidity ^0.6.2;
 pragma experimental ABIEncoderV2;
 
-import "forge-std/Test.sol";
-import {MintableERC1155Predicate} from "contracts/root/TokenPredicates/MintableERC1155Predicate.sol";
-import {MintableERC1155PredicateProxy} from "contracts/root/TokenPredicates/MintableERC1155PredicateProxy.sol";
-import {DummyMintableERC1155} from "contracts/root/RootToken/DummyMintableERC1155.sol";
+import "lib/forge-std/src/Test.sol";
+import {ERC1155Predicate} from "contracts/root/TokenPredicates/ERC1155Predicate.sol";
+import {ERC1155PredicateProxy} from "contracts/root/TokenPredicates/ERC1155PredicateProxy.sol";
+import {DummyERC1155} from "contracts/root/RootToken/DummyERC1155.sol";
 
-contract MintableERC1155PredicateTest is Test {
-    MintableERC1155Predicate internal erc1155Predicate;
-    MintableERC1155Predicate internal erc1155PredicateImpl;
-    DummyMintableERC1155 internal erc1155Token;
+contract ERC1155PredicateTest is Test {
+    ERC1155Predicate internal erc1155Predicate;
+    ERC1155Predicate internal erc1155PredicateImpl;
+    DummyERC1155 internal erc1155Token;
     address internal manager = makeAddr("manager");
     address internal alice = makeAddr("alice");
     address internal bob = makeAddr("bob");
@@ -26,7 +26,7 @@ contract MintableERC1155PredicateTest is Test {
         address indexed account,
         address indexed sender
     );
-    event LockedBatchMintableERC1155(
+    event LockedBatchERC1155(
         address indexed depositor,
         address indexed depositReceiver,
         address indexed rootToken,
@@ -34,14 +34,14 @@ contract MintableERC1155PredicateTest is Test {
         uint256[] amounts
     );
 
-    event ExitedMintableERC1155(
+    event ExitedERC1155(
         address indexed exitor,
         address indexed rootToken,
         uint256 id,
         uint256 amount
     );
 
-    event ExitedBatchMintableERC1155(
+    event ExitedBatchERC1155(
         address indexed exitor,
         address indexed rootToken,
         uint256[] ids,
@@ -49,48 +49,25 @@ contract MintableERC1155PredicateTest is Test {
     );
 
     function setUp() public {
+        erc1155Token = new DummyERC1155("ipfs://");
+        vm.prank(manager);
+
+        erc1155PredicateImpl = new ERC1155Predicate();
+        address erc1155PredicateProxy = address(new ERC1155PredicateProxy(address(erc1155PredicateImpl)));
+        erc1155Predicate = ERC1155Predicate(erc1155PredicateProxy);
+
+        erc1155Predicate.initialize(manager);
+
+        vm.startPrank(alice);
+        erc1155Token.mint(alice, tokenId, amt);
+        erc1155Token.mint(alice, tokenId2, amt);
+        erc1155Token.setApprovalForAll(address(erc1155Predicate), true);
+        vm.stopPrank();
+
         tokenIds[0] = tokenId;
         tokenIds[1] = tokenId2;
         amts[0] = amt;
         amts[1] = amt;
-
-        vm.startPrank(manager);
-
-        erc1155PredicateImpl = new MintableERC1155Predicate();
-        address erc1155PredicateProxy = address(new MintableERC1155PredicateProxy(address(erc1155PredicateImpl)));
-        erc1155Predicate = MintableERC1155Predicate(erc1155PredicateProxy);
-
-        erc1155Token = new DummyMintableERC1155("ipfs://");
-        erc1155Predicate.initialize(manager);
-
-        erc1155Token.grantRole(
-            erc1155Token.PREDICATE_ROLE(),
-            address(erc1155Predicate)
-        );
-
-        // because it's a mintable token, burning it first then
-        // brining it to root chain by making predicate contract mint it for us
-        string[] memory inputs = new string[](5);
-        inputs[0] = "npx";
-        inputs[1] = "ts-node";
-        inputs[2] = "test/forge/predicates/utils/rlpEncoder.ts";
-        inputs[3] = "erc1155TransferBatch";
-        inputs[4] = vm.toString(
-            abi.encode(
-                address(erc1155Predicate) /* operator */,
-                alice,
-                address(0),
-                tokenIds,
-                amts,
-                erc1155Predicate.TRANSFER_BATCH_EVENT_SIG()
-            )
-        );
-        bytes memory burnLog = vm.ffi(inputs);
-        erc1155Predicate.exitTokens(address(0x00), address(erc1155Token), burnLog);
-
-        vm.stopPrank();
-        vm.prank(alice);
-        erc1155Token.setApprovalForAll(address(erc1155Predicate), true);
     }
 
     function testAliceBalanceAndApproval() public {
@@ -108,8 +85,8 @@ contract MintableERC1155PredicateTest is Test {
         vm.expectRevert("already inited");
         erc1155Predicate.initialize(manager);
 
-        address erc1155PredicateProxy = address(new MintableERC1155PredicateProxy(address(erc1155PredicateImpl)));
-        erc1155Predicate = MintableERC1155Predicate(erc1155PredicateProxy);
+        address erc1155PredicateProxy = address(new ERC1155PredicateProxy(address(erc1155PredicateImpl)));
+        erc1155Predicate = ERC1155Predicate(erc1155PredicateProxy);
 
         vm.expectEmit();
         emit RoleGranted(
@@ -127,11 +104,11 @@ contract MintableERC1155PredicateTest is Test {
         erc1155Predicate.initialize(manager);
     }
 
-     function testInitializeImpl() public {
+    function testInitializeImpl() public {
         vm.expectRevert("already inited");
         erc1155PredicateImpl.initialize(manager);
 
-        erc1155PredicateImpl = new MintableERC1155Predicate();
+        erc1155PredicateImpl = new ERC1155Predicate();
 
         vm.expectRevert("already inited");
         erc1155PredicateImpl.initialize(manager);
@@ -139,7 +116,7 @@ contract MintableERC1155PredicateTest is Test {
 
     function testLockTokensInvalidSender() public {
         bytes memory depositData = abi.encode(tokenIds, amts, new bytes(0));
-        vm.expectRevert("MintableERC1155Predicate: INSUFFICIENT_PERMISSIONS");
+        vm.expectRevert("ERC1155Predicate: INSUFFICIENT_PERMISSIONS");
         erc1155Predicate.lockTokens(
             alice /* depositor */,
             bob /* depositReceiver */,
@@ -160,7 +137,7 @@ contract MintableERC1155PredicateTest is Test {
         );
 
         vm.expectEmit();
-        emit LockedBatchMintableERC1155(
+        emit LockedBatchERC1155(
             alice,
             bob,
             address(erc1155Token),
@@ -204,7 +181,7 @@ contract MintableERC1155PredicateTest is Test {
 
     function testExitTokensInvalidSender() public {
         bytes memory depositData = abi.encode(tokenIds, amts, new bytes(0));
-        vm.expectRevert("MintableERC1155Predicate: INSUFFICIENT_PERMISSIONS");
+        vm.expectRevert("ERC1155Predicate: INSUFFICIENT_PERMISSIONS");
         erc1155Predicate.exitTokens(address(0x00), address(erc1155Token), "0x");
     }
 
@@ -212,7 +189,7 @@ contract MintableERC1155PredicateTest is Test {
         string[] memory inputs = new string[](5);
         inputs[0] = "npx";
         inputs[1] = "ts-node";
-        inputs[2] = "test/forge/predicates/utils/rlpEncoder.ts";
+        inputs[2] = "forge/predicates/utils/rlpEncoder.ts";
         inputs[3] = "erc1155TransferSingle";
         inputs[4] = vm.toString(
             abi.encode(
@@ -226,6 +203,7 @@ contract MintableERC1155PredicateTest is Test {
         );
         bytes memory res = vm.ffi(inputs);
 
+        vm.expectRevert("ERC1155: insufficient balance for transfer"); // transfer from erc1155Predicate to alice
         vm.prank(manager);
         erc1155Predicate.exitTokens(address(0x00), address(erc1155Token), res);
     }
@@ -242,7 +220,7 @@ contract MintableERC1155PredicateTest is Test {
         string[] memory inputs = new string[](5);
         inputs[0] = "npx";
         inputs[1] = "ts-node";
-        inputs[2] = "test/forge/predicates/utils/rlpEncoder.ts";
+        inputs[2] = "forge/predicates/utils/rlpEncoder.ts";
         inputs[3] = "erc1155TransferSingle";
         inputs[4] = vm.toString(
             abi.encode(
@@ -256,7 +234,7 @@ contract MintableERC1155PredicateTest is Test {
         );
         bytes memory res = vm.ffi(inputs);
 
-        vm.expectRevert("MintableERC1155Predicate: INVALID_WITHDRAW_SIG");
+        vm.expectRevert("ERC1155Predicate: INVALID_WITHDRAW_SIG");
         vm.prank(manager);
         erc1155Predicate.exitTokens(address(0x00), address(erc1155Token), res);
     }
@@ -273,7 +251,7 @@ contract MintableERC1155PredicateTest is Test {
         string[] memory inputs = new string[](5);
         inputs[0] = "npx";
         inputs[1] = "ts-node";
-        inputs[2] = "test/forge/predicates/utils/rlpEncoder.ts";
+        inputs[2] = "forge/predicates/utils/rlpEncoder.ts";
         inputs[3] = "erc1155TransferSingle";
         inputs[4] = vm.toString(
             abi.encode(
@@ -287,7 +265,7 @@ contract MintableERC1155PredicateTest is Test {
         );
         bytes memory res = vm.ffi(inputs);
 
-        vm.expectRevert("MintableERC1155Predicate: INVALID_RECEIVER");
+        vm.expectRevert("ERC1155Predicate: INVALID_RECEIVER");
         vm.prank(manager);
         erc1155Predicate.exitTokens(address(0x00), address(erc1155Token), res);
     }
@@ -312,7 +290,7 @@ contract MintableERC1155PredicateTest is Test {
         string[] memory inputs = new string[](5);
         inputs[0] = "npx";
         inputs[1] = "ts-node";
-        inputs[2] = "test/forge/predicates/utils/rlpEncoder.ts";
+        inputs[2] = "forge/predicates/utils/rlpEncoder.ts";
         inputs[3] = "erc1155TransferSingle";
         inputs[4] = vm.toString(
             abi.encode(
@@ -338,7 +316,7 @@ contract MintableERC1155PredicateTest is Test {
         );
 
         vm.expectEmit();
-        emit ExitedMintableERC1155(alice, address(erc1155Token), tokenId, amt);
+        emit ExitedERC1155(alice, address(erc1155Token), tokenId, amt);
         vm.prank(manager);
         erc1155Predicate.exitTokens(address(0x00), address(erc1155Token), res);
 
@@ -371,7 +349,7 @@ contract MintableERC1155PredicateTest is Test {
         string[] memory inputs = new string[](5);
         inputs[0] = "npx";
         inputs[1] = "ts-node";
-        inputs[2] = "test/forge/predicates/utils/rlpEncoder.ts";
+        inputs[2] = "forge/predicates/utils/rlpEncoder.ts";
         inputs[3] = "erc1155TransferBatch";
         inputs[4] = vm.toString(
             abi.encode(
@@ -397,12 +375,7 @@ contract MintableERC1155PredicateTest is Test {
         );
 
         vm.expectEmit();
-        emit ExitedBatchMintableERC1155(
-            alice,
-            address(erc1155Token),
-            tokenIds,
-            amts
-        );
+        emit ExitedBatchERC1155(alice, address(erc1155Token), tokenIds, amts);
         vm.prank(manager);
         erc1155Predicate.exitTokens(address(0x00), address(erc1155Token), res);
 

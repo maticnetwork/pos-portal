@@ -2,7 +2,7 @@
 pragma solidity ^0.6.2;
 pragma experimental ABIEncoderV2;
 
-import "forge-std/Test.sol";
+import "lib/forge-std/src/Test.sol";
 import {ERC20Predicate} from "contracts/root/TokenPredicates/ERC20Predicate.sol";
 import {ERC20PredicateProxy} from "contracts/root/TokenPredicates/ERC20PredicateProxy.sol";
 import {DummyERC20} from "contracts/root/RootToken/DummyERC20.sol";
@@ -154,7 +154,7 @@ contract ERC20PredicateTest is Test {
         string[] memory inputs = new string[](5);
         inputs[0] = "npx";
         inputs[1] = "ts-node";
-        inputs[2] = "test/forge/predicates/utils/rlpEncoder.ts";
+        inputs[2] = "forge/predicates/utils/rlpEncoder.ts";
         inputs[3] = "erc20Transfer";
         inputs[4] = vm.toString(
             abi.encode(
@@ -183,7 +183,7 @@ contract ERC20PredicateTest is Test {
         string[] memory inputs = new string[](5);
         inputs[0] = "npx";
         inputs[1] = "ts-node";
-        inputs[2] = "test/forge/predicates/utils/rlpEncoder.ts";
+        inputs[2] = "forge/predicates/utils/rlpEncoder.ts";
         inputs[3] = "erc20Transfer";
         inputs[4] = vm.toString(
             abi.encode(
@@ -212,7 +212,7 @@ contract ERC20PredicateTest is Test {
         string[] memory inputs = new string[](5);
         inputs[0] = "npx";
         inputs[1] = "ts-node";
-        inputs[2] = "test/forge/predicates/utils/rlpEncoder.ts";
+        inputs[2] = "forge/predicates/utils/rlpEncoder.ts";
         inputs[3] = "erc20Transfer";
         inputs[4] = vm.toString(
             abi.encode(
@@ -244,7 +244,7 @@ contract ERC20PredicateTest is Test {
         string[] memory inputs = new string[](5);
         inputs[0] = "npx";
         inputs[1] = "ts-node";
-        inputs[2] = "test/forge/predicates/utils/rlpEncoder.ts";
+        inputs[2] = "forge/predicates/utils/rlpEncoder.ts";
         inputs[3] = "erc20Transfer";
         inputs[4] = vm.toString(
             abi.encode(

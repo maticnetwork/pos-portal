@@ -2,7 +2,7 @@
 pragma solidity ^0.6.2;
 pragma experimental ABIEncoderV2;
 
-import "forge-std/Test.sol";
+import "lib/forge-std/src/Test.sol";
 import {MintableERC721Predicate} from "contracts/root/TokenPredicates/MintableERC721Predicate.sol";
 import {MintableERC721PredicateProxy} from "contracts/root/TokenPredicates/MintableERC721PredicateProxy.sol";
 
@@ -66,7 +66,7 @@ contract MintableERC721PredicateTest is Test {
         string[] memory inputs = new string[](5);
         inputs[0] = "npx";
         inputs[1] = "ts-node";
-        inputs[2] = "test/forge/predicates/utils/rlpEncoder.ts";
+        inputs[2] = "forge/predicates/utils/rlpEncoder.ts";
         inputs[3] = "erc721Transfer";
         inputs[4] = vm.toString(
             abi.encode(
@@ -252,7 +252,7 @@ contract MintableERC721PredicateTest is Test {
         string[] memory inputs = new string[](5);
         inputs[0] = "npx";
         inputs[1] = "ts-node";
-        inputs[2] = "test/forge/predicates/utils/rlpEncoder.ts";
+        inputs[2] = "forge/predicates/utils/rlpEncoder.ts";
         inputs[3] = "erc721Transfer";
         inputs[4] = vm.toString(
             abi.encode(
@@ -281,7 +281,7 @@ contract MintableERC721PredicateTest is Test {
         string[] memory inputs = new string[](5);
         inputs[0] = "npx";
         inputs[1] = "ts-node";
-        inputs[2] = "test/forge/predicates/utils/rlpEncoder.ts";
+        inputs[2] = "forge/predicates/utils/rlpEncoder.ts";
         inputs[3] = "erc721Transfer";
         inputs[4] = vm.toString(
             abi.encode(
@@ -310,7 +310,7 @@ contract MintableERC721PredicateTest is Test {
         string[] memory inputs = new string[](5);
         inputs[0] = "npx";
         inputs[1] = "ts-node";
-        inputs[2] = "test/forge/predicates/utils/rlpEncoder.ts";
+        inputs[2] = "forge/predicates/utils/rlpEncoder.ts";
         inputs[3] = "erc721Transfer";
         inputs[4] = vm.toString(
             abi.encode(
@@ -342,7 +342,7 @@ contract MintableERC721PredicateTest is Test {
         string[] memory inputs = new string[](5);
         inputs[0] = "npx";
         inputs[1] = "ts-node";
-        inputs[2] = "test/forge/predicates/utils/rlpEncoder.ts";
+        inputs[2] = "forge/predicates/utils/rlpEncoder.ts";
         inputs[3] = "erc721Transfer";
         inputs[4] = vm.toString(
             abi.encode(
@@ -385,7 +385,7 @@ contract MintableERC721PredicateTest is Test {
         string[] memory inputs = new string[](5);
         inputs[0] = "npx";
         inputs[1] = "ts-node";
-        inputs[2] = "test/forge/predicates/utils/rlpEncoder.ts";
+        inputs[2] = "forge/predicates/utils/rlpEncoder.ts";
         inputs[3] = "erc721TransferWithMetadata";
         inputs[4] = vm.toString(
             abi.encode(

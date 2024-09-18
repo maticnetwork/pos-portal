@@ -1,6 +1,7 @@
 [profile.default]
 src = "contracts"
 out = "out"
+test = "forge"
 libs = [
     "lib",
     "node_modules",

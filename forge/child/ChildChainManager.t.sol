@@ -2,7 +2,7 @@
 pragma solidity ^0.6.2;
 pragma experimental ABIEncoderV2;
 
-import "forge-std/Test.sol";
+import "lib/forge-std/src/Test.sol";
 
 import {ChildChainManager} from "contracts/child/ChildChainManager/ChildChainManager.sol";
 import {ChildChainManagerProxy} from "contracts/child/ChildChainManager/ChildChainManagerProxy.sol";
