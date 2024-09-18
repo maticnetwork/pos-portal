@@ -17,6 +17,9 @@ remappings = [
 
 ffi = true
 
+fs_permissions = [{ access = "read", path = "./lib/"}, { access = "read", path = "./test/"}]
+
+
 [rpc_endpoints]
 anvil = "http://127.0.0.1:8545"
 mainnet = "https://mainnet.infura.io/v3/${INFURA_TOKEN}"
