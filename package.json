@@ -44,6 +44,7 @@
     "@openzeppelin/contracts": "=3.1.0",
     "@openzeppelin/test-helpers": "^0.5.5",
     "@truffle/hdwallet-provider": "^1.0.35",
+    "@types/node": "^22.5.5",
     "babel-cli": "^6.26.0",
     "babel-eslint": "^10.1.0",
     "babel-polyfill": "^6.26.0",
@@ -77,7 +78,10 @@
     "nunjucks": "^3.2.1",
     "solium": "^1.2.5",
     "truffle": "^5.1.21",
-    "truffle-flattener": "^1.4.4"
+    "truffle-flattener": "^1.4.4",
+    "ts-node": "^10.9.2",
+    "tslib": "^2.7.0",
+    "typescript": "^4.9.5"
   },
   "dependencies": {
     "ganache-cli": "^6.9.1"
