@@ -17,7 +17,7 @@ remappings = [
 
 ffi = true
 
-fs_permissions = [{ access = "read", path = "./lib/"}, { access = "read", path = "./test/"}]
+fs_permissions = [{ access = "read", path = "./lib/"}, { access = "read", path = "./test/"}, { access = "read", path = "./contracts/"}]
 
 
 [rpc_endpoints]
