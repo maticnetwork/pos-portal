@@ -2,7 +2,7 @@
 pragma solidity ^0.6.2;
 pragma experimental ABIEncoderV2;
 
-import "test/forge/utils/Test.sol";
+import "forge-std/Test.sol";
 import {ERC20Predicate} from "contracts/root/TokenPredicates/ERC20Predicate.sol";
 import {ERC20PredicateProxy} from "contracts/root/TokenPredicates/ERC20PredicateProxy.sol";
 import {DummyERC20} from "contracts/root/RootToken/DummyERC20.sol";

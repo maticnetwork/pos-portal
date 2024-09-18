@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.6.2;
 
-import "test/forge/utils/Test.sol";
+import "forge-std/Test.sol";
 
 import {ChildChainManager} from "contracts/child/ChildChainManager/ChildChainManager.sol";
 import {ChildChainManagerProxy} from "contracts/child/ChildChainManager/ChildChainManagerProxy.sol";

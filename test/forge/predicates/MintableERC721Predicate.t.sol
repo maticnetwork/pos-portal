@@ -2,7 +2,7 @@
 pragma solidity ^0.6.2;
 pragma experimental ABIEncoderV2;
 
-import "test/forge/utils/Test.sol";
+import "forge-std/Test.sol";
 import {MintableERC721Predicate} from "contracts/root/TokenPredicates/MintableERC721Predicate.sol";
 import {MintableERC721PredicateProxy} from "contracts/root/TokenPredicates/MintableERC721PredicateProxy.sol";
 

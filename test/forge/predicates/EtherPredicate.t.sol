@@ -2,7 +2,7 @@
 pragma solidity ^0.6.2;
 pragma experimental ABIEncoderV2;
 
-import "test/forge/utils/Test.sol";
+import "forge-std/Test.sol";
 import {EtherPredicate} from "contracts/root/TokenPredicates/EtherPredicate.sol";
 import {EtherPredicateProxy} from "contracts/root/TokenPredicates/EtherPredicateProxy.sol";
 
