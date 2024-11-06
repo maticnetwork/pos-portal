@@ -10,17 +10,10 @@ import {UpgradableProxy} from "../helpers/interfaces/UpgradableProxy.generated.s
 contract DeployFix is Script {
     using stdJson for string;
 
-    // owned by 0xfa7d2a996ac6350f4b56c043112da0366a59b74c
     address governance = 0x6e7a5820baD6cebA8Ef5ea69c0C92EbbDAc9CE48;
-
     address gSafeAddress = 0xFa7D2a996aC6350f4b56C043112Da0366a59b74c;
-
-    // //pos
-
-    // owned by 0xfa7d2a996ac6350f4b56c043112da0366a59b74c
     address rootChainManagerProxy = 0xA0c68C638235ee32657e8f720a23ceC1bFc77C77;
     address rootChainManager;
-    // // pending check
 
     function run() public {
         //uint256 deployerPrivateKey = vm.promptSecretUint("Enter deployer private key: ");
