@@ -57,5 +57,5 @@ jobs:
 
       - name: Run Forge tests
         run: |
-          forge test -vvv
+          forge test -vvv --no-match-test "SkipCI"
         id: test

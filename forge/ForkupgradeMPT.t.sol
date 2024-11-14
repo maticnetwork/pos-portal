@@ -39,7 +39,7 @@ contract ForkupgradeMPT is Test {
         vm.selectFork(mainnetFork);
     }
 
-    function test_UpgradeMPT() public {
+    function test_UpgradeMPTSkipCI() public {
         assertEq(vm.activeFork(), mainnetFork);
         
         address rootChainManagerImpl = deployCode("out/RootChainManager.sol/RootChainManager.json");
