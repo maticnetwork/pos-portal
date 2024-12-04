@@ -13,9 +13,14 @@ remappings = [
     "truffle/=node_modules/truffle/",
 ]
 
+evm_version = "shanghai"
+
+memory_limit = 40003554432
+gas_limit = "18446744073709551615"
+
 ffi = true
 
-fs_permissions = [{ access = "read", path = "./lib/"}, { access = "read", path = "./test/"}, { access = "read", path = "./contracts/"}]
+fs_permissions = [{ access = "read", path = "./forge/"}, { access = "read", path = "./out/"}, { access = "read", path = "./lib/"}, { access = "read", path = "./test/"}, { access = "read", path = "./contracts/"}]
 
 
 [rpc_endpoints]

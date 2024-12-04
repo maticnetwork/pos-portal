@@ -10,40 +10,10 @@ import {UpgradableProxy} from "../helpers/interfaces/UpgradableProxy.generated.s
 contract DeployFix is Script {
     using stdJson for string;
 
-    // owned by 0xfa7d2a996ac6350f4b56c043112da0366a59b74c
     address governance = 0x6e7a5820baD6cebA8Ef5ea69c0C92EbbDAc9CE48;
-
     address gSafeAddress = 0xFa7D2a996aC6350f4b56C043112Da0366a59b74c;
-
-    // //pos
-
-    // owned by 0xfa7d2a996ac6350f4b56c043112da0366a59b74c
     address rootChainManagerProxy = 0xA0c68C638235ee32657e8f720a23ceC1bFc77C77;
     address rootChainManager;
-    // // pending check
-
-    // owned by 0xfa7d2a996ac6350f4b56c043112da0366a59b74c
-    address eRC20PredicateProxy = 0x40ec5B33f54e0E8A33A975908C5BA1c14e5BbbDf;
-    address eRC20Predicate;
-    // owned by 0xfa7d2a996ac6350f4b56c043112da0366a59b74c
-    address eRC721PredicateProxy = 0xE6F45376f64e1F568BD1404C155e5fFD2F80F7AD;
-    address eRC721Predicate;
-    // owned by 0xfa7d2a996ac6350f4b56c043112da0366a59b74c
-    address eRC1155PredicateProxy = 0x0B9020d4E32990D67559b1317c7BF0C15D6EB88f;
-    address eRC1155Predicate;
-    // owned by 0xfa7d2a996ac6350f4b56c043112da0366a59b74c
-    address mintableERC20PredicateProxy = 0x9923263fA127b3d1484cFD649df8f1831c2A74e4;
-    address mintableERC20Predicate;
-    // owned by 0xfa7d2a996ac6350f4b56c043112da0366a59b74c
-    address mintableERC721PredicateProxy = 0x932532aA4c0174b8453839A6E44eE09Cc615F2b7;
-    address mintableERC721Predicate;
-    // owned by 0xfa7d2a996ac6350f4b56c043112da0366a59b74c
-    address mintableERC1155PredicateProxy = 0x2d641867411650cd05dB93B59964536b1ED5b1B7;
-    address mintableERC1155Predicate;
-    // owned by 0xfa7d2a996ac6350f4b56c043112da0366a59b74c
-    address etherPredicateProxy = 0x8484Ef722627bf18ca5Ae6BcF031c23E6e922B30;
-    address etherPredicate;
-
 
     function run() public {
         //uint256 deployerPrivateKey = vm.promptSecretUint("Enter deployer private key: ");
@@ -51,69 +21,20 @@ contract DeployFix is Script {
 
         vm.startBroadcast(deployerPrivateKey);
 
-        // deploy STEP 1
         // deploy new RootChainManager version
         rootChainManager = deployCode("out/RootChainManager.sol/RootChainManager.json");
 
         console.log("deployed RootChainManager implementation at: ", rootChainManager);
-
-        // deploy STEP 2
-        // deploy new ERC20Predicate version
-        eRC20Predicate = deployCode("out/ERC20Predicate.sol/ERC20Predicate.json");
-
-        console.log("deployed ERC20Predicate implementation at: ", eRC20Predicate);
-
-        // deploy STEP 3
-        // deploy new ERC721Predicate version
-        eRC721Predicate = deployCode("out/ERC721Predicate.sol/ERC721Predicate.json");
-
-        console.log("deployed ERC721Predicate implementation at: ", eRC721Predicate);
-
-        // deploy STEP 4
-        // deploy new ERC1155Predicate version
-        eRC1155Predicate = deployCode("out/ERC1155Predicate.sol/ERC1155Predicate.json");
-
-        console.log("deployed ERC1155Predicate implementation at: ", eRC1155Predicate);
-
-        // deploy STEP 5
-        // deploy new MintableERC20Predicate version
-        mintableERC20Predicate = deployCode("out/MintableERC20Predicate.sol/MintableERC20Predicate.json");
-
-        console.log("deployed MintableERC20Predicate implementation at: ", mintableERC20Predicate);
-
-        // deploy STEP 6
-        // deploy new MintableERC721Predicate version
-        mintableERC721Predicate = deployCode("out/MintableERC721Predicate.sol/MintableERC721Predicate.json");
-
-        console.log("deployed MintableERC721Predicate implementation at: ", mintableERC721Predicate);
-
-        // deploy STEP 7
-        // deploy new MintableERC1155Predicate version
-        mintableERC1155Predicate = deployCode("out/MintableERC1155Predicate.sol/MintableERC1155Predicate.json");
-
-        console.log("deployed MintableERC1155Predicate implementation at: ", mintableERC1155Predicate);
-
-        // deploy STEP 8
-        // deploy new EtherPredicate version
-        etherPredicate = deployCode("out/EtherPredicate.sol/EtherPredicate.json");
-
-        console.log("deployed EtherPredicate implementation at: ", etherPredicate);
 
         vm.stopBroadcast();
    
         console.log("----------------------");
         console.log("Generating payloads \n");
 
-        // STEP 9 
         // Update Proxies
-        address[8] memory impls = [rootChainManager, eRC20Predicate, eRC721Predicate, eRC1155Predicate, mintableERC20Predicate, mintableERC721Predicate, mintableERC1155Predicate, etherPredicate];
-        address[8] memory proxies = [rootChainManagerProxy, eRC20PredicateProxy, eRC721PredicateProxy, eRC1155PredicateProxy, mintableERC20PredicateProxy, mintableERC721PredicateProxy, mintableERC1155PredicateProxy, etherPredicateProxy];
-
-        for (uint i = 0; i < impls.length; i++) {
-            bytes memory payload = abi.encodeCall(UpgradableProxy.updateImplementation, (impls[i]));
-            console.log("Send: ");
-            console.logBytes(payload);
-            console.log("to: ", proxies[i]);
-        }
+        bytes memory payload = abi.encodeCall(UpgradableProxy.updateImplementation, (rootChainManager));
+        console.log("Send: ");
+        console.logBytes(payload);
+        console.log("to: ", rootChainManagerProxy);
     }
 }
