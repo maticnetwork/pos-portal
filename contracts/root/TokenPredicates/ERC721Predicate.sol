@@ -38,7 +38,10 @@ contract ERC721Predicate is ITokenPredicate, AccessControlMixin, Initializable, 
         uint256 tokenId
     );
 
-    constructor() public {}
+    constructor() public {
+        // Disable initializer on implementation contract
+        _disableInitializer();
+    }
 
     function initialize(address _owner) external initializer {
         _setupContractId("ERC721Predicate");
@@ -101,10 +104,12 @@ contract ERC721Predicate is ITokenPredicate, AccessControlMixin, Initializable, 
      * @notice Validates log signature, from and to address
      * then sends the correct tokenId to withdrawer
      * callable only by manager
+     * @notice address unused, being kept for abi compatability
      * @param rootToken Token which gets withdrawn
      * @param log Valid ERC721 burn log from child chain
      */
     function exitTokens(
+        address,
         address rootToken,
         bytes calldata log
     )

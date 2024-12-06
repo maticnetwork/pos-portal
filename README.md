@@ -24,11 +24,11 @@ npm i @maticnetwork/pos-portal
 Make sure you've NodeJS & NPM installed
 
 ```bash
-user:pos-portal anjan$ node --version
-v12.18.1
+node --version
+v10.24.1
 
-user:pos-portal anjan$ npm --version
-6.14.5
+npm --version
+6.14.12
 ```
 
 Clone repository & install all dependencies
@@ -272,4 +272,3 @@ Set list of contract addresses and new owner address in `6_change_owners.js` mig
 Set `MNEMONIC` and `API_KEY` as env variables
 ```bash
 npm run change-owners -- --network <network-name>
-```

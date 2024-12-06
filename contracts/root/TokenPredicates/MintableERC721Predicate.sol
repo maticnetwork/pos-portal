@@ -51,7 +51,10 @@ contract MintableERC721Predicate is ITokenPredicate, AccessControlMixin, Initial
         uint256[] tokenIds
     );
 
-    constructor() public {}
+    constructor() public {
+        // Disable initializer on implementation contract
+        _disableInitializer();
+    }
 
     function initialize(address _owner) external initializer {
         _setupContractId("MintableERC721Predicate");
@@ -137,10 +140,12 @@ contract MintableERC721Predicate is ITokenPredicate, AccessControlMixin, Initial
      * if token exits then transfers it to withdrawer
      * if token doesn't exit then it is minted
      * callable only by manager
+     * @notice address unused, being kept for abi compatability
      * @param rootToken Token which gets withdrawn
      * @param log Valid ERC721 burn log from child chain
      */
     function exitTokens(
+        address,
         address rootToken,
         bytes calldata log
     )

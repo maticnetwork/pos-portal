@@ -1,0 +1,36 @@
+[profile.default]
+src = "contracts"
+out = "out"
+test = "forge"
+libs = [
+    "lib",
+    "node_modules",
+]
+remappings = [
+    "@openzeppelin/=node_modules/@openzeppelin/",
+    "forge-std/=lib/forge-std/src/",
+    "hardhat/=node_modules/hardhat/",
+    "truffle/=node_modules/truffle/",
+]
+
+evm_version = "shanghai"
+
+memory_limit = 40003554432
+gas_limit = "18446744073709551615"
+
+ffi = true
+
+fs_permissions = [{ access = "read", path = "./forge/"}, { access = "read", path = "./out/"}, { access = "read", path = "./lib/"}, { access = "read", path = "./test/"}, { access = "read", path = "./contracts/"}]
+
+
+[rpc_endpoints]
+anvil = "http://127.0.0.1:8545"
+mainnet = "https://mainnet.infura.io/v3/${INFURA_TOKEN}"
+goerli = "https://goerli.infura.io/v3/${INFURA_TOKEN}"
+sepolia = "https://sepolia.infura.io/v3/${INFURA_TOKEN}"
+polygon_pos = "https://polygon-mainnet.infura.io/v3/${INFURA_TOKEN}"
+mumbai = "https://polygon-mumbai.infura.io/v3/${INFURA_TOKEN}"
+polygon_zkevm = "https://zkevm-rpc.com"
+polygon_zkevm_testnet = "https://rpc.public.zkevm-test.net"
+
+# See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options

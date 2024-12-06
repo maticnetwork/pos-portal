@@ -24,7 +24,10 @@ contract EtherPredicate is ITokenPredicate, AccessControlMixin, Initializable {
         uint256 amount
     );
 
-    constructor() public {}
+    constructor() public {
+        // Disable initializer on implementation contract
+        _disableInitializer();
+    }
 
     function initialize(address _owner) external initializer {
         _setupContractId("EtherPredicate");
@@ -61,9 +64,12 @@ contract EtherPredicate is ITokenPredicate, AccessControlMixin, Initializable {
      * @notice Validates log signature, from and to address
      * then sends the correct amount to withdrawer
      * callable only by manager
+     * @notice address unused, being kept for abi compatability
+     * @notice address unused, being kept for abi compatability
      * @param log Valid ERC20 burn log from child chain
      */
     function exitTokens(
+        address,
         address,
         bytes calldata log
     )

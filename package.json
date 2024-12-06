@@ -9,6 +9,7 @@
     "bor": "cd test-blockchain && bash run-docker.sh",
     "bor:clean": "cd test-blockchain && bash stop-docker.sh",
     "truffle": "truffle",
+    "generate:interfaces": "scripts/helpers/generateInterfaces.sh",
     "build": "truffle compile && npm run artifacts && npm run flatten",
     "migrate:2": "truffle migrate --network root --f 2 --to 2",
     "migrate:3": "truffle migrate --network child --f 3 --to 3",
@@ -43,6 +44,7 @@
     "@openzeppelin/contracts": "=3.1.0",
     "@openzeppelin/test-helpers": "^0.5.5",
     "@truffle/hdwallet-provider": "^1.0.35",
+    "@types/node": "^22.5.5",
     "babel-cli": "^6.26.0",
     "babel-eslint": "^10.1.0",
     "babel-polyfill": "^6.26.0",
@@ -76,7 +78,10 @@
     "nunjucks": "^3.2.1",
     "solium": "^1.2.5",
     "truffle": "^5.1.21",
-    "truffle-flattener": "^1.4.4"
+    "truffle-flattener": "^1.4.4",
+    "ts-node": "^10.9.2",
+    "tslib": "^2.7.0",
+    "typescript": "^4.9.5"
   },
   "dependencies": {
     "ganache-cli": "^6.9.1"

@@ -113,6 +113,7 @@ library RLPReader {
             result[i] = RLPItem(dataLen, memPtr); 
             memPtr = memPtr + dataLen;
         }
+        require(memPtr - item.memPtr == item.len, "Wrong total length.");
 
         return result;
     }
