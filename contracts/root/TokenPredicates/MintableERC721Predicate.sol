@@ -95,6 +95,7 @@ contract MintableERC721Predicate is ITokenPredicate, AccessControlMixin, Initial
         override
         only(MANAGER_ROLE)
     {
+        IMintableERC721 token = IMintableERC721(rootToken);
 
         // Locking single ERC721 token
         if (depositData.length == 32) {
@@ -106,7 +107,7 @@ contract MintableERC721Predicate is ITokenPredicate, AccessControlMixin, Initial
 
             // Transferring token to this address, which will be
             // released when attempted to be unlocked
-            IMintableERC721(rootToken).safeTransferFrom(depositor, address(this), tokenId);
+            token.safeTransferFrom(token.ownerOf(tokenId), address(this), tokenId);
 
         } else {
             // Locking a set a ERC721 token(s)
@@ -126,7 +127,7 @@ contract MintableERC721Predicate is ITokenPredicate, AccessControlMixin, Initial
             // to this predicate address
             for (uint256 i; i < length; i++) {
 
-                IMintableERC721(rootToken).safeTransferFrom(depositor, address(this), tokenIds[i]);
+                token.safeTransferFrom(token.ownerOf(tokenIds[i]), address(this), tokenIds[i]);
 
             }
 
