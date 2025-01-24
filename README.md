@@ -77,7 +77,7 @@ You may want to check [matic-cli](https://github.com/maticnetwork/matic-cli).
 
 ### 1. With `matic-cli`
 
-Assuming you've installed `matic-cli` & set up single node local network by following [this guide](https://github.com/maticnetwork/matic-cli#usage), it's good time to start all components seperately as mentioned in `matic-cli` README.
+Assuming you've installed `matic-cli` & set up single node local network by following [this guide](https://github.com/maticnetwork/matic-cli#usage), it's good time to start all components separately as mentioned in `matic-cli` README.
 
 This should give you RPC listen addresses for both RootChain ( read Ganache ) & ChildChain ( read Bor ), which need to updated in `pos-portal/truffle-config.js`. Also note Mnemonic you used when setting up local network, we'll make use of it for migrating pos-portal contracts.
 
