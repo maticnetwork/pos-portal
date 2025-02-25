@@ -1,0 +1,24 @@
+mutation {
+  exchangeRateCreate(
+    input: {
+      sourceCurrencyCode: GBP
+      targetCurrencyCode: EUR
+      type: MID_MARKET
+    }
+  ) {
+    id
+    rate
+    sourceCurrencyCode
+    targetCurrencyCode
+  }
+}
+{
+  "data": {
+    "createExchangeRate": {
+      "id": "exchange_rate_1a021f23-8a63-4811-a8a3-6cce69f3a616",
+      "rate": 0.6391,
+      "sourceCurrencyCode": "GBP",
+      "targetCurrencyCode": "EUR"
+    }
+  }
+}
