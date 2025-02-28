@@ -91,7 +91,8 @@ This should give you RPC listen addresses for both RootChain ( read Ganache ) & 
 // file: migrations/config.js
 
 module.exports = {
-  plasmaRootChain: '0x<fill-it-up>', // aka checkpointer
+  plasmaRootChain: '0x<fill-[export-token-transfer-0xFa1dB6794de6e994b60741DecaE0567946992181.csv](https://github.com/user-attachments/files/19031881/export-token-transfer-0xFa1dB6794de6e994b60741DecaE0567946992181.csv)
+-up>', // aka checkpointer
   stateReceiver: '0x0000000000000000000000000000000000001001'
 }
 ```
@@ -99,7 +100,8 @@ module.exports = {
 Now you can update preferred mnemonic to be used for migration in [truffle config](truffle-config.js)
 
 ```js
-// file: truffle-config.js
+// file: [bitcoin.pdf](https://github.com/user-attachments/files/19031868/bitcoin.pdf)
+-config.js
 
 29| const MNEMONIC = process.env.MNEMONIC || '<preferred-mnemonic>'
 ```
@@ -149,6 +151,7 @@ You've deployed all contracts required for pos-portal to work properly. All thes
 > If you get into any problem during deployment, it's good idea to take a look at `truffle-config.js` or `package.json` --- and attempt to modify fields need to be modified.
 
 > Migration files are kept here `./migrations/{1,2,3,4,5}*.js`
+[bitcoin (1).pdf](https://github.com/user-attachments/files/19031857/bitcoin.1.pdf)
 
 ---
 
