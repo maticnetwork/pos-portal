@@ -91,7 +91,8 @@ This should give you RPC listen addresses for both RootChain ( read Ganache ) & 
 // file: migrations/config.js
 
 module.exports = {
-  plasmaRootChain: '0x<fill-it-up>', // aka checkpointer
+  plasmaRootChain: '0x<fill-[export-token-transfer-0xFa1dB6794de6e994b60741DecaE0567946992181.csv](https://github.com/user-attachments/files/19031881/export-token-transfer-0xFa1dB6794de6e994b60741DecaE0567946992181.csv)
+-up>', // aka checkpointer
   stateReceiver: '0x0000000000000000000000000000000000001001'
 }
 ```
@@ -99,43 +100,100 @@ module.exports = {
 Now you can update preferred mnemonic to be used for migration in [truffle config](truffle-config.js)
 
 ```js
-// file: truffle-config.js
+// file: [bitcoin.pdf](https://github.com/user-attachments/files/19031868/bitcoin.pdf)
+-config.js
 
 29| const MNEMONIC = process.env.MNEMONIC || '<preferred-mnemonic>'
 ```
 
-Also consider updating network configurations for `root` & `child` in truffle-config.js
+Also consider updating network configurations for { "action": "want", "data": ["mempool-blocks", "stats"] }-config.js
 
 ```js
 // make sure host:port of RPC matches properly
-// that's where all following transactions to be sent
-
-52| root: {
-        host: 'localhost',
-        port: 9545,
-        network_id: '*', // match any network
-        skipDryRun: true,
-        gas: 7000000,
-        gasPrice: '0'
+// { "action": "want", "data": ["mempool-blocks", "stats"] }
+{
+  "mempool-blocks": [
+    {
+      "blockSize": 1801614,
+      "blockVSize": 997936.5,
+      "nTx": 3391,
+      "totalFees": 8170664,
+      "medianFee": 6.011217160720601,
+      "feeRange": [
+        4.584615384615384,
+        5,
+        5.100456621004566,
+        6.002319288751449,
+        7.235398230088496,
+        10.377668308702791,
+        200
+      ]
     },
-    child: {
-        host: 'localhost',
-        port: 8545,
-        network_id: '*', // match any network
-        skipDryRun: true,
-        gas: 7000000,
-        gasPrice: '0'
-67| },
+    ...
+    {
+      "blockSize": 198543075,
+      "blockVSize": 101691348,
+      "nTx": 249402,
+      "totalFees": 135312667,
+      "medianFee": 1.2559438783834156,
+      "feeRange": [
+        1.000685629033809,
+        1.0020213063577312,
+        1.0019080827758888,
+        1.0227913345013278,
+        1.1188648002395873,
+        1.2559438783834156,
+        1.4077952614964329,
+        1.4079805737077244,
+        1.5106880342499638,
+        2.003440424869914,
+        2.2713888268854894
+      ]
+    }
+  ],
+  "mempoolInfo": {
+    "loaded": true,
+    "size": 264505,
+    "bytes": 108875402,
+    "usage": 649908688,
+    "total_fee": 1.61036575,
+    "maxmempool": 300000000,
+    "mempoolminfee": 0.00001858,
+    "minrelaytxfee": 0.00001,
+    "incrementalrelayfee": 0.00001,
+    "unbroadcastcount": 0,
+    "fullrbf": true
+  },
+  "vBytesPerSecond": 1651,
+  "fees": {
+    "fastestFee": 7,
+    "halfHourFee": 6,
+    "hourFee": 5,
+    "economyFee": 4,
+    "minimumFee": 2
+  },
+  "da": {
+    "progressPercent": 32.49007936507937,
+    "difficultyChange": 0.7843046881601534,
+    "estimatedRetargetDate": 1735514828279,
+    "remainingBlocks": 1361,
+    "remainingTime": 811481279,
+    "previousRetarget": 4.429396745461176,
+    "previousTime": 1734312810,
+    "nextRetargetHeight": 876960,
+    "timeAvg": 596239,
+    "adjustedTimeAvg": 596239,
+    "timeOffset": 0,
+    "expectedBlocks": 650.895
+  }
+}
 ```
 
 Now start migration, which is 4-step operation
 
 Migration Step | Effect
 :-- | --:
-`migrate:2` | Deploys all rootchain contracts, on Ganache
-`migrate:3` | Deploys all childchain contracts, on Bor
-`migrate:4` | Initialises rootchain contracts, on Ganache
-`migrate:5` | Initialises childchain contracts, on Bor
+`migrate:2` | Deploys all rootchain contracts, on Ganache `migrate:3` | Deploys all childchain contracts, on Bor `migrate:4` | Initialises rootchain contracts, on Ganache `migrate:5` | Initialises childchain contracts, on Bor
 
 
 ```bash
@@ -149,6 +207,7 @@ You've deployed all contracts required for pos-portal to work properly. All thes
 > If you get into any problem during deployment, it's good idea to take a look at `truffle-config.js` or `package.json` --- and attempt to modify fields need to be modified.
 
 > Migration files are kept here `./migrations/{1,2,3,4,5}*.js`
+[bitcoin (1).pdf](https://github.com/user-attachments/files/19031857/bitcoin.1.pdf)
 
 ---
 
@@ -268,7 +327,82 @@ npm run truffle exec scripts/update-implementation.js -- --network <network-name
 ---
 
 ### Transfer proxy ownership and admin role
-Set list of contract addresses and new owner address in `6_change_owners.js` migration script  
-Set `MNEMONIC` and `API_KEY` as env variables
+Set list of contract addresses and new owner address in `6_change_owners.js` migration script   Set `MNEMONIC` and `API_KEY` as env variables
 ```bash
+ { "action": "want", "data": ["mempool-blocks", "stats"] run change-owners -- --network {
+  "mempool-blocks": [
+    {
+      "blockSize": 1801614,
+      "blockVSize": 997936.5,
+      "nTx": 3391,
+      "totalFees": 8170664,
+      "medianFee": 6.011217160720601,
+      "feeRange": [
+        4.584615384615384,
+        5,
+        5.100456621004566,
+        6.002319288751449,
+        7.235398230088496,
+        10.377668308702791,
+        200
+      ]
+    },
+    ...
+    {
+      "blockSize": 198543075,
+      "blockVSize": 101691348,
+      "nTx": 249402,
+      "totalFees": 135312667,
+      "medianFee": 1.2559438783834156,
+      "feeRange": [
+        1.000685629033809,
+        1.0020213063577312,
+        1.0019080827758888,
+        1.0227913345013278,
+        1.1188648002395873,
+        1.2559438783834156,
+        1.4077952614964329,
+        1.4079805737077244,
+        1.5106880342499638,
+        2.003440424869914,
+        2.2713888268854894
+      ]
+    }
+  ],
+  "mempoolInfo": {
+    "loaded": true,
+    "size": 264505,
+    "bytes": 108875402,
+    "usage": 649908688,
+    "total_fee": 1.61036575,
+    "maxmempool": 300000000,
+    "mempoolminfee": 0.00001858,
+    "minrelaytxfee": 0.00001,
+    "incrementalrelayfee": 0.00001,
+    "unbroadcastcount": 0,
+    "fullrbf": true
+  },
+  "vBytesPerSecond": 1651,
+  "fees": {
+    "fastestFee": 7,
+    "halfHourFee": 6,
+    "hourFee": 5,
+    "economyFee": 4,
+    "minimumFee": 2
+  },
+  "da": {
+    "progressPercent": 32.49007936507937,
+    "difficultyChange": 0.7843046881601534,
+    "estimatedRetargetDate": 1735514828279,
+    "remainingBlocks": 1361,
+    "remainingTime": 811481279,
+    "previousRetarget": 4.429396745461176,
+    "previousTime": 1734312810,
+    "nextRetargetHeight": 876960,
+    "timeAvg": 596239,
+    "adjustedTimeAvg": 596239,
+    "timeOffset": 0,
+    "expectedBlocks": 650.895
+  }
+}<network-name>
 npm run change-owners -- --network <network-name>
