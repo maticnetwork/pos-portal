@@ -1,27 +1,17 @@
-import BN from 'bn.js'
+import { toBigInt } from 'ethers';
 
-// export const rootRPC = 'http://localhost:8545'
-// export const childRPC = 'http://localhost:9545'
+export const rootRPC = 'http://localhost:9545';
+export const childRPC = 'http://localhost:8545';
 
-// export const rootWeb3 = new web3.constructor(
-//   new web3.providers.HttpProvider(rootRPC)
-// )
-// export const childWeb3 = new web3.constructor(
-//   new web3.providers.HttpProvider(childRPC)
-// )
+export const etherAddress = '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE';
 
-export const rootRPC = 'http://localhost:9545'
-export const childRPC = 'http://localhost:8545'
-
-export const etherAddress = '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE'
-
-export const erc20TransferEventSig = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef'
-export const erc721TransferEventSig = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef'
-export const erc721WithdrawnBatchEventSig = '0xf871896b17e9cb7a64941c62c188a4f5c621b86800e3d15452ece01ce56073df'
-export const erc721TransferWithMetadataEventSig = '0xf94915c6d1fd521cee85359239227480c7e8776d7caf1fc3bacad5c269b66a14'
-export const erc1155TransferSingleEventSig = '0xc3d58168c5ae7397731d063d5bbf3d657854427343f4c083240f7aacaa2d0f62'
-export const erc1155TransferBatchEventSig = '0x4a39dc06d4c0dbc64b70af90fd698a233a518aa5d07e595d983b8c0526c8f7fb'
-export const erc1155ChainExitEventSig = '0xc7b80b68f1c661da97dbd7e6e143a0c7c587dfc522cb2ac508b9084fecc492bc'
+export const erc20TransferEventSig = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef';
+export const erc721TransferEventSig = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef';
+export const erc721WithdrawnBatchEventSig = '0xf871896b17e9cb7a64941c62c188a4f5c621b86800e3d15452ece01ce56073df';
+export const erc721TransferWithMetadataEventSig = '0xf94915c6d1fd521cee85359239227480c7e8776d7caf1fc3bacad5c269b66a14';
+export const erc1155TransferSingleEventSig = '0xc3d58168c5ae7397731d063d5bbf3d657854427343f4c083240f7aacaa2d0f62';
+export const erc1155TransferBatchEventSig = '0x4a39dc06d4c0dbc64b70af90fd698a233a518aa5d07e595d983b8c0526c8f7fb';
+export const erc1155ChainExitEventSig = '0xc7b80b68f1c661da97dbd7e6e143a0c7c587dfc522cb2ac508b9084fecc492bc';
 
 export const mockValues = {
   zeroAddress: '0x0000000000000000000000000000000000000000',
@@ -45,27 +35,27 @@ export const mockValues = {
     '0x00000000000000000000000000000000000000000000000003c68af0bb140000'
   ],
   amounts: [
-    new BN('100000000000000000'),
-    new BN('200000000000000000'),
-    new BN('500000000000000000'),
-    new BN('1000000000000000000'),
-    new BN('2000000000000000000'),
-    new BN('5000000000000000000'),
-    new BN('10000000000000000000'),
-    new BN('20000000000000000000'),
-    new BN('50000000000000000000'),
-    new BN('200000000000000000000')
+    toBigInt(100000000000000000n),
+    toBigInt(200000000000000000n),
+    toBigInt(500000000000000000n),
+    toBigInt(1000000000000000000n),
+    toBigInt(2000000000000000000n),
+    toBigInt(5000000000000000000n),
+    toBigInt(10000000000000000000n),
+    toBigInt(20000000000000000000n),
+    toBigInt(50000000000000000000n),
+    toBigInt(200000000000000000000n)
   ],
   numbers: [
-    1,
-    2,
-    5,
-    10,
-    20,
-    50,
-    100,
-    200,
-    500,
-    2000
+    toBigInt(1n),
+    toBigInt(2n),
+    toBigInt(5n),
+    toBigInt(10n),
+    toBigInt(20n),
+    toBigInt(50n),
+    toBigInt(100n),
+    toBigInt(200n),
+    toBigInt(500n),
+    toBigInt(2000n)
   ]
-}
+};

@@ -1,6 +1,4 @@
-import { RLP } from 'ethers/utils'
-import { AbiCoder, toUtf8Bytes } from 'ethers/utils'
-
+import { toUtf8Bytes, AbiCoder, encodeRlp, toBeHex } from 'ethers';
 import {
   erc20TransferEventSig,
   erc721TransferEventSig,
@@ -9,9 +7,9 @@ import {
   erc1155TransferSingleEventSig,
   erc1155TransferBatchEventSig,
   erc1155ChainExitEventSig
-} from './constants'
+} from './constants.js';
 
-const abi = new AbiCoder()
+const abi = new AbiCoder();
 
 export const getERC20TransferLog = ({
   overrideSig,
@@ -19,16 +17,16 @@ export const getERC20TransferLog = ({
   to,
   amount
 }) => {
-  return RLP.encode([
-    '0x0',
+  return encodeRlp([
+    '0x',
     [
       overrideSig || erc20TransferEventSig,
       from,
       to
     ],
-    '0x' + amount.toString(16)
-  ])
-}
+    toBeHex(amount)
+  ]);
+};
 
 export const getERC721TransferLog = ({
   overrideSig,
@@ -36,24 +34,24 @@ export const getERC721TransferLog = ({
   to,
   tokenId
 }) => {
-  return RLP.encode([
-    '0x0',
+  return encodeRlp([
+    '0x',
     [
       overrideSig || erc721TransferEventSig,
       from,
       to,
-      '0x' + tokenId.toString(16)
+      toBeHex(tokenId)
     ]
-  ])
-}
+  ]);
+};
 
 export const getERC721WithdrawnBatchLog = ({
   overrideSig,
   user,
   tokenIds
 }) => {
-  return RLP.encode([
-    '0x0',
+  return encodeRlp([
+    '0x',
     [
       overrideSig || erc721WithdrawnBatchEventSig,
       user
@@ -66,8 +64,8 @@ export const getERC721WithdrawnBatchLog = ({
         tokenIds.map(t => '0x' + t.toString(16))
       ]
     )
-  ])
-}
+  ]);
+};
 
 export const getERC721TransferWithMetadataLog = ({
   overrideSig,
@@ -76,26 +74,17 @@ export const getERC721TransferWithMetadataLog = ({
   tokenId,
   metaData
 }) => {
-  return RLP.encode([
-    '0x0',
+  return encodeRlp([
+    '0x',
     [
       overrideSig || erc721TransferWithMetadataEventSig,
       from,
       to,
       '0x' + tokenId.toString(16)
     ],
-    // ABI encoded metadata, because that's how dummy root token expects it
-    //
-    // @note Two level serialisation is required because we're emitting
-    // event with `bytes` field, which will be serialised by EVM itself
-    // as `abi.encode(data)`, result into final level of serialised form
-    //
-    // Before that actual metadata we're interested in passing cross
-    // chain needs to be serialised, which is what gets emitted via event
-    // on L2
     abi.encode(['bytes'], [abi.encode(['string'], [metaData])])
-  ])
-}
+  ]);
+};
 
 export const getERC1155TransferSingleLog = ({
   overrideSig,
@@ -105,8 +94,8 @@ export const getERC1155TransferSingleLog = ({
   tokenId,
   amount
 }) => {
-  return RLP.encode([
-    '0x0',
+  return encodeRlp([
+    '0x',
     [
       overrideSig || erc1155TransferSingleEventSig,
       operator,
@@ -114,8 +103,8 @@ export const getERC1155TransferSingleLog = ({
       to
     ],
     abi.encode(['uint256', 'uint256'], ['0x' + tokenId.toString(16), '0x' + amount.toString(16)])
-  ])
-}
+  ]);
+};
 
 export const getERC1155TransferBatchLog = ({
   overrideSig,
@@ -125,8 +114,8 @@ export const getERC1155TransferBatchLog = ({
   tokenIds,
   amounts
 }) => {
-  return RLP.encode([
-    '0x0',
+  return encodeRlp([
+    '0x',
     [
       overrideSig || erc1155TransferBatchEventSig,
       operator,
@@ -143,8 +132,8 @@ export const getERC1155TransferBatchLog = ({
         amounts.map(a => '0x' + a.toString(16))
       ]
     )
-  ])
-}
+  ]);
+};
 
 export const getERC1155ChainExitLog = ({
   overrideSig,
@@ -153,8 +142,8 @@ export const getERC1155ChainExitLog = ({
   amounts,
   data
 }) => {
-  return RLP.encode([
-    '0x0',
+  return encodeRlp([
+    '0x',
     [
       overrideSig || erc1155ChainExitEventSig,
       to
@@ -171,5 +160,5 @@ export const getERC1155ChainExitLog = ({
         `0x${Buffer.from(toUtf8Bytes(data || 'Hello World')).toString('hex')}`
       ]
     )
-  ])
-}
+  ]);
+};

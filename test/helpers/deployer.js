@@ -1,82 +1,167 @@
-import contracts from './contracts'
-import { etherAddress } from './constants'
+import { etherAddress } from './constants.js';
 
-export const deployFreshRootContracts = async(accounts) => {
-  const [
-    checkpointManager,
-    rootChainManagerLogic,
-    dummyStateSender,
-    erc20PredicateLogic,
-    mintableERC20PredicateLogic,
-    erc721PredicateLogic,
-    mintableERC721PredicateLogic,
-    erc1155PredicateLogic,
-    mintableERC1155PredicateLogic,
-    chainExitERC1155PredicateLogic,
-    etherPredicateLogic,
-    dummyERC20,
-    dummyMintableERC20,
-    dummyERC721,
-    dummyMintableERC721,
-    dummyERC1155,
-    dummyMintableERC1155,
-    exitPayloadReaderTest
-  ] = await Promise.all([
-    contracts.MockCheckpointManager.new(),
-    contracts.RootChainManager.new(),
-    contracts.DummyStateSender.new(),
-    contracts.ERC20Predicate.new(),
-    contracts.MintableERC20Predicate.new(),
-    contracts.ERC721Predicate.new(),
-    contracts.MintableERC721Predicate.new(),
-    contracts.ERC1155Predicate.new(),
-    contracts.MintableERC1155Predicate.new(),
-    contracts.ChainExitERC1155Predicate.new(),
-    contracts.EtherPredicate.new(),
-    contracts.DummyERC20.new('Dummy ERC20', 'DERC20'),
-    contracts.DummyMintableERC20.new('Dummy Mintable ERC20', 'DMERC20'),
-    contracts.DummyERC721.new('Dummy ERC721', 'DERC721'),
-    contracts.DummyMintableERC721.new('Dummy Mintable ERC721', 'DMERC721'),
-    contracts.DummyERC1155.new('Dummy ERC1155'),
-    contracts.DummyMintableERC1155.new('Dummy Mintable ERC1155'),
-    contracts.ExitPayloadReaderTest.new()
-  ])
+export const deployFreshRootContracts = async (accounts) => {
+  const CheckpointManager = await ethers.getContractFactory("MockCheckpointManager");
+  const checkpointManager = await CheckpointManager.deploy();
+  await checkpointManager.deployed();
 
-  const rootChainManagerProxy = await contracts.RootChainManagerProxy.new('0x0000000000000000000000000000000000000000')
-  await rootChainManagerProxy.updateAndCall(rootChainManagerLogic.address, rootChainManagerLogic.contract.methods.initialize(accounts[0]).encodeABI())
-  const rootChainManager = await contracts.RootChainManager.at(rootChainManagerProxy.address)
+  const RootChainManager = await ethers.getContractFactory("RootChainManager");
+  const rootChainManagerLogic = await RootChainManager.deploy();
+  await rootChainManagerLogic.deployed();
 
-  const erc20PredicateProxy = await contracts.ERC20PredicateProxy.new('0x0000000000000000000000000000000000000000')
-  await erc20PredicateProxy.updateAndCall(erc20PredicateLogic.address, erc20PredicateLogic.contract.methods.initialize(accounts[0]).encodeABI())
-  const erc20Predicate = await contracts.ERC20Predicate.at(erc20PredicateProxy.address)
+  const DummyStateSender = await ethers.getContractFactory("DummyStateSender");
+  const dummyStateSender = await DummyStateSender.deploy();
+  await dummyStateSender.deployed();
 
-  const mintableERC20PredicateProxy = await contracts.MintableERC20PredicateProxy.new('0x0000000000000000000000000000000000000000')
-  await mintableERC20PredicateProxy.updateAndCall(mintableERC20PredicateLogic.address, mintableERC20PredicateLogic.contract.methods.initialize(accounts[0]).encodeABI())
-  const mintableERC20Predicate = await contracts.MintableERC20Predicate.at(mintableERC20PredicateProxy.address)
+  const ERC20Predicate = await ethers.getContractFactory("ERC20Predicate");
+  const erc20PredicateLogic = await ERC20Predicate.deploy();
+  await erc20PredicateLogic.deployed();
 
-  const erc721PredicateProxy = await contracts.ERC721PredicateProxy.new('0x0000000000000000000000000000000000000000')
-  await erc721PredicateProxy.updateAndCall(erc721PredicateLogic.address, erc721PredicateLogic.contract.methods.initialize(accounts[0]).encodeABI())
-  const erc721Predicate = await contracts.ERC721Predicate.at(erc721PredicateProxy.address)
+  const MintableERC20Predicate = await ethers.getContractFactory("MintableERC20Predicate");
+  const mintableERC20PredicateLogic = await MintableERC20Predicate.deploy();
+  await mintableERC20PredicateLogic.deployed();
 
-  const mintableERC721PredicateProxy = await contracts.MintableERC721PredicateProxy.new('0x0000000000000000000000000000000000000000')
-  await mintableERC721PredicateProxy.updateAndCall(mintableERC721PredicateLogic.address, mintableERC721PredicateLogic.contract.methods.initialize(accounts[0]).encodeABI())
-  const mintableERC721Predicate = await contracts.MintableERC721Predicate.at(mintableERC721PredicateProxy.address)
+  const ERC721Predicate = await ethers.getContractFactory("ERC721Predicate");
+  const erc721PredicateLogic = await ERC721Predicate.deploy();
+  await erc721PredicateLogic.deployed();
 
-  const erc1155PredicateProxy = await contracts.ERC1155PredicateProxy.new('0x0000000000000000000000000000000000000000')
-  await erc1155PredicateProxy.updateAndCall(erc1155PredicateLogic.address, erc1155PredicateLogic.contract.methods.initialize(accounts[0]).encodeABI())
-  const erc1155Predicate = await contracts.ERC1155Predicate.at(erc1155PredicateProxy.address)
+  const MintableERC721Predicate = await ethers.getContractFactory("MintableERC721Predicate");
+  const mintableERC721PredicateLogic = await MintableERC721Predicate.deploy();
+  await mintableERC721PredicateLogic.deployed();
 
-  const mintableERC1155PredicateProxy = await contracts.MintableERC1155PredicateProxy.new('0x0000000000000000000000000000000000000000')
-  await mintableERC1155PredicateProxy.updateAndCall(mintableERC1155PredicateLogic.address, mintableERC1155PredicateLogic.contract.methods.initialize(accounts[0]).encodeABI())
-  const mintableERC1155Predicate = await contracts.MintableERC1155Predicate.at(mintableERC1155PredicateProxy.address)
+  const ERC1155Predicate = await ethers.getContractFactory("ERC1155Predicate");
+  const erc1155PredicateLogic = await ERC1155Predicate.deploy();
+  await erc1155PredicateLogic.deployed();
 
-  const chainExitERC1155PredicateProxy = await contracts.ChainExitERC1155PredicateProxy.new('0x0000000000000000000000000000000000000000')
-  await chainExitERC1155PredicateProxy.updateAndCall(chainExitERC1155PredicateLogic.address, chainExitERC1155PredicateLogic.contract.methods.initialize(accounts[0]).encodeABI())
-  const chainExitERC1155Predicate = await contracts.ChainExitERC1155Predicate.at(chainExitERC1155PredicateProxy.address)
+  const MintableERC1155Predicate = await ethers.getContractFactory("MintableERC1155Predicate");
+  const mintableERC1155PredicateLogic = await MintableERC1155Predicate.deploy();
+  await mintableERC1155PredicateLogic.deployed();
 
-  const etherPredicateProxy = await contracts.EtherPredicateProxy.new('0x0000000000000000000000000000000000000000')
-  await etherPredicateProxy.updateAndCall(etherPredicateLogic.address, etherPredicateLogic.contract.methods.initialize(accounts[0]).encodeABI())
-  const etherPredicate = await contracts.EtherPredicate.at(etherPredicateProxy.address)
+  const ChainExitERC1155Predicate = await ethers.getContractFactory("ChainExitERC1155Predicate");
+  const chainExitERC1155PredicateLogic = await ChainExitERC1155Predicate.deploy();
+  await chainExitERC1155PredicateLogic.deployed();
+
+  const EtherPredicate = await ethers.getContractFactory("EtherPredicate");
+  const etherPredicateLogic = await EtherPredicate.deploy();
+  await etherPredicateLogic.deployed();
+
+  const DummyERC20 = await ethers.getContractFactory("DummyERC20");
+  const dummyERC20 = await DummyERC20.deploy("Dummy ERC20", "DERC20");
+  await dummyERC20.deployed();
+
+  const DummyMintableERC20 = await ethers.getContractFactory("DummyMintableERC20");
+  const dummyMintableERC20 = await DummyMintableERC20.deploy("Dummy Mintable ERC20", "DMERC20");
+  await dummyMintableERC20.deployed();
+
+  const DummyERC721 = await ethers.getContractFactory("DummyERC721");
+  const dummyERC721 = await DummyERC721.deploy("Dummy ERC721", "DERC721");
+  await dummyERC721.deployed();
+
+  const DummyMintableERC721 = await ethers.getContractFactory("DummyMintableERC721");
+  const dummyMintableERC721 = await DummyMintableERC721.deploy("Dummy Mintable ERC721", "DMERC721");
+  await dummyMintableERC721.deployed();
+
+  const DummyERC1155 = await ethers.getContractFactory("DummyERC1155");
+  const dummyERC1155 = await DummyERC1155.deploy("Dummy ERC1155");
+  await dummyERC1155.deployed();
+
+  const DummyMintableERC1155 = await ethers.getContractFactory("DummyMintableERC1155");
+  const dummyMintableERC1155 = await DummyMintableERC1155.deploy("Dummy Mintable ERC1155");
+  await dummyMintableERC1155.deployed();
+
+  const ExitPayloadReaderTest = await ethers.getContractFactory("ExitPayloadReaderTest");
+  const exitPayloadReaderTest = await ExitPayloadReaderTest.deploy();
+  await exitPayloadReaderTest.deployed();
+
+  const RootChainManagerProxy = await ethers.getContractFactory("RootChainManagerProxy");
+  const rootChainManagerProxy = await RootChainManagerProxy.deploy("0x0000000000000000000000000000000000000000");
+  await rootChainManagerProxy.deployed();
+
+  const rootChainManager = RootChainManager.attach(rootChainManagerProxy.address);
+  await rootChainManagerProxy.updateAndCall(
+    rootChainManagerLogic.address,
+    rootChainManagerLogic.interface.encodeFunctionData("initialize", [accounts[0]])
+  );
+
+  const ERC20PredicateProxy = await ethers.getContractFactory("ERC20PredicateProxy");
+  const erc20PredicateProxy = await ERC20PredicateProxy.deploy("0x0000000000000000000000000000000000000000");
+  await erc20PredicateProxy.deployed();
+
+  const erc20Predicate = ERC20Predicate.attach(erc20PredicateProxy.address);
+  await erc20PredicateProxy.updateAndCall(
+    erc20PredicateLogic.address,
+    erc20PredicateLogic.interface.encodeFunctionData("initialize", [accounts[0]])
+  );
+
+  const MintableERC20PredicateProxy = await ethers.getContractFactory("MintableERC20PredicateProxy");
+  const mintableERC20PredicateProxy = await MintableERC20PredicateProxy.deploy("0x0000000000000000000000000000000000000000");
+  await mintableERC20PredicateProxy.deployed();
+
+  const mintableERC20Predicate = MintableERC20Predicate.attach(mintableERC20PredicateProxy.address);
+  await mintableERC20PredicateProxy.updateAndCall(
+    mintableERC20PredicateLogic.address,
+    mintableERC20PredicateLogic.interface.encodeFunctionData("initialize", [accounts[0]])
+  );
+
+  const ERC721PredicateProxy = await ethers.getContractFactory("ERC721PredicateProxy");
+  const erc721PredicateProxy = await ERC721PredicateProxy.deploy("0x0000000000000000000000000000000000000000");
+  await erc721PredicateProxy.deployed();
+
+  const erc721Predicate = ERC721Predicate.attach(erc721PredicateProxy.address);
+  await erc721PredicateProxy.updateAndCall(
+    erc721PredicateLogic.address,
+    erc721PredicateLogic.interface.encodeFunctionData("initialize", [accounts[0]])
+  );
+
+  const MintableERC721PredicateProxy = await ethers.getContractFactory("MintableERC721PredicateProxy");
+  const mintableERC721PredicateProxy = await MintableERC721PredicateProxy.deploy("0x0000000000000000000000000000000000000000");
+  await mintableERC721PredicateProxy.deployed();
+
+  const mintableERC721Predicate = MintableERC721Predicate.attach(mintableERC721PredicateProxy.address);
+  await mintableERC721PredicateProxy.updateAndCall(
+    mintableERC721PredicateLogic.address,
+    mintableERC721PredicateLogic.interface.encodeFunctionData("initialize", [accounts[0]])
+  );
+
+  const ERC1155PredicateProxy = await ethers.getContractFactory("ERC1155PredicateProxy");
+  const erc1155PredicateProxy = await ERC1155PredicateProxy.deploy("0x0000000000000000000000000000000000000000");
+  await erc1155PredicateProxy.deployed();
+
+  const erc1155Predicate = ERC1155Predicate.attach(erc1155PredicateProxy.address);
+  await erc1155PredicateProxy.updateAndCall(
+    erc1155PredicateLogic.address,
+    erc1155PredicateLogic.interface.encodeFunctionData("initialize", [accounts[0]])
+  );
+
+  const MintableERC1155PredicateProxy = await ethers.getContractFactory("MintableERC1155PredicateProxy");
+  const mintableERC1155PredicateProxy = await MintableERC1155PredicateProxy.deploy("0x0000000000000000000000000000000000000000");
+  await mintableERC1155PredicateProxy.deployed();
+
+  const mintableERC1155Predicate = MintableERC1155Predicate.attach(mintableERC1155PredicateProxy.address);
+  await mintableERC1155PredicateProxy.updateAndCall(
+    mintableERC1155PredicateLogic.address,
+    mintableERC1155PredicateLogic.interface.encodeFunctionData("initialize", [accounts[0]])
+  );
+
+  const ChainExitERC1155PredicateProxy = await ethers.getContractFactory("ChainExitERC1155PredicateProxy");
+  const chainExitERC1155PredicateProxy = await ChainExitERC1155PredicateProxy.deploy("0x0000000000000000000000000000000000000000");
+  await chainExitERC1155PredicateProxy.deployed();
+
+  const chainExitERC1155Predicate = ChainExitERC1155Predicate.attach(chainExitERC1155PredicateProxy.address);
+  await chainExitERC1155PredicateProxy.updateAndCall(
+    chainExitERC1155PredicateLogic.address,
+    chainExitERC1155PredicateLogic.interface.encodeFunctionData("initialize", [accounts[0]])
+  );
+
+  const EtherPredicateProxy = await ethers.getContractFactory("EtherPredicateProxy");
+  const etherPredicateProxy = await EtherPredicateProxy.deploy("0x0000000000000000000000000000000000000000");
+  await etherPredicateProxy.deployed();
+
+  const etherPredicate = EtherPredicate.attach(etherPredicateProxy.address);
+  await etherPredicateProxy.updateAndCall(
+    etherPredicateLogic.address,
+    etherPredicateLogic.interface.encodeFunctionData("initialize", [accounts[0]])
+  );
 
   return {
     exitPayloadReaderTest,
@@ -97,32 +182,51 @@ export const deployFreshRootContracts = async(accounts) => {
     dummyMintableERC721,
     dummyERC1155,
     dummyMintableERC1155
-  }
-}
+  };
+};
 
-export const deployFreshChildContracts = async(accounts) => {
-  const childChainManagerLogic = await contracts.ChildChainManager.new()
-  const childChainManagerProxy = await contracts.ChildChainManagerProxy.new('0x0000000000000000000000000000000000000000')
-  await childChainManagerProxy.updateAndCall(childChainManagerLogic.address, childChainManagerLogic.contract.methods.initialize(accounts[0]).encodeABI())
-  const childChainManager = await contracts.ChildChainManager.at(childChainManagerProxy.address)
+export const deployFreshChildContracts = async (accounts) => {
+  const ChildChainManager = await ethers.getContractFactory("ChildChainManager");
+  const childChainManagerLogic = await ChildChainManager.deploy();
+  await childChainManagerLogic.waitForDeployment();
 
-  const [
-    dummyERC20,
-    dummyMintableERC20,
-    dummyERC721,
-    dummyMintableERC721,
-    dummyERC1155,
-    dummyMintableERC1155,
-    maticWETH
-  ] = await Promise.all([
-    contracts.ChildERC20.new('Dummy ERC20', 'DERC20', 18, childChainManager.address),
-    contracts.ChildMintableERC20.new('Dummy Mintable ERC20', 'DMERC20', 18, childChainManager.address),
-    contracts.ChildERC721.new('Dummy ERC721', 'DERC721', childChainManager.address),
-    contracts.ChildMintableERC721.new('Dummy Mintable ERC721', 'DMERC721', childChainManager.address),
-    contracts.ChildERC1155.new('Dummy ERC1155', childChainManager.address),
-    contracts.ChildMintableERC1155.new('Dummy Mintable ERC1155', childChainManager.address),
-    contracts.MaticWETH.new(childChainManager.address)
-  ])
+  const ChildChainManagerProxy = await ethers.getContractFactory("ChildChainManagerProxy");
+  const childChainManagerProxy = await ChildChainManagerProxy.deploy(childChainManagerLogic.target);
+  await childChainManagerProxy.waitForDeployment();
+
+  const childChainManager = ChildChainManager.attach('0x0000000000000000000000000000000000000000');
+  await childChainManagerProxy.updateAndCall(
+    childChainManagerLogic.target,
+    childChainManagerLogic.interface.encodeFunctionData("initialize", [accounts[0]])
+  );
+
+  const DummyERC20 = await ethers.getContractFactory("ChildERC20");
+  const dummyERC20 = await DummyERC20.deploy('Dummy ERC20', 'DERC20', 18, childChainManager.target);
+  await dummyERC20.waitForDeployment();
+
+  const DummyMintableERC20 = await ethers.getContractFactory("ChildMintableERC20");
+  const dummyMintableERC20 = await DummyMintableERC20.deploy('Dummy Mintable ERC20', 'DMERC20', 18, childChainManager.target);
+  await dummyMintableERC20.waitForDeployment();
+
+  const DummyERC721 = await ethers.getContractFactory("ChildERC721");
+  const dummyERC721 = await DummyERC721.deploy('Dummy ERC721', 'DERC721', childChainManager.target);
+  await dummyERC721.waitForDeployment();
+
+  const DummyMintableERC721 = await ethers.getContractFactory("ChildMintableERC721");
+  const dummyMintableERC721 = await DummyMintableERC721.deploy('Dummy Mintable ERC721', 'DMERC721', childChainManager.target);
+  await dummyMintableERC721.waitForDeployment();
+
+  const DummyERC1155 = await ethers.getContractFactory("ChildERC1155");
+  const dummyERC1155 = await DummyERC1155.deploy('Dummy ERC1155', childChainManager.target);
+  await dummyERC1155.waitForDeployment();
+
+  const DummyMintableERC1155 = await ethers.getContractFactory("ChildMintableERC1155");
+  const dummyMintableERC1155 = await DummyMintableERC1155.deploy('Dummy Mintable ERC1155', childChainManager.target);
+  await dummyMintableERC1155.waitForDeployment();
+
+  const MaticWETH = await ethers.getContractFactory("MaticWETH");
+  const maticWETH = await MaticWETH.deploy(childChainManager.target);
+  await maticWETH.waitForDeployment();
 
   return {
     childChainManager,
@@ -133,10 +237,10 @@ export const deployFreshChildContracts = async(accounts) => {
     dummyERC1155,
     dummyMintableERC1155,
     maticWETH
-  }
-}
+  };
+};
 
-export const deployInitializedContracts = async(accounts) => {
+export const deployInitializedContracts = async (accounts) => {
   const [
     root,
     child
@@ -209,7 +313,7 @@ export const deployInitializedContracts = async(accounts) => {
   return { root, child }
 }
 
-export const deployFreshRootTunnelContracts = async() => {
+export const deployFreshRootTunnelContracts = async () => {
   const [
     testRootTunnel,
     dummyStateSender,
@@ -227,7 +331,7 @@ export const deployFreshRootTunnelContracts = async() => {
   }
 }
 
-export const deployFreshChildTunnelContracts = async() => {
+export const deployFreshChildTunnelContracts = async () => {
   const [
     testChildTunnel
   ] = await Promise.all([
@@ -239,7 +343,7 @@ export const deployFreshChildTunnelContracts = async() => {
   }
 }
 
-export const deployInitializedTunnelContracts = async() => {
+export const deployInitializedTunnelContracts = async () => {
   const [
     root,
     child
@@ -255,7 +359,7 @@ export const deployInitializedTunnelContracts = async() => {
   return { root, child }
 }
 
-export const deployPotatoContracts = async(accounts) => {
+export const deployPotatoContracts = async (accounts) => {
   // deploy pos portal contracts
   const [
     rootChainManager,

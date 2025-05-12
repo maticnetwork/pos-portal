@@ -1,17 +1,18 @@
-import { expectRevert } from '@openzeppelin/test-helpers'
+import { expect } from 'chai';
 
-const ProxyTestImpl = artifacts.require('ProxyTestImpl')
+describe('Initializable', function () {
+  let ProxyTestImpl, impl;
 
-contract('Initializable', function() {
-  before(async function() {
-    this.impl = await ProxyTestImpl.new()
-  })
+  before(async function () {
+    ProxyTestImpl = await ethers.getContractFactory('ProxyTestImpl');
+    impl = await ProxyTestImpl.deploy();
+  });
 
-  it('must initialize', async function() {
-    await this.impl.init()
-  })
+  it('must initialize', async function () {
+    await impl.init();
+  });
 
-  it('must revert when attempt to initialize again', async function() {
-    await expectRevert(this.impl.init(), 'already inited')
-  })
-})
+  it('must revert when attempt to initialize again', async function () {
+    await expect(impl.init()).to.be.revertedWith('already inited');
+  });
+});

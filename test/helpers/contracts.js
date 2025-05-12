@@ -1,172 +1,116 @@
-/* global artifacts */
+import { rootRPC, childRPC } from './constants.js';
 
-import { rootRPC, childRPC } from './constants'
-import Web3 from 'web3'
+// Providers for root and child chains
+const rootProvider = new ethers.JsonRpcProvider(rootRPC);
+const childProvider = new ethers.JsonRpcProvider(childRPC);
 
-const MockCheckpointManager = artifacts.require('MockCheckpointManager')
-const RootChainManager = artifacts.require('RootChainManager')
-const RootChainManagerProxy = artifacts.require('RootChainManagerProxy')
-const ExitPayloadReaderTest = artifacts.require('ExitPayloadReaderTest')
-const DummyStateSender = artifacts.require('DummyStateSender')
-const ERC20Predicate = artifacts.require('ERC20Predicate')
-const ERC20PredicateProxy = artifacts.require('ERC20PredicateProxy')
-const MintableERC20Predicate = artifacts.require('MintableERC20Predicate')
-const MintableERC20PredicateProxy = artifacts.require('MintableERC20PredicateProxy')
-const ERC721Predicate = artifacts.require('ERC721Predicate')
-const ERC721PredicateProxy = artifacts.require('ERC721PredicateProxy')
-const MintableERC721Predicate = artifacts.require('MintableERC721Predicate')
-const MintableERC721PredicateProxy = artifacts.require('MintableERC721PredicateProxy')
-const ERC1155Predicate = artifacts.require('ERC1155Predicate')
-const ERC1155PredicateProxy = artifacts.require('ERC1155PredicateProxy')
-const MintableERC1155Predicate = artifacts.require('MintableERC1155Predicate')
-const MintableERC1155PredicateProxy = artifacts.require('MintableERC1155PredicateProxy')
-const ChainExitERC1155Predicate = artifacts.require('ChainExitERC1155Predicate')
-const ChainExitERC1155PredicateProxy = artifacts.require('ChainExitERC1155PredicateProxy')
-const EtherPredicate = artifacts.require('EtherPredicate')
-const EtherPredicateProxy = artifacts.require('EtherPredicateProxy')
-const DummyERC20 = artifacts.require('DummyERC20')
-const DummyMintableERC20 = artifacts.require('DummyMintableERC20')
-const DummyERC721 = artifacts.require('DummyERC721')
-const DummyMintableERC721 = artifacts.require('DummyMintableERC721')
-const DummyERC1155 = artifacts.require('DummyERC1155')
-const DummyMintableERC1155 = artifacts.require('DummyMintableERC1155')
-const TestRootTunnel = artifacts.require('TestRootTunnel')
-const RootPotatoMigrator = artifacts.require('RootPotatoMigrator')
-const RootPotatoToken = artifacts.require('RootPotatoToken')
+// Helper function to get contract instances
+const getContractInstance = async (contractName, address, provider) => {
+  return await ethers.getContractAt(contractName, address, provider);
+};
 
-const ChildChainManager = artifacts.require('ChildChainManager')
-const ChildChainManagerProxy = artifacts.require('ChildChainManagerProxy')
-const ChildERC20 = artifacts.require('ChildERC20')
-const ChildMintableERC20 = artifacts.require('ChildMintableERC20')
-const UChildERC20 = artifacts.require('UChildERC20')
-const UChildERC20Proxy = artifacts.require('UChildERC20Proxy')
-const TestUChildERC20 = artifacts.require('TestUChildERC20')
-const UChildDAI = artifacts.require('UChildDAI')
-const ChildERC721 = artifacts.require('ChildERC721')
-const ChildMintableERC721 = artifacts.require('ChildMintableERC721')
-const ChildERC1155 = artifacts.require('ChildERC1155')
-const ChildMintableERC1155 = artifacts.require('ChildMintableERC1155')
-const MaticWETH = artifacts.require('MaticWETH')
-const TestChildTunnel = artifacts.require('TestChildTunnel')
-const IStateReceiver = artifacts.require('IStateReceiver')
-const ChildPotatoFarm = artifacts.require('ChildPotatoFarm')
-const ChildPotatoMigrator = artifacts.require('ChildPotatoMigrator')
-const ChildPotatoToken = artifacts.require('ChildPotatoToken')
+// Exported function to initialize all contracts
+export const initializeContracts = async () => {
+  // Root chain contracts
+  const MockCheckpointManager = await getContractInstance('MockCheckpointManager', '0xMockCheckpointManagerAddress', rootProvider);
+  const RootChainManager = await getContractInstance('RootChainManager', '0xRootChainManagerAddress', rootProvider);
+  const RootChainManagerProxy = await getContractInstance('RootChainManagerProxy', '0xRootChainManagerProxyAddress', rootProvider);
+  const ExitPayloadReaderTest = await getContractInstance('ExitPayloadReaderTest', '0xExitPayloadReaderTestAddress', rootProvider);
+  const DummyStateSender = await getContractInstance('DummyStateSender', '0xDummyStateSenderAddress', rootProvider);
+  const ERC20Predicate = await getContractInstance('ERC20Predicate', '0xERC20PredicateAddress', rootProvider);
+  const ERC20PredicateProxy = await getContractInstance('ERC20PredicateProxy', '0xERC20PredicateProxyAddress', rootProvider);
+  const MintableERC20Predicate = await getContractInstance('MintableERC20Predicate', '0xMintableERC20PredicateAddress', rootProvider);
+  const MintableERC20PredicateProxy = await getContractInstance('MintableERC20PredicateProxy', '0xMintableERC20PredicateProxyAddress', rootProvider);
+  const ERC721Predicate = await getContractInstance('ERC721Predicate', '0xERC721PredicateAddress', rootProvider);
+  const ERC721PredicateProxy = await getContractInstance('ERC721PredicateProxy', '0xERC721PredicateProxyAddress', rootProvider);
+  const MintableERC721Predicate = await getContractInstance('MintableERC721Predicate', '0xMintableERC721PredicateAddress', rootProvider);
+  const MintableERC721PredicateProxy = await getContractInstance('MintableERC721PredicateProxy', '0xMintableERC721PredicateProxyAddress', rootProvider);
+  const ERC1155Predicate = await getContractInstance('ERC1155Predicate', '0xERC1155PredicateAddress', rootProvider);
+  const ERC1155PredicateProxy = await getContractInstance('ERC1155PredicateProxy', '0xERC1155PredicateProxyAddress', rootProvider);
+  const MintableERC1155Predicate = await getContractInstance('MintableERC1155Predicate', '0xMintableERC1155PredicateAddress', rootProvider);
+  const MintableERC1155PredicateProxy = await getContractInstance('MintableERC1155PredicateProxy', '0xMintableERC1155PredicateProxyAddress', rootProvider);
+  const ChainExitERC1155Predicate = await getContractInstance('ChainExitERC1155Predicate', '0xChainExitERC1155PredicateAddress', rootProvider);
+  const ChainExitERC1155PredicateProxy = await getContractInstance('ChainExitERC1155PredicateProxy', '0xChainExitERC1155PredicateProxyAddress', rootProvider);
+  const EtherPredicate = await getContractInstance('EtherPredicate', '0xEtherPredicateAddress', rootProvider);
+  const EtherPredicateProxy = await getContractInstance('EtherPredicateProxy', '0xEtherPredicateProxyAddress', rootProvider);
+  const DummyERC20 = await getContractInstance('DummyERC20', '0xDummyERC20Address', rootProvider);
+  const DummyMintableERC20 = await getContractInstance('DummyMintableERC20', '0xDummyMintableERC20Address', rootProvider);
+  const DummyERC721 = await getContractInstance('DummyERC721', '0xDummyERC721Address', rootProvider);
+  const DummyMintableERC721 = await getContractInstance('DummyMintableERC721', '0xDummyMintableERC721Address', rootProvider);
+  const DummyERC1155 = await getContractInstance('DummyERC1155', '0xDummyERC1155Address', rootProvider);
+  const DummyMintableERC1155 = await getContractInstance('DummyMintableERC1155', '0xDummyMintableERC1155Address', rootProvider);
+  const TestRootTunnel = await getContractInstance('TestRootTunnel', '0xTestRootTunnelAddress', rootProvider);
+  const RootPotatoMigrator = await getContractInstance('RootPotatoMigrator', '0xRootPotatoMigratorAddress', rootProvider);
+  const RootPotatoToken = await getContractInstance('RootPotatoToken', '0xRootPotatoTokenAddress', rootProvider);
 
-const rootProvider = new Web3.providers.HttpProvider(rootRPC)
-const childProvider = new Web3.providers.HttpProvider(childRPC)
+  // Child chain contracts
+  const ChildChainManager = await getContractInstance('ChildChainManager', '0xChildChainManagerAddress', childProvider);
+  const ChildChainManagerProxy = await getContractInstance('ChildChainManagerProxy', '0xChildChainManagerProxyAddress', childProvider);
+  const ChildERC20 = await getContractInstance('ChildERC20', '0xChildERC20Address', childProvider);
+  const ChildMintableERC20 = await getContractInstance('ChildMintableERC20', '0xChildMintableERC20Address', childProvider);
+  const UChildERC20 = await getContractInstance('UChildERC20', '0xUChildERC20Address', childProvider);
+  const UChildERC20Proxy = await getContractInstance('UChildERC20Proxy', '0xUChildERC20ProxyAddress', childProvider);
+  const TestUChildERC20 = await getContractInstance('TestUChildERC20', '0xTestUChildERC20Address', childProvider);
+  const UChildDAI = await getContractInstance('UChildDAI', '0xUChildDAIAddress', childProvider);
+  const ChildERC721 = await getContractInstance('ChildERC721', '0xChildERC721Address', childProvider);
+  const ChildMintableERC721 = await getContractInstance('ChildMintableERC721', '0xChildMintableERC721Address', childProvider);
+  const ChildERC1155 = await getContractInstance('ChildERC1155', '0xChildERC1155Address', childProvider);
+  const ChildMintableERC1155 = await getContractInstance('ChildMintableERC1155', '0xChildMintableERC1155Address', childProvider);
+  const MaticWETH = await getContractInstance('MaticWETH', '0xMaticWETHAddress', childProvider);
+  const TestChildTunnel = await getContractInstance('TestChildTunnel', '0xTestChildTunnelAddress', childProvider);
+  const IStateReceiver = await getContractInstance('IStateReceiver', '0xIStateReceiverAddress', childProvider);
+  const ChildPotatoFarm = await getContractInstance('ChildPotatoFarm', '0xChildPotatoFarmAddress', childProvider);
+  const ChildPotatoMigrator = await getContractInstance('ChildPotatoMigrator', '0xChildPotatoMigratorAddress', childProvider);
+  const ChildPotatoToken = await getContractInstance('ChildPotatoToken', '0xChildPotatoTokenAddress', childProvider);
 
-export const rootWeb3 = new Web3(rootProvider)
-rootWeb3.setNetworkType = () => {} // Truffle work around for Web3Shim
-export const childWeb3 = new Web3(childProvider)
-childWeb3.setNetworkType = () => {} // Truffle work around for Web3Shim
-
-// set web3 and provider
-const setWeb3 = (contractObj, w3) => {
-  contractObj.web3 = w3
-  contractObj.setProvider(w3.currentProvider)
-}
-
-// contracts on root chain
-setWeb3(MockCheckpointManager, rootWeb3)
-setWeb3(RootChainManager, rootWeb3)
-setWeb3(ExitPayloadReaderTest, rootWeb3)
-setWeb3(RootChainManagerProxy, rootWeb3)
-setWeb3(DummyStateSender, rootWeb3)
-setWeb3(ERC20Predicate, rootWeb3)
-setWeb3(ERC20PredicateProxy, rootWeb3)
-setWeb3(MintableERC20Predicate, rootWeb3)
-setWeb3(MintableERC20PredicateProxy, rootWeb3)
-setWeb3(ERC721Predicate, rootWeb3)
-setWeb3(ERC721PredicateProxy, rootWeb3)
-setWeb3(MintableERC721Predicate, rootWeb3)
-setWeb3(MintableERC721PredicateProxy, rootWeb3)
-setWeb3(ERC1155Predicate, rootWeb3)
-setWeb3(ERC1155PredicateProxy, rootWeb3)
-setWeb3(MintableERC1155Predicate, rootWeb3)
-setWeb3(MintableERC1155PredicateProxy, rootWeb3)
-setWeb3(ChainExitERC1155Predicate, rootWeb3)
-setWeb3(ChainExitERC1155PredicateProxy, rootWeb3)
-setWeb3(EtherPredicate, rootWeb3)
-setWeb3(EtherPredicateProxy, rootWeb3)
-setWeb3(DummyERC20, rootWeb3)
-setWeb3(DummyMintableERC20, rootWeb3)
-setWeb3(DummyERC721, rootWeb3)
-setWeb3(DummyMintableERC721, rootWeb3)
-setWeb3(DummyERC1155, rootWeb3)
-setWeb3(DummyMintableERC1155, rootWeb3)
-setWeb3(TestRootTunnel, rootWeb3)
-setWeb3(RootPotatoMigrator, rootWeb3)
-setWeb3(RootPotatoToken, rootWeb3)
-
-// contracts on child chain
-setWeb3(ChildChainManager, childWeb3)
-setWeb3(ChildChainManagerProxy, childWeb3)
-setWeb3(ChildERC20, childWeb3)
-setWeb3(ChildMintableERC20, childWeb3)
-setWeb3(UChildERC20, childWeb3)
-setWeb3(UChildERC20Proxy, childWeb3)
-setWeb3(TestUChildERC20, childWeb3)
-setWeb3(UChildDAI, childWeb3)
-setWeb3(ChildERC721, childWeb3)
-setWeb3(ChildMintableERC721, childWeb3)
-setWeb3(ChildERC1155, childWeb3)
-setWeb3(ChildMintableERC1155, childWeb3)
-setWeb3(MaticWETH, childWeb3)
-setWeb3(TestChildTunnel, childWeb3)
-setWeb3(IStateReceiver, childWeb3)
-setWeb3(ChildPotatoFarm, childWeb3)
-setWeb3(ChildPotatoMigrator, childWeb3)
-setWeb3(ChildPotatoToken, childWeb3)
-
-export default {
-  MockCheckpointManager,
-  RootChainManager,
-  ExitPayloadReaderTest,
-  RootChainManagerProxy,
-  DummyStateSender,
-  ERC20Predicate,
-  ERC20PredicateProxy,
-  MintableERC20Predicate,
-  MintableERC20PredicateProxy,
-  ERC721Predicate,
-  ERC721PredicateProxy,
-  MintableERC721Predicate,
-  MintableERC721PredicateProxy,
-  ERC1155Predicate,
-  ERC1155PredicateProxy,
-  MintableERC1155Predicate,
-  MintableERC1155PredicateProxy,
-  ChainExitERC1155Predicate,
-  ChainExitERC1155PredicateProxy,
-  EtherPredicate,
-  EtherPredicateProxy,
-  DummyERC20,
-  DummyMintableERC20,
-  DummyERC721,
-  DummyMintableERC721,
-  DummyERC1155,
-  DummyMintableERC1155,
-  TestRootTunnel,
-  RootPotatoMigrator,
-  RootPotatoToken,
-
-  ChildChainManager,
-  ChildChainManagerProxy,
-  ChildERC20,
-  ChildMintableERC20,
-  UChildERC20,
-  UChildERC20Proxy,
-  TestUChildERC20,
-  UChildDAI,
-  ChildERC721,
-  ChildMintableERC721,
-  ChildERC1155,
-  ChildMintableERC1155,
-  MaticWETH,
-  TestChildTunnel,
-  IStateReceiver,
-  ChildPotatoFarm,
-  ChildPotatoMigrator,
-  ChildPotatoToken
-}
+  return {
+    MockCheckpointManager,
+    RootChainManager,
+    RootChainManagerProxy,
+    ExitPayloadReaderTest,
+    DummyStateSender,
+    ERC20Predicate,
+    ERC20PredicateProxy,
+    MintableERC20Predicate,
+    MintableERC20PredicateProxy,
+    ERC721Predicate,
+    ERC721PredicateProxy,
+    MintableERC721Predicate,
+    MintableERC721PredicateProxy,
+    ERC1155Predicate,
+    ERC1155PredicateProxy,
+    MintableERC1155Predicate,
+    MintableERC1155PredicateProxy,
+    ChainExitERC1155Predicate,
+    ChainExitERC1155PredicateProxy,
+    EtherPredicate,
+    EtherPredicateProxy,
+    DummyERC20,
+    DummyMintableERC20,
+    DummyERC721,
+    DummyMintableERC721,
+    DummyERC1155,
+    DummyMintableERC1155,
+    TestRootTunnel,
+    RootPotatoMigrator,
+    RootPotatoToken,
+    ChildChainManager,
+    ChildChainManagerProxy,
+    ChildERC20,
+    ChildMintableERC20,
+    UChildERC20,
+    UChildERC20Proxy,
+    TestUChildERC20,
+    UChildDAI,
+    ChildERC721,
+    ChildMintableERC721,
+    ChildERC1155,
+    ChildMintableERC1155,
+    MaticWETH,
+    TestChildTunnel,
+    IStateReceiver,
+    ChildPotatoFarm,
+    ChildPotatoMigrator,
+    ChildPotatoToken,
+  };
+};

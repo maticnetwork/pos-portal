@@ -37,5 +37,5 @@ export const getTypedData = ({ name, version, chainId, verifyingContract, nonce,
       from,
       functionSignature
     }
-  }
-}
+  };
+};
