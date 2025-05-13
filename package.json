@@ -5,19 +5,20 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "testrpc": "ganache-cli --hardfork istanbul --mnemonic 'clock radar mass judge dismiss just intact mind resemble fringe diary casino' --gasLimit 8000000 --gasPrice 0 --port 9545 --networkId 53227",
-    "template:process": "node scripts/process-templates.js",
-    "bor": "cd test-blockchain && bash run-docker.sh",
     "bor:clean": "cd test-blockchain && bash stop-docker.sh",
+    "bor": "cd test-blockchain && bash run-docker.sh",
     "build": "hardhat compile",
-    "test": "hardhat test",
-    "lint": "npm run lint:sol && npm run lint:js",
-    "lint:js": "eslint test/**/*.js",
+    "flatten": "hardhat flatten",
     "fmt:js:fix": "prettier --log-level warn scripts/**/*.js test/**/*.js --write",
+    "generate:interfaces": "scripts/helpers/generateInterfaces.sh",
+    "lint:js": "eslint test/**/*.js",
     "lint:sol:fix": "solhint --fix 'contracts/**/*.sol'",
     "lint:sol": "solhint 'contracts/**/*.sol'",
-    "flatten": "hardhat flatten",
-    "test:ci": "scripts/run-test.sh"
+    "lint": "npm run lint:sol && npm run lint:js",
+    "template:process": "node scripts/process-templates.js",
+    "test:ci": "scripts/run-test.sh",
+    "test": "hardhat test",
+    "testrpc": "ganache-cli --hardfork istanbul --mnemonic 'clock radar mass judge dismiss just intact mind resemble fringe diary casino' --gasLimit 8000000 --gasPrice 0 --port 9545 --networkId 53227"
   },
   "repository": {
     "type": "git",
