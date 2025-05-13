@@ -31,7 +31,7 @@ jobs:
       - name: Setup Node.js environment
         uses: actions/setup-node@v1
         with:
-         node-version: "10.24.1"
+         node-version: "22.14.0"
       - name: Cache npm dependencies
         uses: actions/cache@v1
         with:
@@ -41,6 +41,9 @@ jobs:
             ${{ runner.OS }}-npm-cache-
       - name: Install npm dependencies
         run: npm install
+
+      - name: Run npm tests
+        run: npm test
 
       - name: generate interfaces
         run: npm run generate:interfaces
