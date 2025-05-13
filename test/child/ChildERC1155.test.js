@@ -20,15 +20,9 @@ contract('ChildERC1155', (accounts) => {
     })
 
     it('Can receive deposit tx', async () => {
-      await expect(
-        contracts.dummyERC1155.deposit(user, depositData)
-      ).to.emit(contracts.dummyERC1155, 'TransferBatch').withArgs(
-        accounts[0],
-        mockValues.zeroAddress,
-        user,
-        [tokenId],
-        [depositAmount]
-      )
+      await expect(contracts.dummyERC1155.deposit(user, depositData))
+        .to.emit(contracts.dummyERC1155, 'TransferBatch')
+        .withArgs(accounts[0], mockValues.zeroAddress, user, [tokenId], [depositAmount])
     })
 
     // @note Already verified in the above test
@@ -113,15 +107,9 @@ contract('ChildERC1155', (accounts) => {
     })
 
     it('Can receive withdraw tx', async () => {
-      await expect(
-        contracts.dummyERC1155.withdrawSingle(tokenId, withdrawAmount)
-      ).to.emit(contracts.dummyERC1155, 'TransferSingle').withArgs(
-        user,
-        user,
-        mockValues.zeroAddress,
-        tokenId,
-        withdrawAmount
-      )
+      await expect(contracts.dummyERC1155.withdrawSingle(tokenId, withdrawAmount))
+        .to.emit(contracts.dummyERC1155, 'TransferSingle')
+        .withArgs(user, user, mockValues.zeroAddress, tokenId, withdrawAmount)
     })
 
     // @note Already verified in the above test
@@ -196,15 +184,15 @@ contract('ChildERC1155', (accounts) => {
     })
 
     it('Can receive deposit tx', async () => {
-      await expect(
-        contracts.dummyERC1155.deposit(user, depositData)
-      ).to.emit(contracts.dummyERC1155, 'TransferBatch').withArgs(
-        accounts[0],
-        mockValues.zeroAddress,
-        user,
-        [tokenIdA, tokenIdB, tokenIdC],
-        [depositAmountA, depositAmountB, depositAmountC]
-      )
+      await expect(contracts.dummyERC1155.deposit(user, depositData))
+        .to.emit(contracts.dummyERC1155, 'TransferBatch')
+        .withArgs(
+          accounts[0],
+          mockValues.zeroAddress,
+          user,
+          [tokenIdA, tokenIdB, tokenIdC],
+          [depositAmountA, depositAmountB, depositAmountC]
+        )
     })
 
     // @note Already verified in the above test
@@ -310,13 +298,15 @@ contract('ChildERC1155', (accounts) => {
           [tokenIdA, tokenIdB, tokenIdC],
           [withdrawAmountA, withdrawAmountB, withdrawAmountC]
         )
-      ).to.emit(contracts.dummyERC1155, 'TransferBatch').withArgs(
-        user,
-        user,
-        mockValues.zeroAddress,
-        [tokenIdA, tokenIdB, tokenIdC],
-        [withdrawAmountA, withdrawAmountB, withdrawAmountC]
       )
+        .to.emit(contracts.dummyERC1155, 'TransferBatch')
+        .withArgs(
+          user,
+          user,
+          mockValues.zeroAddress,
+          [tokenIdA, tokenIdB, tokenIdC],
+          [withdrawAmountA, withdrawAmountB, withdrawAmountC]
+        )
     })
 
     // @note Already verified in the above test

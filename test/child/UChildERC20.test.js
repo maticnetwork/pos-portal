@@ -62,8 +62,8 @@ contract('UChildERC20', (accounts) => {
     before(async () => {
       const contracts = await deployFreshChildContracts(accounts)
 
-      const UChildERC20 = await ethers.getContractFactory("UChildERC20")
-      const TestUChildERC20 = await ethers.getContractFactory("TestUChildERC20")
+      const UChildERC20 = await ethers.getContractFactory('UChildERC20')
+      const TestUChildERC20 = await ethers.getContractFactory('TestUChildERC20')
 
       oldImplementation = contracts.uChildERC20
 
@@ -88,10 +88,9 @@ contract('UChildERC20', (accounts) => {
     })
 
     it('Joe should not be able to update implementation', async () => {
-      await expect(uChildERC20Proxy.connect(await ethers.getSigner(joe)).
-        updateImplementation(newImplementation.target)).to.be.revertedWith(
-          'NOT_OWNER'
-        )
+      await expect(
+        uChildERC20Proxy.connect(await ethers.getSigner(joe)).updateImplementation(newImplementation.target)
+      ).to.be.revertedWith('NOT_OWNER')
     })
 
     it('Admin should be able to update implementation', async () => {
@@ -132,10 +131,7 @@ contract('UChildERC20', (accounts) => {
     })
 
     it('Admin should be able to send approve on behalf of jack', async () => {
-      const functionSignature = await web3UChildERC20.methods.approve(
-        jill,
-        amount.toString(10)
-      ).encodeABI()
+      const functionSignature = await web3UChildERC20.methods.approve(jill, amount.toString(10)).encodeABI()
       const name = await uChildERC20.name()
       const chainId = await uChildERC20.getChainId()
       const nonce = await uChildERC20.getNonce(jack)

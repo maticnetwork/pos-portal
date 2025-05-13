@@ -14,7 +14,9 @@ const ERC721_WITHDRAW_BATCH_EVENT_SIG = '0xf871896b17e9cb7a64941c62c188a4f5c621b
 
 const toHex = (buf) => {
   buf = buf.toString('hex')
-  if (buf.substring(0, 2) == '0x') { return buf }
+  if (buf.substring(0, 2) == '0x') {
+    return buf
+  }
   return '0x' + buf.toString('hex')
 }
 
@@ -63,8 +65,12 @@ contract('RootChainManager', async (accounts) => {
     it('Second depositor should be able to approve and deposit', async () => {
       await dummyERC20.mint(depositAmount)
       await dummyERC20.transfer(accounts[2], depositAmount)
-      await dummyERC20.connect(await ethers.getSigner(accounts[2])).approve(contracts.root.erc20Predicate.target, mockValues.amounts[2])
-      const depositTx = await rootChainManager.connect(await ethers.getSigner(accounts[2])).depositFor(accounts[2], dummyERC20.target, depositData)
+      await dummyERC20
+        .connect(await ethers.getSigner(accounts[2]))
+        .approve(contracts.root.erc20Predicate.target, mockValues.amounts[2])
+      const depositTx = await rootChainManager
+        .connect(await ethers.getSigner(accounts[2]))
+        .depositFor(accounts[2], dummyERC20.target, depositData)
       expect(depositTx).to.exist
       totalDepositedAmount += depositAmount
       let txReceipt = await depositTx.wait()
@@ -88,7 +94,9 @@ contract('RootChainManager', async (accounts) => {
     })
 
     it('Can receive withdraw tx', async () => {
-      withdrawTx = await contracts.child.dummyERC20.connect(await ethers.getSigner(depositReceiver)).withdraw(withdrawAmount)
+      withdrawTx = await contracts.child.dummyERC20
+        .connect(await ethers.getSigner(depositReceiver))
+        .withdraw(withdrawAmount)
       expect(withdrawTx).to.exist
 
       await withdrawTx.wait()
@@ -138,8 +146,9 @@ contract('RootChainManager', async (accounts) => {
         ])
       )
       // start exit
-      await expect(contracts.root.rootChainManager.connect(await ethers.getSigner(depositReceiver)).exit(data))
-        .to.be.revertedWith('RootChainManager: INVALID_PROOF')
+      await expect(
+        contracts.root.rootChainManager.connect(await ethers.getSigner(depositReceiver)).exit(data)
+      ).to.be.revertedWith('RootChainManager: INVALID_PROOF')
     })
 
     it('Should fail: exit with a fake amount data in receipt', async () => {
@@ -160,8 +169,8 @@ contract('RootChainManager', async (accounts) => {
         ])
       )
       // start exit
-      await expect(contracts.root.rootChainManager.connect(await ethers.getSigner(depositReceiver)).exit(data))
-        .to.be.reverted
+      await expect(contracts.root.rootChainManager.connect(await ethers.getSigner(depositReceiver)).exit(data)).to.be
+        .reverted
     })
 
     it('Should fail to start exit (changed the block number to future block)', async () => {
@@ -182,8 +191,9 @@ contract('RootChainManager', async (accounts) => {
         ])
       )
       // start exit
-      await expect(contracts.root.rootChainManager.connect(await ethers.getSigner(depositReceiver)).exit(data))
-        .to.be.revertedWith('Leaf index is too big')
+      await expect(
+        contracts.root.rootChainManager.connect(await ethers.getSigner(depositReceiver)).exit(data)
+      ).to.be.revertedWith('Leaf index is too big')
     })
 
     it('Should fail to start exit (changed the block number with different encoding)', async () => {
@@ -204,8 +214,8 @@ contract('RootChainManager', async (accounts) => {
         ])
       )
       // start exit
-      await expect(contracts.root.rootChainManager.connect(await ethers.getSigner(depositReceiver)).exit(data))
-        .to.be.reverted
+      await expect(contracts.root.rootChainManager.connect(await ethers.getSigner(depositReceiver)).exit(data)).to.be
+        .reverted
     })
 
     it('Should start exit', async () => {
@@ -249,8 +259,9 @@ contract('RootChainManager', async (accounts) => {
       // start exit
       // await expectRevert(contracts.root.rootChainManager.exit(data,
       //   { from: depositReceiver }), 'EXIT_ALREADY_PROCESSED')
-      await expect(contracts.root.rootChainManager.connect(await ethers.getSigner(depositReceiver)).exit(data))
-        .to.be.revertedWith('RootChainManager: EXIT_ALREADY_PROCESSED')
+      await expect(
+        contracts.root.rootChainManager.connect(await ethers.getSigner(depositReceiver)).exit(data)
+      ).to.be.revertedWith('RootChainManager: EXIT_ALREADY_PROCESSED')
     })
 
     it('Should fail: start exit again', async () => {
@@ -270,8 +281,9 @@ contract('RootChainManager', async (accounts) => {
         ])
       )
       // start exit
-      await expect(contracts.root.rootChainManager.connect(await ethers.getSigner(depositReceiver)).exit(data))
-        .to.be.revertedWith('RootChainManager: EXIT_ALREADY_PROCESSED')
+      await expect(
+        contracts.root.rootChainManager.connect(await ethers.getSigner(depositReceiver)).exit(data)
+      ).to.be.revertedWith('RootChainManager: EXIT_ALREADY_PROCESSED')
     })
 
     it('Should fail to start exit again (change the log index to generate same exit hash)', async () => {
@@ -291,8 +303,9 @@ contract('RootChainManager', async (accounts) => {
         ])
       )
       // start exit
-      await expect(contracts.root.rootChainManager.connect(await ethers.getSigner(depositReceiver)).exit(data))
-        .to.be.revertedWith('RootChainManager: EXIT_ALREADY_PROCESSED')
+      await expect(
+        contracts.root.rootChainManager.connect(await ethers.getSigner(depositReceiver)).exit(data)
+      ).to.be.revertedWith('RootChainManager: EXIT_ALREADY_PROCESSED')
     })
 
     it('Should emit Transfer log in exit tx', () => {
@@ -351,8 +364,12 @@ contract('RootChainManager', async (accounts) => {
     it('Second depositor should be able to approve and deposit', async () => {
       await dummyERC20.mint(depositAmount)
       await dummyERC20.transfer(accounts[2], depositAmount)
-      await dummyERC20.connect(await ethers.getSigner(accounts[2])).approve(contracts.root.erc20Predicate.target, mockValues.amounts[2])
-      const depositTx = await rootChainManager.connect(await ethers.getSigner(accounts[2])).depositFor(accounts[2], dummyERC20.target, depositData)
+      await dummyERC20
+        .connect(await ethers.getSigner(accounts[2]))
+        .approve(contracts.root.erc20Predicate.target, mockValues.amounts[2])
+      const depositTx = await rootChainManager
+        .connect(await ethers.getSigner(accounts[2]))
+        .depositFor(accounts[2], dummyERC20.target, depositData)
       expect(depositTx).to.exist
       totalDepositedAmount += depositAmount
       let txReceipt = await depositTx.wait()
@@ -376,7 +393,9 @@ contract('RootChainManager', async (accounts) => {
     })
 
     it('Can receive withdraw tx', async () => {
-      withdrawTx = await contracts.child.dummyERC20.connect(await ethers.getSigner(depositReceiver)).withdraw(withdrawAmount)
+      withdrawTx = await contracts.child.dummyERC20
+        .connect(await ethers.getSigner(depositReceiver))
+        .withdraw(withdrawAmount)
       expect(withdrawTx).to.exist
       await withdrawTx.wait()
       withdrawTxReceipt = await web3.eth.getTransactionReceipt(withdrawTx.hash)
@@ -424,8 +443,9 @@ contract('RootChainManager', async (accounts) => {
           logIndex
         ])
       )
-      await expect(contracts.root.rootChainManager.connect(await ethers.getSigner(nonDepositAccount)).exit(data))
-        .to.be.revertedWith('RootChainManager: INVALID_PROOF')
+      await expect(
+        contracts.root.rootChainManager.connect(await ethers.getSigner(nonDepositAccount)).exit(data)
+      ).to.be.revertedWith('RootChainManager: INVALID_PROOF')
     })
 
     it('Should fail: exit with a fake amount data in receipt', async () => {
@@ -445,8 +465,8 @@ contract('RootChainManager', async (accounts) => {
           logIndex
         ])
       )
-      expect(contracts.root.rootChainManager.connect(await ethers.getSigner(nonDepositAccount)).exit(data))
-        .to.be.revertedWith
+      expect(contracts.root.rootChainManager.connect(await ethers.getSigner(nonDepositAccount)).exit(data)).to.be
+        .revertedWith
     })
 
     it('Should fail to start exit (changed the block number to future block)', async () => {
@@ -466,8 +486,9 @@ contract('RootChainManager', async (accounts) => {
           logIndex
         ])
       )
-      await expect(contracts.root.rootChainManager.connect(await ethers.getSigner(nonDepositAccount)).exit(data))
-        .to.be.revertedWith('Leaf index is too big')
+      await expect(
+        contracts.root.rootChainManager.connect(await ethers.getSigner(nonDepositAccount)).exit(data)
+      ).to.be.revertedWith('Leaf index is too big')
     })
 
     it('Should fail to start exit (changed the block number with different encoding)', async () => {
@@ -487,8 +508,8 @@ contract('RootChainManager', async (accounts) => {
           logIndex
         ])
       )
-      await expect(contracts.root.rootChainManager.connect(await ethers.getSigner(nonDepositAccount)).exit(data))
-        .to.be.reverted
+      await expect(contracts.root.rootChainManager.connect(await ethers.getSigner(nonDepositAccount)).exit(data)).to.be
+        .reverted
     })
 
     // call exit from some account other than depositReceiver
@@ -529,8 +550,9 @@ contract('RootChainManager', async (accounts) => {
           logIndex
         ])
       )
-      await expect(contracts.root.rootChainManager.connect(await ethers.getSigner(nonDepositAccount)).exit(data))
-        .to.be.revertedWith('RootChainManager: EXIT_ALREADY_PROCESSED')
+      await expect(
+        contracts.root.rootChainManager.connect(await ethers.getSigner(nonDepositAccount)).exit(data)
+      ).to.be.revertedWith('RootChainManager: EXIT_ALREADY_PROCESSED')
     })
 
     it('Should fail: start exit again', async () => {
@@ -549,8 +571,9 @@ contract('RootChainManager', async (accounts) => {
           logIndex
         ])
       )
-      await expect(contracts.root.rootChainManager.connect(await ethers.getSigner(nonDepositAccount)).exit(data))
-        .to.be.revertedWith('RootChainManager: EXIT_ALREADY_PROCESSED')
+      await expect(
+        contracts.root.rootChainManager.connect(await ethers.getSigner(nonDepositAccount)).exit(data)
+      ).to.be.revertedWith('RootChainManager: EXIT_ALREADY_PROCESSED')
     })
 
     it('Should fail to start exit again (change the log index to generate same exit hash)', async () => {
@@ -569,8 +592,9 @@ contract('RootChainManager', async (accounts) => {
           logIndex
         ])
       )
-      await expect(contracts.root.rootChainManager.connect(await ethers.getSigner(nonDepositAccount)).exit(data))
-        .to.be.revertedWith('RootChainManager: EXIT_ALREADY_PROCESSED')
+      await expect(
+        contracts.root.rootChainManager.connect(await ethers.getSigner(nonDepositAccount)).exit(data)
+      ).to.be.revertedWith('RootChainManager: EXIT_ALREADY_PROCESSED')
     })
 
     it('Should emit Transfer log in exit tx', () => {
@@ -642,7 +666,9 @@ contract('RootChainManager', async (accounts) => {
     })
 
     it('Can receive withdraw tx', async () => {
-      withdrawTx = await contracts.child.dummyERC721.connect(await ethers.getSigner(depositReceiver)).withdraw(depositTokenId)
+      withdrawTx = await contracts.child.dummyERC721
+        .connect(await ethers.getSigner(depositReceiver))
+        .withdraw(depositTokenId)
       expect(withdrawTx).to.exist
       await withdrawTx.wait()
       withdrawTxReceipt = await web3.eth.getTransactionReceipt(withdrawTx.hash)
@@ -690,8 +716,8 @@ contract('RootChainManager', async (accounts) => {
           logIndex
         ])
       )
-      await expect(contracts.root.rootChainManager.connect(await ethers.getSigner(depositReceiver)).exit(data))
-        .to.be.reverted
+      await expect(contracts.root.rootChainManager.connect(await ethers.getSigner(depositReceiver)).exit(data)).to.be
+        .reverted
     })
 
     it('Should fail: exit with a fake amount data in receipt', async () => {
@@ -711,8 +737,8 @@ contract('RootChainManager', async (accounts) => {
           logIndex
         ])
       )
-      await expect(contracts.root.rootChainManager.connect(await ethers.getSigner(depositReceiver)).exit(data))
-        .to.be.reverted
+      await expect(contracts.root.rootChainManager.connect(await ethers.getSigner(depositReceiver)).exit(data)).to.be
+        .reverted
     })
 
     it('Should fail to start exit (changed the block number)', async () => {
@@ -732,8 +758,9 @@ contract('RootChainManager', async (accounts) => {
           logIndex
         ])
       )
-      await expect(contracts.root.rootChainManager.connect(await ethers.getSigner(depositReceiver)).exit(data))
-        .to.be.revertedWith('Leaf index is too big')
+      await expect(
+        contracts.root.rootChainManager.connect(await ethers.getSigner(depositReceiver)).exit(data)
+      ).to.be.revertedWith('Leaf index is too big')
     })
 
     it('Should start exit', async () => {
@@ -773,8 +800,9 @@ contract('RootChainManager', async (accounts) => {
         ])
       )
       // start exit
-      await expect(contracts.root.rootChainManager.connect(await ethers.getSigner(depositReceiver)).exit(data))
-        .to.be.revertedWith('RootChainManager: EXIT_ALREADY_PROCESSED')
+      await expect(
+        contracts.root.rootChainManager.connect(await ethers.getSigner(depositReceiver)).exit(data)
+      ).to.be.revertedWith('RootChainManager: EXIT_ALREADY_PROCESSED')
     })
 
     it('Should fail to start exit again (change the log index to generate same exit hash)', async () => {
@@ -794,8 +822,9 @@ contract('RootChainManager', async (accounts) => {
         ])
       )
       // start exit
-      await expect(contracts.root.rootChainManager.connect(await ethers.getSigner(depositReceiver)).exit(data))
-        .to.be.revertedWith('RootChainManager: EXIT_ALREADY_PROCESSED')
+      await expect(
+        contracts.root.rootChainManager.connect(await ethers.getSigner(depositReceiver)).exit(data)
+      ).to.be.revertedWith('RootChainManager: EXIT_ALREADY_PROCESSED')
     })
 
     it('Should emit Transfer log in exit tx', () => {
@@ -820,12 +849,7 @@ contract('RootChainManager', async (accounts) => {
     const tokenId2 = mockValues.numbers[5]
     const tokenId3 = mockValues.numbers[8]
     const user = accounts[0]
-    const depositData = abi.encode(
-      ['uint256[]'],
-      [
-        [tokenId1.toString(), tokenId2.toString(), tokenId3.toString()]
-      ]
-    )
+    const depositData = abi.encode(['uint256[]'], [[tokenId1.toString(), tokenId2.toString(), tokenId3.toString()]])
     let contracts
     let rootToken
     let childToken
@@ -860,12 +884,10 @@ contract('RootChainManager', async (accounts) => {
       {
         const owner = await rootToken.ownerOf(tokenId2)
         expect(owner).to.equal(user)
-
       }
       {
         const owner = await rootToken.ownerOf(tokenId3)
         expect(owner).to.equal(user)
-
       }
     })
 
@@ -941,8 +963,9 @@ contract('RootChainManager', async (accounts) => {
     })
 
     it('User should fail to exit with WithdrawnBatch', async () => {
-      const logIndex = withdrawTxReceipt.logs
-        .findIndex(log => log.topics[0].toLowerCase() === ERC721_WITHDRAW_BATCH_EVENT_SIG.toLowerCase())
+      const logIndex = withdrawTxReceipt.logs.findIndex(
+        (log) => log.topics[0].toLowerCase() === ERC721_WITHDRAW_BATCH_EVENT_SIG.toLowerCase()
+      )
       const data = bufferToHex(
         rlp.encode([
           headerNumber,
@@ -1118,7 +1141,9 @@ contract('RootChainManager', async (accounts) => {
     })
 
     it('Can receive withdraw tx', async () => {
-      withdrawTx = await contracts.child.dummyERC721.connect(await ethers.getSigner(depositReceiver)).withdraw(depositTokenId)
+      withdrawTx = await contracts.child.dummyERC721
+        .connect(await ethers.getSigner(depositReceiver))
+        .withdraw(depositTokenId)
       expect(withdrawTx).to.exist
       await withdrawTx.wait()
       withdrawTxReceipt = await web3.eth.getTransactionReceipt(withdrawTx.hash)
@@ -1165,8 +1190,8 @@ contract('RootChainManager', async (accounts) => {
           logIndex
         ])
       )
-      await expect(contracts.root.rootChainManager.connect(await ethers.getSigner(nonDepositAccount)).exit(data))
-        .to.be.reverted
+      await expect(contracts.root.rootChainManager.connect(await ethers.getSigner(nonDepositAccount)).exit(data)).to.be
+        .reverted
     })
 
     it('Should fail: exit with a fake amount data in receipt', async () => {
@@ -1186,8 +1211,8 @@ contract('RootChainManager', async (accounts) => {
           logIndex
         ])
       )
-      await expect(contracts.root.rootChainManager.connect(await ethers.getSigner(nonDepositAccount)).exit(data))
-        .to.be.reverted
+      await expect(contracts.root.rootChainManager.connect(await ethers.getSigner(nonDepositAccount)).exit(data)).to.be
+        .reverted
     })
 
     it('Should fail to start exit (changed the block number)', async () => {
@@ -1207,8 +1232,9 @@ contract('RootChainManager', async (accounts) => {
           logIndex
         ])
       )
-      await expect(contracts.root.rootChainManager.connect(await ethers.getSigner(nonDepositAccount)).exit(data))
-        .to.be.revertedWith('Leaf index is too big')
+      await expect(
+        contracts.root.rootChainManager.connect(await ethers.getSigner(nonDepositAccount)).exit(data)
+      ).to.be.revertedWith('Leaf index is too big')
     })
 
     it('Should start exit', async () => {
@@ -1247,8 +1273,9 @@ contract('RootChainManager', async (accounts) => {
           logIndex
         ])
       )
-      await expect(contracts.root.rootChainManager.connect(await ethers.getSigner(nonDepositAccount)).exit(data))
-        .to.be.revertedWith('RootChainManager: EXIT_ALREADY_PROCESSED')
+      await expect(
+        contracts.root.rootChainManager.connect(await ethers.getSigner(nonDepositAccount)).exit(data)
+      ).to.be.revertedWith('RootChainManager: EXIT_ALREADY_PROCESSED')
     })
 
     it('Should fail to start exit again (change the log index to generate same exit hash)', async () => {
@@ -1267,8 +1294,9 @@ contract('RootChainManager', async (accounts) => {
           logIndex
         ])
       )
-      await expect(contracts.root.rootChainManager.connect(await ethers.getSigner(nonDepositAccount)).exit(data))
-        .to.be.revertedWith('RootChainManager: EXIT_ALREADY_PROCESSED')
+      await expect(
+        contracts.root.rootChainManager.connect(await ethers.getSigner(nonDepositAccount)).exit(data)
+      ).to.be.revertedWith('RootChainManager: EXIT_ALREADY_PROCESSED')
     })
 
     it('Should emit Transfer log in exit tx', () => {
@@ -1294,16 +1322,8 @@ contract('RootChainManager', async (accounts) => {
     const withdrawAmount = mockValues.amounts[1]
     const depositReceiver = accounts[0]
     const depositData = abi.encode(
-      [
-        'uint256[]',
-        'uint256[]',
-        'bytes'
-      ],
-      [
-        [tokenId.toString()],
-        [depositAmount.toString()],
-        '0x'
-      ]
+      ['uint256[]', 'uint256[]', 'bytes'],
+      [[tokenId.toString()], [depositAmount.toString()], '0x']
     )
     let contracts
     let dummyERC1155
@@ -1352,7 +1372,9 @@ contract('RootChainManager', async (accounts) => {
     })
 
     it('Can receive withdraw tx', async () => {
-      withdrawTx = await contracts.child.dummyERC1155.connect(await ethers.getSigner(depositReceiver)).withdrawSingle(tokenId, withdrawAmount)
+      withdrawTx = await contracts.child.dummyERC1155
+        .connect(await ethers.getSigner(depositReceiver))
+        .withdrawSingle(tokenId, withdrawAmount)
       expect(withdrawTx).to.exist
       await withdrawTx.wait()
       withdrawTxReceipt = await web3.eth.getTransactionReceipt(withdrawTx.hash)
@@ -1400,8 +1422,9 @@ contract('RootChainManager', async (accounts) => {
           logIndex
         ])
       )
-      await expect(contracts.root.rootChainManager.connect(await ethers.getSigner(depositReceiver)).exit(data))
-        .to.be.revertedWith('RootChainManager: INVALID_PROOF')
+      await expect(
+        contracts.root.rootChainManager.connect(await ethers.getSigner(depositReceiver)).exit(data)
+      ).to.be.revertedWith('RootChainManager: INVALID_PROOF')
     })
 
     it('Should fail: exit with a fake amount data in receipt', async () => {
@@ -1421,8 +1444,8 @@ contract('RootChainManager', async (accounts) => {
           logIndex
         ])
       )
-      await expect(contracts.root.rootChainManager.connect(await ethers.getSigner(depositReceiver)).exit(data))
-        .to.be.reverted
+      await expect(contracts.root.rootChainManager.connect(await ethers.getSigner(depositReceiver)).exit(data)).to.be
+        .reverted
     })
 
     it('Should fail to start exit (changed the block number)', async () => {
@@ -1442,8 +1465,9 @@ contract('RootChainManager', async (accounts) => {
           logIndex
         ])
       )
-      await expect(contracts.root.rootChainManager.connect(await ethers.getSigner(depositReceiver)).exit(data))
-        .to.be.revertedWith('Leaf index is too big')
+      await expect(
+        contracts.root.rootChainManager.connect(await ethers.getSigner(depositReceiver)).exit(data)
+      ).to.be.revertedWith('Leaf index is too big')
     })
 
     it('Should start exit', async () => {
@@ -1482,8 +1506,9 @@ contract('RootChainManager', async (accounts) => {
           logIndex
         ])
       )
-      await expect(contracts.root.rootChainManager.connect(await ethers.getSigner(depositReceiver)).exit(data))
-        .to.be.revertedWith('RootChainManager: EXIT_ALREADY_PROCESSED')
+      await expect(
+        contracts.root.rootChainManager.connect(await ethers.getSigner(depositReceiver)).exit(data)
+      ).to.be.revertedWith('RootChainManager: EXIT_ALREADY_PROCESSED')
     })
 
     it('Should fail to start exit again (change the log index to generate same exit hash)', async () => {
@@ -1502,8 +1527,9 @@ contract('RootChainManager', async (accounts) => {
           logIndex
         ])
       )
-      await expect(contracts.root.rootChainManager.connect(await ethers.getSigner(depositReceiver)).exit(data))
-        .to.be.revertedWith('RootChainManager: EXIT_ALREADY_PROCESSED')
+      await expect(
+        contracts.root.rootChainManager.connect(await ethers.getSigner(depositReceiver)).exit(data)
+      ).to.be.revertedWith('RootChainManager: EXIT_ALREADY_PROCESSED')
     })
 
     it('Should emit Transfer log in exit tx', () => {
@@ -1530,16 +1556,8 @@ contract('RootChainManager', async (accounts) => {
     const depositReceiver = accounts[0]
     const nonDepositAccount = accounts[1]
     const depositData = abi.encode(
-      [
-        'uint256[]',
-        'uint256[]',
-        'bytes'
-      ],
-      [
-        [tokenId.toString()],
-        [depositAmount.toString()],
-        '0x'
-      ]
+      ['uint256[]', 'uint256[]', 'bytes'],
+      [[tokenId.toString()], [depositAmount.toString()], '0x']
     )
     let contracts
     let dummyERC1155
@@ -1588,7 +1606,9 @@ contract('RootChainManager', async (accounts) => {
     })
 
     it('Can receive withdraw tx', async () => {
-      withdrawTx = await contracts.child.dummyERC1155.connect(await ethers.getSigner(depositReceiver)).withdrawSingle(tokenId, withdrawAmount)
+      withdrawTx = await contracts.child.dummyERC1155
+        .connect(await ethers.getSigner(depositReceiver))
+        .withdrawSingle(tokenId, withdrawAmount)
       expect(withdrawTx).to.exist
       await withdrawTx.wait()
       withdrawTxReceipt = await web3.eth.getTransactionReceipt(withdrawTx.hash)
@@ -1636,8 +1656,9 @@ contract('RootChainManager', async (accounts) => {
           logIndex
         ])
       )
-      await expect(contracts.root.rootChainManager.connect(await ethers.getSigner(nonDepositAccount)).exit(data))
-        .to.be.revertedWith('RootChainManager: INVALID_PROOF')
+      await expect(
+        contracts.root.rootChainManager.connect(await ethers.getSigner(nonDepositAccount)).exit(data)
+      ).to.be.revertedWith('RootChainManager: INVALID_PROOF')
     })
 
     it('Should fail: exit with a fake amount data in receipt', async () => {
@@ -1657,8 +1678,8 @@ contract('RootChainManager', async (accounts) => {
           logIndex
         ])
       )
-      await expect(contracts.root.rootChainManager.connect(await ethers.getSigner(nonDepositAccount)).exit(data))
-        .to.be.reverted
+      await expect(contracts.root.rootChainManager.connect(await ethers.getSigner(nonDepositAccount)).exit(data)).to.be
+        .reverted
     })
 
     it('Should fail to start exit (changed the block number)', async () => {
@@ -1678,8 +1699,9 @@ contract('RootChainManager', async (accounts) => {
           logIndex
         ])
       )
-      await expect(contracts.root.rootChainManager.connect(await ethers.getSigner(nonDepositAccount)).exit(data))
-        .to.be.revertedWith('Leaf index is too big')
+      await expect(
+        contracts.root.rootChainManager.connect(await ethers.getSigner(nonDepositAccount)).exit(data)
+      ).to.be.revertedWith('Leaf index is too big')
     })
 
     it('Should start exit', async () => {
@@ -1718,8 +1740,9 @@ contract('RootChainManager', async (accounts) => {
           logIndex
         ])
       )
-      await expect(contracts.root.rootChainManager.connect(await ethers.getSigner(nonDepositAccount)).exit(data))
-        .to.be.revertedWith('RootChainManager: EXIT_ALREADY_PROCESSED')
+      await expect(
+        contracts.root.rootChainManager.connect(await ethers.getSigner(nonDepositAccount)).exit(data)
+      ).to.be.revertedWith('RootChainManager: EXIT_ALREADY_PROCESSED')
     })
 
     it('Should fail to start exit again (change the log index to generate same exit hash)', async () => {
@@ -1738,8 +1761,9 @@ contract('RootChainManager', async (accounts) => {
           logIndex
         ])
       )
-      await expect(contracts.root.rootChainManager.connect(await ethers.getSigner(nonDepositAccount)).exit(data))
-        .to.be.revertedWith('RootChainManager: EXIT_ALREADY_PROCESSED')
+      await expect(
+        contracts.root.rootChainManager.connect(await ethers.getSigner(nonDepositAccount)).exit(data)
+      ).to.be.revertedWith('RootChainManager: EXIT_ALREADY_PROCESSED')
     })
 
     it('Should emit Transfer log in exit tx', () => {
@@ -1842,7 +1866,8 @@ contract('RootChainManager', async (accounts) => {
     })
 
     it('Can receive withdraw tx', async () => {
-      withdrawTx = await contracts.child.dummyERC1155.connect(await ethers.getSigner(depositReceiver))
+      withdrawTx = await contracts.child.dummyERC1155
+        .connect(await ethers.getSigner(depositReceiver))
         .withdrawBatch([tokenIdA, tokenIdB, tokenIdC], [withdrawAmountA, withdrawAmountB, withdrawAmountC])
       expect(withdrawTx).to.exist
       await withdrawTx.wait()
@@ -1852,7 +1877,12 @@ contract('RootChainManager', async (accounts) => {
     it('Should emit Transfer log in withdraw tx', () => {
       expect(withdrawTx)
         .to.emit(contracts.child.dummyERC1155, 'TransferBatch')
-        .withArgs(depositReceiver, mockValues.zeroAddress, [tokenIdA, tokenIdB, tokenIdC], [withdrawAmountA, withdrawAmountB, withdrawAmountC])
+        .withArgs(
+          depositReceiver,
+          mockValues.zeroAddress,
+          [tokenIdA, tokenIdB, tokenIdC],
+          [withdrawAmountA, withdrawAmountB, withdrawAmountC]
+        )
     })
 
     it('Should submit checkpoint', async () => {
@@ -1891,8 +1921,9 @@ contract('RootChainManager', async (accounts) => {
           logIndex
         ])
       )
-      await expect(contracts.root.rootChainManager.connect(await ethers.getSigner(depositReceiver)).exit(data))
-        .to.be.revertedWith('RootChainManager: INVALID_PROOF')
+      await expect(
+        contracts.root.rootChainManager.connect(await ethers.getSigner(depositReceiver)).exit(data)
+      ).to.be.revertedWith('RootChainManager: INVALID_PROOF')
     })
 
     it('Should fail: exit with a fake amount data in receipt', async () => {
@@ -1912,8 +1943,8 @@ contract('RootChainManager', async (accounts) => {
           logIndex
         ])
       )
-      await expect(contracts.root.rootChainManager.connect(await ethers.getSigner(depositReceiver)).exit(data))
-        .to.be.reverted
+      await expect(contracts.root.rootChainManager.connect(await ethers.getSigner(depositReceiver)).exit(data)).to.be
+        .reverted
     })
 
     it('Should start exit', async () => {
@@ -1952,14 +1983,20 @@ contract('RootChainManager', async (accounts) => {
           logIndex
         ])
       )
-      await expect(contracts.root.rootChainManager.connect(await ethers.getSigner(depositReceiver)).exit(data))
-        .to.be.revertedWith('RootChainManager: EXIT_ALREADY_PROCESSED')
+      await expect(
+        contracts.root.rootChainManager.connect(await ethers.getSigner(depositReceiver)).exit(data)
+      ).to.be.revertedWith('RootChainManager: EXIT_ALREADY_PROCESSED')
     })
 
     it('Should emit Transfer log in exit tx', () => {
       expect(exitTx)
         .to.emit(contracts.root.rootChainManager, 'TransferBatch')
-        .withArgs(mockValues.zeroAddress, depositReceiver, [tokenIdA, tokenIdB, tokenIdC], [withdrawAmountA, withdrawAmountB, withdrawAmountC])
+        .withArgs(
+          mockValues.zeroAddress,
+          depositReceiver,
+          [tokenIdA, tokenIdB, tokenIdC],
+          [withdrawAmountA, withdrawAmountB, withdrawAmountC]
+        )
     })
 
     it('Should have more amount in withdrawer account after withdraw', async () => {
@@ -2065,7 +2102,8 @@ contract('RootChainManager', async (accounts) => {
     })
 
     it('Can receive withdraw tx', async () => {
-      withdrawTx = await contracts.child.dummyERC1155.connect(await ethers.getSigner(depositReceiver))
+      withdrawTx = await contracts.child.dummyERC1155
+        .connect(await ethers.getSigner(depositReceiver))
         .withdrawBatch([tokenIdA, tokenIdB, tokenIdC], [withdrawAmountA, withdrawAmountB, withdrawAmountC])
       expect(withdrawTx).to.exist
       await withdrawTx.wait()
@@ -2075,7 +2113,12 @@ contract('RootChainManager', async (accounts) => {
     it('Should emit Transfer log in withdraw tx', () => {
       expect(withdrawTx)
         .to.emit(contracts.child.dummyERC1155, 'TransferBatch')
-        .withArgs(depositReceiver, mockValues.zeroAddress, [tokenIdA, tokenIdB, tokenIdC], [withdrawAmountA, withdrawAmountB, withdrawAmountC])
+        .withArgs(
+          depositReceiver,
+          mockValues.zeroAddress,
+          [tokenIdA, tokenIdB, tokenIdC],
+          [withdrawAmountA, withdrawAmountB, withdrawAmountC]
+        )
     })
 
     it('Should submit checkpoint', async () => {
@@ -2114,8 +2157,9 @@ contract('RootChainManager', async (accounts) => {
           logIndex
         ])
       )
-      await expect(contracts.root.rootChainManager.connect(await ethers.getSigner(nonDepositAccount)).exit(data))
-        .to.be.revertedWith('RootChainManager: INVALID_PROOF')
+      await expect(
+        contracts.root.rootChainManager.connect(await ethers.getSigner(nonDepositAccount)).exit(data)
+      ).to.be.revertedWith('RootChainManager: INVALID_PROOF')
     })
 
     it('Should fail: exit with a fake amount data in receipt', async () => {
@@ -2135,8 +2179,8 @@ contract('RootChainManager', async (accounts) => {
           logIndex
         ])
       )
-      await expect(contracts.root.rootChainManager.connect(await ethers.getSigner(nonDepositAccount)).exit(data))
-        .to.be.reverted
+      await expect(contracts.root.rootChainManager.connect(await ethers.getSigner(nonDepositAccount)).exit(data)).to.be
+        .reverted
     })
 
     it('Should start exit', async () => {
@@ -2175,14 +2219,20 @@ contract('RootChainManager', async (accounts) => {
           logIndex
         ])
       )
-      await expect(contracts.root.rootChainManager.connect(await ethers.getSigner(nonDepositAccount)).exit(data))
-        .to.be.revertedWith('RootChainManager: EXIT_ALREADY_PROCESSED')
+      await expect(
+        contracts.root.rootChainManager.connect(await ethers.getSigner(nonDepositAccount)).exit(data)
+      ).to.be.revertedWith('RootChainManager: EXIT_ALREADY_PROCESSED')
     })
 
     it('Should emit Transfer log in exit tx', () => {
       expect(exitTx)
         .to.emit(contracts.root.rootChainManager, 'TransferBatch')
-        .withArgs(mockValues.zeroAddress, depositReceiver, [tokenIdA, tokenIdB, tokenIdC], [withdrawAmountA, withdrawAmountB, withdrawAmountC])
+        .withArgs(
+          mockValues.zeroAddress,
+          depositReceiver,
+          [tokenIdA, tokenIdB, tokenIdC],
+          [withdrawAmountA, withdrawAmountB, withdrawAmountC]
+        )
     })
 
     it('Should have more amount in withdrawer account after withdraw', async () => {
@@ -2287,7 +2337,9 @@ contract('RootChainManager', async (accounts) => {
     })
 
     it('Alice should be able to send exit tx', async () => {
-      const logIndex = burnTx1Receipt.logs.findIndex(log => log.topics[0].toLowerCase() === ERC721_TRANSFER_EVENT_SIG.toLowerCase())
+      const logIndex = burnTx1Receipt.logs.findIndex(
+        (log) => log.topics[0].toLowerCase() === ERC721_TRANSFER_EVENT_SIG.toLowerCase()
+      )
       const data = bufferToHex(
         rlp.encode([
           headerNumber1,
@@ -2314,7 +2366,9 @@ contract('RootChainManager', async (accounts) => {
     it('Alice should be able to deposit token', async () => {
       await rootMintableERC721.connect(await ethers.getSigner(alice)).approve(mintableERC721Predicate.target, tokenId)
       const depositData = abi.encode(['uint256'], [tokenId.toString()])
-      const depositTx = await rootChainManager.connect(await ethers.getSigner(alice)).depositFor(alice, rootMintableERC721.target, depositData)
+      const depositTx = await rootChainManager
+        .connect(await ethers.getSigner(alice))
+        .depositFor(alice, rootMintableERC721.target, depositData)
       expect(depositTx).to.exist
       const txReceipt = await depositTx.wait()
       const syncTx = await syncState(txReceipt)
@@ -2368,7 +2422,9 @@ contract('RootChainManager', async (accounts) => {
     })
 
     it('bob should be able to exit token', async () => {
-      const logIndex = burnTx2Receipt.logs.findIndex(log => log.topics[0].toLowerCase() === ERC721_TRANSFER_EVENT_SIG.toLowerCase())
+      const logIndex = burnTx2Receipt.logs.findIndex(
+        (log) => log.topics[0].toLowerCase() === ERC721_TRANSFER_EVENT_SIG.toLowerCase()
+      )
       const data = bufferToHex(
         rlp.encode([
           headerNumber2,
@@ -2401,7 +2457,9 @@ contract('RootChainManager', async (accounts) => {
     it('Charlie should be able to deposit token for Daniel', async () => {
       await rootMintableERC721.connect(await ethers.getSigner(charlie)).approve(mintableERC721Predicate.target, tokenId)
       const depositData = abi.encode(['uint256'], [tokenId.toString()])
-      const depositTx = await rootChainManager.connect(await ethers.getSigner(charlie)).depositFor(daniel, rootMintableERC721.target, depositData)
+      const depositTx = await rootChainManager
+        .connect(await ethers.getSigner(charlie))
+        .depositFor(daniel, rootMintableERC721.target, depositData)
       expect(depositTx).to.exist
       const txReceipt = await depositTx.wait()
       const syncTx = await syncState(txReceipt)

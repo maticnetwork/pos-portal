@@ -18,19 +18,25 @@ const DummyMintableERC1155 = artifacts.require('DummyMintableERC1155')
 import { getContractAddresses } from './utils'
 import { plasmaRootChain } from './config'
 
-export default async() => {
+export default async () => {
   const contractAddresses = getContractAddresses()
 
   const RootChainManagerInstance = await RootChainManager.at(contractAddresses.root.RootChainManagerProxy)
 
   const ERC20PredicateInstance = await ERC20Predicate.at(contractAddresses.root.ERC20PredicateProxy)
-  const MintableERC20PredicateInstance = await MintableERC20Predicate.at(contractAddresses.root.MintableERC20PredicateProxy)
+  const MintableERC20PredicateInstance = await MintableERC20Predicate.at(
+    contractAddresses.root.MintableERC20PredicateProxy
+  )
 
   const ERC721PredicateInstance = await ERC721Predicate.at(contractAddresses.root.ERC721PredicateProxy)
-  const MintableERC721PredicateInstance = await MintableERC721Predicate.at(contractAddresses.root.MintableERC721PredicateProxy)
+  const MintableERC721PredicateInstance = await MintableERC721Predicate.at(
+    contractAddresses.root.MintableERC721PredicateProxy
+  )
 
   const ERC1155PredicateInstance = await ERC1155Predicate.at(contractAddresses.root.ERC1155PredicateProxy)
-  const MintableERC1155PredicateInstance = await MintableERC1155Predicate.at(contractAddresses.root.MintableERC1155PredicateProxy)
+  const MintableERC1155PredicateInstance = await MintableERC1155Predicate.at(
+    contractAddresses.root.MintableERC1155PredicateProxy
+  )
 
   const EtherPredicateInstance = await EtherPredicate.at(contractAddresses.root.EtherPredicateProxy)
 
@@ -109,23 +115,51 @@ export default async() => {
   await RootChainManagerInstance.registerPredicate(EtherType, EtherPredicateInstance.address)
 
   console.log('Mapping DummyERC20')
-  await RootChainManagerInstance.mapToken(contractAddresses.root.DummyERC20, contractAddresses.child.DummyERC20, ERC20Type)
+  await RootChainManagerInstance.mapToken(
+    contractAddresses.root.DummyERC20,
+    contractAddresses.child.DummyERC20,
+    ERC20Type
+  )
 
   console.log('Mapping DummyMintableERC20')
-  await RootChainManagerInstance.mapToken(contractAddresses.root.DummyMintableERC20, contractAddresses.child.DummyMintableERC20, MintableERC20Type)
+  await RootChainManagerInstance.mapToken(
+    contractAddresses.root.DummyMintableERC20,
+    contractAddresses.child.DummyMintableERC20,
+    MintableERC20Type
+  )
 
   console.log('Mapping DummyERC721')
-  await RootChainManagerInstance.mapToken(contractAddresses.root.DummyERC721, contractAddresses.child.DummyERC721, ERC721Type)
+  await RootChainManagerInstance.mapToken(
+    contractAddresses.root.DummyERC721,
+    contractAddresses.child.DummyERC721,
+    ERC721Type
+  )
 
   console.log('Mapping DummyMintableERC721')
-  await RootChainManagerInstance.mapToken(contractAddresses.root.DummyMintableERC721, contractAddresses.child.DummyMintableERC721, MintableERC721Type)
+  await RootChainManagerInstance.mapToken(
+    contractAddresses.root.DummyMintableERC721,
+    contractAddresses.child.DummyMintableERC721,
+    MintableERC721Type
+  )
 
   console.log('Mapping DummyERC1155')
-  await RootChainManagerInstance.mapToken(contractAddresses.root.DummyERC1155, contractAddresses.child.DummyERC1155, ERC1155Type)
+  await RootChainManagerInstance.mapToken(
+    contractAddresses.root.DummyERC1155,
+    contractAddresses.child.DummyERC1155,
+    ERC1155Type
+  )
 
   console.log('Mapping DummyMintableERC1155')
-  await RootChainManagerInstance.mapToken(contractAddresses.root.DummyMintableERC1155, contractAddresses.child.DummyMintableERC1155, MintableERC1155Type)
+  await RootChainManagerInstance.mapToken(
+    contractAddresses.root.DummyMintableERC1155,
+    contractAddresses.child.DummyMintableERC1155,
+    MintableERC1155Type
+  )
 
   console.log('Mapping Ether')
-  await RootChainManagerInstance.mapToken('0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE', contractAddresses.child.MaticWETH, EtherType)
+  await RootChainManagerInstance.mapToken(
+    '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
+    contractAddresses.child.MaticWETH,
+    EtherType
+  )
 }

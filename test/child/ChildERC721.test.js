@@ -19,19 +19,15 @@ contract('ChildERC721', (accounts) => {
     })
 
     it('Token should not exist before deposit', async () => {
-      await expect(
-        contracts.dummyERC721.ownerOf(tokenId)
-      ).to.be.revertedWith('ERC721: owner query for nonexistent token')
+      await expect(contracts.dummyERC721.ownerOf(tokenId)).to.be.revertedWith(
+        'ERC721: owner query for nonexistent token'
+      )
     })
 
     it('Can receive deposit tx', async () => {
-      await expect(
-        contracts.dummyERC721.deposit(user, depositData)
-      ).to.emit(contracts.dummyERC721, 'Transfer').withArgs(
-        mockValues.zeroAddress,
-        user,
-        tokenId
-      )
+      await expect(contracts.dummyERC721.deposit(user, depositData))
+        .to.emit(contracts.dummyERC721, 'Transfer')
+        .withArgs(mockValues.zeroAddress, user, tokenId)
     })
 
     // @note Already verified in the above test
@@ -72,12 +68,7 @@ contract('ChildERC721', (accounts) => {
     const tokenId2 = mockValues.numbers[3]
     const tokenId3 = mockValues.numbers[1]
     const user = mockValues.addresses[3]
-    const depositData = abi.encode(
-      ['uint256[]'],
-      [
-        [tokenId1.toString(), tokenId2.toString(), tokenId3.toString()]
-      ]
-    )
+    const depositData = abi.encode(['uint256[]'], [[tokenId1.toString(), tokenId2.toString(), tokenId3.toString()]])
     let contracts
     // let depositTx
     // let transferLogs
@@ -89,35 +80,27 @@ contract('ChildERC721', (accounts) => {
     })
 
     it('Token should not exist before deposit', async () => {
-      await expect(
-        contracts.dummyERC721.ownerOf(tokenId1)
-      ).to.be.revertedWith('ERC721: owner query for nonexistent token')
-      await expect(
-        contracts.dummyERC721.ownerOf(tokenId2)
-      ).to.be.revertedWith('ERC721: owner query for nonexistent token')
-      await expect(
-        contracts.dummyERC721.ownerOf(tokenId3)
-      ).to.be.revertedWith('ERC721: owner query for nonexistent token')
+      await expect(contracts.dummyERC721.ownerOf(tokenId1)).to.be.revertedWith(
+        'ERC721: owner query for nonexistent token'
+      )
+      await expect(contracts.dummyERC721.ownerOf(tokenId2)).to.be.revertedWith(
+        'ERC721: owner query for nonexistent token'
+      )
+      await expect(contracts.dummyERC721.ownerOf(tokenId3)).to.be.revertedWith(
+        'ERC721: owner query for nonexistent token'
+      )
     })
 
     it('Can receive deposit tx', async () => {
       // depositTx = await contracts.dummyERC721.deposit(user, depositData)
       // should.exist(depositTx)
-      await expect(
-        contracts.dummyERC721.deposit(user, depositData)
-      ).to.emit(contracts.dummyERC721, 'Transfer').withArgs(
-        mockValues.zeroAddress,
-        user,
-        tokenId1
-      ).and.to.emit(contracts.dummyERC721, 'Transfer').withArgs(
-        mockValues.zeroAddress,
-        user,
-        tokenId2
-      ).and.to.emit(contracts.dummyERC721, 'Transfer').withArgs(
-        mockValues.zeroAddress,
-        user,
-        tokenId3
-      )
+      await expect(contracts.dummyERC721.deposit(user, depositData))
+        .to.emit(contracts.dummyERC721, 'Transfer')
+        .withArgs(mockValues.zeroAddress, user, tokenId1)
+        .and.to.emit(contracts.dummyERC721, 'Transfer')
+        .withArgs(mockValues.zeroAddress, user, tokenId2)
+        .and.to.emit(contracts.dummyERC721, 'Transfer')
+        .withArgs(mockValues.zeroAddress, user, tokenId3)
     })
 
     // @note Already verified in the above test
@@ -213,13 +196,9 @@ contract('ChildERC721', (accounts) => {
     })
 
     it('Can receive withdraw tx', async () => {
-      await expect(
-        contracts.dummyERC721.withdraw(tokenId)
-      ).to.emit(contracts.dummyERC721, 'Transfer').withArgs(
-        user,
-        mockValues.zeroAddress,
-        tokenId
-      )
+      await expect(contracts.dummyERC721.withdraw(tokenId))
+        .to.emit(contracts.dummyERC721, 'Transfer')
+        .withArgs(user, mockValues.zeroAddress, tokenId)
     })
 
     // @note Already verified in the above test
@@ -250,9 +229,9 @@ contract('ChildERC721', (accounts) => {
     //   })
 
     it('Token should not exist after burning', async () => {
-      await expect(
-        contracts.dummyERC721.ownerOf(tokenId)
-      ).to.be.revertedWith('ERC721: owner query for nonexistent token')
+      await expect(contracts.dummyERC721.ownerOf(tokenId)).to.be.revertedWith(
+        'ERC721: owner query for nonexistent token'
+      )
     })
   })
 })

@@ -13,11 +13,17 @@ const ChildMintableERC1155 = artifacts.require('ChildMintableERC1155')
 const MaticWETH = artifacts.require('MaticWETH')
 import { getContractAddresses, writeContractAddresses } from './utils'
 
-export default async(deployer, network, accounts) => {
-  deployer.then(async() => {
+export default async (deployer, network, accounts) => {
+  deployer.then(async () => {
     const childChainManager = await deployer.deploy(ChildChainManager)
-    const childChainManagerProxy = await deployer.deploy(ChildChainManagerProxy, '0x0000000000000000000000000000000000000000')
-    await childChainManagerProxy.updateAndCall(childChainManager.address, childChainManager.contract.methods.initialize(accounts[0]).encodeABI())
+    const childChainManagerProxy = await deployer.deploy(
+      ChildChainManagerProxy,
+      '0x0000000000000000000000000000000000000000'
+    )
+    await childChainManagerProxy.updateAndCall(
+      childChainManager.address,
+      childChainManager.contract.methods.initialize(accounts[0]).encodeABI()
+    )
 
     await deployer.deploy(ChildERC20, 'Dummy ERC20', 'DERC20', 18, ChildChainManagerProxy.address)
     await deployer.deploy(ChildMintableERC20, 'Dummy Mintable ERC20', 'DMERC20', 18, ChildChainManagerProxy.address)

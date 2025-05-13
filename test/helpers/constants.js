@@ -1,17 +1,17 @@
-import { toBigInt } from 'ethers';
+import { toBigInt } from 'ethers'
 
-export const rootRPC = 'http://localhost:9545';
-export const childRPC = 'http://localhost:8545';
+export const rootRPC = 'http://localhost:9545'
+export const childRPC = 'http://localhost:8545'
 
-export const etherAddress = '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE';
+export const etherAddress = '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE'
 
-export const erc20TransferEventSig = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef';
-export const erc721TransferEventSig = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef';
-export const erc721WithdrawnBatchEventSig = '0xf871896b17e9cb7a64941c62c188a4f5c621b86800e3d15452ece01ce56073df';
-export const erc721TransferWithMetadataEventSig = '0xf94915c6d1fd521cee85359239227480c7e8776d7caf1fc3bacad5c269b66a14';
-export const erc1155TransferSingleEventSig = '0xc3d58168c5ae7397731d063d5bbf3d657854427343f4c083240f7aacaa2d0f62';
-export const erc1155TransferBatchEventSig = '0x4a39dc06d4c0dbc64b70af90fd698a233a518aa5d07e595d983b8c0526c8f7fb';
-export const erc1155ChainExitEventSig = '0xc7b80b68f1c661da97dbd7e6e143a0c7c587dfc522cb2ac508b9084fecc492bc';
+export const erc20TransferEventSig = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef'
+export const erc721TransferEventSig = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef'
+export const erc721WithdrawnBatchEventSig = '0xf871896b17e9cb7a64941c62c188a4f5c621b86800e3d15452ece01ce56073df'
+export const erc721TransferWithMetadataEventSig = '0xf94915c6d1fd521cee85359239227480c7e8776d7caf1fc3bacad5c269b66a14'
+export const erc1155TransferSingleEventSig = '0xc3d58168c5ae7397731d063d5bbf3d657854427343f4c083240f7aacaa2d0f62'
+export const erc1155TransferBatchEventSig = '0x4a39dc06d4c0dbc64b70af90fd698a233a518aa5d07e595d983b8c0526c8f7fb'
+export const erc1155ChainExitEventSig = '0xc7b80b68f1c661da97dbd7e6e143a0c7c587dfc522cb2ac508b9084fecc492bc'
 
 export const mockValues = {
   zeroAddress: '0x0000000000000000000000000000000000000000',
@@ -58,4 +58,4 @@ export const mockValues = {
     toBigInt(500n),
     toBigInt(2000n)
   ]
-};
+}

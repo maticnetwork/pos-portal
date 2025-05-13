@@ -21,13 +21,9 @@ contract('ChildERC20', (accounts) => {
     })
 
     it('Can receive deposit tx', async () => {
-      await expect(
-        contracts.dummyERC20.deposit(depositReceiver, depositData)
-      ).to.emit(contracts.dummyERC20, 'Transfer').withArgs(
-        mockValues.zeroAddress,
-        depositReceiver,
-        depositAmount
-      )
+      await expect(contracts.dummyERC20.deposit(depositReceiver, depositData))
+        .to.emit(contracts.dummyERC20, 'Transfer')
+        .withArgs(mockValues.zeroAddress, depositReceiver, depositAmount)
     })
 
     // @note Already verified in the above test
@@ -77,8 +73,8 @@ contract('ChildERC20', (accounts) => {
 
     it('Tx should revert with proper reason', async () => {
       await expect(
-        dummyERC20.connect(await ethers.getSigner(accounts[1])).deposit(depositReceiver, depositData))
-        .to.be.revertedWith('ChildERC20: INSUFFICIENT_PERMISSIONS')
+        dummyERC20.connect(await ethers.getSigner(accounts[1])).deposit(depositReceiver, depositData)
+      ).to.be.revertedWith('ChildERC20: INSUFFICIENT_PERMISSIONS')
     })
   })
 
@@ -99,13 +95,9 @@ contract('ChildERC20', (accounts) => {
     })
 
     it('Can receive withdraw tx', async () => {
-      await expect(
-        contracts.dummyERC20.withdraw(withdrawAmount)
-      ).to.emit(contracts.dummyERC20, 'Transfer').withArgs(
-        user,
-        mockValues.zeroAddress,
-        withdrawAmount
-      )
+      await expect(contracts.dummyERC20.withdraw(withdrawAmount))
+        .to.emit(contracts.dummyERC20, 'Transfer')
+        .withArgs(user, mockValues.zeroAddress, withdrawAmount)
     })
 
     // @note Already verified in the above test

@@ -1,15 +1,14 @@
-import { AbiCoder } from 'ethers';
-import { deployFreshChildContracts, deployInitializedContracts } from '../helpers/deployerNew.js';
-import { expect } from 'chai';
-import { generateFirstWallets, constructERC1155DepositData, getSignatureParameters } from '../helpers/utils.js';
-import { getTypedData } from '../helpers/meta-tx.js';
-import { mockValues } from '../helpers/constants.js';
+import { AbiCoder } from 'ethers'
+import { deployFreshChildContracts, deployInitializedContracts } from '../helpers/deployerNew.js'
+import { expect } from 'chai'
+import { generateFirstWallets, constructERC1155DepositData, getSignatureParameters } from '../helpers/utils.js'
+import { getTypedData } from '../helpers/meta-tx.js'
+import { mockValues } from '../helpers/constants.js'
 
-import ethUtils from 'ethereumjs-util';
-import sigUtils from 'eth-sig-util';
+import ethUtils from 'ethereumjs-util'
+import sigUtils from 'eth-sig-util'
 
 const abi = new AbiCoder()
-
 
 contract('NativeMetaTransaction', (accounts) => {
   let wallets = generateFirstWallets({ n: 10 })
@@ -20,7 +19,6 @@ contract('NativeMetaTransaction', (accounts) => {
   const ChildMintableERC721 = artifacts.require('ChildMintableERC721')
   const DummyERC20 = artifacts.require('DummyERC20')
   const RootChainManager = artifacts.require('RootChainManager')
-
 
   const web3ChildERC20 = new web3.eth.Contract(ChildERC20.abi)
   const web3ChildERC721 = new web3.eth.Contract(ChildERC721.abi)
@@ -168,8 +166,9 @@ contract('NativeMetaTransaction', (accounts) => {
         })
       })
       const { r, s, v } = getSignatureParameters(sig)
-      await expect(dummyERC20.executeMetaTransaction(user, functionSignature, r, s, v, { from: admin }))
-        .to.be.revertedWith('Signer and signature do not match')
+      await expect(
+        dummyERC20.executeMetaTransaction(user, functionSignature, r, s, v, { from: admin })
+      ).to.be.revertedWith('Signer and signature do not match')
     })
   })
 
@@ -198,7 +197,9 @@ contract('NativeMetaTransaction', (accounts) => {
     })
 
     it('Can receive withdraw tx', async () => {
-      const functionSignature = await web3ChildERC1155.methods.withdrawSingle(tokenId, withdrawAmount.toString(10)).encodeABI()
+      const functionSignature = await web3ChildERC1155.methods
+        .withdrawSingle(tokenId, withdrawAmount.toString(10))
+        .encodeABI()
       const name = await dummyERC1155.uri(0)
       const chainId = await dummyERC1155.getChainId()
       const nonce = await dummyERC1155.getNonce(user)
@@ -300,10 +301,9 @@ contract('NativeMetaTransaction', (accounts) => {
     })
 
     it('User should be able to approve', async () => {
-      const functionSignature = await web3DummyERC20.methods.approve(
-        contracts.root.erc20Predicate.target,
-        depositAmount.toString(10)
-      ).encodeABI()
+      const functionSignature = await web3DummyERC20.methods
+        .approve(contracts.root.erc20Predicate.target, depositAmount.toString(10))
+        .encodeABI()
       const name = await dummyERC20.name()
       const chainId = await dummyERC20.getChainId()
       const nonce = await dummyERC20.getNonce(user)
@@ -327,11 +327,9 @@ contract('NativeMetaTransaction', (accounts) => {
 
     it('User should be able to deposit', async () => {
       const depositData = abi.encode(['uint256'], [depositAmount.toString()])
-      const functionSignature = await web3RootChainManager.methods.depositFor(
-        depositForAccount,
-        dummyERC20.target,
-        depositData
-      ).encodeABI()
+      const functionSignature = await web3RootChainManager.methods
+        .depositFor(depositForAccount, dummyERC20.target, depositData)
+        .encodeABI()
       const name = 'RootChainManager'
       const chainId = await rootChainManager.getChainId()
       const nonce = await rootChainManager.getNonce(user)
@@ -348,14 +346,19 @@ contract('NativeMetaTransaction', (accounts) => {
         })
       })
       const { r, s, v } = getSignatureParameters(sig)
-      const stateSyncData = abi.encode(['bytes32', 'bytes'], [ethers.solidityPackedKeccak256(["string"], ["DEPOSIT"]),
-      abi.encode(['address', 'address', 'bytes'], [depositForAccount, dummyERC20.target, depositData])])
+      const stateSyncData = abi.encode(
+        ['bytes32', 'bytes'],
+        [
+          ethers.solidityPackedKeccak256(['string'], ['DEPOSIT']),
+          abi.encode(['address', 'address', 'bytes'], [depositForAccount, dummyERC20.target, depositData])
+        ]
+      )
 
-      await expect(rootChainManager.executeMetaTransaction(user, functionSignature, r, s, v, { from: admin })).
-        to.emit(contracts.root.erc20Predicate, 'LockedERC20').
-        withArgs(user, depositForAccount, dummyERC20.target, depositAmount).
-        to.emit(contracts.root.dummyStateSender, 'StateSynced').
-        withArgs(1, contracts.child.childChainManager.target, stateSyncData)
+      await expect(rootChainManager.executeMetaTransaction(user, functionSignature, r, s, v, { from: admin }))
+        .to.emit(contracts.root.erc20Predicate, 'LockedERC20')
+        .withArgs(user, depositForAccount, dummyERC20.target, depositAmount)
+        .to.emit(contracts.root.dummyStateSender, 'StateSynced')
+        .withArgs(1, contracts.child.childChainManager.target, stateSyncData)
     })
 
     // @note Already verified in the above test

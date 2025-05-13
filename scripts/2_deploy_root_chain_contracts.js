@@ -31,50 +31,89 @@ const DummyMintableERC1155 = artifacts.require('DummyMintableERC1155')
 
 import { getContractAddresses, writeContractAddresses } from './utils'
 
-export default async(deployer, network, accounts) => {
+export default async (deployer, network, accounts) => {
   await deployer
 
   console.log('deploying contracts...')
   const rootChainManager = await deployer.deploy(RootChainManager)
-  const rootChainManagerProxy = await deployer.deploy(RootChainManagerProxy, '0x0000000000000000000000000000000000000000')
-  await rootChainManagerProxy.updateAndCall(RootChainManager.address, rootChainManager.contract.methods.initialize(accounts[0]).encodeABI())
+  const rootChainManagerProxy = await deployer.deploy(
+    RootChainManagerProxy,
+    '0x0000000000000000000000000000000000000000'
+  )
+  await rootChainManagerProxy.updateAndCall(
+    RootChainManager.address,
+    rootChainManager.contract.methods.initialize(accounts[0]).encodeABI()
+  )
 
   // -- ERC20 Predicates Deployment, starting
   const erc20Predicate = await deployer.deploy(ERC20Predicate)
   const erc20PredicateProxy = await deployer.deploy(ERC20PredicateProxy, '0x0000000000000000000000000000000000000000')
-  await erc20PredicateProxy.updateAndCall(erc20Predicate.address, erc20Predicate.contract.methods.initialize(accounts[0]).encodeABI())
+  await erc20PredicateProxy.updateAndCall(
+    erc20Predicate.address,
+    erc20Predicate.contract.methods.initialize(accounts[0]).encodeABI()
+  )
 
   // Mintable version of ERC20 👇
   const mintableErc20Predicate = await deployer.deploy(MintableERC20Predicate)
-  const mintableErc20PredicateProxy = await deployer.deploy(MintableERC20PredicateProxy, '0x0000000000000000000000000000000000000000')
-  await mintableErc20PredicateProxy.updateAndCall(mintableErc20Predicate.address, mintableErc20Predicate.contract.methods.initialize(accounts[0]).encodeABI())
+  const mintableErc20PredicateProxy = await deployer.deploy(
+    MintableERC20PredicateProxy,
+    '0x0000000000000000000000000000000000000000'
+  )
+  await mintableErc20PredicateProxy.updateAndCall(
+    mintableErc20Predicate.address,
+    mintableErc20Predicate.contract.methods.initialize(accounts[0]).encodeABI()
+  )
   // -- ERC20 Predicates Deployment, ending
 
   // -- ERC721 Predicates Deployment, starting
   const erc721Predicate = await deployer.deploy(ERC721Predicate)
   const erc721PredicateProxy = await deployer.deploy(ERC721PredicateProxy, '0x0000000000000000000000000000000000000000')
-  await erc721PredicateProxy.updateAndCall(erc721Predicate.address, erc721Predicate.contract.methods.initialize(accounts[0]).encodeABI())
+  await erc721PredicateProxy.updateAndCall(
+    erc721Predicate.address,
+    erc721Predicate.contract.methods.initialize(accounts[0]).encodeABI()
+  )
 
   // Mintable version of ERC721 👇
   const mintableERC721Predicate = await deployer.deploy(MintableERC721Predicate)
-  const mintableERC721PredicateProxy = await deployer.deploy(MintableERC721PredicateProxy, '0x0000000000000000000000000000000000000000')
-  await mintableERC721PredicateProxy.updateAndCall(mintableERC721Predicate.address, mintableERC721Predicate.contract.methods.initialize(accounts[0]).encodeABI())
+  const mintableERC721PredicateProxy = await deployer.deploy(
+    MintableERC721PredicateProxy,
+    '0x0000000000000000000000000000000000000000'
+  )
+  await mintableERC721PredicateProxy.updateAndCall(
+    mintableERC721Predicate.address,
+    mintableERC721Predicate.contract.methods.initialize(accounts[0]).encodeABI()
+  )
   // -- ERC721 Predicates Deployment, ending
 
   // -- ERC1155 Predicates Deployment, starting
   const erc1155Predicate = await deployer.deploy(ERC1155Predicate)
-  const erc1155PredicateProxy = await deployer.deploy(ERC1155PredicateProxy, '0x0000000000000000000000000000000000000000')
-  await erc1155PredicateProxy.updateAndCall(erc1155Predicate.address, erc1155Predicate.contract.methods.initialize(accounts[0]).encodeABI())
+  const erc1155PredicateProxy = await deployer.deploy(
+    ERC1155PredicateProxy,
+    '0x0000000000000000000000000000000000000000'
+  )
+  await erc1155PredicateProxy.updateAndCall(
+    erc1155Predicate.address,
+    erc1155Predicate.contract.methods.initialize(accounts[0]).encodeABI()
+  )
 
   // Mintable version of ERC1155 👇
   const mintableErc1155Predicate = await deployer.deploy(MintableERC1155Predicate)
-  const mintableErc1155PredicateProxy = await deployer.deploy(MintableERC1155PredicateProxy, '0x0000000000000000000000000000000000000000')
-  await mintableErc1155PredicateProxy.updateAndCall(mintableErc1155Predicate.address, mintableErc1155Predicate.contract.methods.initialize(accounts[0]).encodeABI())
+  const mintableErc1155PredicateProxy = await deployer.deploy(
+    MintableERC1155PredicateProxy,
+    '0x0000000000000000000000000000000000000000'
+  )
+  await mintableErc1155PredicateProxy.updateAndCall(
+    mintableErc1155Predicate.address,
+    mintableErc1155Predicate.contract.methods.initialize(accounts[0]).encodeABI()
+  )
   // -- ERC721 Predicates Deployment, ending
 
   const etherPredicate = await deployer.deploy(EtherPredicate)
   const etherPredicateProxy = await deployer.deploy(EtherPredicateProxy, '0x0000000000000000000000000000000000000000')
-  await etherPredicateProxy.updateAndCall(etherPredicate.address, etherPredicate.contract.methods.initialize(accounts[0]).encodeABI())
+  await etherPredicateProxy.updateAndCall(
+    etherPredicate.address,
+    etherPredicate.contract.methods.initialize(accounts[0]).encodeABI()
+  )
 
   await deployer.deploy(DummyStateSender)
 

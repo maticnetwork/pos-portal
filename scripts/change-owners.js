@@ -12,7 +12,7 @@ const newOwner = '' // new owner
 
 const adminRole = '0x00'
 
-export default async(callback) => {
+export default async (callback) => {
   if (!newOwner || !contractList || !contractList.length) {
     console.log('Set required params')
   } else {

@@ -1,36 +1,35 @@
-import { assertBigNumberEquality } from '../helpers/utils.js';
-import { expect } from 'chai';
+import { assertBigNumberEquality } from '../helpers/utils.js'
+import { expect } from 'chai'
 
-let UpgradableProxy, ProxyTestImpl, ProxyTestImplStorageLayoutChange;
+let UpgradableProxy, ProxyTestImpl, ProxyTestImplStorageLayoutChange
 
 before(async function () {
-  UpgradableProxy = await ethers.getContractFactory('UpgradableProxy');
-  ProxyTestImpl = await ethers.getContractFactory('ProxyTestImpl');
-  ProxyTestImplStorageLayoutChange = await ethers.getContractFactory('ProxyTestImplStorageLayoutChange');
-});
+  UpgradableProxy = await ethers.getContractFactory('UpgradableProxy')
+  ProxyTestImpl = await ethers.getContractFactory('ProxyTestImpl')
+  ProxyTestImplStorageLayoutChange = await ethers.getContractFactory('ProxyTestImplStorageLayoutChange')
+})
 
 contract('UpgradableProxy', function (accounts) {
-
   async function doDeploy() {
-    this.impl = await ProxyTestImpl.deploy();
-    await this.impl.waitForDeployment();
-    this.proxy = await UpgradableProxy.deploy(this.impl.target);
-    await this.proxy.waitForDeployment();
-    this.testContract = ProxyTestImpl.attach(this.proxy.target);
+    this.impl = await ProxyTestImpl.deploy()
+    await this.impl.waitForDeployment()
+    this.proxy = await UpgradableProxy.deploy(this.impl.target)
+    await this.proxy.waitForDeployment()
+    this.testContract = ProxyTestImpl.attach(this.proxy.target)
   }
 
   describe('updateImplementation', function () {
     before(doDeploy)
     before(async function () {
-      this.newImpl = await ProxyTestImpl.deploy();
-      await this.newImpl.waitForDeployment();
+      this.newImpl = await ProxyTestImpl.deploy()
+      await this.newImpl.waitForDeployment()
     })
 
     describe('when from is not owner', function () {
       it('reverts', async function () {
         await expect(
           this.proxy.connect(await ethers.getSigner(accounts[1])).updateImplementation(this.newImpl.target)
-        ).to.be.revertedWith('NOT_OWNER');
+        ).to.be.revertedWith('NOT_OWNER')
       })
     })
 
@@ -81,7 +80,7 @@ contract('UpgradableProxy', function (accounts) {
       it('reverts', async function () {
         await expect(
           this.proxy.connect(await ethers.getSigner(this.newOwner)).transferProxyOwnership(this.newOwner)
-        ).to.be.revertedWith('NOT_OWNER');
+        ).to.be.revertedWith('NOT_OWNER')
       })
     })
 
@@ -100,15 +99,15 @@ contract('UpgradableProxy', function (accounts) {
   describe('updateAndCall', function () {
     before(doDeploy)
     before(async function () {
-      this.newImpl = await ProxyTestImpl.deploy();
-      await this.newImpl.waitForDeployment();
+      this.newImpl = await ProxyTestImpl.deploy()
+      await this.newImpl.waitForDeployment()
     })
 
     describe('when from is not owner', function () {
       it('reverts', async function () {
         await expect(
           this.proxy.connect(await ethers.getSigner(accounts[1])).updateImplementation(this.newImpl.target)
-        ).to.be.revertedWith('NOT_OWNER');
+        ).to.be.revertedWith('NOT_OWNER')
       })
     })
 
@@ -134,9 +133,9 @@ contract('UpgradableProxy', function (accounts) {
     before(doDeploy)
 
     it('reverts', async function () {
-      await expect(
-        this.proxy.updateImplementation(accounts[1])
-      ).to.be.revertedWith('DESTINATION_ADDRESS_IS_NOT_A_CONTRACT');
+      await expect(this.proxy.updateImplementation(accounts[1])).to.be.revertedWith(
+        'DESTINATION_ADDRESS_IS_NOT_A_CONTRACT'
+      )
     })
   })
 
@@ -145,8 +144,8 @@ contract('UpgradableProxy', function (accounts) {
     before(async function () {
       await this.testContract.init()
 
-      this.newImpl = await ProxyTestImplStorageLayoutChange.deploy();
-      await this.newImpl.waitForDeployment();
+      this.newImpl = await ProxyTestImplStorageLayoutChange.deploy()
+      await this.newImpl.waitForDeployment()
       await this.proxy.updateImplementation(this.newImpl.target)
 
       this.newTestContract = ProxyTestImplStorageLayoutChange.attach(this.proxy.target)

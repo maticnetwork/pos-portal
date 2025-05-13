@@ -1,6 +1,6 @@
-import { bufferToHex, rlp, toBuffer } from 'ethereumjs-util';
-import { deployInitializedContracts } from '../helpers/deployerNew.js';
-import { expect } from 'chai';
+import { bufferToHex, rlp, toBuffer } from 'ethereumjs-util'
+import { deployInitializedContracts } from '../helpers/deployerNew.js'
+import { expect } from 'chai'
 
 contract('ExitPayloadReader', function (accounts) {
   let contracts
@@ -11,12 +11,15 @@ contract('ExitPayloadReader', function (accounts) {
 
   it('should parse typed receipt', async function () {
     const txType = '0x1'
-    const receiptData = Buffer.concat([toBuffer(txType), rlp.encode([
-      toBuffer(txType), // type
-      toBuffer(1000), // cumulative gas
-      toBuffer('0x000000000'), // logs bloom
-      [] // logs
-    ])])
+    const receiptData = Buffer.concat([
+      toBuffer(txType),
+      rlp.encode([
+        toBuffer(txType), // type
+        toBuffer(1000), // cumulative gas
+        toBuffer('0x000000000'), // logs bloom
+        [] // logs
+      ])
+    ])
 
     const receipt = [
       '1',
@@ -31,9 +34,7 @@ contract('ExitPayloadReader', function (accounts) {
       '4'
     ]
 
-    const data = bufferToHex(
-      rlp.encode(receipt)
-    )
+    const data = bufferToHex(rlp.encode(receipt))
 
     const parsedReceipt = await contracts.root.exitPayloadReaderTest.tryParseReceipt(data)
 

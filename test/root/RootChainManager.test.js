@@ -37,7 +37,9 @@ contract('RootChainManager', async (accounts) => {
     it('Should revert while setting childChainManagerAddress from non admin account', async () => {
       const mockChildChainManagerAddress = mockValues.addresses[3]
       await expect(
-        contracts.rootChainManager.connect(await ethers.getSigner(accounts[4])).setChildChainManagerAddress(mockChildChainManagerAddress)
+        contracts.rootChainManager
+          .connect(await ethers.getSigner(accounts[4]))
+          .setChildChainManagerAddress(mockChildChainManagerAddress)
       ).to.be.revertedWith('RootChainManager: INSUFFICIENT_PERMISSIONS')
     })
 
@@ -53,7 +55,9 @@ contract('RootChainManager', async (accounts) => {
       const mockType = mockValues.bytes32[3]
       const mockPredicate = mockValues.addresses[5]
       await expect(
-        contracts.rootChainManager.connect(await ethers.getSigner(accounts[4])).registerPredicate(mockType, mockPredicate)
+        contracts.rootChainManager
+          .connect(await ethers.getSigner(accounts[4]))
+          .registerPredicate(mockType, mockPredicate)
       ).to.be.revertedWith('RootChainManager: INSUFFICIENT_PERMISSIONS')
     })
   })
@@ -97,15 +101,17 @@ contract('RootChainManager', async (accounts) => {
 
       it('Should fail while mapping token from non mapper account', async () => {
         await expect(
-          contracts.rootChainManager.connect(await ethers.getSigner(accounts[4])).mapToken(spockParent, spockChild, mockType)
+          contracts.rootChainManager
+            .connect(await ethers.getSigner(accounts[4]))
+            .mapToken(spockParent, spockChild, mockType)
         ).to.be.revertedWith('RootChainManager: INSUFFICIENT_PERMISSIONS')
       })
 
       it('Should fail while mapping token using non existant predicate', async () => {
         const mockType = mockValues.bytes32[0]
-        await expect(
-          contracts.rootChainManager.mapToken(spockParent, spockChild, mockType)
-        ).to.be.revertedWith('RootChainManager: TOKEN_TYPE_NOT_SUPPORTED')
+        await expect(contracts.rootChainManager.mapToken(spockParent, spockChild, mockType)).to.be.revertedWith(
+          'RootChainManager: TOKEN_TYPE_NOT_SUPPORTED'
+        )
       })
     })
 
@@ -141,9 +147,9 @@ contract('RootChainManager', async (accounts) => {
       })
 
       it('Should fail to noramlly map Tomato as child of Fruit', async () => {
-        await expect(
-          contracts.rootChainManager.mapToken(fruit, tomato, tokenType)
-        ).to.be.revertedWith('RootChainManager: ALREADY_MAPPED')
+        await expect(contracts.rootChainManager.mapToken(fruit, tomato, tokenType)).to.be.revertedWith(
+          'RootChainManager: ALREADY_MAPPED'
+        )
       })
 
       it('Should be able to explicitly remap Tomato as child of Fruit', async () => {
@@ -198,9 +204,9 @@ contract('RootChainManager', async (accounts) => {
       })
 
       it('Should fail to noramlly map Chimp to Man', async () => {
-        await expect(
-          contracts.rootChainManager.mapToken(chimp, man, tokenType)
-        ).to.be.revertedWith('RootChainManager: ALREADY_MAPPED')
+        await expect(contracts.rootChainManager.mapToken(chimp, man, tokenType)).to.be.revertedWith(
+          'RootChainManager: ALREADY_MAPPED'
+        )
       })
 
       it('Should be able to explicitly remap Chimp to Man', async () => {
@@ -249,15 +255,18 @@ contract('RootChainManager', async (accounts) => {
       const stateSyncId = 1
       const depositPrefix = ethers.solidityPackedKeccak256(['string'], ['DEPOSIT'])
       const depositData = abi.encode(['uint256'], [depositAmount.toString()])
-      const depositDataEvent = abi.encode(['address', 'address', 'bytes'], [depositForAccount, dummyERC20.target, depositData])
+      const depositDataEvent = abi.encode(
+        ['address', 'address', 'bytes'],
+        [depositForAccount, dummyERC20.target, depositData]
+      )
       const depositPayload = abi.encode(['bytes32', 'bytes'], [depositPrefix, depositDataEvent])
 
       await dummyERC20.approve(contracts.root.erc20Predicate.target, depositAmount)
-      await expect(rootChainManager.depositFor(depositForAccount, dummyERC20.target, depositData)).
-        to.emit(contracts.root.erc20Predicate, 'LockedERC20').
-        withArgs(accounts[0], depositForAccount, dummyERC20.target, depositAmount).
-        to.emit(contracts.root.dummyStateSender, 'StateSynced').
-        withArgs(stateSyncId, contracts.child.childChainManager.target, depositPayload)
+      await expect(rootChainManager.depositFor(depositForAccount, dummyERC20.target, depositData))
+        .to.emit(contracts.root.erc20Predicate, 'LockedERC20')
+        .withArgs(accounts[0], depositForAccount, dummyERC20.target, depositAmount)
+        .to.emit(contracts.root.dummyStateSender, 'StateSynced')
+        .withArgs(stateSyncId, contracts.child.childChainManager.target, depositPayload)
     })
 
     // @note Already verified in the test above
@@ -361,9 +370,9 @@ contract('RootChainManager', async (accounts) => {
 
     it('transaction should revert', async () => {
       const depositData = abi.encode(['uint256'], [depositAmount.toString()])
-      await expect(
-        rootChainManager.depositFor(depositForAccount, dummyERC20.target, depositData)
-      ).to.be.revertedWith('RootChainManager: INVALID_USER')
+      await expect(rootChainManager.depositFor(depositForAccount, dummyERC20.target, depositData)).to.be.revertedWith(
+        'RootChainManager: INVALID_USER'
+      )
     })
   })
 
@@ -391,24 +400,21 @@ contract('RootChainManager', async (accounts) => {
     it('Depositor should be able to deposit', async () => {
       const depositPrefix = ethers.solidityPackedKeccak256(['string'], ['DEPOSIT'])
       const depositData = abi.encode(['uint256'], [depositAmount.toString()])
-      const depositDataEvent = abi.encode(['address', 'address', 'bytes'], [depositForAccount, etherAddress, depositData])
+      const depositDataEvent = abi.encode(
+        ['address', 'address', 'bytes'],
+        [depositForAccount, etherAddress, depositData]
+      )
       const depositPayload = abi.encode(['bytes32', 'bytes'], [depositPrefix, depositDataEvent])
 
       depositTx = await rootChainManager.depositEtherFor(depositForAccount, {
         value: depositAmount
       })
 
-      expect(
-        depositTx
-      ).to.emit(contracts.root.etherPredicate, 'LockedEther').withArgs(
-        accounts[0],
-        depositForAccount,
-        depositAmount
-      ).to.emit(contracts.root.dummyStateSender, 'StateSynced').withArgs(
-        1,
-        contracts.child.childChainManager.target,
-        depositPayload
-      )
+      expect(depositTx)
+        .to.emit(contracts.root.etherPredicate, 'LockedEther')
+        .withArgs(accounts[0], depositForAccount, depositAmount)
+        .to.emit(contracts.root.dummyStateSender, 'StateSynced')
+        .withArgs(1, contracts.child.childChainManager.target, depositPayload)
       await depositTx.wait()
       depositTxReceipt = await web3.eth.getTransactionReceipt(depositTx.hash)
     })
@@ -529,17 +535,11 @@ contract('RootChainManager', async (accounts) => {
         value: depositAmount
       })
 
-      expect(
-        depositTx
-      ).to.emit(contracts.root.etherPredicate, 'LockedEther').withArgs(
-        accounts[0],
-        accounts[0],
-        depositAmount
-      ).to.emit(contracts.root.dummyStateSender, 'StateSynced').withArgs(
-        1,
-        contracts.child.childChainManager.target,
-        depositPayload
-      )
+      expect(depositTx)
+        .to.emit(contracts.root.etherPredicate, 'LockedEther')
+        .withArgs(accounts[0], accounts[0], depositAmount)
+        .to.emit(contracts.root.dummyStateSender, 'StateSynced')
+        .withArgs(1, contracts.child.childChainManager.target, depositPayload)
       await depositTx.wait()
       depositTxReceipt = await web3.eth.getTransactionReceipt(depositTx.hash)
     })
@@ -640,9 +640,9 @@ contract('RootChainManager', async (accounts) => {
 
     it('transaction should revert', async () => {
       const depositData = abi.encode(['uint256'], [depositAmount.toString()])
-      await expect(
-        rootChainManager.depositFor(depositForAccount, etherAddress, depositData)
-      ).to.be.revertedWith('RootChainManager: INVALID_ROOT_TOKEN')
+      await expect(rootChainManager.depositFor(depositForAccount, etherAddress, depositData)).to.be.revertedWith(
+        'RootChainManager: INVALID_ROOT_TOKEN'
+      )
     })
   })
 
@@ -661,9 +661,9 @@ contract('RootChainManager', async (accounts) => {
       //   rootChainManager.depositEtherFor(depositForAccount, { value: depositAmount }),
       //   'RootChainManager: INVALID_USER'
       // )
-      await expect(
-        rootChainManager.depositEtherFor(depositForAccount, { value: depositAmount })
-      ).to.be.revertedWith('RootChainManager: INVALID_USER')
+      await expect(rootChainManager.depositEtherFor(depositForAccount, { value: depositAmount })).to.be.revertedWith(
+        'RootChainManager: INVALID_USER'
+      )
     })
   })
 
@@ -690,24 +690,20 @@ contract('RootChainManager', async (accounts) => {
     it('Depositor should be able to approve and deposit', async () => {
       const depositPrefix = ethers.solidityPackedKeccak256(['string'], ['DEPOSIT'])
       const depositData = abi.encode(['uint256'], [depositTokenId.toString()])
-      const depositDataEvent = abi.encode(['address', 'address', 'bytes'], [depositForAccount, dummyERC721.target, depositData])
+      const depositDataEvent = abi.encode(
+        ['address', 'address', 'bytes'],
+        [depositForAccount, dummyERC721.target, depositData]
+      )
       const depositPayload = abi.encode(['bytes32', 'bytes'], [depositPrefix, depositDataEvent])
 
       await dummyERC721.approve(contracts.root.erc721Predicate.target, depositTokenId)
       let depositTx = await rootChainManager.depositFor(depositForAccount, dummyERC721.target, depositData)
 
-      expect(
-        depositTx
-      ).to.emit(contracts.root.erc721Predicate, 'LockedERC721').withArgs(
-        accounts[0],
-        depositForAccount,
-        dummyERC721.target,
-        depositTokenId
-      ).to.emit(contracts.root.dummyStateSender, 'StateSynced').withArgs(
-        1,
-        contracts.child.childChainManager.target,
-        depositPayload
-      )
+      expect(depositTx)
+        .to.emit(contracts.root.erc721Predicate, 'LockedERC721')
+        .withArgs(accounts[0], depositForAccount, dummyERC721.target, depositTokenId)
+        .to.emit(contracts.root.dummyStateSender, 'StateSynced')
+        .withArgs(1, contracts.child.childChainManager.target, depositPayload)
 
       depositTxReceipt = await depositTx.wait()
     })
@@ -819,26 +815,18 @@ contract('RootChainManager', async (accounts) => {
     it('Depositor should be able to approve and deposit', async () => {
       const depositData = abi.encode(['uint256[]'], [[tokenId1.toString(), tokenId2.toString(), tokenId3.toString()]])
       const depositPrefix = ethers.solidityPackedKeccak256(['string'], ['DEPOSIT'])
-      const depositDataEvent = abi.encode(['address', 'address', 'bytes'], [depositForAccount, dummyERC721.target, depositData])
+      const depositDataEvent = abi.encode(
+        ['address', 'address', 'bytes'],
+        [depositForAccount, dummyERC721.target, depositData]
+      )
       const depositPayload = abi.encode(['bytes32', 'bytes'], [depositPrefix, depositDataEvent])
 
       await dummyERC721.setApprovalForAll(contracts.root.erc721Predicate.target, true)
-      await expect(
-        rootChainManager.depositFor(depositForAccount, dummyERC721.target, depositData)
-      )
+      await expect(rootChainManager.depositFor(depositForAccount, dummyERC721.target, depositData))
         .to.emit(contracts.root.erc721Predicate, 'LockedERC721Batch')
-        .withArgs(
-          accounts[0],
-          depositForAccount,
-          dummyERC721.target,
-          [tokenId1, tokenId2, tokenId3]
-        )
+        .withArgs(accounts[0], depositForAccount, dummyERC721.target, [tokenId1, tokenId2, tokenId3])
         .and.to.emit(contracts.root.dummyStateSender, 'StateSynced')
-        .withArgs(
-          1,
-          contracts.child.childChainManager.target,
-          depositPayload
-        )
+        .withArgs(1, contracts.child.childChainManager.target, depositPayload)
     })
 
     // @note Already verified in the test above
@@ -943,9 +931,9 @@ contract('RootChainManager', async (accounts) => {
 
     it('transaction should revert', async () => {
       const depositData = abi.encode(['uint256'], [depositTokenId.toString()])
-      await expect(
-        rootChainManager.depositFor(depositForAccount, dummyERC721.target, depositData)
-      ).to.be.revertedWith('RootChainManager: INVALID_USER')
+      await expect(rootChainManager.depositFor(depositForAccount, dummyERC721.target, depositData)).to.be.revertedWith(
+        'RootChainManager: INVALID_USER'
+      )
     })
   })
 
@@ -981,26 +969,17 @@ contract('RootChainManager', async (accounts) => {
       await dummyERC1155.setApprovalForAll(erc1155Predicate.target, true)
       const depositData = constructERC1155DepositData([depositTokenId], [depositAmount])
       const depositPrefix = ethers.solidityPackedKeccak256(['string'], ['DEPOSIT'])
-      const depositDataEvent = abi.encode(['address', 'address', 'bytes'], [depositForAccount, dummyERC1155.target, depositData])
+      const depositDataEvent = abi.encode(
+        ['address', 'address', 'bytes'],
+        [depositForAccount, dummyERC1155.target, depositData]
+      )
       const depositPayload = abi.encode(['bytes32', 'bytes'], [depositPrefix, depositDataEvent])
 
-      await expect(
-        rootChainManager.depositFor(depositForAccount, dummyERC1155.target, depositData)
-      )
+      await expect(rootChainManager.depositFor(depositForAccount, dummyERC1155.target, depositData))
         .to.emit(erc1155Predicate, 'LockedBatchERC1155')
-        .withArgs(
-          accounts[0],
-          depositForAccount,
-          dummyERC1155.target,
-          [depositTokenId],
-          [depositAmount]
-        )
+        .withArgs(accounts[0], depositForAccount, dummyERC1155.target, [depositTokenId], [depositAmount])
         .and.to.emit(contracts.root.dummyStateSender, 'StateSynced')
-        .withArgs(
-          1,
-          contracts.child.childChainManager.target,
-          depositPayload
-        )
+        .withArgs(1, contracts.child.childChainManager.target, depositPayload)
     })
 
     // @note Already verified in the test above
@@ -1170,12 +1149,13 @@ contract('RootChainManager', async (accounts) => {
         [depositAmountA, depositAmountB, depositAmountC]
       )
       const depositPrefix = ethers.solidityPackedKeccak256(['string'], ['DEPOSIT'])
-      const depositDataEvent = abi.encode(['address', 'address', 'bytes'], [depositForAccount, dummyERC1155.target, depositData])
+      const depositDataEvent = abi.encode(
+        ['address', 'address', 'bytes'],
+        [depositForAccount, dummyERC1155.target, depositData]
+      )
       const depositPayload = abi.encode(['bytes32', 'bytes'], [depositPrefix, depositDataEvent])
 
-      await expect(
-        rootChainManager.depositFor(depositForAccount, dummyERC1155.target, depositData)
-      )
+      await expect(rootChainManager.depositFor(depositForAccount, dummyERC1155.target, depositData))
         .to.emit(erc1155Predicate, 'LockedBatchERC1155')
         .withArgs(
           accounts[0],
@@ -1185,11 +1165,7 @@ contract('RootChainManager', async (accounts) => {
           [depositAmountA, depositAmountB, depositAmountC]
         )
         .and.to.emit(contracts.root.dummyStateSender, 'StateSynced')
-        .withArgs(
-          1,
-          contracts.child.childChainManager.target,
-          depositPayload
-        )
+        .withArgs(1, contracts.child.childChainManager.target, depositPayload)
     })
 
     // @note Already verified in the test above
@@ -1370,9 +1346,9 @@ contract('RootChainManager', async (accounts) => {
 
     it('transaction should revert', async () => {
       const depositData = constructERC1155DepositData([depositTokenId], [depositAmount])
-      await expect(
-        rootChainManager.depositFor(depositForAccount, dummyERC1155.target, depositData)
-      ).to.be.revertedWith('RootChainManager: INVALID_USER')
+      await expect(rootChainManager.depositFor(depositForAccount, dummyERC1155.target, depositData)).to.be.revertedWith(
+        'RootChainManager: INVALID_USER'
+      )
     })
   })
 
@@ -1394,9 +1370,9 @@ contract('RootChainManager', async (accounts) => {
 
     it('Should revert with correct reason', async () => {
       const depositData = abi.encode(['uint256'], [depositAmount.toString()])
-      await expect(
-        rootChainManager.depositFor(depositForAccount, dummyERC20.target, depositData)
-      ).to.be.revertedWith('RootChainManager: TOKEN_NOT_MAPPED')
+      await expect(rootChainManager.depositFor(depositForAccount, dummyERC20.target, depositData)).to.be.revertedWith(
+        'RootChainManager: TOKEN_NOT_MAPPED'
+      )
     })
   })
 
@@ -1425,9 +1401,9 @@ contract('RootChainManager', async (accounts) => {
 
     it('Should revert with correct reason', async () => {
       const depositData = abi.encode(['uint256'], [depositAmount.toString()])
-      await expect(
-        rootChainManager.depositFor(depositForAccount, dummyERC20.target, depositData)
-      ).to.be.revertedWith('RootChainManager: INVALID_TOKEN_TYPE')
+      await expect(rootChainManager.depositFor(depositForAccount, dummyERC20.target, depositData)).to.be.revertedWith(
+        'RootChainManager: INVALID_TOKEN_TYPE'
+      )
     })
   })
 })

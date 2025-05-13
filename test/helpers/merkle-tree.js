@@ -14,11 +14,7 @@ class MerkleTree {
       throw new Error('Depth must be 20 or less')
     }
 
-    const l = leaves.concat(
-      Array.from(Array(Math.pow(2, depth) - leaves.length), () =>
-        zeros(32)
-      )
-    )
+    const l = leaves.concat(Array.from(Array(Math.pow(2, depth) - leaves.length), () => zeros(32)))
 
     this.leaves = l
     this.layers = [l]

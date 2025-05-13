@@ -19,19 +19,15 @@ contract('ChildMintableERC721', (accounts) => {
     })
 
     it('Token should not exist before deposit', async () => {
-      await expect(
-        contracts.dummyMintableERC721.ownerOf(tokenId)
-      ).to.be.revertedWith('ERC721: owner query for nonexistent token')
+      await expect(contracts.dummyMintableERC721.ownerOf(tokenId)).to.be.revertedWith(
+        'ERC721: owner query for nonexistent token'
+      )
     })
 
     it('Can receive deposit tx', async () => {
-      await expect(
-        contracts.dummyMintableERC721.deposit(user, depositData)
-      ).to.emit(contracts.dummyMintableERC721, 'Transfer').withArgs(
-        mockValues.zeroAddress,
-        user,
-        tokenId
-      )
+      await expect(contracts.dummyMintableERC721.deposit(user, depositData))
+        .to.emit(contracts.dummyMintableERC721, 'Transfer')
+        .withArgs(mockValues.zeroAddress, user, tokenId)
     })
 
     // @note Already verified in the above test
@@ -104,13 +100,9 @@ contract('ChildMintableERC721', (accounts) => {
     })
 
     it('Can receive withdraw tx', async () => {
-      await expect(
-        contracts.dummyMintableERC721.withdraw(tokenId)
-      ).to.emit(contracts.dummyMintableERC721, 'Transfer').withArgs(
-        user,
-        mockValues.zeroAddress,
-        tokenId
-      )
+      await expect(contracts.dummyMintableERC721.withdraw(tokenId))
+        .to.emit(contracts.dummyMintableERC721, 'Transfer')
+        .withArgs(user, mockValues.zeroAddress, tokenId)
     })
 
     // @note Already verified in the above test
@@ -142,9 +134,9 @@ contract('ChildMintableERC721', (accounts) => {
     // })
 
     it('Token should not exist after burning', async () => {
-      await expect(
-        contracts.dummyMintableERC721.ownerOf(tokenId)
-      ).to.be.revertedWith('ERC721: owner query for nonexistent token')
+      await expect(contracts.dummyMintableERC721.ownerOf(tokenId)).to.be.revertedWith(
+        'ERC721: owner query for nonexistent token'
+      )
     })
   })
 
@@ -163,24 +155,16 @@ contract('ChildMintableERC721', (accounts) => {
     })
 
     it('Should be able to withdraw token once', async () => {
-      await expect(
-        contracts.dummyMintableERC721.withdraw(tokenId)
-      ).to.emit(contracts.dummyMintableERC721, 'Transfer').withArgs(
-        user,
-        mockValues.zeroAddress,
-        tokenId
-      )
+      await expect(contracts.dummyMintableERC721.withdraw(tokenId))
+        .to.emit(contracts.dummyMintableERC721, 'Transfer')
+        .withArgs(user, mockValues.zeroAddress, tokenId)
     })
 
     it('Should be able to deposit token', async () => {
       const depositData = abi.encode(['uint256'], [tokenId])
-      await expect(
-        contracts.dummyMintableERC721.deposit(user, depositData)
-      ).to.emit(contracts.dummyMintableERC721, 'Transfer').withArgs(
-        mockValues.zeroAddress,
-        user,
-        tokenId
-      )
+      await expect(contracts.dummyMintableERC721.deposit(user, depositData))
+        .to.emit(contracts.dummyMintableERC721, 'Transfer')
+        .withArgs(mockValues.zeroAddress, user, tokenId)
     })
 
     it('User should own token', async () => {
@@ -189,13 +173,9 @@ contract('ChildMintableERC721', (accounts) => {
     })
 
     it('Can receive withdraw tx', async () => {
-      await expect(
-        contracts.dummyMintableERC721.withdraw(tokenId)
-      ).to.emit(contracts.dummyMintableERC721, 'Transfer').withArgs(
-        user,
-        mockValues.zeroAddress,
-        tokenId
-      )
+      await expect(contracts.dummyMintableERC721.withdraw(tokenId))
+        .to.emit(contracts.dummyMintableERC721, 'Transfer')
+        .withArgs(user, mockValues.zeroAddress, tokenId)
     })
 
     // @note Already verified in the above test
@@ -227,9 +207,9 @@ contract('ChildMintableERC721', (accounts) => {
     // })
 
     it('Token should not exist after burning', async () => {
-      await expect(
-        contracts.dummyMintableERC721.ownerOf(tokenId)
-      ).to.be.revertedWith('ERC721: owner query for nonexistent token')
+      await expect(contracts.dummyMintableERC721.ownerOf(tokenId)).to.be.revertedWith(
+        'ERC721: owner query for nonexistent token'
+      )
     })
   })
 
@@ -246,15 +226,13 @@ contract('ChildMintableERC721', (accounts) => {
     })
 
     it('Token should not exist', async () => {
-      await expect(
-        dummyMintableERC721.ownerOf(tokenId)
-      ).to.be.revertedWith('ERC721: owner query for nonexistent token')
+      await expect(dummyMintableERC721.ownerOf(tokenId)).to.be.revertedWith('ERC721: owner query for nonexistent token')
     })
 
     it('Minting withdrawn token should revert with correct reason', async () => {
-      await expect(
-        dummyMintableERC721.mint(user, tokenId)
-      ).to.be.revertedWith('ChildMintableERC721: TOKEN_EXISTS_ON_ROOT_CHAIN')
+      await expect(dummyMintableERC721.mint(user, tokenId)).to.be.revertedWith(
+        'ChildMintableERC721: TOKEN_EXISTS_ON_ROOT_CHAIN'
+      )
     })
   })
 })

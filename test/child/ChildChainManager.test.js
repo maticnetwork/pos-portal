@@ -1,8 +1,12 @@
-import { AbiCoder, toBeHex } from 'ethers';
-import { constructERC1155DepositData } from '../helpers/utils.js';
-import { deployFreshRootContracts, deployFreshChildContracts, deployInitializedContracts } from '../helpers/deployerNew.js';
-import { expect } from 'chai';
-import { mockValues, etherAddress } from '../helpers/constants.js';
+import { AbiCoder, toBeHex } from 'ethers'
+import { constructERC1155DepositData } from '../helpers/utils.js'
+import {
+  deployFreshRootContracts,
+  deployFreshChildContracts,
+  deployInitializedContracts
+} from '../helpers/deployerNew.js'
+import { expect } from 'chai'
+import { mockValues, etherAddress } from '../helpers/constants.js'
 
 const abi = new AbiCoder()
 
@@ -204,9 +208,9 @@ contract('ChildChainManager', async (accounts) => {
     })
 
     it('Tx should revert with correct reason', async () => {
-      await expect(
-        contracts.childChainManager.onStateReceive(syncId, syncState)
-      ).to.be.revertedWith('ChildChainManager: INVALID_SYNC_TYPE')
+      await expect(contracts.childChainManager.onStateReceive(syncId, syncState)).to.be.revertedWith(
+        'ChildChainManager: INVALID_SYNC_TYPE'
+      )
     })
   })
 
@@ -233,9 +237,8 @@ contract('ChildChainManager', async (accounts) => {
       )
       const syncType = await contracts.child.childChainManager.DEPOSIT()
       syncState = abi.encode(['bytes32', 'bytes'], [syncType, syncData])
-      await expect(contracts.child.childChainManager
-        .onStateReceive(syncId, syncState, { from: accounts[0] }))
-        .to.emit(contracts.child.dummyERC20, "Transfer")
+      await expect(contracts.child.childChainManager.onStateReceive(syncId, syncState, { from: accounts[0] }))
+        .to.emit(contracts.child.dummyERC20, 'Transfer')
         .withArgs(mockValues.zeroAddress, depositReceiver, depositAmount)
     })
 
@@ -287,18 +290,11 @@ contract('ChildChainManager', async (accounts) => {
 
     it('Can receive MaticWETH deposit sync', async () => {
       const depositData = abi.encode(['uint256'], [depositAmount.toString()])
-      const syncData = abi.encode(
-        ['address', 'address', 'bytes'],
-        [depositReceiver, etherAddress, depositData]
-      )
+      const syncData = abi.encode(['address', 'address', 'bytes'], [depositReceiver, etherAddress, depositData])
       const syncType = await contracts.child.childChainManager.DEPOSIT()
-      const syncBytes = abi.encode(
-        ['bytes32', 'bytes'],
-        [syncType, syncData]
-      )
-      await expect(contracts.child.childChainManager
-        .onStateReceive(syncId, syncBytes, { from: accounts[0] }))
-        .to.emit(contracts.child.maticWETH, "Transfer")
+      const syncBytes = abi.encode(['bytes32', 'bytes'], [syncType, syncData])
+      await expect(contracts.child.childChainManager.onStateReceive(syncId, syncBytes, { from: accounts[0] }))
+        .to.emit(contracts.child.maticWETH, 'Transfer')
         .withArgs(mockValues.zeroAddress, depositReceiver, depositAmount)
     })
 
@@ -361,13 +357,9 @@ contract('ChildChainManager', async (accounts) => {
         [depositReceiver, contracts.root.dummyERC721.target, depositData]
       )
       const syncType = await contracts.child.childChainManager.DEPOSIT()
-      const syncBytes = abi.encode(
-        ['bytes32', 'bytes'],
-        [syncType, syncData]
-      )
-      await expect(contracts.child.childChainManager
-        .onStateReceive(syncId, syncBytes, { from: accounts[0] }))
-        .to.emit(contracts.child.dummyERC721, "Transfer")
+      const syncBytes = abi.encode(['bytes32', 'bytes'], [syncType, syncData])
+      await expect(contracts.child.childChainManager.onStateReceive(syncId, syncBytes, { from: accounts[0] }))
+        .to.emit(contracts.child.dummyERC721, 'Transfer')
         .withArgs(mockValues.zeroAddress, depositReceiver, depositTokenId)
     })
 
@@ -427,15 +419,16 @@ contract('ChildChainManager', async (accounts) => {
         [depositReceiver, contracts.root.dummyERC1155.target, depositData]
       )
       const syncType = await contracts.child.childChainManager.DEPOSIT()
-      const syncBytes = abi.encode(
-        ['bytes32', 'bytes'],
-        [syncType, syncData]
-      )
-      await expect(contracts.child.childChainManager
-        .onStateReceive(syncId, syncBytes, { from: accounts[0] }))
-        .to.emit(contracts.child.dummyERC1155, "TransferBatch")
-        .withArgs(contracts.child.childChainManager.target, mockValues.zeroAddress, depositReceiver, [depositTokenId], [depositAmount])
-
+      const syncBytes = abi.encode(['bytes32', 'bytes'], [syncType, syncData])
+      await expect(contracts.child.childChainManager.onStateReceive(syncId, syncBytes, { from: accounts[0] }))
+        .to.emit(contracts.child.dummyERC1155, 'TransferBatch')
+        .withArgs(
+          contracts.child.childChainManager.target,
+          mockValues.zeroAddress,
+          depositReceiver,
+          [depositTokenId],
+          [depositAmount]
+        )
     })
 
     // @note Already verified in the above test
@@ -512,14 +505,16 @@ contract('ChildChainManager', async (accounts) => {
         [depositReceiver, contracts.root.dummyERC1155.target, depositData]
       )
       const syncType = await contracts.child.childChainManager.DEPOSIT()
-      const syncBytes = abi.encode(
-        ['bytes32', 'bytes'],
-        [syncType, syncData]
-      )
-      await expect(contracts.child.childChainManager
-        .onStateReceive(syncId, syncBytes, { from: accounts[0] }))
-        .to.emit(contracts.child.dummyERC1155, "TransferBatch")
-        .withArgs(contracts.child.childChainManager.target, mockValues.zeroAddress, depositReceiver, [depositTokenIdA, depositTokenIdB, depositTokenIdC], [depositAmountA, depositAmountB, depositAmountC])
+      const syncBytes = abi.encode(['bytes32', 'bytes'], [syncType, syncData])
+      await expect(contracts.child.childChainManager.onStateReceive(syncId, syncBytes, { from: accounts[0] }))
+        .to.emit(contracts.child.dummyERC1155, 'TransferBatch')
+        .withArgs(
+          contracts.child.childChainManager.target,
+          mockValues.zeroAddress,
+          depositReceiver,
+          [depositTokenIdA, depositTokenIdB, depositTokenIdC],
+          [depositAmountA, depositAmountB, depositAmountC]
+        )
     })
 
     // @note Already verified in the above test

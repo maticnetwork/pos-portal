@@ -24,7 +24,7 @@ const artifactsToGenerate = [
   'ChainExitERC1155PredicateProxy.json'
 ]
 
-artifactsToGenerate.forEach(a => {
+artifactsToGenerate.forEach((a) => {
   const source = `build/contracts/${a}`
   const dest = `artifacts/${a}`
   const abi = JSON.parse(readFileSync(source)).abi

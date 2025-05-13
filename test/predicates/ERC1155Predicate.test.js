@@ -1,58 +1,56 @@
-import { deployFreshRootContracts } from '../helpers/deployerNew.js';
-import { expect } from 'chai';
-import { getERC1155TransferSingleLog, getERC1155TransferBatchLog } from '../helpers/logs.js';
-import { mockValues } from '../helpers/constants.js';
-import { constructERC1155DepositData } from '../helpers/utils.js';
-
+import { deployFreshRootContracts } from '../helpers/deployerNew.js'
+import { expect } from 'chai'
+import { getERC1155TransferSingleLog, getERC1155TransferBatchLog } from '../helpers/logs.js'
+import { mockValues } from '../helpers/constants.js'
+import { constructERC1155DepositData } from '../helpers/utils.js'
 
 contract('ERC1155Predicate', (accounts) => {
   describe('lockTokens', () => {
-    const tokenIdA = mockValues.numbers[2];
-    const tokenIdB = mockValues.numbers[7];
-    const amountA = mockValues.amounts[0];
-    const amountB = mockValues.amounts[1];
-    const depositReceiver = mockValues.addresses[7];
-    let depositor;
-    let dummyERC1155;
-    let erc1155Predicate;
+    const tokenIdA = mockValues.numbers[2]
+    const tokenIdB = mockValues.numbers[7]
+    const amountA = mockValues.amounts[0]
+    const amountB = mockValues.amounts[1]
+    const depositReceiver = mockValues.addresses[7]
+    let depositor
+    let dummyERC1155
+    let erc1155Predicate
     let oldAccountBalanceA
     let oldAccountBalanceB
     let oldContractBalanceA
     let oldContractBalanceB
 
     before(async () => {
-      depositor = await ethers.getSigner(accounts[1]);
-      const contracts = await deployFreshRootContracts(accounts);
-      dummyERC1155 = contracts.dummyERC1155;
-      erc1155Predicate = contracts.erc1155Predicate;
+      depositor = await ethers.getSigner(accounts[1])
+      const contracts = await deployFreshRootContracts(accounts)
+      dummyERC1155 = contracts.dummyERC1155
+      erc1155Predicate = contracts.erc1155Predicate
 
-      await dummyERC1155.mint(depositor, tokenIdA, amountA);
-      await dummyERC1155.mint(depositor, tokenIdB, amountB);
-      await dummyERC1155.connect(depositor).setApprovalForAll(erc1155Predicate.target, true);
+      await dummyERC1155.mint(depositor, tokenIdA, amountA)
+      await dummyERC1155.mint(depositor, tokenIdB, amountB)
+      await dummyERC1155.connect(depositor).setApprovalForAll(erc1155Predicate.target, true)
       oldAccountBalanceA = await dummyERC1155.balanceOf(depositor.address, tokenIdA)
       oldAccountBalanceB = await dummyERC1155.balanceOf(depositor.address, tokenIdB)
       oldContractBalanceA = await dummyERC1155.balanceOf(erc1155Predicate.target, tokenIdA)
       oldContractBalanceB = await dummyERC1155.balanceOf(erc1155Predicate.target, tokenIdB)
-    });
+    })
 
     it('Depositor should have balance', async () => {
-      const balanceA = await dummyERC1155.balanceOf(depositor.address, tokenIdA);
-      const balanceB = await dummyERC1155.balanceOf(depositor.address, tokenIdB);
-      expect(balanceA).to.be.gte(amountA);
-      expect(balanceB).to.be.gte(amountB);
+      const balanceA = await dummyERC1155.balanceOf(depositor.address, tokenIdA)
+      const balanceB = await dummyERC1155.balanceOf(depositor.address, tokenIdB)
+      expect(balanceA).to.be.gte(amountA)
+      expect(balanceB).to.be.gte(amountB)
     })
 
     it('Depositor should have approved token transfer', async () => {
-      const approved = await dummyERC1155.isApprovedForAll(depositor.address, erc1155Predicate.target);
-      expect(approved).to.be.true;
+      const approved = await dummyERC1155.isApprovedForAll(depositor.address, erc1155Predicate.target)
+      expect(approved).to.be.true
     })
 
     it('Should be able to receive lockTokens tx', async () => {
-      const depositData = constructERC1155DepositData([tokenIdA, tokenIdB], [amountA, amountB]);
-      await expect(
-        erc1155Predicate.lockTokens(depositor.address, depositReceiver, dummyERC1155.target, depositData)
-      ).to.emit(erc1155Predicate, 'LockedBatchERC1155')
-        .withArgs(depositor.address, depositReceiver, dummyERC1155.target, [tokenIdA, tokenIdB], [amountA, amountB]);
+      const depositData = constructERC1155DepositData([tokenIdA, tokenIdB], [amountA, amountB])
+      await expect(erc1155Predicate.lockTokens(depositor.address, depositReceiver, dummyERC1155.target, depositData))
+        .to.emit(erc1155Predicate, 'LockedBatchERC1155')
+        .withArgs(depositor.address, depositReceiver, dummyERC1155.target, [tokenIdA, tokenIdB], [amountA, amountB])
     })
 
     // @note Already verified in the above test
@@ -106,78 +104,80 @@ contract('ERC1155Predicate', (accounts) => {
 
     it('Deposit amount should be deducted from depositor account for A', async () => {
       const newAccountBalance = await dummyERC1155.balanceOf(depositor, tokenIdA)
-      expect(newAccountBalance).to.equal(oldAccountBalanceA - amountA);
+      expect(newAccountBalance).to.equal(oldAccountBalanceA - amountA)
     })
 
     it('Deposit amount should be deducted from depositor account for B', async () => {
       const newAccountBalance = await dummyERC1155.balanceOf(depositor, tokenIdB)
-      expect(newAccountBalance).to.equal(oldAccountBalanceB - amountB);
+      expect(newAccountBalance).to.equal(oldAccountBalanceB - amountB)
     })
 
     it('Deposit amount should be credited to correct contract for A', async () => {
       const newContractBalance = await dummyERC1155.balanceOf(erc1155Predicate.target, tokenIdA)
-      expect(newContractBalance).to.equal(oldContractBalanceA + amountA);
+      expect(newContractBalance).to.equal(oldContractBalanceA + amountA)
     })
 
     it('Deposit amount should be credited to correct contract for B', async () => {
       const newContractBalance = await dummyERC1155.balanceOf(erc1155Predicate.target, tokenIdB)
-      expect(newContractBalance).to.equal(oldContractBalanceB + amountB);
+      expect(newContractBalance).to.equal(oldContractBalanceB + amountB)
     })
   })
 
   describe('lockTokens called by non manager', () => {
-    const tokenId = mockValues.numbers[5];
-    const amount = mockValues.amounts[9];
-    const depositReceiver = mockValues.addresses[7];
-    let depositor;
-    let dummyERC1155;
-    let erc1155Predicate;
+    const tokenId = mockValues.numbers[5]
+    const amount = mockValues.amounts[9]
+    const depositReceiver = mockValues.addresses[7]
+    let depositor
+    let dummyERC1155
+    let erc1155Predicate
 
     before(async () => {
-      depositor = await ethers.getSigner(accounts[1]);
-      const contracts = await deployFreshRootContracts(accounts);
-      dummyERC1155 = contracts.dummyERC1155;
-      erc1155Predicate = contracts.erc1155Predicate;
+      depositor = await ethers.getSigner(accounts[1])
+      const contracts = await deployFreshRootContracts(accounts)
+      dummyERC1155 = contracts.dummyERC1155
+      erc1155Predicate = contracts.erc1155Predicate
 
-      await dummyERC1155.mint(depositor, tokenId, amount);
-      await dummyERC1155.connect(depositor).setApprovalForAll(erc1155Predicate.target, true);
-    });
+      await dummyERC1155.mint(depositor, tokenId, amount)
+      await dummyERC1155.connect(depositor).setApprovalForAll(erc1155Predicate.target, true)
+    })
 
     it('Should revert with correct reason', async () => {
-      const depositData = constructERC1155DepositData([tokenId], [amount]);
+      const depositData = constructERC1155DepositData([tokenId], [amount])
       await expect(
-        erc1155Predicate.connect(depositor).lockTokens(depositor.address, depositReceiver, dummyERC1155.target, depositData)
-      ).to.be.revertedWith('ERC1155Predicate: INSUFFICIENT_PERMISSIONS');
+        erc1155Predicate
+          .connect(depositor)
+          .lockTokens(depositor.address, depositReceiver, dummyERC1155.target, depositData)
+      ).to.be.revertedWith('ERC1155Predicate: INSUFFICIENT_PERMISSIONS')
     })
   })
 
   describe('exitTokens single', () => {
-    const withdrawAmount = mockValues.amounts[9];
-    const depositAmount = withdrawAmount + mockValues.amounts[3];
-    const tokenId = mockValues.numbers[4];
-    let depositor;
-    const withdrawer = mockValues.addresses[8];
-    let dummyERC1155;
-    let erc1155Predicate;
+    const withdrawAmount = mockValues.amounts[9]
+    const depositAmount = withdrawAmount + mockValues.amounts[3]
+    const tokenId = mockValues.numbers[4]
+    let depositor
+    const withdrawer = mockValues.addresses[8]
+    let dummyERC1155
+    let erc1155Predicate
     let oldAccountBalance
     let oldContractBalance
 
     before(async () => {
-      depositor = await ethers.getSigner(accounts[1]);
-      const contracts = await deployFreshRootContracts(accounts);
-      dummyERC1155 = contracts.dummyERC1155;
-      erc1155Predicate = contracts.erc1155Predicate;
+      depositor = await ethers.getSigner(accounts[1])
+      const contracts = await deployFreshRootContracts(accounts)
+      dummyERC1155 = contracts.dummyERC1155
+      erc1155Predicate = contracts.erc1155Predicate
 
-      await dummyERC1155.mint(depositor.address, tokenId, depositAmount);
-      await dummyERC1155.connect(depositor).setApprovalForAll(erc1155Predicate.target, true);
-      const depositData = constructERC1155DepositData([tokenId], [depositAmount]);
-      await erc1155Predicate.lockTokens(depositor.address, mockValues.addresses[2], dummyERC1155.target, depositData);
+      await dummyERC1155.mint(depositor.address, tokenId, depositAmount)
+      await dummyERC1155.connect(depositor).setApprovalForAll(erc1155Predicate.target, true)
+      const depositData = constructERC1155DepositData([tokenId], [depositAmount])
+      await erc1155Predicate.lockTokens(depositor.address, mockValues.addresses[2], dummyERC1155.target, depositData)
       oldAccountBalance = await dummyERC1155.balanceOf(withdrawer, tokenId)
       oldContractBalance = await dummyERC1155.balanceOf(erc1155Predicate.target, tokenId)
     })
 
     it('Predicate should have the token', async () => {
-      expect(withdrawAmount).to.be.lte(oldContractBalance);
+      expect(withdrawAmount).to.be.lte(oldContractBalance)
     })
 
     it('Should be able to receive exitTokens tx', async () => {
@@ -187,12 +187,11 @@ contract('ERC1155Predicate', (accounts) => {
         to: mockValues.zeroAddress,
         tokenId,
         amount: withdrawAmount
-      });
+      })
 
-      await expect(
-        erc1155Predicate.exitTokens(dummyERC1155.target, dummyERC1155.target, burnLog)
-      ).to.emit(erc1155Predicate, 'ExitedERC1155')
-        .withArgs(withdrawer, dummyERC1155.target, tokenId, withdrawAmount);
+      await expect(erc1155Predicate.exitTokens(dummyERC1155.target, dummyERC1155.target, burnLog))
+        .to.emit(erc1155Predicate, 'ExitedERC1155')
+        .withArgs(withdrawer, dummyERC1155.target, tokenId, withdrawAmount)
     })
 
     // @note Already verified in the above test
@@ -230,42 +229,42 @@ contract('ERC1155Predicate', (accounts) => {
 
     it('Withdaw amount should be deducted from contract', async () => {
       const newContractBalance = await dummyERC1155.balanceOf(erc1155Predicate.target, tokenId)
-      expect(newContractBalance).to.equal(oldContractBalance - withdrawAmount);
+      expect(newContractBalance).to.equal(oldContractBalance - withdrawAmount)
     })
 
     it('Withdraw amount should be credited to withdrawer', async () => {
       const newAccountBalance = await dummyERC1155.balanceOf(withdrawer, tokenId)
-      expect(newAccountBalance).to.equal(oldAccountBalance + withdrawAmount);
+      expect(newAccountBalance).to.equal(oldAccountBalance + withdrawAmount)
     })
   })
 
   describe('exitTokens batch', () => {
-    const withdrawAmountA = mockValues.amounts[9];
-    const withdrawAmountB = mockValues.amounts[8];
-    const depositAmountA = withdrawAmountA + mockValues.amounts[3];
-    const depositAmountB = withdrawAmountB + mockValues.amounts[4];
-    const tokenIdA = mockValues.numbers[4];
-    const tokenIdB = mockValues.numbers[5];
-    let depositor;
-    const withdrawer = mockValues.addresses[8];
-    let dummyERC1155;
-    let erc1155Predicate;
+    const withdrawAmountA = mockValues.amounts[9]
+    const withdrawAmountB = mockValues.amounts[8]
+    const depositAmountA = withdrawAmountA + mockValues.amounts[3]
+    const depositAmountB = withdrawAmountB + mockValues.amounts[4]
+    const tokenIdA = mockValues.numbers[4]
+    const tokenIdB = mockValues.numbers[5]
+    let depositor
+    const withdrawer = mockValues.addresses[8]
+    let dummyERC1155
+    let erc1155Predicate
     let oldAccountBalanceA
     let oldAccountBalanceB
     let oldContractBalanceA
     let oldContractBalanceB
 
     before(async () => {
-      depositor = await ethers.getSigner(accounts[1]);
-      const contracts = await deployFreshRootContracts(accounts);
-      dummyERC1155 = contracts.dummyERC1155;
-      erc1155Predicate = contracts.erc1155Predicate;
+      depositor = await ethers.getSigner(accounts[1])
+      const contracts = await deployFreshRootContracts(accounts)
+      dummyERC1155 = contracts.dummyERC1155
+      erc1155Predicate = contracts.erc1155Predicate
 
-      await dummyERC1155.mint(depositor.address, tokenIdA, depositAmountA);
-      await dummyERC1155.mint(depositor.address, tokenIdB, depositAmountB);
-      await dummyERC1155.connect(depositor).setApprovalForAll(erc1155Predicate.target, true);
-      const depositData = constructERC1155DepositData([tokenIdA, tokenIdB], [depositAmountA, depositAmountB]);
-      await erc1155Predicate.lockTokens(depositor.address, mockValues.addresses[2], dummyERC1155.target, depositData);
+      await dummyERC1155.mint(depositor.address, tokenIdA, depositAmountA)
+      await dummyERC1155.mint(depositor.address, tokenIdB, depositAmountB)
+      await dummyERC1155.connect(depositor).setApprovalForAll(erc1155Predicate.target, true)
+      const depositData = constructERC1155DepositData([tokenIdA, tokenIdB], [depositAmountA, depositAmountB])
+      await erc1155Predicate.lockTokens(depositor.address, mockValues.addresses[2], dummyERC1155.target, depositData)
       oldAccountBalanceA = await dummyERC1155.balanceOf(withdrawer, tokenIdA)
       oldAccountBalanceB = await dummyERC1155.balanceOf(withdrawer, tokenIdB)
       oldContractBalanceA = await dummyERC1155.balanceOf(erc1155Predicate.target, tokenIdA)
@@ -273,8 +272,8 @@ contract('ERC1155Predicate', (accounts) => {
     })
 
     it('Predicate should have the token balances', async () => {
-      expect(withdrawAmountA).to.be.lte(oldContractBalanceA);
-      expect(withdrawAmountB).to.be.lte(oldContractBalanceB);
+      expect(withdrawAmountA).to.be.lte(oldContractBalanceA)
+      expect(withdrawAmountB).to.be.lte(oldContractBalanceB)
     })
 
     it('Should be able to receive exitTokens tx', async () => {
@@ -284,12 +283,11 @@ contract('ERC1155Predicate', (accounts) => {
         to: mockValues.zeroAddress,
         tokenIds: [tokenIdA, tokenIdB],
         amounts: [withdrawAmountA, withdrawAmountB]
-      });
+      })
 
-      await expect(
-        erc1155Predicate.exitTokens(dummyERC1155.target, dummyERC1155.target, burnLog)
-      ).to.emit(erc1155Predicate, 'ExitedBatchERC1155')
-        .withArgs(withdrawer, dummyERC1155.target, [tokenIdA, tokenIdB], [withdrawAmountA, withdrawAmountB]);
+      await expect(erc1155Predicate.exitTokens(dummyERC1155.target, dummyERC1155.target, burnLog))
+        .to.emit(erc1155Predicate, 'ExitedBatchERC1155')
+        .withArgs(withdrawer, dummyERC1155.target, [tokenIdA, tokenIdB], [withdrawAmountA, withdrawAmountB])
     })
 
     // @note Already verified in the above test
@@ -339,56 +337,56 @@ contract('ERC1155Predicate', (accounts) => {
 
     it('Withdaw amount should be deducted from contract for A', async () => {
       const newContractBalance = await dummyERC1155.balanceOf(erc1155Predicate.target, tokenIdA)
-      expect(newContractBalance).to.equal(oldContractBalanceA - withdrawAmountA);
+      expect(newContractBalance).to.equal(oldContractBalanceA - withdrawAmountA)
     })
 
     it('Withdaw amount should be deducted from contract for B', async () => {
       const newContractBalance = await dummyERC1155.balanceOf(erc1155Predicate.target, tokenIdB)
-      expect(newContractBalance).to.equal(oldContractBalanceB - withdrawAmountB);
+      expect(newContractBalance).to.equal(oldContractBalanceB - withdrawAmountB)
     })
 
     it('Withdraw amount should be credited to withdrawer for A', async () => {
       const newAccountBalance = await dummyERC1155.balanceOf(withdrawer, tokenIdA)
-      expect(newAccountBalance).to.equal(oldAccountBalanceA + withdrawAmountA);
+      expect(newAccountBalance).to.equal(oldAccountBalanceA + withdrawAmountA)
     })
 
     it('Withdraw amount should be credited to withdrawer for B', async () => {
       const newAccountBalance = await dummyERC1155.balanceOf(withdrawer, tokenIdB)
-      expect(newAccountBalance).to.equal(oldAccountBalanceB + withdrawAmountB);
+      expect(newAccountBalance).to.equal(oldAccountBalanceB + withdrawAmountB)
     })
   })
 
   describe('exitTokens called by different user', () => {
-    const withdrawAmountA = mockValues.amounts[9];
-    const withdrawAmountB = mockValues.amounts[8];
-    const depositAmountA = withdrawAmountA + mockValues.amounts[3];
-    const depositAmountB = withdrawAmountB + mockValues.amounts[4];
-    const tokenIdA = mockValues.numbers[4];
-    const tokenIdB = mockValues.numbers[5];
-    const withdrawer = mockValues.addresses[8];
-    const exitCaller = mockValues.addresses[5];
-    let depositor;
-    let dummyERC1155;
-    let erc1155Predicate;
-    let oldAccountBalanceA;
-    let oldAccountBalanceB;
-    let oldContractBalanceA;
-    let oldContractBalanceB;
+    const withdrawAmountA = mockValues.amounts[9]
+    const withdrawAmountB = mockValues.amounts[8]
+    const depositAmountA = withdrawAmountA + mockValues.amounts[3]
+    const depositAmountB = withdrawAmountB + mockValues.amounts[4]
+    const tokenIdA = mockValues.numbers[4]
+    const tokenIdB = mockValues.numbers[5]
+    const withdrawer = mockValues.addresses[8]
+    const exitCaller = mockValues.addresses[5]
+    let depositor
+    let dummyERC1155
+    let erc1155Predicate
+    let oldAccountBalanceA
+    let oldAccountBalanceB
+    let oldContractBalanceA
+    let oldContractBalanceB
 
     before(async () => {
-      depositor = await ethers.getSigner(accounts[1]);
-      const contracts = await deployFreshRootContracts(accounts);
-      dummyERC1155 = contracts.dummyERC1155;
-      erc1155Predicate = contracts.erc1155Predicate;
-      await dummyERC1155.mint(depositor.address, tokenIdA, depositAmountA);
-      await dummyERC1155.mint(depositor.address, tokenIdB, depositAmountB);
-      await dummyERC1155.connect(depositor).setApprovalForAll(erc1155Predicate.target, true);
-      const depositData = constructERC1155DepositData([tokenIdA, tokenIdB], [depositAmountA, depositAmountB]);
-      await erc1155Predicate.lockTokens(depositor.address, mockValues.addresses[2], dummyERC1155.target, depositData);
-      oldAccountBalanceA = await dummyERC1155.balanceOf(withdrawer, tokenIdA);
-      oldAccountBalanceB = await dummyERC1155.balanceOf(withdrawer, tokenIdB);
-      oldContractBalanceA = await dummyERC1155.balanceOf(erc1155Predicate.target, tokenIdA);
-      oldContractBalanceB = await dummyERC1155.balanceOf(erc1155Predicate.target, tokenIdB);
+      depositor = await ethers.getSigner(accounts[1])
+      const contracts = await deployFreshRootContracts(accounts)
+      dummyERC1155 = contracts.dummyERC1155
+      erc1155Predicate = contracts.erc1155Predicate
+      await dummyERC1155.mint(depositor.address, tokenIdA, depositAmountA)
+      await dummyERC1155.mint(depositor.address, tokenIdB, depositAmountB)
+      await dummyERC1155.connect(depositor).setApprovalForAll(erc1155Predicate.target, true)
+      const depositData = constructERC1155DepositData([tokenIdA, tokenIdB], [depositAmountA, depositAmountB])
+      await erc1155Predicate.lockTokens(depositor.address, mockValues.addresses[2], dummyERC1155.target, depositData)
+      oldAccountBalanceA = await dummyERC1155.balanceOf(withdrawer, tokenIdA)
+      oldAccountBalanceB = await dummyERC1155.balanceOf(withdrawer, tokenIdB)
+      oldContractBalanceA = await dummyERC1155.balanceOf(erc1155Predicate.target, tokenIdA)
+      oldContractBalanceB = await dummyERC1155.balanceOf(erc1155Predicate.target, tokenIdB)
     })
 
     it('Should be able to receive exitTokens tx', async () => {
@@ -399,10 +397,9 @@ contract('ERC1155Predicate', (accounts) => {
         tokenIds: [tokenIdA, tokenIdB],
         amounts: [withdrawAmountA, withdrawAmountB]
       })
-      await expect(
-        erc1155Predicate.exitTokens(dummyERC1155.target, dummyERC1155.target, burnLog)
-      ).to.emit(erc1155Predicate, 'ExitedBatchERC1155')
-        .withArgs(withdrawer, dummyERC1155.target, [tokenIdA, tokenIdB], [withdrawAmountA, withdrawAmountB]);
+      await expect(erc1155Predicate.exitTokens(dummyERC1155.target, dummyERC1155.target, burnLog))
+        .to.emit(erc1155Predicate, 'ExitedBatchERC1155')
+        .withArgs(withdrawer, dummyERC1155.target, [tokenIdA, tokenIdB], [withdrawAmountA, withdrawAmountB])
     })
 
     // @note Already verified in the above test
@@ -451,44 +448,44 @@ contract('ERC1155Predicate', (accounts) => {
     // })
 
     it('Withdaw amount should be deducted from contract for A', async () => {
-      const newContractBalance = await dummyERC1155.balanceOf(erc1155Predicate.target, tokenIdA);
-      expect(newContractBalance).to.equal(oldContractBalanceA - withdrawAmountA);
+      const newContractBalance = await dummyERC1155.balanceOf(erc1155Predicate.target, tokenIdA)
+      expect(newContractBalance).to.equal(oldContractBalanceA - withdrawAmountA)
     })
 
     it('Withdaw amount should be deducted from contract for B', async () => {
-      const newContractBalance = await dummyERC1155.balanceOf(erc1155Predicate.target, tokenIdB);
-      expect(newContractBalance).to.equal(oldContractBalanceB - withdrawAmountB);
+      const newContractBalance = await dummyERC1155.balanceOf(erc1155Predicate.target, tokenIdB)
+      expect(newContractBalance).to.equal(oldContractBalanceB - withdrawAmountB)
     })
 
     it('Withdraw amount should be credited to withdrawer for A', async () => {
-      const newAccountBalance = await dummyERC1155.balanceOf(withdrawer, tokenIdA);
-      expect(newAccountBalance).to.equal(oldAccountBalanceA + withdrawAmountA);
+      const newAccountBalance = await dummyERC1155.balanceOf(withdrawer, tokenIdA)
+      expect(newAccountBalance).to.equal(oldAccountBalanceA + withdrawAmountA)
     })
 
     it('Withdraw amount should be credited to withdrawer for B', async () => {
-      const newAccountBalance = await dummyERC1155.balanceOf(withdrawer, tokenIdB);
-      expect(newAccountBalance).to.equal(oldAccountBalanceB + withdrawAmountB);
+      const newAccountBalance = await dummyERC1155.balanceOf(withdrawer, tokenIdB)
+      expect(newAccountBalance).to.equal(oldAccountBalanceB + withdrawAmountB)
     })
   })
 
   describe('exitTokens with incorrect burn transaction signature', () => {
-    const withdrawAmount = mockValues.amounts[9];
-    const depositAmount = withdrawAmount + mockValues.amounts[3];
-    const tokenId = mockValues.numbers[4];
-    const withdrawer = mockValues.addresses[8];
-    let depositor;
-    let dummyERC1155;
-    let erc1155Predicate;
+    const withdrawAmount = mockValues.amounts[9]
+    const depositAmount = withdrawAmount + mockValues.amounts[3]
+    const tokenId = mockValues.numbers[4]
+    const withdrawer = mockValues.addresses[8]
+    let depositor
+    let dummyERC1155
+    let erc1155Predicate
 
     before(async () => {
-      depositor = await ethers.getSigner(accounts[1]);
-      const contracts = await deployFreshRootContracts(accounts);
-      dummyERC1155 = contracts.dummyERC1155;
-      erc1155Predicate = contracts.erc1155Predicate;
-      await dummyERC1155.mint(depositor.address, tokenId, depositAmount);
-      await dummyERC1155.connect(depositor).setApprovalForAll(erc1155Predicate.target, true);
-      const depositData = constructERC1155DepositData([tokenId], [depositAmount]);
-      await erc1155Predicate.lockTokens(depositor.address, mockValues.addresses[2], dummyERC1155.target, depositData);
+      depositor = await ethers.getSigner(accounts[1])
+      const contracts = await deployFreshRootContracts(accounts)
+      dummyERC1155 = contracts.dummyERC1155
+      erc1155Predicate = contracts.erc1155Predicate
+      await dummyERC1155.mint(depositor.address, tokenId, depositAmount)
+      await dummyERC1155.connect(depositor).setApprovalForAll(erc1155Predicate.target, true)
+      const depositData = constructERC1155DepositData([tokenId], [depositAmount])
+      await erc1155Predicate.lockTokens(depositor.address, mockValues.addresses[2], dummyERC1155.target, depositData)
     })
 
     it('Should revert with correct reason', async () => {
@@ -499,31 +496,31 @@ contract('ERC1155Predicate', (accounts) => {
         to: mockValues.zeroAddress,
         tokenId: tokenId,
         amount: withdrawAmount
-      });
-      await expect(
-        erc1155Predicate.exitTokens(dummyERC1155.target, dummyERC1155.target, burnLog)
-      ).to.be.revertedWith('ERC1155Predicate: INVALID_WITHDRAW_SIG');
+      })
+      await expect(erc1155Predicate.exitTokens(dummyERC1155.target, dummyERC1155.target, burnLog)).to.be.revertedWith(
+        'ERC1155Predicate: INVALID_WITHDRAW_SIG'
+      )
     })
   })
 
   describe('exitTokens called using normal transfer log instead of burn', () => {
-    const withdrawAmount = mockValues.amounts[9];
-    const depositAmount = withdrawAmount + mockValues.amounts[3];
-    const tokenId = mockValues.numbers[4];
-    const withdrawer = mockValues.addresses[8];
-    let depositor;
-    let dummyERC1155;
-    let erc1155Predicate;
+    const withdrawAmount = mockValues.amounts[9]
+    const depositAmount = withdrawAmount + mockValues.amounts[3]
+    const tokenId = mockValues.numbers[4]
+    const withdrawer = mockValues.addresses[8]
+    let depositor
+    let dummyERC1155
+    let erc1155Predicate
 
     before(async () => {
-      depositor = await ethers.getSigner(accounts[1]);
-      const contracts = await deployFreshRootContracts(accounts);
-      dummyERC1155 = contracts.dummyERC1155;
-      erc1155Predicate = contracts.erc1155Predicate;
-      await dummyERC1155.mint(depositor.address, tokenId, depositAmount);
-      await dummyERC1155.connect(depositor).setApprovalForAll(erc1155Predicate.target, true);
-      const depositData = constructERC1155DepositData([tokenId], [depositAmount]);
-      await erc1155Predicate.lockTokens(depositor.address, mockValues.addresses[2], dummyERC1155.target, depositData);
+      depositor = await ethers.getSigner(accounts[1])
+      const contracts = await deployFreshRootContracts(accounts)
+      dummyERC1155 = contracts.dummyERC1155
+      erc1155Predicate = contracts.erc1155Predicate
+      await dummyERC1155.mint(depositor.address, tokenId, depositAmount)
+      await dummyERC1155.connect(depositor).setApprovalForAll(erc1155Predicate.target, true)
+      const depositData = constructERC1155DepositData([tokenId], [depositAmount])
+      await erc1155Predicate.lockTokens(depositor.address, mockValues.addresses[2], dummyERC1155.target, depositData)
     })
 
     it('Should revert with correct reason', async () => {
@@ -533,31 +530,31 @@ contract('ERC1155Predicate', (accounts) => {
         to: mockValues.addresses[8],
         tokenId: tokenId,
         amount: withdrawAmount
-      });
-      await expect(
-        erc1155Predicate.exitTokens(dummyERC1155.target, dummyERC1155.target, burnLog)
-      ).to.be.revertedWith('ERC1155Predicate: INVALID_RECEIVER');
+      })
+      await expect(erc1155Predicate.exitTokens(dummyERC1155.target, dummyERC1155.target, burnLog)).to.be.revertedWith(
+        'ERC1155Predicate: INVALID_RECEIVER'
+      )
     })
   })
 
   describe('exitTokens called by non manager', () => {
-    const withdrawAmount = mockValues.amounts[9];
-    const depositAmount = withdrawAmount + mockValues.amounts[3];
-    const tokenId = mockValues.numbers[4];
-    const withdrawer = mockValues.addresses[8];
-    let depositor;
-    let dummyERC1155;
-    let erc1155Predicate;
+    const withdrawAmount = mockValues.amounts[9]
+    const depositAmount = withdrawAmount + mockValues.amounts[3]
+    const tokenId = mockValues.numbers[4]
+    const withdrawer = mockValues.addresses[8]
+    let depositor
+    let dummyERC1155
+    let erc1155Predicate
 
     before(async () => {
-      depositor = await ethers.getSigner(accounts[1]);
-      const contracts = await deployFreshRootContracts(accounts);
-      dummyERC1155 = contracts.dummyERC1155;
-      erc1155Predicate = contracts.erc1155Predicate;
-      await dummyERC1155.mint(depositor.address, tokenId, depositAmount);
-      await dummyERC1155.connect(depositor).setApprovalForAll(erc1155Predicate.target, true);
-      const depositData = constructERC1155DepositData([tokenId], [depositAmount]);
-      await erc1155Predicate.lockTokens(depositor.address, mockValues.addresses[2], dummyERC1155.target, depositData);
+      depositor = await ethers.getSigner(accounts[1])
+      const contracts = await deployFreshRootContracts(accounts)
+      dummyERC1155 = contracts.dummyERC1155
+      erc1155Predicate = contracts.erc1155Predicate
+      await dummyERC1155.mint(depositor.address, tokenId, depositAmount)
+      await dummyERC1155.connect(depositor).setApprovalForAll(erc1155Predicate.target, true)
+      const depositData = constructERC1155DepositData([tokenId], [depositAmount])
+      await erc1155Predicate.lockTokens(depositor.address, mockValues.addresses[2], dummyERC1155.target, depositData)
     })
 
     it('Should revert with correct reason', async () => {
@@ -567,11 +564,12 @@ contract('ERC1155Predicate', (accounts) => {
         to: mockValues.zeroAddress,
         tokenId: tokenId,
         amount: withdrawAmount
-      });
+      })
       await expect(
-        erc1155Predicate.connect(await ethers.getSigner(accounts[2]))
+        erc1155Predicate
+          .connect(await ethers.getSigner(accounts[2]))
           .exitTokens(dummyERC1155.target, dummyERC1155.target, burnLog)
-      ).to.be.revertedWith('ERC1155Predicate: INSUFFICIENT_PERMISSIONS');
+      ).to.be.revertedWith('ERC1155Predicate: INSUFFICIENT_PERMISSIONS')
     })
   })
 })
