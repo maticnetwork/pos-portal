@@ -96,7 +96,7 @@ contract EtherPredicateTest is Test {
     function testExitTokensInsufficientEtherBalance() public {
         string[] memory inputs = new string[](5);
         inputs[0] = "npx";
-        inputs[1] = "ts-node";
+        inputs[1] = "tsx";
         inputs[2] = "forge/predicates/utils/rlpEncoder.ts";
         inputs[3] = "erc20Transfer"; // same Transfer event signature
         inputs[4] = vm.toString(
@@ -120,7 +120,7 @@ contract EtherPredicateTest is Test {
 
         string[] memory inputs = new string[](5);
         inputs[0] = "npx";
-        inputs[1] = "ts-node";
+        inputs[1] = "tsx";
         inputs[2] = "forge/predicates/utils/rlpEncoder.ts";
         inputs[3] = "erc20Transfer";
         inputs[4] = vm.toString(
@@ -144,7 +144,7 @@ contract EtherPredicateTest is Test {
 
         string[] memory inputs = new string[](5);
         inputs[0] = "npx";
-        inputs[1] = "ts-node";
+        inputs[1] = "tsx";
         inputs[2] = "forge/predicates/utils/rlpEncoder.ts";
         inputs[3] = "erc20Transfer";
         inputs[4] = vm.toString(
@@ -168,7 +168,7 @@ contract EtherPredicateTest is Test {
 
         string[] memory inputs = new string[](5);
         inputs[0] = "npx";
-        inputs[1] = "ts-node";
+        inputs[1] = "tsx";
         inputs[2] = "forge/predicates/utils/rlpEncoder.ts";
         inputs[3] = "erc20Transfer";
         inputs[4] = vm.toString(

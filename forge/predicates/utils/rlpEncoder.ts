@@ -1,6 +1,6 @@
 import * as ethers from "ethers";
 
-const { AbiCoder, toUtf8Bytes, RLP } = ethers.utils;
+const { AbiCoder, toUtf8Bytes, encodeRlp, toBeHex } = ethers;
 
 const erc20TransferEventSig =
   "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef";
@@ -27,19 +27,23 @@ interface iGetLogs {
     user?: string;
     metaData?: string;
     data?: string;
-    amount?: ethers.utils.BigNumber;
-    amounts?: ethers.utils.BigNumber[];
-    tokenId?: ethers.utils.BigNumber;
-    tokenIds?: ethers.utils.BigNumber[];
+    amount?: ethers.BigNumberish;
+    amounts?: ethers.BigNumberish[];
+    tokenId?: ethers.BigNumberish;
+    tokenIds?: ethers.BigNumberish[];
     overrideSig?: string;
   }): string;
 }
 
 const getERC20TransferLog: iGetLogs = ({ overrideSig, from, to, amount }) => {
-  return RLP.encode([
+  return encodeRlp([
     "0x00",
-    [overrideSig || erc20TransferEventSig, from, to],
-    amount!.toHexString(),
+    [
+      overrideSig || erc20TransferEventSig,
+      from || "0x0000000000000000000000000000000000000000",
+      to || "0x0000000000000000000000000000000000000000",
+    ],
+    toBeHex(amount!),
   ]);
 };
 
@@ -49,9 +53,14 @@ export const getERC721TransferLog: iGetLogs = ({
   to,
   tokenId,
 }) => {
-  return RLP.encode([
+  return encodeRlp([
     "0x00",
-    [overrideSig || erc721TransferEventSig, from, to, tokenId!.toHexString()],
+    [
+      overrideSig || erc721TransferEventSig,
+      from || "0x0000000000000000000000000000000000000000",
+      to || "0x0000000000000000000000000000000000000000",
+      toBeHex(tokenId || 0),
+    ],
   ]);
 };
 
@@ -60,10 +69,10 @@ export const getERC721WithdrawnBatchLog: iGetLogs = ({
   user,
   tokenIds,
 }) => {
-  return RLP.encode([
+  return encodeRlp([
     "0x00",
-    [overrideSig || erc721WithdrawnBatchEventSig, user],
-    abi.encode(["uint256[]"], [tokenIds!.map((t) => t.toHexString())]),
+    [overrideSig || erc721WithdrawnBatchEventSig, user || "0x0000000000000000000000000000000000000000"],
+    abi.encode(["uint256[]"], [tokenIds!.map((t) => toBeHex(t))]),
   ]);
 };
 
@@ -74,13 +83,13 @@ export const getERC721TransferWithMetadataLog: iGetLogs = ({
   tokenId,
   metaData,
 }) => {
-  return RLP.encode([
+  return encodeRlp([
     "0x00",
     [
       overrideSig || erc721TransferWithMetadataEventSig,
-      from,
-      to,
-      tokenId!.toHexString(),
+      from || "0x0000000000000000000000000000000000000000",
+      to || "0x0000000000000000000000000000000000000000",
+      toBeHex(tokenId!),
     ],
     // ABI encoded metadata, because that's how dummy root token expects it
     //
@@ -103,10 +112,15 @@ export const getERC1155TransferSingleLog: iGetLogs = ({
   tokenId,
   amount,
 }) => {
-  return RLP.encode([
+  return encodeRlp([
     "0x00",
-    [overrideSig || erc1155TransferSingleEventSig, operator, from, to],
-    abi.encode(["uint256", "uint256"], [tokenId!.toHexString(), amount!.toHexString()]),
+    [
+      overrideSig || erc1155TransferSingleEventSig,
+      operator || "0x0000000000000000000000000000000000000000",
+      from || "0x0000000000000000000000000000000000000000",
+      to || "0x0000000000000000000000000000000000000000",
+    ],
+    abi.encode(["uint256", "uint256"], [toBeHex(tokenId!), toBeHex(amount!)]),
   ]);
 };
 
@@ -118,12 +132,17 @@ export const getERC1155TransferBatchLog: iGetLogs = ({
   tokenIds,
   amounts,
 }) => {
-  return RLP.encode([
+  return encodeRlp([
     "0x00",
-    [overrideSig || erc1155TransferBatchEventSig, operator, from, to],
+    [
+      overrideSig || erc1155TransferBatchEventSig,
+      operator || "0x0000000000000000000000000000000000000000",
+      from || "0x0000000000000000000000000000000000000000",
+      to || "0x0000000000000000000000000000000000000000",
+    ],
     abi.encode(
       ["uint256[]", "uint256[]"],
-      [tokenIds!.map((t) => t.toHexString()), amounts!.map((a) => a.toHexString())]
+      [tokenIds!.map((t) => toBeHex(t)), amounts!.map((a) => toBeHex(a))]
     ),
   ]);
 };
@@ -135,14 +154,14 @@ export const getERC1155ChainExitLog: iGetLogs = ({
   amounts,
   data,
 }) => {
-  return RLP.encode([
+  return encodeRlp([
     "0x00",
-    [overrideSig || erc1155ChainExitEventSig, to],
+    [overrideSig || erc1155ChainExitEventSig, to || "0x0000000000000000000000000000000000000000"],
     abi.encode(
       ["uint256[]", "uint256[]", "bytes"],
       [
-        tokenIds!.map((t) => t.toHexString()),
-        amounts!.map((a) => a.toHexString()),
+        tokenIds!.map((t) => toBeHex(t)),
+        amounts!.map((a) => toBeHex(a)),
         `0x${Buffer.from(
           toUtf8Bytes((data as string) || "Hello World")
         ).toString("hex")}`,
