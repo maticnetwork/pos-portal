@@ -9,6 +9,7 @@
     "bor": "cd test-blockchain && bash run-docker.sh",
     "build": "hardhat compile",
     "flatten": "hardhat flatten",
+    "fmt:js:check": "prettier --log-level warn scripts/**/*.js test/**/*.js --check",
     "fmt:js:fix": "prettier --log-level warn scripts/**/*.js test/**/*.js --write",
     "generate:interfaces": "scripts/helpers/generateInterfaces.sh",
     "lint:js": "eslint test/**/*.js",

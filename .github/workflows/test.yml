@@ -45,6 +45,9 @@ jobs:
       - name: Run npm tests
         run: npm test
 
+      - name: Check fmt
+        run: npm run fmt:js:check
+
       - name: generate interfaces
         run: npm run generate:interfaces
 
