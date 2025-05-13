@@ -1,10 +1,10 @@
-const contractAddresses = require('../contractAddresses.json')
+import { root } from '../contractAddresses.json'
 
 const RootChainManagerProxy = artifacts.require('RootChainManagerProxy')
 
 async function updateImplementation(address) {
   const rootChainManager = await RootChainManagerProxy.at(
-    contractAddresses.root.RootChainManagerProxy
+    root.RootChainManagerProxy
   )
 
   let currentImplementation = await rootChainManager.implementation()
@@ -14,7 +14,7 @@ async function updateImplementation(address) {
   console.log("ChildChainManagerProxy updateImplementation ABI encoded data:", data)
 }
 
-module.exports = async function(callback) {
+export default async function(callback) {
   // args starts with index 6, example: first arg == process.args[6]
   console.log(process.argv)
   try {

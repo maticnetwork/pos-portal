@@ -1,11 +1,3 @@
-const bluebird = require('bluebird')
-
-const Merkle = artifacts.require('Merkle')
-const MerklePatriciaProof = artifacts.require('MerklePatriciaProof')
-const RLPReader = artifacts.require('RLPReader')
-const SafeERC20 = artifacts.require('SafeERC20')
-const SafeMath = artifacts.require('SafeMath')
-
 const RootChainManager = artifacts.require('RootChainManager')
 const RootChainManagerProxy = artifacts.require('RootChainManagerProxy')
 const DummyStateSender = artifacts.require('DummyStateSender')
@@ -37,12 +29,9 @@ const DummyMintableERC721 = artifacts.require('DummyMintableERC721')
 const DummyERC1155 = artifacts.require('DummyERC1155')
 const DummyMintableERC1155 = artifacts.require('DummyMintableERC1155')
 
-const TestRootTunnel = artifacts.require('TestRootTunnel')
-const TestChildTunnel = artifacts.require('TestChildTunnel')
+import { getContractAddresses, writeContractAddresses } from './utils'
 
-const utils = require('./utils')
-
-module.exports = async(deployer, network, accounts) => {
+export default async(deployer, network, accounts) => {
   await deployer
 
   console.log('deploying contracts...')
@@ -93,7 +82,7 @@ module.exports = async(deployer, network, accounts) => {
   await deployer.deploy(DummyERC20, 'Dummy ERC20', 'DERC20')
   await deployer.deploy(DummyMintableERC20, 'Dummy Mintable ERC20', 'DERC20')
   // -- ends
-  
+
   // -- Dummy version of ERC721
   await deployer.deploy(DummyERC721, 'Dummy ERC721', 'DERC721')
   await deployer.deploy(DummyMintableERC721, 'Dummy Mintable ERC721', 'DMERC721')
@@ -103,8 +92,8 @@ module.exports = async(deployer, network, accounts) => {
   await deployer.deploy(DummyERC1155, 'Dummy ERC1155')
   await deployer.deploy(DummyMintableERC1155, 'Dummy Mintable ERC1155')
   // -- ends
-  
-  const contractAddresses = utils.getContractAddresses()
+
+  const contractAddresses = getContractAddresses()
 
   contractAddresses.root.RootChainManager = RootChainManager.address
   contractAddresses.root.RootChainManagerProxy = RootChainManagerProxy.address
@@ -115,28 +104,28 @@ module.exports = async(deployer, network, accounts) => {
   contractAddresses.root.ERC20PredicateProxy = ERC20PredicateProxy.address
   contractAddresses.root.MintableERC20Predicate = MintableERC20Predicate.address
   contractAddresses.root.MintableERC20PredicateProxy = MintableERC20PredicateProxy.address
-  
+
   contractAddresses.root.ERC721Predicate = ERC721Predicate.address
   contractAddresses.root.ERC721PredicateProxy = ERC721PredicateProxy.address
   contractAddresses.root.MintableERC721Predicate = MintableERC721Predicate.address
   contractAddresses.root.MintableERC721PredicateProxy = MintableERC721PredicateProxy.address
-  
+
   contractAddresses.root.ERC1155Predicate = ERC1155Predicate.address
   contractAddresses.root.ERC1155PredicateProxy = ERC1155PredicateProxy.address
   contractAddresses.root.MintableERC1155Predicate = MintableERC1155Predicate.address
   contractAddresses.root.MintableERC1155PredicateProxy = MintableERC1155PredicateProxy.address
-  
+
   contractAddresses.root.EtherPredicate = EtherPredicate.address
   contractAddresses.root.EtherPredicateProxy = EtherPredicateProxy.address
-  
+
   contractAddresses.root.DummyERC20 = DummyERC20.address
   contractAddresses.root.DummyMintableERC20 = DummyMintableERC20.address
-  
+
   contractAddresses.root.DummyERC721 = DummyERC721.address
   contractAddresses.root.DummyMintableERC721 = DummyMintableERC721.address
-  
+
   contractAddresses.root.DummyERC1155 = DummyERC1155.address
   contractAddresses.root.DummyMintableERC1155 = DummyMintableERC1155.address
 
-  utils.writeContractAddresses(contractAddresses)
+  writeContractAddresses(contractAddresses)
 }

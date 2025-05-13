@@ -1,16 +1,16 @@
 const ChildChainManager = artifacts.require('ChildChainManager')
 
-const utils = require('./utils')
-const config = require('./config')
+import { getContractAddresses } from './utils'
+import { stateReceiver } from './config'
 
-module.exports = async(deployer) => {
-  const contractAddresses = utils.getContractAddresses()
+export default async() => {
+  const contractAddresses = getContractAddresses()
 
   const ChildChainManagerInstance = await ChildChainManager.at(contractAddresses.child.ChildChainManagerProxy)
 
   console.log('Granting STATE_SYNCER_ROLE on ChildChainManager')
   const STATE_SYNCER_ROLE = await ChildChainManagerInstance.STATE_SYNCER_ROLE()
-  await ChildChainManagerInstance.grantRole(STATE_SYNCER_ROLE, config.stateReceiver)
+  await ChildChainManagerInstance.grantRole(STATE_SYNCER_ROLE, stateReceiver)
 
   console.log('Mapping DummyERC20')
   await ChildChainManagerInstance.mapToken(contractAddresses.root.DummyERC20, contractAddresses.child.DummyERC20)

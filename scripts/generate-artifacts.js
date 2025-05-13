@@ -1,4 +1,4 @@
-const fs = require('fs')
+import { readFileSync, writeFileSync } from 'fs'
 
 const artifactsToGenerate = [
   'ChildChainManager.json',
@@ -27,6 +27,6 @@ const artifactsToGenerate = [
 artifactsToGenerate.forEach(a => {
   const source = `build/contracts/${a}`
   const dest = `artifacts/${a}`
-  const abi = JSON.parse(fs.readFileSync(source)).abi
-  fs.writeFileSync(dest, JSON.stringify({ abi }) + '\n')
+  const abi = JSON.parse(readFileSync(source)).abi
+  writeFileSync(dest, JSON.stringify({ abi }) + '\n')
 })

@@ -11,9 +11,9 @@ const ChildERC1155 = artifacts.require('ChildERC1155')
 const ChildMintableERC1155 = artifacts.require('ChildMintableERC1155')
 
 const MaticWETH = artifacts.require('MaticWETH')
-const utils = require('./utils')
+import { getContractAddresses, writeContractAddresses } from './utils'
 
-module.exports = async(deployer, network, accounts) => {
+export default async(deployer, network, accounts) => {
   deployer.then(async() => {
     const childChainManager = await deployer.deploy(ChildChainManager)
     const childChainManagerProxy = await deployer.deploy(ChildChainManagerProxy, '0x0000000000000000000000000000000000000000')
@@ -24,13 +24,13 @@ module.exports = async(deployer, network, accounts) => {
 
     await deployer.deploy(ChildERC721, 'Dummy ERC721', 'DERC721', ChildChainManagerProxy.address)
     await deployer.deploy(ChildMintableERC721, 'Dummy Mintable ERC721', 'DMERC721', ChildChainManagerProxy.address)
-    
+
     await deployer.deploy(ChildERC1155, 'Dummy ERC1155', ChildChainManagerProxy.address)
     await deployer.deploy(ChildMintableERC1155, 'Dummy Mintable ERC1155', ChildChainManagerProxy.address)
-    
+
     await deployer.deploy(MaticWETH, ChildChainManagerProxy.address)
 
-    const contractAddresses = utils.getContractAddresses()
+    const contractAddresses = getContractAddresses()
 
     contractAddresses.child.ChildChainManager = ChildChainManager.address
     contractAddresses.child.ChildChainManagerProxy = ChildChainManagerProxy.address
@@ -46,6 +46,6 @@ module.exports = async(deployer, network, accounts) => {
 
     contractAddresses.child.MaticWETH = MaticWETH.address
 
-    utils.writeContractAddresses(contractAddresses)
+    writeContractAddresses(contractAddresses)
   })
 }

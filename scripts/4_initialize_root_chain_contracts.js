@@ -15,11 +15,11 @@ const DummyMintableERC20 = artifacts.require('DummyMintableERC20')
 const DummyMintableERC721 = artifacts.require('DummyMintableERC721')
 const DummyMintableERC1155 = artifacts.require('DummyMintableERC1155')
 
-const utils = require('./utils')
-const config = require('./config')
+import { getContractAddresses } from './utils'
+import { plasmaRootChain } from './config'
 
-module.exports = async(deployer) => {
-  const contractAddresses = utils.getContractAddresses()
+export default async() => {
+  const contractAddresses = getContractAddresses()
 
   const RootChainManagerInstance = await RootChainManager.at(contractAddresses.root.RootChainManagerProxy)
 
@@ -45,7 +45,7 @@ module.exports = async(deployer) => {
   await RootChainManagerInstance.setChildChainManagerAddress(contractAddresses.child.ChildChainManagerProxy)
 
   console.log('Setting CheckpointManager')
-  await RootChainManagerInstance.setCheckpointManager(config.plasmaRootChain)
+  await RootChainManagerInstance.setCheckpointManager(plasmaRootChain)
 
   console.log('Granting manager role on ERC20Predicate')
   const MANAGER_ROLE = await ERC20PredicateInstance.MANAGER_ROLE()
