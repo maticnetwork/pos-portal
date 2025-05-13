@@ -1,9 +1,9 @@
-import { zeros, keccak256 } from 'ethereumjs-util'
 import { Buffer } from 'safe-buffer'
+import { zeros, keccak256 } from 'ethereumjs-util'
 
 const sha3 = keccak256
 
-export default class MerkleTree {
+class MerkleTree {
   constructor(leaves = []) {
     if (leaves.length < 1) {
       throw new Error('Atleast 1 leaf needed')
@@ -14,11 +14,7 @@ export default class MerkleTree {
       throw new Error('Depth must be 20 or less')
     }
 
-    const l = leaves.concat(
-      Array.from(Array(Math.pow(2, depth) - leaves.length), () =>
-        zeros(32)
-      )
-    )
+    const l = leaves.concat(Array.from(Array(Math.pow(2, depth) - leaves.length), () => zeros(32)))
 
     this.leaves = l
     this.layers = [l]
@@ -103,3 +99,5 @@ export default class MerkleTree {
     return Buffer.compare(hash, root) === 0
   }
 }
+
+export default MerkleTree

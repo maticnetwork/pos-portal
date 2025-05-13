@@ -31,6 +31,18 @@ npm --version
 6.14.12
 ```
 
+## Test
+
+Make sure you have installed NVM and switched to the correct node version
+
+```bash
+nvm -v
+0.39.7
+
+nvm use
+npm run test
+```
+
 Clone repository & install all dependencies
 
 ```bash

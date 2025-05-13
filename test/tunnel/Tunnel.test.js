@@ -1,36 +1,23 @@
-import chai from 'chai'
-import chaiAsPromised from 'chai-as-promised'
-import chaiBN from 'chai-bn'
-import BN from 'bn.js'
-import { defaultAbiCoder as abi } from 'ethers/utils/abi-coder'
-import { expectRevert } from '@openzeppelin/test-helpers'
+import { AbiCoder } from 'ethers'
 import { bufferToHex, rlp } from 'ethereumjs-util'
+import { deployInitializedTunnelContracts } from '../helpers/deployerNew.js'
+import { expect } from 'chai'
+import { submitCheckpoint } from '../helpers/checkpoint.js'
 
-import * as deployer from '../helpers/deployer'
-// import { mockValues } from '../helpers/constants'
-// import { childWeb3 } from '../helpers/contracts'
-// import logDecoder from '../helpers/log-decoder'
-import { submitCheckpoint } from '../helpers/checkpoint'
+const abi = new AbiCoder()
 
-// Enable and inject BN dependency
-chai
-  .use(chaiAsPromised)
-  .use(chaiBN(BN))
-  .should()
-
-const should = chai.should()
-
-contract('Tunnel', async(accounts) => {
+contract('Tunnel', async (accounts) => {
   let contracts
-  let testRootTunnel
   let testChildTunnel
   let checkpointData
   let messageSentTx
+  let messageSentTxReceipt
   let headerNumber
   let receivedTx
+  let testRootTunnel
 
-  before(async() => {
-    contracts = await deployer.deployInitializedTunnelContracts(accounts)
+  before(async () => {
+    contracts = await deployInitializedTunnelContracts(accounts)
     testRootTunnel = contracts.root.testRootTunnel
     testChildTunnel = contracts.child.testChildTunnel
 
@@ -38,48 +25,50 @@ contract('Tunnel', async(accounts) => {
     await testChildTunnel.grantRole(STATE_SYNCER_ROLE, accounts[0])
   })
 
-  it('should receive message on L2 with type1', async() => {
+  it('should receive message on L2 with type1', async () => {
     const type1 = await testChildTunnel.TYPE1()
     const messageReceiveTx = await testChildTunnel.onStateReceive(0, abi.encode(['bytes32', 'uint256'], [type1, '4']))
-    should.exist(messageReceiveTx)
+    expect(messageReceiveTx).to.exist
     const n = await testChildTunnel.number()
-    n.should.be.a.bignumber.that.equals('4')
+    expect(n).to.equal(4)
   })
 
-  it('should receive message on L2 with type2', async() => {
+  it('should receive message on L2 with type2', async () => {
     const type2 = await testChildTunnel.TYPE2()
     const messageReceiveTx = await testChildTunnel.onStateReceive(0, abi.encode(['bytes32', 'uint256'], [type2, '1']))
-    should.exist(messageReceiveTx)
+    expect(messageReceiveTx).to.exist
     const n = await testChildTunnel.number()
-    n.should.be.a.bignumber.that.equals('3')
+    expect(n).to.equal(3)
   })
 
-  it('should send message on L1', async() => {
+  it('should send message on L1', async () => {
     const n = await testChildTunnel.number()
     messageSentTx = await testChildTunnel.sendMessage(abi.encode(['uint256'], [n.toString()]))
-    should.exist(messageSentTx)
+    await messageSentTx.wait()
+    expect(messageSentTx).to.exist
+    messageSentTxReceipt = await web3.eth.getTransactionReceipt(messageSentTx.hash)
   })
 
-  it('should submit checkpoint', async() => {
+  it('should submit checkpoint', async () => {
     // submit checkpoint including message tx
-    checkpointData = await submitCheckpoint(contracts.root.checkpointManager, messageSentTx.receipt)
-    should.exist(checkpointData)
+    checkpointData = await submitCheckpoint(contracts.root.checkpointManager, messageSentTxReceipt)
+    expect(checkpointData).to.exist
   })
 
-  it('should match checkpoint details', async() => {
+  it('should match checkpoint details', async () => {
     const root = bufferToHex(checkpointData.header.root)
-    should.exist(root)
+    expect(root).to.exist
 
     // fetch latest header number
     headerNumber = await contracts.root.checkpointManager.currentCheckpointNumber()
-    headerNumber.should.be.bignumber.gt('0')
+    expect(headerNumber).to.be.gt('0')
 
     // fetch header block details and validate
     const headerData = await contracts.root.checkpointManager.headerBlocks(headerNumber)
-    root.should.equal(headerData.root)
+    expect(headerData.root).to.equal(root)
   })
 
-  it('should be able to call receive message', async() => {
+  it('should be able to call receive message', async () => {
     const logIndex = 0
     const data = bufferToHex(
       rlp.encode([
@@ -98,15 +87,15 @@ contract('Tunnel', async(accounts) => {
 
     // receive message
     receivedTx = await contracts.root.testRootTunnel.receiveMessage(data)
-    should.exist(receivedTx)
+    expect(receivedTx).to.exist
   })
 
-  it('should set state receiving message', async() => {
+  it('should set state receiving message', async () => {
     const number = await contracts.root.testRootTunnel.receivedNumber()
-    number.should.be.bignumber.that.equals('3')
+    expect(number).to.be.equal('3')
   })
 
-  it('should fail while receiveing same message again', async() => {
+  it('should fail while receiveing same message again', async () => {
     const logIndex = 0
     const data = bufferToHex(
       rlp.encode([
@@ -123,6 +112,8 @@ contract('Tunnel', async(accounts) => {
       ])
     )
 
-    await expectRevert(contracts.root.testRootTunnel.receiveMessage(data), 'EXIT_ALREADY_PROCESSED')
+    await expect(contracts.root.testRootTunnel.receiveMessage(data)).to.be.revertedWith(
+      'RootTunnel: EXIT_ALREADY_PROCESSED'
+    )
   })
 })

@@ -1,20 +1,18 @@
-const contractAddresses = require('../contractAddresses.json')
+import { root } from '../contractAddresses.json'
 
 const RootChainManagerProxy = artifacts.require('RootChainManagerProxy')
 
 async function updateImplementation(address) {
-  const rootChainManager = await RootChainManagerProxy.at(
-    contractAddresses.root.RootChainManagerProxy
-  )
+  const rootChainManager = await RootChainManagerProxy.at(root.RootChainManagerProxy)
 
   let currentImplementation = await rootChainManager.implementation()
-  console.log("Current ChildChainManagerProxy implementation address", currentImplementation)
+  console.log('Current ChildChainManagerProxy implementation address', currentImplementation)
 
   const data = rootChainManager.contract.methods.updateImplementation(address).encodeABI()
-  console.log("ChildChainManagerProxy updateImplementation ABI encoded data:", data)
+  console.log('ChildChainManagerProxy updateImplementation ABI encoded data:', data)
 }
 
-module.exports = async function(callback) {
+export default async function (callback) {
   // args starts with index 6, example: first arg == process.args[6]
   console.log(process.argv)
   try {

@@ -72,7 +72,7 @@ contract MintableERC1155PredicateTest is Test {
         // brining it to root chain by making predicate contract mint it for us
         string[] memory inputs = new string[](5);
         inputs[0] = "npx";
-        inputs[1] = "ts-node";
+        inputs[1] = "tsx";
         inputs[2] = "forge/predicates/utils/rlpEncoder.ts";
         inputs[3] = "erc1155TransferBatch";
         inputs[4] = vm.toString(
@@ -211,7 +211,7 @@ contract MintableERC1155PredicateTest is Test {
     function testExitTokensInsufficientTokensLocked() public {
         string[] memory inputs = new string[](5);
         inputs[0] = "npx";
-        inputs[1] = "ts-node";
+        inputs[1] = "tsx";
         inputs[2] = "forge/predicates/utils/rlpEncoder.ts";
         inputs[3] = "erc1155TransferSingle";
         inputs[4] = vm.toString(
@@ -241,7 +241,7 @@ contract MintableERC1155PredicateTest is Test {
 
         string[] memory inputs = new string[](5);
         inputs[0] = "npx";
-        inputs[1] = "ts-node";
+        inputs[1] = "tsx";
         inputs[2] = "forge/predicates/utils/rlpEncoder.ts";
         inputs[3] = "erc1155TransferSingle";
         inputs[4] = vm.toString(
@@ -272,7 +272,7 @@ contract MintableERC1155PredicateTest is Test {
 
         string[] memory inputs = new string[](5);
         inputs[0] = "npx";
-        inputs[1] = "ts-node";
+        inputs[1] = "tsx";
         inputs[2] = "forge/predicates/utils/rlpEncoder.ts";
         inputs[3] = "erc1155TransferSingle";
         inputs[4] = vm.toString(
@@ -311,7 +311,7 @@ contract MintableERC1155PredicateTest is Test {
 
         string[] memory inputs = new string[](5);
         inputs[0] = "npx";
-        inputs[1] = "ts-node";
+        inputs[1] = "tsx";
         inputs[2] = "forge/predicates/utils/rlpEncoder.ts";
         inputs[3] = "erc1155TransferSingle";
         inputs[4] = vm.toString(
@@ -370,7 +370,7 @@ contract MintableERC1155PredicateTest is Test {
 
         string[] memory inputs = new string[](5);
         inputs[0] = "npx";
-        inputs[1] = "ts-node";
+        inputs[1] = "tsx";
         inputs[2] = "forge/predicates/utils/rlpEncoder.ts";
         inputs[3] = "erc1155TransferBatch";
         inputs[4] = vm.toString(

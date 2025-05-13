@@ -1,212 +1,207 @@
-import chai from 'chai'
-import chaiAsPromised from 'chai-as-promised'
-import chaiBN from 'chai-bn'
-import BN from 'bn.js'
-import { AbiCoder } from 'ethers/utils'
-import { expectRevert } from '@openzeppelin/test-helpers'
+import { AbiCoder } from 'ethers'
+import { deployFreshRootContracts } from '../helpers/deployerNew.js'
+import { expect } from 'chai'
+import { getERC721TransferLog, getERC721TransferWithMetadataLog } from '../helpers/logs.js'
+import { mockValues } from '../helpers/constants.js'
 
-import * as deployer from '../helpers/deployer'
-import { mockValues } from '../helpers/constants'
-import logDecoder from '../helpers/log-decoder.js'
-import { getERC721TransferLog, getERC721TransferWithMetadataLog } from '../helpers/logs'
-
-// Enable and inject BN dependency
-chai
-  .use(chaiAsPromised)
-  .use(chaiBN(BN))
-  .should()
-
-const should = chai.should()
 const abi = new AbiCoder()
 
 contract('MintableERC721Predicate', (accounts) => {
   describe('lockTokens', () => {
     const tokenId = mockValues.numbers[2]
     const depositReceiver = mockValues.addresses[7]
-    const depositor = accounts[1]
+    let depositor
     let dummyMintableERC721
     let mintableERC721Predicate
-    let lockTokensTx
-    let lockedLog
 
     before(async () => {
-      const contracts = await deployer.deployFreshRootContracts(accounts)
+      depositor = await ethers.getSigner(accounts[1])
+      const contracts = await deployFreshRootContracts(accounts)
       dummyMintableERC721 = contracts.dummyMintableERC721
       mintableERC721Predicate = contracts.mintableERC721Predicate
 
       const PREDICATE_ROLE = await dummyMintableERC721.PREDICATE_ROLE()
-      await dummyMintableERC721.grantRole(PREDICATE_ROLE, mintableERC721Predicate.address)
+      await dummyMintableERC721.grantRole(PREDICATE_ROLE, mintableERC721Predicate.target)
 
       // tokens cannot be minted on main chain so they need to be withdrawn before depositing
       const burnLog = getERC721TransferLog({
-        from: depositor,
+        from: depositor.address,
         to: mockValues.zeroAddress,
         tokenId: tokenId
       })
-      await mintableERC721Predicate.exitTokens(dummyMintableERC721.address, burnLog)
-      await dummyMintableERC721.approve(mintableERC721Predicate.address, tokenId, { from: depositor })
+      await mintableERC721Predicate.exitTokens(dummyMintableERC721.target, dummyMintableERC721.target, burnLog)
+      await dummyMintableERC721.connect(depositor).approve(mintableERC721Predicate.target, tokenId)
     })
 
     it('Depositor should have token', async () => {
       const owner = await dummyMintableERC721.ownerOf(tokenId)
-      owner.should.equal(depositor)
+      expect(owner).to.equal(depositor.address)
     })
 
     it('Depositor should have approved token transfer', async () => {
       const approved = await dummyMintableERC721.getApproved(tokenId)
-      approved.should.equal(mintableERC721Predicate.address)
+      expect(approved).to.equal(mintableERC721Predicate.target)
     })
 
     it('Should be able to receive lockTokens tx', async () => {
       const depositData = abi.encode(['uint256'], [tokenId])
-      lockTokensTx = await mintableERC721Predicate.lockTokens(depositor, depositReceiver, dummyMintableERC721.address, depositData)
-      should.exist(lockTokensTx)
+      await expect(
+        mintableERC721Predicate.lockTokens(depositor.address, depositReceiver, dummyMintableERC721.target, depositData)
+      )
+        .to.emit(mintableERC721Predicate, 'LockedMintableERC721')
+        .withArgs(depositor.address, depositReceiver, dummyMintableERC721.target, tokenId)
     })
 
-    it('Should emit LockedMintableERC721 log', () => {
-      const logs = logDecoder.decodeLogs(lockTokensTx.receipt.rawLogs)
-      lockedLog = logs.find(l => l.event === 'LockedMintableERC721')
-      should.exist(lockedLog)
-    })
+    // @note Already verified in the test above
+    // it('Should emit LockedMintableERC721 log', () => {
+    //   const logs = logDecoder.decodeLogs(lockTokensTx.receipt.rawLogs)
+    //   lockedLog = logs.find(l => l.event === 'LockedMintableERC721')
+    //   should.exist(lockedLog)
+    // })
 
-    describe('Correct values should be emitted in LockedMintableERC721 log', () => {
-      it('Event should be emitted by correct contract', () => {
-        lockedLog.address.should.equal(
-          mintableERC721Predicate.address.toLowerCase()
-        )
-      })
+    // describe('Correct values should be emitted in LockedMintableERC721 log', () => {
+    //   it('Event should be emitted by correct contract', () => {
+    //     lockedLog.address.should.equal(
+    //       mintableERC721Predicate.address.toLowerCase()
+    //     )
+    //   })
 
-      it('Should emit proper depositor', () => {
-        lockedLog.args.depositor.should.equal(depositor)
-      })
+    //   it('Should emit proper depositor', () => {
+    //     lockedLog.args.depositor.should.equal(depositor)
+    //   })
 
-      it('Should emit correct tokenId', () => {
-        const lockedLogTokenId = lockedLog.args.tokenId.toNumber()
-        lockedLogTokenId.should.equal(tokenId)
-      })
+    //   it('Should emit correct tokenId', () => {
+    //     const lockedLogTokenId = lockedLog.args.tokenId.toNumber()
+    //     lockedLogTokenId.should.equal(tokenId)
+    //   })
 
-      it('Should emit correct deposit receiver', () => {
-        lockedLog.args.depositReceiver.should.equal(depositReceiver)
-      })
+    //   it('Should emit correct deposit receiver', () => {
+    //     lockedLog.args.depositReceiver.should.equal(depositReceiver)
+    //   })
 
-      it('Should emit correct root token', () => {
-        lockedLog.args.rootToken.should.equal(dummyMintableERC721.address)
-      })
-    })
+    //   it('Should emit correct root token', () => {
+    //     lockedLog.args.rootToken.should.equal(dummyMintableERC721.address)
+    //   })
+    // })
 
     it('token should be transferred to correct contract', async () => {
       const owner = await dummyMintableERC721.ownerOf(tokenId)
-      owner.should.equal(mintableERC721Predicate.address)
+      expect(owner).to.equal(mintableERC721Predicate.target)
     })
   })
 
   describe('lockTokens called by non manager', () => {
     const tokenId = mockValues.numbers[5]
-    const depositor = accounts[1]
     const depositReceiver = accounts[2]
-    const depositData = abi.encode(['uint256'], [tokenId.toString()])
+    let depositor
     let dummyMintableERC721
     let mintableERC721Predicate
 
     before(async () => {
-      const contracts = await deployer.deployFreshRootContracts(accounts)
+      depositor = await ethers.getSigner(accounts[1])
+      const contracts = await deployFreshRootContracts(accounts)
       dummyMintableERC721 = contracts.dummyMintableERC721
       mintableERC721Predicate = contracts.mintableERC721Predicate
 
       const PREDICATE_ROLE = await dummyMintableERC721.PREDICATE_ROLE()
-      await dummyMintableERC721.grantRole(PREDICATE_ROLE, mintableERC721Predicate.address)
+      await dummyMintableERC721.grantRole(PREDICATE_ROLE, mintableERC721Predicate.target)
 
       // tokens cannot be minted on main chain so they need to be withdrawn before depositing
       const burnLog = getERC721TransferLog({
-        from: depositor,
+        from: depositor.address,
         to: mockValues.zeroAddress,
         tokenId: tokenId
       })
-      await mintableERC721Predicate.exitTokens(dummyMintableERC721.address, burnLog)
-      await dummyMintableERC721.approve(mintableERC721Predicate.address, tokenId, { from: depositor })
+      await mintableERC721Predicate.exitTokens(dummyMintableERC721.target, dummyMintableERC721.target, burnLog)
+      await dummyMintableERC721.connect(depositor).approve(mintableERC721Predicate.target, tokenId)
     })
 
     it('Should revert with correct reason', async () => {
-      await expectRevert(
-        mintableERC721Predicate.lockTokens(depositor, depositReceiver, dummyMintableERC721.address, depositData, { from: depositor }),
-        'MintableERC721Predicate: INSUFFICIENT_PERMISSIONS')
+      const depositData = abi.encode(['uint256'], [tokenId])
+      await expect(
+        mintableERC721Predicate
+          .connect(depositor)
+          .lockTokens(depositor.address, depositReceiver, dummyMintableERC721.target, depositData)
+      ).to.be.revertedWith('MintableERC721Predicate: INSUFFICIENT_PERMISSIONS')
     })
   })
 
   describe('exitTokens by alice then deposit back and exitTokens for second time by bob', () => {
     const tokenId = mockValues.numbers[5]
-    const alice = accounts[2]
     const bob = mockValues.addresses[8]
 
+    let alice
     let dummyMintableERC721
     let mintableERC721Predicate
-    let exitTokensTx
-    let exitedLog
 
     before(async () => {
-      const contracts = await deployer.deployFreshRootContracts(accounts)
+      alice = await ethers.getSigner(accounts[2])
+      const contracts = await deployFreshRootContracts(accounts)
       dummyMintableERC721 = contracts.dummyMintableERC721
       mintableERC721Predicate = contracts.mintableERC721Predicate
       const PREDICATE_ROLE = await dummyMintableERC721.PREDICATE_ROLE()
-      await dummyMintableERC721.grantRole(PREDICATE_ROLE, mintableERC721Predicate.address)
+      await dummyMintableERC721.grantRole(PREDICATE_ROLE, mintableERC721Predicate.target)
     })
 
     it('Token should not exist', async () => {
-      await expectRevert(dummyMintableERC721.ownerOf(tokenId), 'revert ERC721: owner query for nonexistent token')
+      await expect(dummyMintableERC721.ownerOf(tokenId)).to.be.revertedWith('ERC721: owner query for nonexistent token')
     })
 
     it('alice should be able to send exitTokens tx', async () => {
       const burnLog = getERC721TransferLog({
-        from: alice,
+        from: alice.address,
         to: mockValues.zeroAddress,
         tokenId: tokenId
       })
-      exitTokensTx = await mintableERC721Predicate.exitTokens(dummyMintableERC721.address, burnLog)
-      should.exist(exitTokensTx)
+      await expect(mintableERC721Predicate.exitTokens(dummyMintableERC721.target, dummyMintableERC721.target, burnLog))
+        .to.emit(mintableERC721Predicate, 'ExitedMintableERC721')
+        .withArgs(alice.address, dummyMintableERC721.target, tokenId)
     })
 
-    it('Should emit ExitedMintableERC721 log', () => {
-      const logs = logDecoder.decodeLogs(exitTokensTx.receipt.rawLogs)
-      exitedLog = logs.find(l => l.event === 'ExitedMintableERC721')
-      should.exist(exitedLog)
-    })
+    // @note Already verified in the test above
+    // it('Should emit ExitedMintableERC721 log', () => {
+    //   const logs = logDecoder.decodeLogs(exitTokensTx.receipt.rawLogs)
+    //   exitedLog = logs.find(l => l.event === 'ExitedMintableERC721')
+    //   should.exist(exitedLog)
+    // })
 
-    describe('Correct values should be emitted in ExitedMintableERC721 log', () => {
-      it('Event should be emitted by correct contract', () => {
-        exitedLog.address.should.equal(
-          mintableERC721Predicate.address.toLowerCase()
-        )
-      })
+    // describe('Correct values should be emitted in ExitedMintableERC721 log', () => {
+    //   it('Event should be emitted by correct contract', () => {
+    //     exitedLog.address.should.equal(
+    //       mintableERC721Predicate.address.toLowerCase()
+    //     )
+    //   })
 
-      it('Should emit proper withdrawer', () => {
-        exitedLog.args.exitor.should.equal(alice)
-      })
+    //   it('Should emit proper withdrawer', () => {
+    //     exitedLog.args.exitor.should.equal(alice)
+    //   })
 
-      it('Should emit correct tokenId', () => {
-        const exitedLogTokenId = exitedLog.args.tokenId.toNumber()
-        exitedLogTokenId.should.equal(tokenId)
-      })
+    //   it('Should emit correct tokenId', () => {
+    //     const exitedLogTokenId = exitedLog.args.tokenId.toNumber()
+    //     exitedLogTokenId.should.equal(tokenId)
+    //   })
 
-      it('Should emit correct root token', () => {
-        exitedLog.args.rootToken.should.equal(dummyMintableERC721.address)
-      })
-    })
+    //   it('Should emit correct root token', () => {
+    //     exitedLog.args.rootToken.should.equal(dummyMintableERC721.address)
+    //   })
+    // })
 
     it('Token should be minted for alice', async () => {
-      const owner = await dummyMintableERC721.ownerOf(tokenId)
-      owner.should.equal(alice)
+      expect(await dummyMintableERC721.ownerOf(tokenId)).to.equal(alice.address)
     })
 
     it('alice should be able to deposit token back', async () => {
-      await dummyMintableERC721.approve(mintableERC721Predicate.address, tokenId, { from: alice })
+      await dummyMintableERC721.connect(alice).approve(mintableERC721Predicate.target, tokenId)
       const depositData = abi.encode(['uint256'], [tokenId])
-      const lockTokensTx = await mintableERC721Predicate.lockTokens(alice, alice, dummyMintableERC721.address, depositData)
-      should.exist(lockTokensTx)
+      await expect(
+        mintableERC721Predicate.lockTokens(alice.address, alice.address, dummyMintableERC721.target, depositData)
+      )
+        .to.emit(mintableERC721Predicate, 'LockedMintableERC721')
+        .withArgs(alice.address, alice.address, dummyMintableERC721.target, tokenId)
     })
 
     it('Token should be transfered to mintableERC721Predicate', async () => {
-      const owner = await dummyMintableERC721.ownerOf(tokenId)
-      owner.should.equal(mintableERC721Predicate.address)
+      expect(await dummyMintableERC721.ownerOf(tokenId)).to.equal(mintableERC721Predicate.target)
     })
 
     it('bob should be able to send exitTokens tx', async () => {
@@ -215,88 +210,88 @@ contract('MintableERC721Predicate', (accounts) => {
         to: mockValues.zeroAddress,
         tokenId: tokenId
       })
-      exitTokensTx = await mintableERC721Predicate.exitTokens(dummyMintableERC721.address, burnLog)
-      should.exist(exitTokensTx)
+      await expect(mintableERC721Predicate.exitTokens(dummyMintableERC721.target, dummyMintableERC721.target, burnLog))
+        .to.emit(mintableERC721Predicate, 'ExitedMintableERC721')
+        .withArgs(bob, dummyMintableERC721.target, tokenId)
     })
 
     it('Token should be transfered to bob', async () => {
-      const owner = await dummyMintableERC721.ownerOf(tokenId)
-      owner.should.equal(bob)
+      expect(await dummyMintableERC721.ownerOf(tokenId)).to.equal(bob)
     })
   })
 
   describe('exitTokens called by different user', () => {
     const tokenId = mockValues.numbers[5]
-    const alice = accounts[2]
     const bob = mockValues.addresses[8]
-    const exitCaller = mockValues.addresses[3]
 
+    let alice
     let dummyMintableERC721
     let mintableERC721Predicate
-    let exitTokensTx
-    let exitedLog0
-    let exitedLog1
 
     before(async () => {
-      const contracts = await deployer.deployFreshRootContracts(accounts)
+      alice = await ethers.getSigner(accounts[2])
+      const contracts = await deployFreshRootContracts(accounts)
       dummyMintableERC721 = contracts.dummyMintableERC721
       mintableERC721Predicate = contracts.mintableERC721Predicate
       const PREDICATE_ROLE = await dummyMintableERC721.PREDICATE_ROLE()
-      await dummyMintableERC721.grantRole(PREDICATE_ROLE, mintableERC721Predicate.address)
+      await dummyMintableERC721.grantRole(PREDICATE_ROLE, mintableERC721Predicate.target)
     })
 
     it('exitCaller should be able to send exitTokens tx', async () => {
       const burnLog = getERC721TransferLog({
-        from: alice,
+        from: alice.address,
         to: mockValues.zeroAddress,
         tokenId: tokenId
       })
-      exitTokensTx = await mintableERC721Predicate.exitTokens(dummyMintableERC721.address, burnLog)
-      should.exist(exitTokensTx)
+      await expect(mintableERC721Predicate.exitTokens(dummyMintableERC721.target, dummyMintableERC721.target, burnLog))
+        .to.emit(mintableERC721Predicate, 'ExitedMintableERC721')
+        .withArgs(alice.address, dummyMintableERC721.target, tokenId)
     })
 
-    it('Should emit ExitedMintableERC721 log', () => {
-      const logs = logDecoder.decodeLogs(exitTokensTx.receipt.rawLogs)
-      exitedLog0 = logs.find(l => l.event === 'ExitedMintableERC721')
-      should.exist(exitedLog0)
-    })
+    // @note Already verified in the test above
+    // it('Should emit ExitedMintableERC721 log', () => {
+    //   const logs = logDecoder.decodeLogs(exitTokensTx.receipt.rawLogs)
+    //   exitedLog0 = logs.find(l => l.event === 'ExitedMintableERC721')
+    //   should.exist(exitedLog0)
+    // })
 
-    describe('Correct values should be emitted in ExitedMintableERC721 log', () => {
-      it('Event should be emitted by correct contract', () => {
-        exitedLog0.address.should.equal(
-          mintableERC721Predicate.address.toLowerCase()
-        )
-      })
+    // describe('Correct values should be emitted in ExitedMintableERC721 log', () => {
+    //   it('Event should be emitted by correct contract', () => {
+    //     exitedLog0.address.should.equal(
+    //       mintableERC721Predicate.address.toLowerCase()
+    //     )
+    //   })
 
-      it('Should emit proper withdrawer', () => {
-        exitedLog0.args.exitor.should.equal(alice)
-      })
+    //   it('Should emit proper withdrawer', () => {
+    //     exitedLog0.args.exitor.should.equal(alice)
+    //   })
 
-      it('Should emit correct tokenId', () => {
-        const exitedLogTokenId = exitedLog0.args.tokenId.toNumber()
-        exitedLogTokenId.should.equal(tokenId)
-      })
+    //   it('Should emit correct tokenId', () => {
+    //     const exitedLogTokenId = exitedLog0.args.tokenId.toNumber()
+    //     exitedLogTokenId.should.equal(tokenId)
+    //   })
 
-      it('Should emit correct root token', () => {
-        exitedLog0.args.rootToken.should.equal(dummyMintableERC721.address)
-      })
-    })
+    //   it('Should emit correct root token', () => {
+    //     exitedLog0.args.rootToken.should.equal(dummyMintableERC721.address)
+    //   })
+    // })
 
     it('Token should be minted for alice', async () => {
-      const owner = await dummyMintableERC721.ownerOf(tokenId)
-      owner.should.equal(alice)
+      expect(await dummyMintableERC721.ownerOf(tokenId)).to.equal(alice.address)
     })
 
     it('alice should be able to deposit token back', async () => {
-      await dummyMintableERC721.approve(mintableERC721Predicate.address, tokenId, { from: alice })
+      await dummyMintableERC721.connect(alice).approve(mintableERC721Predicate.target, tokenId)
       const depositData = abi.encode(['uint256'], [tokenId])
-      const lockTokensTx = await mintableERC721Predicate.lockTokens(alice, alice, dummyMintableERC721.address, depositData)
-      should.exist(lockTokensTx)
+      await expect(
+        mintableERC721Predicate.lockTokens(alice.address, alice.address, dummyMintableERC721.target, depositData)
+      )
+        .to.emit(mintableERC721Predicate, 'LockedMintableERC721')
+        .withArgs(alice.address, alice.address, dummyMintableERC721.target, tokenId)
     })
 
     it('Token should be transfered to mintableERC721Predicate', async () => {
-      const owner = await dummyMintableERC721.ownerOf(tokenId)
-      owner.should.equal(mintableERC721Predicate.address)
+      expect(await dummyMintableERC721.ownerOf(tokenId)).to.equal(mintableERC721Predicate.target)
     })
 
     it('exitCaller should be able to send exitTokens tx', async () => {
@@ -305,60 +300,58 @@ contract('MintableERC721Predicate', (accounts) => {
         to: mockValues.zeroAddress,
         tokenId: tokenId
       })
-      exitTokensTx = await mintableERC721Predicate.exitTokens(dummyMintableERC721.address, burnLog)
-      should.exist(exitTokensTx)
+      await expect(mintableERC721Predicate.exitTokens(dummyMintableERC721.target, dummyMintableERC721.target, burnLog))
+        .to.emit(mintableERC721Predicate, 'ExitedMintableERC721')
+        .withArgs(bob, dummyMintableERC721.target, tokenId)
     })
 
-    it('Should emit ExitedMintableERC721 log', () => {
-      const logs = logDecoder.decodeLogs(exitTokensTx.receipt.rawLogs)
-      exitedLog1 = logs.find(l => l.event === 'ExitedMintableERC721')
-      should.exist(exitedLog1)
-    })
+    // @note Already verified in the test above
+    // it('Should emit ExitedMintableERC721 log', () => {
+    //   const logs = logDecoder.decodeLogs(exitTokensTx.receipt.rawLogs)
+    //   exitedLog1 = logs.find(l => l.event === 'ExitedMintableERC721')
+    //   should.exist(exitedLog1)
+    // })
 
-    describe('Correct values should be emitted in ExitedMintableERC721 log', () => {
-      it('Event should be emitted by correct contract', () => {
-        exitedLog1.address.should.equal(
-          mintableERC721Predicate.address.toLowerCase()
-        )
-      })
+    // describe('Correct values should be emitted in ExitedMintableERC721 log', () => {
+    //   it('Event should be emitted by correct contract', () => {
+    //     exitedLog1.address.should.equal(
+    //       mintableERC721Predicate.address.toLowerCase()
+    //     )
+    //   })
 
-      it('Should emit proper withdrawer', () => {
-        exitedLog1.args.exitor.should.equal(bob)
-      })
+    //   it('Should emit proper withdrawer', () => {
+    //     exitedLog1.args.exitor.should.equal(bob)
+    //   })
 
-      it('Should emit correct tokenId', () => {
-        const exitedLogTokenId = exitedLog1.args.tokenId.toNumber()
-        exitedLogTokenId.should.equal(tokenId)
-      })
+    //   it('Should emit correct tokenId', () => {
+    //     const exitedLogTokenId = exitedLog1.args.tokenId.toNumber()
+    //     exitedLogTokenId.should.equal(tokenId)
+    //   })
 
-      it('Should emit correct root token', () => {
-        exitedLog1.args.rootToken.should.equal(dummyMintableERC721.address)
-      })
-    })
+    //   it('Should emit correct root token', () => {
+    //     exitedLog1.args.rootToken.should.equal(dummyMintableERC721.address)
+    //   })
+    // })
 
     it('Token should be transfered to bob', async () => {
-      const owner = await dummyMintableERC721.ownerOf(tokenId)
-      owner.should.equal(bob)
+      expect(await dummyMintableERC721.ownerOf(tokenId)).to.equal(bob)
     })
   })
 
   describe('exitTokens with `TransferWithMetadata` event signature', () => {
-
     const tokenId = mockValues.numbers[5]
     const withdrawer = mockValues.addresses[8]
     const metaData = 'https://nft.matic.network'
 
     let dummyMintableERC721
     let mintableERC721Predicate
-    let exitTokensTx
-    let exitedLog
 
     before(async () => {
-      const contracts = await deployer.deployFreshRootContracts(accounts)
+      const contracts = await deployFreshRootContracts(accounts)
       dummyMintableERC721 = contracts.dummyMintableERC721
       mintableERC721Predicate = contracts.mintableERC721Predicate
       const PREDICATE_ROLE = await dummyMintableERC721.PREDICATE_ROLE()
-      await dummyMintableERC721.grantRole(PREDICATE_ROLE, mintableERC721Predicate.address)
+      await dummyMintableERC721.grantRole(PREDICATE_ROLE, mintableERC721Predicate.target)
     })
 
     it('Transaction should go through', async () => {
@@ -369,47 +362,46 @@ contract('MintableERC721Predicate', (accounts) => {
         metaData
       })
 
-      exitTokensTx = await mintableERC721Predicate.exitTokens(dummyMintableERC721.address, burnLog)
-      should.exist(exitTokensTx)
+      await expect(mintableERC721Predicate.exitTokens(dummyMintableERC721.target, dummyMintableERC721.target, burnLog))
+        .to.emit(mintableERC721Predicate, 'ExitedMintableERC721')
+        .withArgs(withdrawer, dummyMintableERC721.target, tokenId)
     })
 
-    it('Should emit ExitedMintableERC721 log', () => {
-      const logs = logDecoder.decodeLogs(exitTokensTx.receipt.rawLogs)
-      exitedLog = logs.find(l => l.event === 'ExitedMintableERC721')
-      should.exist(exitedLog)
-    })
+    // @note Already verified in the test above
+    // it('Should emit ExitedMintableERC721 log', () => {
+    //   const logs = logDecoder.decodeLogs(exitTokensTx.receipt.rawLogs)
+    //   exitedLog = logs.find(l => l.event === 'ExitedMintableERC721')
+    //   should.exist(exitedLog)
+    // })
 
-    describe('Correct values should be emitted in ExitedMintableERC721 log', () => {
-      it('Event should be emitted by correct contract', () => {
-        exitedLog.address.should.equal(
-          mintableERC721Predicate.address.toLowerCase()
-        )
-      })
+    // describe('Correct values should be emitted in ExitedMintableERC721 log', () => {
+    //   it('Event should be emitted by correct contract', () => {
+    //     exitedLog.address.should.equal(
+    //       mintableERC721Predicate.address.toLowerCase()
+    //     )
+    //   })
 
-      it('Should emit proper withdrawer', () => {
-        exitedLog.args.exitor.should.equal(withdrawer)
-      })
+    //   it('Should emit proper withdrawer', () => {
+    //     exitedLog.args.exitor.should.equal(withdrawer)
+    //   })
 
-      it('Should emit correct tokenId', () => {
-        const exitedLogTokenId = exitedLog.args.tokenId.toNumber()
-        exitedLogTokenId.should.equal(tokenId)
-      })
+    //   it('Should emit correct tokenId', () => {
+    //     const exitedLogTokenId = exitedLog.args.tokenId.toNumber()
+    //     exitedLogTokenId.should.equal(tokenId)
+    //   })
 
-      it('Should emit correct root token', () => {
-        exitedLog.args.rootToken.should.equal(dummyMintableERC721.address)
-      })
-    })
+    //   it('Should emit correct root token', () => {
+    //     exitedLog.args.rootToken.should.equal(dummyMintableERC721.address)
+    //   })
+    // })
 
     it('Token should be transfered to withdrawer', async () => {
-      const owner = await dummyMintableERC721.ownerOf(tokenId)
-      owner.should.equal(withdrawer)
+      expect(await dummyMintableERC721.ownerOf(tokenId)).to.equal(withdrawer)
     })
 
     it('Token URI should match with transferred metadata', async () => {
-      const _metaData = await dummyMintableERC721.tokenURI(tokenId)
-      _metaData.should.equal(metaData)
+      expect(await dummyMintableERC721.tokenURI(tokenId)).to.equal(metaData)
     })
-
   })
 
   describe('exitTokens with incorrect burn transaction signature', () => {
@@ -419,11 +411,11 @@ contract('MintableERC721Predicate', (accounts) => {
     let mintableERC721Predicate
 
     before(async () => {
-      const contracts = await deployer.deployFreshRootContracts(accounts)
+      const contracts = await deployFreshRootContracts(accounts)
       dummyMintableERC721 = contracts.dummyMintableERC721
       mintableERC721Predicate = contracts.mintableERC721Predicate
       const PREDICATE_ROLE = await dummyMintableERC721.PREDICATE_ROLE()
-      await dummyMintableERC721.grantRole(PREDICATE_ROLE, mintableERC721Predicate.address)
+      await dummyMintableERC721.grantRole(PREDICATE_ROLE, mintableERC721Predicate.target)
     })
 
     it('Should revert with correct reason', async () => {
@@ -433,7 +425,9 @@ contract('MintableERC721Predicate', (accounts) => {
         to: mockValues.zeroAddress,
         tokenId
       })
-      await expectRevert(mintableERC721Predicate.exitTokens(dummyMintableERC721.address, burnLog), 'MintableERC721Predicate: INVALID_SIGNATURE')
+      await expect(
+        mintableERC721Predicate.exitTokens(dummyMintableERC721.target, dummyMintableERC721.target, burnLog)
+      ).to.be.revertedWith('MintableERC721Predicate: INVALID_SIGNATURE')
     })
   })
 
@@ -444,11 +438,11 @@ contract('MintableERC721Predicate', (accounts) => {
     let mintableERC721Predicate
 
     before(async () => {
-      const contracts = await deployer.deployFreshRootContracts(accounts)
+      const contracts = await deployFreshRootContracts(accounts)
       dummyMintableERC721 = contracts.dummyMintableERC721
       mintableERC721Predicate = contracts.mintableERC721Predicate
       const PREDICATE_ROLE = await dummyMintableERC721.PREDICATE_ROLE()
-      await dummyMintableERC721.grantRole(PREDICATE_ROLE, mintableERC721Predicate.address)
+      await dummyMintableERC721.grantRole(PREDICATE_ROLE, mintableERC721Predicate.target)
     })
 
     it('Should revert with correct reason', async () => {
@@ -457,22 +451,26 @@ contract('MintableERC721Predicate', (accounts) => {
         to: mockValues.addresses[8],
         tokenId
       })
-      await expectRevert(mintableERC721Predicate.exitTokens(dummyMintableERC721.address, burnLog), 'MintableERC721Predicate: INVALID_RECEIVER')
+      await expect(
+        mintableERC721Predicate.exitTokens(dummyMintableERC721.target, dummyMintableERC721.target, burnLog)
+      ).to.be.revertedWith('MintableERC721Predicate: INVALID_RECEIVER')
     })
   })
 
   describe('exitTokens called by non manager', () => {
     const tokenId = mockValues.numbers[5]
     const withdrawer = mockValues.addresses[8]
+    let nonManager
     let dummyMintableERC721
     let mintableERC721Predicate
 
     before(async () => {
-      const contracts = await deployer.deployFreshRootContracts(accounts)
+      nonManager = await ethers.getSigner(accounts[2])
+      const contracts = await deployFreshRootContracts(accounts)
       dummyMintableERC721 = contracts.dummyMintableERC721
       mintableERC721Predicate = contracts.mintableERC721Predicate
       const PREDICATE_ROLE = await dummyMintableERC721.PREDICATE_ROLE()
-      await dummyMintableERC721.grantRole(PREDICATE_ROLE, mintableERC721Predicate.address)
+      await dummyMintableERC721.grantRole(PREDICATE_ROLE, mintableERC721Predicate.target)
     })
 
     it('Should revert with correct reason', async () => {
@@ -481,9 +479,11 @@ contract('MintableERC721Predicate', (accounts) => {
         to: mockValues.addresses[8],
         tokenId
       })
-      await expectRevert(
-        mintableERC721Predicate.exitTokens(dummyMintableERC721.address, burnLog, { from: accounts[2] }),
-        'MintableERC721Predicate: INSUFFICIENT_PERMISSIONS')
+      await expect(
+        mintableERC721Predicate
+          .connect(nonManager)
+          .exitTokens(dummyMintableERC721.target, dummyMintableERC721.target, burnLog)
+      ).to.be.revertedWith('MintableERC721Predicate: INSUFFICIENT_PERMISSIONS')
     })
   })
 })

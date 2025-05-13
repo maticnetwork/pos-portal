@@ -1,20 +1,9 @@
-import chai from 'chai'
-import chaiAsPromised from 'chai-as-promised'
-import chaiBN from 'chai-bn'
-import BN from 'bn.js'
-import { defaultAbiCoder as abi } from 'ethers/utils/abi-coder'
-import { expectRevert } from '@openzeppelin/test-helpers'
+import { AbiCoder } from 'ethers'
+import { deployFreshChildContracts } from '../helpers/deployerNew.js'
+import { expect } from 'chai'
+import { mockValues } from '../helpers/constants.js'
 
-import * as deployer from '../helpers/deployer'
-import { mockValues } from '../helpers/constants'
-import logDecoder from '../helpers/log-decoder.js'
-
-chai
-  .use(chaiAsPromised)
-  .use(chaiBN(BN))
-  .should()
-
-const should = chai.should()
+const abi = new AbiCoder()
 
 contract('ChildMintableERC721', (accounts) => {
   describe('Should mint token on deposit', () => {
@@ -22,54 +11,56 @@ contract('ChildMintableERC721', (accounts) => {
     const user = mockValues.addresses[3]
     const depositData = abi.encode(['uint256'], [tokenId])
     let contracts
-    let depositTx
-    let transferLog
 
-    before(async() => {
-      contracts = await deployer.deployFreshChildContracts(accounts)
+    before(async () => {
+      contracts = await deployFreshChildContracts(accounts)
       const DEPOSITOR_ROLE = await contracts.dummyMintableERC721.DEPOSITOR_ROLE()
       await contracts.dummyMintableERC721.grantRole(DEPOSITOR_ROLE, accounts[0])
     })
 
-    it('Token should not exist before deposit', async() => {
-      await expectRevert(contracts.dummyMintableERC721.ownerOf(tokenId), 'ERC721: owner query for nonexistent token')
+    it('Token should not exist before deposit', async () => {
+      await expect(contracts.dummyMintableERC721.ownerOf(tokenId)).to.be.revertedWith(
+        'ERC721: owner query for nonexistent token'
+      )
     })
 
-    it('Can receive deposit tx', async() => {
-      depositTx = await contracts.dummyMintableERC721.deposit(user, depositData)
-      should.exist(depositTx)
+    it('Can receive deposit tx', async () => {
+      await expect(contracts.dummyMintableERC721.deposit(user, depositData))
+        .to.emit(contracts.dummyMintableERC721, 'Transfer')
+        .withArgs(mockValues.zeroAddress, user, tokenId)
     })
 
-    it('Should emit Transfer log', () => {
-      const logs = logDecoder.decodeLogs(depositTx.receipt.rawLogs)
-      transferLog = logs.find(l => l.event === 'Transfer')
-      should.exist(transferLog)
-    })
+    // @note Already verified in the above test
+    // it('Should emit Transfer log', () => {
+    //   const logs = logDecoder.decodeLogs(depositTx.receipt.rawLogs)
+    //   transferLog = logs.find(l => l.event === 'Transfer')
+    //   should.exist(transferLog)
+    // })
 
-    describe('Correct values should be emitted in Transfer log', () => {
-      it('Event should be emitted by correct contract', () => {
-        transferLog.address.should.equal(
-          contracts.dummyMintableERC721.address.toLowerCase()
-        )
-      })
+    // describe('Correct values should be emitted in Transfer log', () => {
+    //   it('Event should be emitted by correct contract', () => {
+    //     transferLog.address.should.equal(
+    //       contracts.dummyMintableERC721.address.toLowerCase()
+    //     )
+    //   })
 
-      it('Should emit proper From', () => {
-        transferLog.args.from.should.equal(mockValues.zeroAddress)
-      })
+    //   it('Should emit proper From', () => {
+    //     transferLog.args.from.should.equal(mockValues.zeroAddress)
+    //   })
 
-      it('Should emit proper To', () => {
-        transferLog.args.to.should.equal(user)
-      })
+    //   it('Should emit proper To', () => {
+    //     transferLog.args.to.should.equal(user)
+    //   })
 
-      it('Should emit correct tokenId', () => {
-        const transferLogTokenId = transferLog.args.tokenId.toNumber()
-        transferLogTokenId.should.equal(tokenId)
-      })
-    })
+    //   it('Should emit correct tokenId', () => {
+    //     const transferLogTokenId = transferLog.args.tokenId.toNumber()
+    //     transferLogTokenId.should.equal(tokenId)
+    //   })
+    // })
 
-    it('Deposit token should be credited to deposit receiver', async() => {
+    it('Deposit token should be credited to deposit receiver', async () => {
       const owner = await contracts.dummyMintableERC721.ownerOf(tokenId)
-      owner.should.equal(user)
+      expect(owner).to.equal(user)
     })
   })
 
@@ -79,16 +70,15 @@ contract('ChildMintableERC721', (accounts) => {
     const depositData = abi.encode(['uint256'], [tokenId])
     let dummyMintableERC721
 
-    before(async() => {
-      const contracts = await deployer.deployFreshChildContracts(accounts)
+    before(async () => {
+      const contracts = await deployFreshChildContracts(accounts)
       dummyMintableERC721 = contracts.dummyMintableERC721
     })
 
-    it('Tx should revert with proper reason', async() => {
-      await expectRevert(
-        dummyMintableERC721.deposit(user, depositData, { from: accounts[1] }),
-        'Transaction has been reverted by the EVM'
-      )
+    it('Tx should revert with proper reason', async () => {
+      await expect(
+        dummyMintableERC721.connect(await ethers.getSigner(accounts[1])).deposit(user, depositData)
+      ).to.be.revertedWith('ChildMintableERC721: INSUFFICIENT_PERMISSIONS')
     })
   })
 
@@ -96,53 +86,57 @@ contract('ChildMintableERC721', (accounts) => {
     const tokenId = mockValues.numbers[6]
     const user = accounts[0]
     let contracts
-    let withdrawTx
-    let transferLog
+    // let withdrawTx
+    // let transferLog
 
-    before(async() => {
-      contracts = await deployer.deployFreshChildContracts(accounts)
+    before(async () => {
+      contracts = await deployFreshChildContracts(accounts)
       await contracts.dummyMintableERC721.mint(user, tokenId)
     })
 
-    it('User should own token', async() => {
+    it('User should own token', async () => {
       const owner = await contracts.dummyMintableERC721.ownerOf(tokenId)
-      owner.should.equal(user)
+      expect(owner).to.equal(user)
     })
 
-    it('Can receive withdraw tx', async() => {
-      withdrawTx = await contracts.dummyMintableERC721.withdraw(tokenId)
-      should.exist(withdrawTx)
+    it('Can receive withdraw tx', async () => {
+      await expect(contracts.dummyMintableERC721.withdraw(tokenId))
+        .to.emit(contracts.dummyMintableERC721, 'Transfer')
+        .withArgs(user, mockValues.zeroAddress, tokenId)
     })
 
-    it('Should emit Transfer log', () => {
-      const logs = logDecoder.decodeLogs(withdrawTx.receipt.rawLogs)
-      transferLog = logs.find(l => l.event === 'Transfer')
-      should.exist(transferLog)
-    })
+    // @note Already verified in the above test
+    // it('Should emit Transfer log', () => {
+    //   const logs = logDecoder.decodeLogs(withdrawTx.receipt.rawLogs)
+    //   transferLog = logs.find(l => l.event === 'Transfer')
+    //   should.exist(transferLog)
+    // })
 
-    describe('Correct values should be emitted in Transfer log', () => {
-      it('Event should be emitted by correct contract', () => {
-        transferLog.address.should.equal(
-          contracts.dummyMintableERC721.address.toLowerCase()
-        )
-      })
+    // describe('Correct values should be emitted in Transfer log', () => {
+    //   it('Event should be emitted by correct contract', () => {
+    //     transferLog.address.should.equal(
+    //       contracts.dummyMintableERC721.address.toLowerCase()
+    //     )
+    //   })
 
-      it('Should emit proper From', () => {
-        transferLog.args.from.should.equal(user)
-      })
+    //   it('Should emit proper From', () => {
+    //     transferLog.args.from.should.equal(user)
+    //   })
 
-      it('Should emit proper To', () => {
-        transferLog.args.to.should.equal(mockValues.zeroAddress)
-      })
+    //   it('Should emit proper To', () => {
+    //     transferLog.args.to.should.equal(mockValues.zeroAddress)
+    //   })
 
-      it('Should emit correct tokenId', () => {
-        const transferLogTokenId = transferLog.args.tokenId.toNumber()
-        transferLogTokenId.should.equal(tokenId)
-      })
-    })
+    //   it('Should emit correct tokenId', () => {
+    //     const transferLogTokenId = transferLog.args.tokenId.toNumber()
+    //     transferLogTokenId.should.equal(tokenId)
+    //   })
+    // })
 
-    it('Token should not exist after burning', async() => {
-      await expectRevert(contracts.dummyMintableERC721.ownerOf(tokenId), 'ERC721: owner query for nonexistent token')
+    it('Token should not exist after burning', async () => {
+      await expect(contracts.dummyMintableERC721.ownerOf(tokenId)).to.be.revertedWith(
+        'ERC721: owner query for nonexistent token'
+      )
     })
   })
 
@@ -150,66 +144,72 @@ contract('ChildMintableERC721', (accounts) => {
     const tokenId = mockValues.numbers[6]
     const user = accounts[0]
     let contracts
-    let withdrawTx2
-    let transferLog2
+    // let withdrawTx
+    // let depositTx
 
-    before(async() => {
-      contracts = await deployer.deployFreshChildContracts(accounts)
+    before(async () => {
+      contracts = await deployFreshChildContracts(accounts)
       await contracts.dummyMintableERC721.mint(user, tokenId)
       const DEPOSITOR_ROLE = await contracts.dummyMintableERC721.DEPOSITOR_ROLE()
       await contracts.dummyMintableERC721.grantRole(DEPOSITOR_ROLE, accounts[0])
     })
 
-    it('Should be able to withdraw token once', async() => {
-      const withdrawTx = await contracts.dummyMintableERC721.withdraw(tokenId)
-      should.exist(withdrawTx)
+    it('Should be able to withdraw token once', async () => {
+      await expect(contracts.dummyMintableERC721.withdraw(tokenId))
+        .to.emit(contracts.dummyMintableERC721, 'Transfer')
+        .withArgs(user, mockValues.zeroAddress, tokenId)
     })
 
-    it('Should be able to deposit token', async() => {
+    it('Should be able to deposit token', async () => {
       const depositData = abi.encode(['uint256'], [tokenId])
-      const depositTx = await contracts.dummyMintableERC721.deposit(user, depositData)
-      should.exist(depositTx)
+      await expect(contracts.dummyMintableERC721.deposit(user, depositData))
+        .to.emit(contracts.dummyMintableERC721, 'Transfer')
+        .withArgs(mockValues.zeroAddress, user, tokenId)
     })
 
-    it('User should own token', async() => {
+    it('User should own token', async () => {
       const owner = await contracts.dummyMintableERC721.ownerOf(tokenId)
-      owner.should.equal(user)
+      expect(owner).to.equal(user)
     })
 
-    it('Can receive withdraw tx', async() => {
-      withdrawTx2 = await contracts.dummyMintableERC721.withdraw(tokenId)
-      should.exist(withdrawTx2)
+    it('Can receive withdraw tx', async () => {
+      await expect(contracts.dummyMintableERC721.withdraw(tokenId))
+        .to.emit(contracts.dummyMintableERC721, 'Transfer')
+        .withArgs(user, mockValues.zeroAddress, tokenId)
     })
 
-    it('Should emit Transfer log', () => {
-      const logs = logDecoder.decodeLogs(withdrawTx2.receipt.rawLogs)
-      transferLog2 = logs.find(l => l.event === 'Transfer')
-      should.exist(transferLog2)
-    })
+    // @note Already verified in the above test
+    // it('Should emit Transfer log', () => {
+    //   const logs = logDecoder.decodeLogs(withdrawTx2.receipt.rawLogs)
+    //   transferLog2 = logs.find(l => l.event === 'Transfer')
+    //   should.exist(transferLog2)
+    // })
 
-    describe('Correct values should be emitted in Transfer log', () => {
-      it('Event should be emitted by correct contract', () => {
-        transferLog2.address.should.equal(
-          contracts.dummyMintableERC721.address.toLowerCase()
-        )
-      })
+    // describe('Correct values should be emitted in Transfer log', () => {
+    //   it('Event should be emitted by correct contract', () => {
+    //     transferLog2.address.should.equal(
+    //       contracts.dummyMintableERC721.address.toLowerCase()
+    //     )
+    //   })
 
-      it('Should emit proper From', () => {
-        transferLog2.args.from.should.equal(user)
-      })
+    //   it('Should emit proper From', () => {
+    //     transferLog2.args.from.should.equal(user)
+    //   })
 
-      it('Should emit proper To', () => {
-        transferLog2.args.to.should.equal(mockValues.zeroAddress)
-      })
+    //   it('Should emit proper To', () => {
+    //     transferLog2.args.to.should.equal(mockValues.zeroAddress)
+    //   })
 
-      it('Should emit correct tokenId', () => {
-        const transferLogTokenId = transferLog2.args.tokenId.toNumber()
-        transferLogTokenId.should.equal(tokenId)
-      })
-    })
+    //   it('Should emit correct tokenId', () => {
+    //     const transferLogTokenId = transferLog2.args.tokenId.toNumber()
+    //     transferLogTokenId.should.equal(tokenId)
+    //   })
+    // })
 
-    it('Token should not exist after burning', async() => {
-      await expectRevert(contracts.dummyMintableERC721.ownerOf(tokenId), 'ERC721: owner query for nonexistent token')
+    it('Token should not exist after burning', async () => {
+      await expect(contracts.dummyMintableERC721.ownerOf(tokenId)).to.be.revertedWith(
+        'ERC721: owner query for nonexistent token'
+      )
     })
   })
 
@@ -218,19 +218,21 @@ contract('ChildMintableERC721', (accounts) => {
     const tokenId = mockValues.numbers[6]
     let dummyMintableERC721
 
-    before(async() => {
-      const contracts = await deployer.deployFreshChildContracts(accounts)
+    before(async () => {
+      const contracts = await deployFreshChildContracts(accounts)
       dummyMintableERC721 = contracts.dummyMintableERC721
       await dummyMintableERC721.mint(user, tokenId)
       await dummyMintableERC721.withdraw(tokenId)
     })
 
-    it('Token should not exist', async() => {
-      await expectRevert(dummyMintableERC721.ownerOf(tokenId), 'ERC721: owner query for nonexistent token')
+    it('Token should not exist', async () => {
+      await expect(dummyMintableERC721.ownerOf(tokenId)).to.be.revertedWith('ERC721: owner query for nonexistent token')
     })
 
-    it('Minting withdrawn token should revert with correct reason', async() => {
-      await expectRevert(dummyMintableERC721.mint(user, tokenId), 'Transaction has been reverted by the EVM')
+    it('Minting withdrawn token should revert with correct reason', async () => {
+      await expect(dummyMintableERC721.mint(user, tokenId)).to.be.revertedWith(
+        'ChildMintableERC721: TOKEN_EXISTS_ON_ROOT_CHAIN'
+      )
     })
   })
 })

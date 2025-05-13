@@ -2,6 +2,8 @@
 src = "contracts"
 out = "out"
 test = "forge"
+optimizer = true
+optimizer_runs = 999999
 libs = [
     "lib",
     "node_modules",

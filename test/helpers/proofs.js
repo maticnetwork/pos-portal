@@ -1,11 +1,9 @@
-import Trie from 'merkle-patricia-tree'
 import { rlp, keccak256, toBuffer } from 'ethereumjs-util'
-import { Transaction } from 'ethereumjs-tx'
-import Common from 'ethereumjs-common'
-import EthereumBlock from 'ethereumjs-block/from-rpc'
+import EthereumTx from 'ethereumjs-tx'
+import Trie from 'merkle-patricia-tree'
 
 // raw header
-function getRawHeader(_block) {
+export function getRawHeader(_block) {
   if (typeof _block.difficulty !== 'string') {
     _block.difficulty = '0x' + _block.difficulty.toString(16)
   }
@@ -23,12 +21,9 @@ export function squanchTx(tx) {
   return tx
 }
 
-function nibblesToTraverse(encodedPartialPath, path, pathPtr) {
+export function nibblesToTraverse(encodedPartialPath, path, pathPtr) {
   let partialPath
-  if (
-    String(encodedPartialPath[0]) === '0' ||
-    String(encodedPartialPath[0]) === '2'
-  ) {
+  if (String(encodedPartialPath[0]) === '0' || String(encodedPartialPath[0]) === '2') {
     partialPath = encodedPartialPath.slice(2)
   } else {
     partialPath = encodedPartialPath.slice(1)
@@ -41,8 +36,8 @@ function nibblesToTraverse(encodedPartialPath, path, pathPtr) {
   }
 }
 
-export function getTxBytes(tx) {
-  const txObj = new Transaction(squanchTx(tx), { common: Common.forCustomChain('mainnet', { chainId: 15001, name: 'bor' }, 'byzantium') })
+export function getTxBytes(rawTx) {
+  const txObj = new EthereumTx(squanchTx(rawTx))
   return txObj.serialize()
 }
 
@@ -54,7 +49,7 @@ export async function getTxProof(tx, block) {
     const path = rlp.encode(siblingTx.transactionIndex)
     const rawSignedSiblingTx = getTxBytes(siblingTx)
     await new Promise((resolve, reject) => {
-      txTrie.put(path, rawSignedSiblingTx, err => {
+      txTrie.put(path, rawSignedSiblingTx, (err) => {
         if (err) {
           reject(err)
         } else {
@@ -66,26 +61,23 @@ export async function getTxProof(tx, block) {
 
   // promise
   return new Promise((resolve, reject) => {
-    txTrie.findPath(
-      rlp.encode(tx.transactionIndex),
-      (err, rawTxNode, reminder, stack) => {
-        if (err) {
-          return reject(err)
-        }
-
-        if (reminder.length > 0) {
-          return reject(new Error('Node does not contain the key'))
-        }
-        const prf = {
-          blockHash: toBuffer(tx.blockHash),
-          parentNodes: stack.map(s => s.raw),
-          root: getRawHeader(block).transactionsTrie,
-          path: rlp.encode(tx.transactionIndex),
-          value: rlp.decode(rawTxNode.value)
-        }
-        resolve(prf)
+    txTrie.findPath(rlp.encode(tx.transactionIndex), (err, rawTxNode, reminder, stack) => {
+      if (err) {
+        return reject(err)
       }
-    )
+
+      if (reminder.length > 0) {
+        return reject(new Error('Node does not contain the key'))
+      }
+      const prf = {
+        blockHash: toBuffer(tx.blockHash),
+        parentNodes: stack.map((s) => s.raw),
+        root: toBuffer(block.transactionsRoot),
+        path: rlp.encode(tx.transactionIndex),
+        value: rlp.decode(rawTxNode.value)
+      }
+      resolve(prf)
+    })
   })
 }
 
@@ -101,10 +93,7 @@ export function verifyTxProof(proof) {
     var pathPtr = 0
     for (var i = 0; i < len; i++) {
       currentNode = parentNodes[i]
-      const encodedNode = Buffer.from(
-        keccak256(rlp.encode(currentNode)),
-        'hex'
-      )
+      const encodedNode = Buffer.from(keccak256(rlp.encode(currentNode)), 'hex')
       if (!nodeKey.equals(encodedNode)) {
         return false
       }
@@ -125,12 +114,8 @@ export function verifyTxProof(proof) {
           break
         case 2:
           // eslint-disable-next-line
-          const traversed = nibblesToTraverse(
-            currentNode[0].toString('hex'),
-            path,
-            pathPtr
-          )
-          if ((traversed + pathPtr) === path.length) {
+          const traversed = nibblesToTraverse(currentNode[0].toString('hex'), path, pathPtr)
+          if (traversed + pathPtr === path.length) {
             // leaf node
             if (currentNode[1].equals(rlp.encode(value))) {
               return true
@@ -159,18 +144,12 @@ export function verifyTxProof(proof) {
 
 export function getReceiptBytes(receipt) {
   return rlp.encode([
-    toBuffer(
-      receipt.status !== undefined && receipt.status != null
-        ? receipt.status
-          ? '0x1'
-          : '0x'
-        : receipt.root
-    ),
+    toBuffer(receipt.status !== undefined && receipt.status != null ? (receipt.status ? '0x1' : '0x') : receipt.root),
     toBuffer(receipt.cumulativeGasUsed),
     toBuffer(receipt.logsBloom),
 
     // encoded log array
-    receipt.logs.map(l => {
+    receipt.logs.map((l) => {
       // [address, [topics array], data]
       return [
         toBuffer(l.address), // convert address to buffer
@@ -183,18 +162,12 @@ export function getReceiptBytes(receipt) {
 
 export function getDiffEncodedReceipt(receipt) {
   return rlp.encode([
-    toBuffer(
-      receipt.status !== undefined && receipt.status != null
-        ? receipt.status
-          ? 1
-          : 0
-        : receipt.root
-    ),
+    toBuffer(receipt.status !== undefined && receipt.status != null ? (receipt.status ? 1 : 0) : receipt.root),
     toBuffer(receipt.cumulativeGasUsed),
     toBuffer(receipt.logsBloom),
 
     // encoded log array
-    receipt.logs.map(l => {
+    receipt.logs.map((l) => {
       // [address, [topics array], data]
       if (l.data.length < 67) {
         // remove left padding
@@ -215,18 +188,12 @@ export function getDiffEncodedReceipt(receipt) {
 
 export function getFakeReceiptBytes(receipt, dummyData) {
   return rlp.encode([
-    toBuffer(
-      receipt.status !== undefined && receipt.status != null
-        ? receipt.status
-          ? 1
-          : 0
-        : receipt.root
-    ),
+    toBuffer(receipt.status !== undefined && receipt.status != null ? (receipt.status ? 1 : 0) : receipt.root),
     toBuffer(receipt.cumulativeGasUsed),
     toBuffer(receipt.logsBloom),
 
     // encoded log array
-    receipt.logs.map(l => {
+    receipt.logs.map((l) => {
       // generate a random data
       const hex = '0123456789abcdef'
       if (dummyData === '') {
@@ -249,7 +216,7 @@ export async function getReceiptProof(receipt, block, web3, receipts) {
   const receiptsTrie = new Trie()
   const receiptPromises = []
   if (!receipts) {
-    block.transactions.forEach(tx => {
+    block.transactions.forEach((tx) => {
       receiptPromises.push(web3.eth.getTransactionReceipt(tx.hash))
     })
     receipts = await Promise.all(receiptPromises)
@@ -260,7 +227,7 @@ export async function getReceiptProof(receipt, block, web3, receipts) {
     const path = rlp.encode(siblingReceipt.transactionIndex)
     const rawReceipt = getReceiptBytes(siblingReceipt)
     await new Promise((resolve, reject) => {
-      receiptsTrie.put(path, rawReceipt, err => {
+      receiptsTrie.put(path, rawReceipt, (err) => {
         if (err) {
           reject(err)
         } else {
@@ -272,27 +239,24 @@ export async function getReceiptProof(receipt, block, web3, receipts) {
 
   // promise
   return new Promise((resolve, reject) => {
-    receiptsTrie.findPath(
-      rlp.encode(receipt.transactionIndex),
-      (err, rawReceiptNode, reminder, stack) => {
-        if (err) {
-          return reject(err)
-        }
-
-        if (reminder.length > 0) {
-          return reject(new Error('Node does not contain the key'))
-        }
-
-        const prf = {
-          blockHash: toBuffer(receipt.blockHash),
-          parentNodes: stack.map(s => s.raw),
-          root: getRawHeader(block).receiptTrie,
-          path: rlp.encode(receipt.transactionIndex),
-          value: rlp.decode(rawReceiptNode.value)
-        }
-        resolve(prf)
+    receiptsTrie.findPath(rlp.encode(receipt.transactionIndex), (err, rawReceiptNode, reminder, stack) => {
+      if (err) {
+        return reject(err)
       }
-    )
+
+      if (reminder.length > 0) {
+        return reject(new Error('Node does not contain the key'))
+      }
+
+      const prf = {
+        blockHash: toBuffer(receipt.blockHash),
+        parentNodes: stack.map((s) => s.raw),
+        root: toBuffer(block.receiptsRoot),
+        path: rlp.encode(receipt.transactionIndex),
+        value: rlp.decode(rawReceiptNode.value)
+      }
+      resolve(prf)
+    })
   })
 }
 

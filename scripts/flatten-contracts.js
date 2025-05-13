@@ -1,5 +1,5 @@
-const flatten = require('truffle-flattener')
-const fs = require('fs')
+import flatten from 'truffle-flattener'
+import { writeFileSync } from 'fs'
 
 const contractsToFlatten = [
   {
@@ -169,5 +169,5 @@ contractsToFlatten.forEach(async (c) => {
   const source = `./${c.path}/${c.fileName}`
   const dest = `./flat/${c.fileName}`
   const flat = await flatten([source])
-  fs.writeFileSync(dest, flat)
+  writeFileSync(dest, flat)
 })

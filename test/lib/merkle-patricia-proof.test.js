@@ -1,44 +1,38 @@
-import chai from 'chai'
-import chaiAsPromised from 'chai-as-promised'
-import chaiBN from 'chai-bn'
-import BN from 'bn.js'
+import { expect } from 'chai'
+import { getReceiptProof, verifyReceiptProof, getReceiptBytes } from '../helpers/proofs.js'
 import { rlp } from 'ethereumjs-util'
-import block from '../mockResponses/347-block.json'
-import receiptList from '../mockResponses/347-receipt-list.json'
-import { getReceiptProof, verifyReceiptProof, getReceiptBytes } from '../helpers/proofs'
+import fs from 'fs'
 
+const block = JSON.parse(fs.readFileSync(new URL('../mockResponses/347-block.json', import.meta.url)))
+const receiptsRoot = block.receiptsRoot
+const receiptList = JSON.parse(fs.readFileSync(new URL('../mockResponses/347-receipt-list.json', import.meta.url)))
 const MerklePatriciaTest = artifacts.require('MerklePatriciaTest')
 
-chai
-  .use(chaiAsPromised)
-  .use(chaiBN(BN))
-  .should()
-
-contract('MerklePatriciaTest', (accounts) => {
+describe('MerklePatriciaTest', function () {
   let merklePatriciaTest
 
-  before(async() => {
+  before(async () => {
     merklePatriciaTest = await MerklePatriciaTest.new()
   })
 
-  it('Proof verification should succeed for all 347 transactions in block', async() => {
+  it('Proof verification should succeed for all 347 transactions in block', async () => {
     await Promise.all(
-      receiptList.map(async(receipt) => {
+      receiptList.map(async (receipt) => {
         const receiptProof = await getReceiptProof(receipt, block, null /* web3 */, receiptList)
 
-        const jsVerified = await verifyReceiptProof(receiptProof)
-        jsVerified.should.equal(true, `Proof verification in js failed for receipt ${receipt.transactionIndex}`)
+        const jsVerified = verifyReceiptProof(receiptProof)
+        expect(jsVerified).to.equal(true, `Proof verification in js failed for receipt ${receipt.transactionIndex}`)
 
         const contractVerified = await merklePatriciaTest.verify(
-          block.receiptsRoot,
+          receiptsRoot,
           getReceiptBytes(receipt),
           rlp.encode(receiptProof.parentNodes),
-          Buffer.concat([
-            Buffer.from('00', 'hex'),
-            receiptProof.path
-          ])
+          Buffer.concat([Buffer.from('00', 'hex'), receiptProof.path])
         )
-        contractVerified.should.equal(true, `Proof verification on contract failed for receipt ${receipt.transactionIndex}`)
+        expect(contractVerified).to.equal(
+          true,
+          `Proof verification on contract failed for receipt ${receipt.transactionIndex}`
+        )
 
         process.stdout.write(`\r      Proof verified for receipt ${receipt.transactionIndex}`)
       })

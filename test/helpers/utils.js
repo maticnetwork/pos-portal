@@ -1,17 +1,22 @@
-import BN from 'bn.js'
-import { defaultAbiCoder as abi } from 'ethers/utils/abi-coder'
+import { AbiCoder } from 'ethers'
+import { BN } from 'bn.js'
+import { expect } from 'chai'
 import bip39 from 'bip39'
-import hdkey from 'ethereumjs-wallet/hdkey'
-import packageJSON from '../../package.json'
-import contracts from './contracts'
+import fs from 'fs'
+import hdkey from 'ethereumjs-wallet/hdkey.js'
+
+const pkg = JSON.parse(fs.readFileSync(new URL('../../package.json', import.meta.url)))
+const abi = new AbiCoder()
 
 const STATE_SYNCED_EVENT_SIG = '0x103fed9db65eac19c4d870f49ab7520fe03b99f1838e5996caf47e9e43308392'
 
 export const encodeStateSyncerData = (user, rootToken, amount) => {
-  return '0x' +
+  return (
+    '0x' +
     user.slice(2).padStart(64, '0') +
     rootToken.slice(2).padStart(64, '0') +
     amount.toString(16).padStart(64, '0')
+  )
 }
 
 export const decodeStateSenderData = (data) => {
@@ -23,35 +28,21 @@ export const decodeStateSenderData = (data) => {
 
 export const constructERC1155DepositData = (ids, amounts) => {
   return abi.encode(
-    [
-      'uint256[]',
-      'uint256[]',
-      'bytes'
-    ],
-    [
-      ids.map(i => i.toString()),
-      amounts.map(a => a.toString()),
-      ['0x0']
-    ]
+    ['uint256[]', 'uint256[]', 'bytes'],
+    [ids.map((i) => i.toString()), amounts.map((a) => a.toString()), '0x']
   )
 }
 
 export function assertBigNumberEquality(num1, num2) {
   if (!BN.isBN(num1)) num1 = web3.utils.toBN(num1.toString())
   if (!BN.isBN(num2)) num2 = web3.utils.toBN(num2.toString())
-  assert(
-    num1.eq(num2),
-    `expected ${num1.toString(10)} and ${num2.toString(10)} to be equal`
-  )
+  expect(num1).to.equal(num2, `expected ${num1.toString(10)} and ${num2.toString(10)} to be equal`)
 }
 
-export const mnemonics = packageJSON.config.mnemonics
-export function generateFirstWallets({
-  mnemonics = packageJSON.config.mnemonics,
-  n = 10,
-  hdPathIndex = 0
-}) {
-  const hdwallet = hdkey.fromMasterSeed(bip39.mnemonicToSeed(mnemonics))
+export const mnemonics = pkg.config.mnemonics
+
+export function generateFirstWallets({ mnemonics = pkg.config.mnemonics, n = 10, hdPathIndex = 0 }) {
+  const hdwallet = hdkey.fromMasterSeed(bip39.mnemonicToSeedSync(mnemonics))
   const result = []
   for (let i = 0; i < n; i++) {
     const node = hdwallet.derivePath(`m/44'/60'/0'/0/${i + hdPathIndex || 0}`)
@@ -70,12 +61,12 @@ export const getSignatureParameters = (signature) => {
   return { r, s, v }
 }
 
-export const syncState = async({ tx }) => {
-  const evtList = tx.receipt.rawLogs.filter(l => l.topics[0] === STATE_SYNCED_EVENT_SIG)
+export const syncState = async (txReceipt) => {
+  const evtList = txReceipt.logs.filter((l) => l.topics[0] === STATE_SYNCED_EVENT_SIG)
   const stateReceiveTxList = []
   for (const evt of evtList) {
     const [contractAddress] = abi.decode(['address'], evt.topics[2])
-    const stateReceiverContract = await contracts.IStateReceiver.at(contractAddress)
+    const stateReceiverContract = await ethers.getContractAt('IStateReceiver', contractAddress)
     const [syncData] = abi.decode(['bytes'], evt.data)
     const syncId = evt.topics[1]
     const stateReceiveTx = await stateReceiverContract.onStateReceive(syncId, syncData)

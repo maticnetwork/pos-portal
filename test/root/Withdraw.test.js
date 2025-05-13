@@ -1,33 +1,22 @@
-import chai from 'chai'
-import chaiAsPromised from 'chai-as-promised'
-import chaiBN from 'chai-bn'
-import BN from 'bn.js'
-import { defaultAbiCoder as abi } from 'ethers/utils/abi-coder'
-import { expectRevert } from '@openzeppelin/test-helpers'
-import { bufferToHex, rlp, toBuffer } from 'ethereumjs-util'
+import { AbiCoder } from 'ethers'
+import { bufferToHex, rlp } from 'ethereumjs-util'
+import { constructERC1155DepositData, syncState } from '../helpers/utils.js'
+import { deployInitializedContracts } from '../helpers/deployerNew.js'
+import { expect } from 'chai'
+import { getFakeReceiptBytes, getDiffEncodedReceipt } from '../helpers/proofs.js'
+import { mockValues } from '../helpers/constants.js'
+import { submitCheckpoint } from '../helpers/checkpoint.js'
 
-import * as deployer from '../helpers/deployer'
-import { mockValues } from '../helpers/constants'
-import contracts, { childWeb3, rootWeb3 as web3 } from '../helpers/contracts'
-import logDecoder from '../helpers/log-decoder'
-import { submitCheckpoint } from '../helpers/checkpoint'
-import { getFakeReceiptBytes, getDiffEncodedReceipt } from '../helpers/proofs'
-import { constructERC1155DepositData, syncState } from '../helpers/utils'
-
-// Enable and inject BN dependency
-chai
-  .use(chaiAsPromised)
-  .use(chaiBN(BN))
-  .should()
-
-const should = chai.should()
+const abi = new AbiCoder()
 
 const ERC721_TRANSFER_EVENT_SIG = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef'
 const ERC721_WITHDRAW_BATCH_EVENT_SIG = '0xf871896b17e9cb7a64941c62c188a4f5c621b86800e3d15452ece01ce56073df'
 
 const toHex = (buf) => {
   buf = buf.toString('hex')
-  if (buf.substring(0, 2) == '0x') { return buf }
+  if (buf.substring(0, 2) == '0x') {
+    return buf
+  }
   return '0x' + buf.toString('hex')
 }
 
@@ -37,104 +26,110 @@ function pad(n, width, z) {
   return n.length >= width ? n : new Array(width - n.length + 1).join(z) + n
 }
 
-contract('RootChainManager', async(accounts) => {
-  describe('Withdraw ERC20', async() => {
+contract('RootChainManager', async (accounts) => {
+  describe('Withdraw ERC20', async () => {
     const depositAmount = mockValues.amounts[1]
-    let totalDepositedAmount = new BN('0')
+    let totalDepositedAmount = 0n
     const withdrawAmount = mockValues.amounts[1]
     const depositReceiver = accounts[0]
     const depositData = abi.encode(['uint256'], [depositAmount.toString()])
     let contracts
     let dummyERC20
     let rootChainManager
-    let accountBalance
-    let contractBalance
-    let transferLog
+    let oldAccountBalance
+    let oldContractBalance
     let withdrawTx
+    let withdrawTxReceipt
     let checkpointData
     let headerNumber
     let exitTx
 
-    before(async() => {
-      contracts = await deployer.deployInitializedContracts(accounts)
+    before(async () => {
+      contracts = await deployInitializedContracts(accounts)
       dummyERC20 = contracts.root.dummyERC20
       rootChainManager = contracts.root.rootChainManager
-      accountBalance = await dummyERC20.balanceOf(accounts[0])
-      contractBalance = await dummyERC20.balanceOf(contracts.root.erc20Predicate.address)
+      oldAccountBalance = await dummyERC20.balanceOf(accounts[0])
+      oldContractBalance = await dummyERC20.balanceOf(contracts.root.erc20Predicate.target)
     })
 
-    it('Depositor should be able to approve and deposit', async() => {
-      await dummyERC20.approve(contracts.root.erc20Predicate.address, depositAmount)
-      const depositTx = await rootChainManager.depositFor(depositReceiver, dummyERC20.address, depositData)
-      should.exist(depositTx)
-      totalDepositedAmount = totalDepositedAmount.add(depositAmount)
-      const syncTx = await syncState({ tx: depositTx })
-      should.exist(syncTx)
+    it('Depositor should be able to approve and deposit', async () => {
+      await dummyERC20.approve(contracts.root.erc20Predicate.target, depositAmount)
+      const depositTx = await rootChainManager.depositFor(depositReceiver, dummyERC20.target, depositData)
+      expect(depositTx).to.exist
+      totalDepositedAmount += depositAmount
+      let txReceipt = await depositTx.wait()
+      const syncTx = await syncState(txReceipt)
+      expect(syncTx).to.exist
     })
 
-    it('Second depositor should be able to approve and deposit', async() => {
+    it('Second depositor should be able to approve and deposit', async () => {
       await dummyERC20.mint(depositAmount)
       await dummyERC20.transfer(accounts[2], depositAmount)
-      await dummyERC20.approve(contracts.root.erc20Predicate.address, mockValues.amounts[2], { from: accounts[2] })
-      const depositTx = await rootChainManager.depositFor(accounts[2], dummyERC20.address, depositData, { from: accounts[2] })
-      should.exist(depositTx)
-      totalDepositedAmount = totalDepositedAmount.add(depositAmount)
-      const syncTx = await syncState({ tx: depositTx })
-      should.exist(syncTx)
+      await dummyERC20
+        .connect(await ethers.getSigner(accounts[2]))
+        .approve(contracts.root.erc20Predicate.target, mockValues.amounts[2])
+      const depositTx = await rootChainManager
+        .connect(await ethers.getSigner(accounts[2]))
+        .depositFor(accounts[2], dummyERC20.target, depositData)
+      expect(depositTx).to.exist
+      totalDepositedAmount += depositAmount
+      let txReceipt = await depositTx.wait()
+      const syncTx = await syncState(txReceipt)
+      expect(syncTx).to.exist
     })
 
-    it('Deposit amount should be deducted from depositor account', async() => {
+    it('Deposit amount should be deducted from depositor account', async () => {
       const newAccountBalance = await dummyERC20.balanceOf(accounts[0])
-      newAccountBalance.should.be.a.bignumber.that.equals(
-        accountBalance.sub(depositAmount)
-      )
+      expect(newAccountBalance).to.equal(oldAccountBalance - depositAmount)
       // update account balance
-      accountBalance = newAccountBalance
+      oldAccountBalance = newAccountBalance
     })
 
-    it('Deposit amount should be credited to correct contract', async() => {
-      const newContractBalance = await dummyERC20.balanceOf(contracts.root.erc20Predicate.address)
-      newContractBalance.should.be.a.bignumber.that.equals(
-        contractBalance.add(totalDepositedAmount)
-      )
+    it('Deposit amount should be credited to correct contract', async () => {
+      const newContractBalance = await dummyERC20.balanceOf(contracts.root.erc20Predicate.target)
+      expect(newContractBalance).to.equal(oldContractBalance + totalDepositedAmount)
 
       // update balance
-      contractBalance = newContractBalance
+      oldContractBalance = newContractBalance
     })
 
-    it('Can receive withdraw tx', async() => {
-      withdrawTx = await contracts.child.dummyERC20.withdraw(withdrawAmount, { from: depositReceiver })
-      should.exist(withdrawTx)
+    it('Can receive withdraw tx', async () => {
+      withdrawTx = await contracts.child.dummyERC20
+        .connect(await ethers.getSigner(depositReceiver))
+        .withdraw(withdrawAmount)
+      expect(withdrawTx).to.exist
+
+      await withdrawTx.wait()
+      withdrawTxReceipt = await web3.eth.getTransactionReceipt(withdrawTx.hash)
     })
 
     it('Should emit Transfer log in withdraw tx', () => {
-      const logs = logDecoder.decodeLogs(withdrawTx.receipt.rawLogs)
-      transferLog = logs.find(l => l.event === 'Transfer')
-      should.exist(transferLog)
+      expect(withdrawTx)
+        .to.emit(contracts.child.dummyERC20, 'Transfer')
+        .withArgs(depositReceiver, mockValues.zeroAddress, withdrawAmount)
     })
 
-    it('Should submit checkpoint', async() => {
+    it('Should submit checkpoint', async () => {
       // submit checkpoint including burn (withdraw) tx
-      checkpointData = await submitCheckpoint(contracts.root.checkpointManager, withdrawTx.receipt)
-      should.exist(checkpointData)
+      checkpointData = await submitCheckpoint(contracts.root.checkpointManager, withdrawTxReceipt)
+      expect(checkpointData).to.exist
     })
 
-    it('Should match checkpoint details', async() => {
+    it('Should match checkpoint details', async () => {
       const root = bufferToHex(checkpointData.header.root)
-      should.exist(root)
+      expect(root).to.exist
 
       // fetch latest header number
       headerNumber = await contracts.root.checkpointManager.currentCheckpointNumber()
-      headerNumber.should.be.bignumber.gt('0')
+      expect(headerNumber).to.be.gt('0')
 
       // fetch header block details and validate
       const headerData = await contracts.root.checkpointManager.headerBlocks(headerNumber)
-      root.should.equal(headerData.root)
+      expect(root).to.equal(headerData.root)
     })
 
-    it('Should fail: exit with a random data receipt', async() => {
-      const receipt = await childWeb3.eth.getTransactionReceipt(withdrawTx.receipt.transactionHash)
-      const dummyReceipt = getFakeReceiptBytes(receipt, '')
+    it('Should fail: exit with a random data receipt', async () => {
+      const dummyReceipt = getFakeReceiptBytes(withdrawTxReceipt, '')
       const logIndex = 0
       const data = bufferToHex(
         rlp.encode([
@@ -151,14 +146,13 @@ contract('RootChainManager', async(accounts) => {
         ])
       )
       // start exit
-      await expectRevert(contracts.root.rootChainManager.exit(data,
-        { from: depositReceiver }), 'RootChainManager: INVALID_PROOF')
+      await expect(
+        contracts.root.rootChainManager.connect(await ethers.getSigner(depositReceiver)).exit(data)
+      ).to.be.revertedWith('RootChainManager: INVALID_PROOF')
     })
 
-    it('Should fail: exit with a fake amount data in receipt', async() => {
-      const receipt = await childWeb3.eth.getTransactionReceipt(
-        withdrawTx.receipt.transactionHash)
-      const dummyReceipt = getFakeReceiptBytes(receipt, mockValues.bytes32[4])
+    it('Should fail: exit with a fake amount data in receipt', async () => {
+      const dummyReceipt = getFakeReceiptBytes(withdrawTxReceipt, mockValues.bytes32[4])
       const logIndex = 0
       const data = bufferToHex(
         rlp.encode([
@@ -175,11 +169,11 @@ contract('RootChainManager', async(accounts) => {
         ])
       )
       // start exit
-      await expectRevert(contracts.root.rootChainManager.exit(data,
-        { from: depositReceiver }), 'revert')
+      await expect(contracts.root.rootChainManager.connect(await ethers.getSigner(depositReceiver)).exit(data)).to.be
+        .reverted
     })
 
-    it('Should fail to start exit (changed the block number to future block)', async() => {
+    it('Should fail to start exit (changed the block number to future block)', async () => {
       const logIndex = 0
       const fakeBlockNumber = checkpointData.number + 1
       const data = bufferToHex(
@@ -197,11 +191,12 @@ contract('RootChainManager', async(accounts) => {
         ])
       )
       // start exit
-      await expectRevert(contracts.root.rootChainManager.exit(data,
-        { from: depositReceiver }), 'Leaf index is too big')
+      await expect(
+        contracts.root.rootChainManager.connect(await ethers.getSigner(depositReceiver)).exit(data)
+      ).to.be.revertedWith('Leaf index is too big')
     })
 
-    it('Should fail to start exit (changed the block number with different encoding)', async() => {
+    it('Should fail to start exit (changed the block number with different encoding)', async () => {
       const logIndex = 0
       const fakeBlockNumber = pad(checkpointData.number, 64)
       const data = bufferToHex(
@@ -219,11 +214,11 @@ contract('RootChainManager', async(accounts) => {
         ])
       )
       // start exit
-      await expectRevert.unspecified(contracts.root.rootChainManager.exit(data,
-        { from: depositReceiver }))
+      await expect(contracts.root.rootChainManager.connect(await ethers.getSigner(depositReceiver)).exit(data)).to.be
+        .reverted
     })
 
-    it('Should start exit', async() => {
+    it('Should start exit', async () => {
       const logIndex = 0
       const data = bufferToHex(
         rlp.encode([
@@ -240,14 +235,12 @@ contract('RootChainManager', async(accounts) => {
         ])
       )
       // start exit
-      exitTx = await contracts.root.rootChainManager.exit(data, { from: depositReceiver })
-      should.exist(exitTx)
+      exitTx = await contracts.root.rootChainManager.connect(await ethers.getSigner(depositReceiver)).exit(data)
+      expect(exitTx).to.exist
     })
 
-    it('Should fail: exit with a differently encoded amount data in receipt', async() => {
-      const receipt = await childWeb3.eth.getTransactionReceipt(
-        withdrawTx.receipt.transactionHash)
-      const dummyReceipt = getDiffEncodedReceipt(receipt, mockValues.bytes32[4])
+    it('Should fail: exit with a differently encoded amount data in receipt', async () => {
+      const dummyReceipt = getDiffEncodedReceipt(withdrawTxReceipt, mockValues.bytes32[4])
       const logIndex = 0
       const data = bufferToHex(
         rlp.encode([
@@ -264,11 +257,14 @@ contract('RootChainManager', async(accounts) => {
         ])
       )
       // start exit
-      await expectRevert(contracts.root.rootChainManager.exit(data,
-        { from: depositReceiver }), 'EXIT_ALREADY_PROCESSED')
+      // await expectRevert(contracts.root.rootChainManager.exit(data,
+      //   { from: depositReceiver }), 'EXIT_ALREADY_PROCESSED')
+      await expect(
+        contracts.root.rootChainManager.connect(await ethers.getSigner(depositReceiver)).exit(data)
+      ).to.be.revertedWith('RootChainManager: EXIT_ALREADY_PROCESSED')
     })
 
-    it('Should fail: start exit again', async() => {
+    it('Should fail: start exit again', async () => {
       const logIndex = 0
       const data = bufferToHex(
         rlp.encode([
@@ -285,11 +281,12 @@ contract('RootChainManager', async(accounts) => {
         ])
       )
       // start exit
-      await expectRevert(contracts.root.rootChainManager.exit(data,
-        { from: depositReceiver }), 'EXIT_ALREADY_PROCESSED')
+      await expect(
+        contracts.root.rootChainManager.connect(await ethers.getSigner(depositReceiver)).exit(data)
+      ).to.be.revertedWith('RootChainManager: EXIT_ALREADY_PROCESSED')
     })
 
-    it('Should fail to start exit again (change the log index to generate same exit hash)', async() => {
+    it('Should fail to start exit again (change the log index to generate same exit hash)', async () => {
       const logIndex = toHex(Array(64).fill(0).join(''))
       const data = bufferToHex(
         rlp.encode([
@@ -306,34 +303,31 @@ contract('RootChainManager', async(accounts) => {
         ])
       )
       // start exit
-      await expectRevert(contracts.root.rootChainManager.exit(data,
-        { from: depositReceiver }), 'EXIT_ALREADY_PROCESSED')
+      await expect(
+        contracts.root.rootChainManager.connect(await ethers.getSigner(depositReceiver)).exit(data)
+      ).to.be.revertedWith('RootChainManager: EXIT_ALREADY_PROCESSED')
     })
 
     it('Should emit Transfer log in exit tx', () => {
-      const logs = logDecoder.decodeLogs(exitTx.receipt.rawLogs)
-      const exitTransferLog = logs.find(l => l.event === 'Transfer')
-      should.exist(exitTransferLog)
+      expect(exitTx)
+        .to.emit(contracts.root.rootChainManager, 'Transfer')
+        .withArgs(mockValues.zeroAddress, depositReceiver, withdrawAmount)
     })
 
-    it('Should have more amount in withdrawer account after withdraw', async() => {
+    it('Should have more amount in withdrawer account after withdraw', async () => {
       const newAccountBalance = await dummyERC20.balanceOf(depositReceiver)
-      newAccountBalance.should.be.a.bignumber.that.equals(
-        accountBalance.add(depositAmount)
-      )
+      expect(newAccountBalance).to.equal(oldAccountBalance + depositAmount)
     })
 
-    it('Should have less amount in predicate contract after withdraw', async() => {
-      const newContractBalance = await dummyERC20.balanceOf(contracts.root.erc20Predicate.address)
-      newContractBalance.should.be.a.bignumber.that.equals(
-        contractBalance.sub(withdrawAmount)
-      )
+    it('Should have less amount in predicate contract after withdraw', async () => {
+      const newContractBalance = await dummyERC20.balanceOf(contracts.root.erc20Predicate.target)
+      expect(newContractBalance).to.equal(oldContractBalance - withdrawAmount)
     })
   })
 
-  describe('Withdraw ERC20 :: non-deposit account', async() => {
+  describe('Withdraw ERC20 :: non-deposit account', async () => {
     const depositAmount = mockValues.amounts[1]
-    let totalDepositedAmount = new BN('0')
+    let totalDepositedAmount = 0n
     const withdrawAmount = mockValues.amounts[1]
     const depositReceiver = accounts[0]
     const nonDepositAccount = accounts[1]
@@ -341,94 +335,99 @@ contract('RootChainManager', async(accounts) => {
     let contracts
     let dummyERC20
     let rootChainManager
-    let accountBalance
-    let contractBalance
-    let transferLog
+    let oldAccountBalance
+    let oldContractBalance
     let withdrawTx
+    let withdrawTxReceipt
     let checkpointData
     let headerNumber
     let exitTx
 
-    before(async() => {
-      contracts = await deployer.deployInitializedContracts(accounts)
+    before(async () => {
+      contracts = await deployInitializedContracts(accounts)
       dummyERC20 = contracts.root.dummyERC20
       rootChainManager = contracts.root.rootChainManager
-      accountBalance = await dummyERC20.balanceOf(accounts[0])
-      contractBalance = await dummyERC20.balanceOf(contracts.root.erc20Predicate.address)
+      oldAccountBalance = await dummyERC20.balanceOf(accounts[0])
+      oldContractBalance = await dummyERC20.balanceOf(contracts.root.erc20Predicate.target)
     })
 
-    it('Depositor should be able to approve and deposit', async() => {
-      await dummyERC20.approve(contracts.root.erc20Predicate.address, depositAmount)
-      const depositTx = await rootChainManager.depositFor(depositReceiver, dummyERC20.address, depositData)
-      should.exist(depositTx)
-      totalDepositedAmount = totalDepositedAmount.add(depositAmount)
-      const syncTx = await syncState({ tx: depositTx })
-      should.exist(syncTx)
+    it('Depositor should be able to approve and deposit', async () => {
+      await dummyERC20.approve(contracts.root.erc20Predicate.target, depositAmount)
+      const depositTx = await rootChainManager.depositFor(depositReceiver, dummyERC20.target, depositData)
+      expect(depositTx).to.exist
+      totalDepositedAmount += depositAmount
+      let txReceipt = await depositTx.wait()
+      const syncTx = await syncState(txReceipt)
+      expect(syncTx).to.exist
     })
 
-    it('Second depositor should be able to approve and deposit', async() => {
+    it('Second depositor should be able to approve and deposit', async () => {
       await dummyERC20.mint(depositAmount)
       await dummyERC20.transfer(accounts[2], depositAmount)
-      await dummyERC20.approve(contracts.root.erc20Predicate.address, mockValues.amounts[2], { from: accounts[2] })
-      const depositTx = await rootChainManager.depositFor(accounts[2], dummyERC20.address, depositData, { from: accounts[2] })
-      should.exist(depositTx)
-      totalDepositedAmount = totalDepositedAmount.add(depositAmount)
-      const syncTx = await syncState({ tx: depositTx })
-      should.exist(syncTx)
+      await dummyERC20
+        .connect(await ethers.getSigner(accounts[2]))
+        .approve(contracts.root.erc20Predicate.target, mockValues.amounts[2])
+      const depositTx = await rootChainManager
+        .connect(await ethers.getSigner(accounts[2]))
+        .depositFor(accounts[2], dummyERC20.target, depositData)
+      expect(depositTx).to.exist
+      totalDepositedAmount += depositAmount
+      let txReceipt = await depositTx.wait()
+      const syncTx = await syncState(txReceipt)
+      expect(syncTx).to.exist
     })
 
-    it('Deposit amount should be deducted from depositor account', async() => {
+    it('Deposit amount should be deducted from depositor account', async () => {
       const newAccountBalance = await dummyERC20.balanceOf(accounts[0])
-      newAccountBalance.should.be.a.bignumber.that.equals(
-        accountBalance.sub(depositAmount)
-      )
+      expect(newAccountBalance).to.equal(oldAccountBalance - depositAmount)
       // update account balance
-      accountBalance = newAccountBalance
+      oldAccountBalance = newAccountBalance
     })
 
-    it('Deposit amount should be credited to correct contract', async() => {
-      const newContractBalance = await dummyERC20.balanceOf(contracts.root.erc20Predicate.address)
-      newContractBalance.should.be.a.bignumber.that.equals(
-        contractBalance.add(totalDepositedAmount)
-      )
+    it('Deposit amount should be credited to correct contract', async () => {
+      const newContractBalance = await dummyERC20.balanceOf(contracts.root.erc20Predicate.target)
+      expect(newContractBalance).to.equal(oldContractBalance + totalDepositedAmount)
 
       // update balance
-      contractBalance = newContractBalance
+      oldContractBalance = newContractBalance
     })
 
-    it('Can receive withdraw tx', async() => {
-      withdrawTx = await contracts.child.dummyERC20.withdraw(withdrawAmount, { from: depositReceiver })
-      should.exist(withdrawTx)
+    it('Can receive withdraw tx', async () => {
+      withdrawTx = await contracts.child.dummyERC20
+        .connect(await ethers.getSigner(depositReceiver))
+        .withdraw(withdrawAmount)
+      expect(withdrawTx).to.exist
+      await withdrawTx.wait()
+      withdrawTxReceipt = await web3.eth.getTransactionReceipt(withdrawTx.hash)
     })
 
     it('Should emit Transfer log in withdraw tx', () => {
-      const logs = logDecoder.decodeLogs(withdrawTx.receipt.rawLogs)
-      transferLog = logs.find(l => l.event === 'Transfer')
-      should.exist(transferLog)
+      expect(withdrawTx)
+        .to.emit(contracts.child.dummyERC20, 'Transfer')
+        .withArgs(depositReceiver, mockValues.zeroAddress, withdrawAmount)
     })
 
-    it('Should submit checkpoint', async() => {
+    it('Should submit checkpoint', async () => {
       // submit checkpoint including burn (withdraw) tx
-      checkpointData = await submitCheckpoint(contracts.root.checkpointManager, withdrawTx.receipt)
-      should.exist(checkpointData)
+      checkpointData = await submitCheckpoint(contracts.root.checkpointManager, withdrawTxReceipt)
+      expect(checkpointData).to.exist
     })
 
-    it('Should match checkpoint details', async() => {
+    it('Should match checkpoint details', async () => {
       const root = bufferToHex(checkpointData.header.root)
-      should.exist(root)
+      expect(root).to.exist
 
       // fetch latest header number
       headerNumber = await contracts.root.checkpointManager.currentCheckpointNumber()
-      headerNumber.should.be.bignumber.gt('0')
+      expect(headerNumber).to.be.gt('0')
 
       // fetch header block details and validate
       const headerData = await contracts.root.checkpointManager.headerBlocks(headerNumber)
-      root.should.equal(headerData.root)
+      expect(root).to.equal(headerData.root)
     })
 
-    it('Should fail: exit with a random data receipt', async() => {
-      const receipt = await childWeb3.eth.getTransactionReceipt(withdrawTx.receipt.transactionHash)
-      const dummyReceipt = getFakeReceiptBytes(receipt, '')
+    it('Should fail: exit with a random data receipt', async () => {
+      const dummyReceipt = getFakeReceiptBytes(withdrawTxReceipt, '')
       const logIndex = 0
       const data = bufferToHex(
         rlp.encode([
@@ -440,19 +439,17 @@ contract('RootChainManager', async(accounts) => {
           bufferToHex(checkpointData.receiptsRoot),
           bufferToHex(dummyReceipt),
           bufferToHex(rlp.encode(checkpointData.receiptParentNodes)),
-          bufferToHex(checkpointData.path), // branch mask,
+          bufferToHex(checkpointData.path),
           logIndex
         ])
       )
-      // start exit
-      await expectRevert(contracts.root.rootChainManager.exit(data,
-        { from: nonDepositAccount }), 'RootChainManager: INVALID_PROOF')
+      await expect(
+        contracts.root.rootChainManager.connect(await ethers.getSigner(nonDepositAccount)).exit(data)
+      ).to.be.revertedWith('RootChainManager: INVALID_PROOF')
     })
 
-    it('Should fail: exit with a fake amount data in receipt', async() => {
-      const receipt = await childWeb3.eth.getTransactionReceipt(
-        withdrawTx.receipt.transactionHash)
-      const dummyReceipt = getFakeReceiptBytes(receipt, mockValues.bytes32[4])
+    it('Should fail: exit with a fake amount data in receipt', async () => {
+      const dummyReceipt = getFakeReceiptBytes(withdrawTxReceipt, mockValues.bytes32[4])
       const logIndex = 0
       const data = bufferToHex(
         rlp.encode([
@@ -464,16 +461,15 @@ contract('RootChainManager', async(accounts) => {
           bufferToHex(checkpointData.receiptsRoot),
           bufferToHex(dummyReceipt),
           bufferToHex(rlp.encode(checkpointData.receiptParentNodes)),
-          bufferToHex(checkpointData.path), // branch mask,
+          bufferToHex(checkpointData.path),
           logIndex
         ])
       )
-      // start exit
-      await expectRevert(contracts.root.rootChainManager.exit(data,
-        { from: nonDepositAccount }), 'revert')
+      expect(contracts.root.rootChainManager.connect(await ethers.getSigner(nonDepositAccount)).exit(data)).to.be
+        .revertedWith
     })
 
-    it('Should fail to start exit (changed the block number to future block)', async() => {
+    it('Should fail to start exit (changed the block number to future block)', async () => {
       const logIndex = 0
       const fakeBlockNumber = checkpointData.number + 1
       const data = bufferToHex(
@@ -486,16 +482,16 @@ contract('RootChainManager', async(accounts) => {
           bufferToHex(checkpointData.receiptsRoot),
           bufferToHex(checkpointData.receipt),
           bufferToHex(rlp.encode(checkpointData.receiptParentNodes)),
-          bufferToHex(checkpointData.path), // branch mask,
+          bufferToHex(checkpointData.path),
           logIndex
         ])
       )
-      // start exit
-      await expectRevert(contracts.root.rootChainManager.exit(data,
-        { from: nonDepositAccount }), 'Leaf index is too big')
+      await expect(
+        contracts.root.rootChainManager.connect(await ethers.getSigner(nonDepositAccount)).exit(data)
+      ).to.be.revertedWith('Leaf index is too big')
     })
 
-    it('Should fail to start exit (changed the block number with different encoding)', async() => {
+    it('Should fail to start exit (changed the block number with different encoding)', async () => {
       const logIndex = 0
       const fakeBlockNumber = pad(checkpointData.number, 64)
       const data = bufferToHex(
@@ -508,17 +504,16 @@ contract('RootChainManager', async(accounts) => {
           bufferToHex(checkpointData.receiptsRoot),
           bufferToHex(checkpointData.receipt),
           bufferToHex(rlp.encode(checkpointData.receiptParentNodes)),
-          bufferToHex(checkpointData.path), // branch mask,
+          bufferToHex(checkpointData.path),
           logIndex
         ])
       )
-      // start exit
-      await expectRevert.unspecified(contracts.root.rootChainManager.exit(data,
-        { from: nonDepositAccount }))
+      await expect(contracts.root.rootChainManager.connect(await ethers.getSigner(nonDepositAccount)).exit(data)).to.be
+        .reverted
     })
 
     // call exit from some account other than depositReceiver
-    it('Should start exit', async() => {
+    it('Should start exit', async () => {
       const logIndex = 0
       const data = bufferToHex(
         rlp.encode([
@@ -530,20 +525,16 @@ contract('RootChainManager', async(accounts) => {
           bufferToHex(checkpointData.receiptsRoot),
           bufferToHex(checkpointData.receipt),
           bufferToHex(rlp.encode(checkpointData.receiptParentNodes)),
-          bufferToHex(checkpointData.path), // branch mask,
+          bufferToHex(checkpointData.path),
           logIndex
         ])
       )
-
-      // start exit
-      exitTx = await contracts.root.rootChainManager.exit(data, { from: nonDepositAccount })
-      should.exist(exitTx)
+      exitTx = await contracts.root.rootChainManager.connect(await ethers.getSigner(nonDepositAccount)).exit(data)
+      expect(exitTx).to.exist
     })
 
-    it('Should fail: exit with a differently encoded amount data in receipt', async() => {
-      const receipt = await childWeb3.eth.getTransactionReceipt(
-        withdrawTx.receipt.transactionHash)
-      const dummyReceipt = getDiffEncodedReceipt(receipt, mockValues.bytes32[4])
+    it('Should fail: exit with a differently encoded amount data in receipt', async () => {
+      const dummyReceipt = getDiffEncodedReceipt(withdrawTxReceipt, mockValues.bytes32[4])
       const logIndex = 0
       const data = bufferToHex(
         rlp.encode([
@@ -555,16 +546,16 @@ contract('RootChainManager', async(accounts) => {
           bufferToHex(checkpointData.receiptsRoot),
           bufferToHex(dummyReceipt),
           bufferToHex(rlp.encode(checkpointData.receiptParentNodes)),
-          bufferToHex(checkpointData.path), // branch mask,
+          bufferToHex(checkpointData.path),
           logIndex
         ])
       )
-      // start exit
-      await expectRevert(contracts.root.rootChainManager.exit(data,
-        { from: nonDepositAccount }), 'EXIT_ALREADY_PROCESSED')
+      await expect(
+        contracts.root.rootChainManager.connect(await ethers.getSigner(nonDepositAccount)).exit(data)
+      ).to.be.revertedWith('RootChainManager: EXIT_ALREADY_PROCESSED')
     })
 
-    it('Should fail: start exit again', async() => {
+    it('Should fail: start exit again', async () => {
       const logIndex = 0
       const data = bufferToHex(
         rlp.encode([
@@ -576,16 +567,16 @@ contract('RootChainManager', async(accounts) => {
           bufferToHex(checkpointData.receiptsRoot),
           bufferToHex(checkpointData.receipt),
           bufferToHex(rlp.encode(checkpointData.receiptParentNodes)),
-          bufferToHex(checkpointData.path), // branch mask,
+          bufferToHex(checkpointData.path),
           logIndex
         ])
       )
-      // start exit
-      await expectRevert(contracts.root.rootChainManager.exit(data,
-        { from: nonDepositAccount }), 'EXIT_ALREADY_PROCESSED')
+      await expect(
+        contracts.root.rootChainManager.connect(await ethers.getSigner(nonDepositAccount)).exit(data)
+      ).to.be.revertedWith('RootChainManager: EXIT_ALREADY_PROCESSED')
     })
 
-    it('Should fail to start exit again (change the log index to generate same exit hash)', async() => {
+    it('Should fail to start exit again (change the log index to generate same exit hash)', async () => {
       const logIndex = toHex(Array(64).fill(0).join(''))
       const data = bufferToHex(
         rlp.encode([
@@ -597,40 +588,36 @@ contract('RootChainManager', async(accounts) => {
           bufferToHex(checkpointData.receiptsRoot),
           bufferToHex(checkpointData.receipt),
           bufferToHex(rlp.encode(checkpointData.receiptParentNodes)),
-          bufferToHex(checkpointData.path), // branch mask,
+          bufferToHex(checkpointData.path),
           logIndex
         ])
       )
-      // start exit
-      await expectRevert(contracts.root.rootChainManager.exit(data,
-        { from: nonDepositAccount }), 'EXIT_ALREADY_PROCESSED')
+      await expect(
+        contracts.root.rootChainManager.connect(await ethers.getSigner(nonDepositAccount)).exit(data)
+      ).to.be.revertedWith('RootChainManager: EXIT_ALREADY_PROCESSED')
     })
 
     it('Should emit Transfer log in exit tx', () => {
-      const logs = logDecoder.decodeLogs(exitTx.receipt.rawLogs)
-      const exitTransferLog = logs.find(l => l.event === 'Transfer')
-      should.exist(exitTransferLog)
+      expect(exitTx)
+        .to.emit(contracts.root.rootChainManager, 'Transfer')
+        .withArgs(mockValues.zeroAddress, depositReceiver, withdrawAmount)
     })
 
-    it('Should have more amount in withdrawer account after withdraw', async() => {
+    it('Should have more amount in withdrawer account after withdraw', async () => {
       const newAccountBalance = await dummyERC20.balanceOf(depositReceiver)
-      newAccountBalance.should.be.a.bignumber.that.equals(
-        accountBalance.add(depositAmount)
-      )
+      expect(newAccountBalance).to.equal(oldAccountBalance + depositAmount)
     })
 
-    it('Should have less amount in predicate contract after withdraw', async() => {
-      const newContractBalance = await dummyERC20.balanceOf(contracts.root.erc20Predicate.address)
-      newContractBalance.should.be.a.bignumber.that.equals(
-        contractBalance.sub(withdrawAmount)
-      )
+    it('Should have less amount in predicate contract after withdraw', async () => {
+      const newContractBalance = await dummyERC20.balanceOf(contracts.root.erc20Predicate.target)
+      expect(newContractBalance).to.equal(oldContractBalance - withdrawAmount)
     })
   })
 
-  describe('Withdraw ERC721', async() => {
+  describe('Withdraw ERC721', async () => {
     const depositTokenId = mockValues.numbers[4]
-    const depositAmount = new BN('1')
-    const withdrawAmount = new BN('1')
+    const depositAmount = 1n
+    const withdrawAmount = 1n
     const depositReceiver = accounts[0]
     const depositData = abi.encode(['uint256'], [depositTokenId.toString()])
     let contracts
@@ -638,83 +625,82 @@ contract('RootChainManager', async(accounts) => {
     let rootChainManager
     let accountBalance
     let contractBalance
-    let transferLog
     let withdrawTx
+    let withdrawTxReceipt
     let checkpointData
     let headerNumber
     let exitTx
 
-    before(async() => {
-      contracts = await deployer.deployInitializedContracts(accounts)
+    before(async () => {
+      contracts = await deployInitializedContracts(accounts)
       dummyERC721 = contracts.root.dummyERC721
       rootChainManager = contracts.root.rootChainManager
       await dummyERC721.mint(depositTokenId)
       accountBalance = await dummyERC721.balanceOf(accounts[0])
-      contractBalance = await dummyERC721.balanceOf(contracts.root.erc721Predicate.address)
+      contractBalance = await dummyERC721.balanceOf(contracts.root.erc721Predicate.target)
     })
 
-    it('Depositor should be able to approve and deposit', async() => {
-      await dummyERC721.approve(contracts.root.erc721Predicate.address, depositTokenId)
-      const depositTx = await rootChainManager.depositFor(depositReceiver, dummyERC721.address, depositData)
-      should.exist(depositTx)
-      const syncTx = await syncState({ tx: depositTx })
-      should.exist(syncTx)
+    it('Depositor should be able to approve and deposit', async () => {
+      await dummyERC721.approve(contracts.root.erc721Predicate.target, depositTokenId)
+      const depositTx = await rootChainManager.depositFor(depositReceiver, dummyERC721.target, depositData)
+      expect(depositTx).to.exist
+      let txReceipt = await depositTx.wait()
+      const syncTx = await syncState(txReceipt)
+      expect(syncTx).to.exist
     })
 
-    it('Deposit amount should be deducted from depositor account', async() => {
+    it('Deposit amount should be deducted from depositor account', async () => {
       const newAccountBalance = await dummyERC721.balanceOf(accounts[0])
-      newAccountBalance.should.be.a.bignumber.that.equals(
-        accountBalance.sub(depositAmount)
-      )
+      expect(newAccountBalance).to.equal(accountBalance - depositAmount)
 
       // update account balance
       accountBalance = newAccountBalance
     })
 
-    it('Deposit amount should be credited to correct contract', async() => {
-      const newContractBalance = await dummyERC721.balanceOf(contracts.root.erc721Predicate.address)
-      newContractBalance.should.be.a.bignumber.that.equals(
-        contractBalance.add(depositAmount)
-      )
+    it('Deposit amount should be credited to correct contract', async () => {
+      const newContractBalance = await dummyERC721.balanceOf(contracts.root.erc721Predicate.target)
+      expect(newContractBalance).to.equal(contractBalance + depositAmount)
 
       // update balance
       contractBalance = newContractBalance
     })
 
-    it('Can receive withdraw tx', async() => {
-      withdrawTx = await contracts.child.dummyERC721.withdraw(depositTokenId, { from: depositReceiver })
-      should.exist(withdrawTx)
+    it('Can receive withdraw tx', async () => {
+      withdrawTx = await contracts.child.dummyERC721
+        .connect(await ethers.getSigner(depositReceiver))
+        .withdraw(depositTokenId)
+      expect(withdrawTx).to.exist
+      await withdrawTx.wait()
+      withdrawTxReceipt = await web3.eth.getTransactionReceipt(withdrawTx.hash)
     })
 
     it('Should emit Transfer log in withdraw tx', () => {
-      const logs = logDecoder.decodeLogs(withdrawTx.receipt.rawLogs)
-      transferLog = logs.find(l => l.event === 'Transfer')
-      should.exist(transferLog)
+      expect(withdrawTx)
+        .to.emit(contracts.child.dummyERC721, 'Transfer')
+        .withArgs(depositReceiver, mockValues.zeroAddress, depositTokenId)
     })
 
-    it('Should submit checkpoint', async() => {
+    it('Should submit checkpoint', async () => {
       // submit checkpoint including burn (withdraw) tx
-      checkpointData = await submitCheckpoint(contracts.root.checkpointManager, withdrawTx.receipt)
-      should.exist(checkpointData)
+      checkpointData = await submitCheckpoint(contracts.root.checkpointManager, withdrawTxReceipt)
+      expect(checkpointData).to.exist
     })
 
-    it('Should match checkpoint details', async() => {
+    it('Should match checkpoint details', async () => {
       const root = bufferToHex(checkpointData.header.root)
-      should.exist(root)
+      expect(root).to.exist
 
       // fetch latest header number
       headerNumber = await contracts.root.checkpointManager.currentCheckpointNumber()
-      headerNumber.should.be.bignumber.gt('0')
+      expect(headerNumber).to.be.gt('0')
 
       // fetch header block details and validate
       const headerData = await contracts.root.checkpointManager.headerBlocks(headerNumber)
-      root.should.equal(headerData.root)
+      expect(root).to.equal(headerData.root)
     })
 
-    it('Should fail: exit with a random data receipt', async() => {
-      const receipt = await childWeb3.eth.getTransactionReceipt(
-        withdrawTx.receipt.transactionHash)
-      const dummyReceipt = getFakeReceiptBytes(receipt, '')
+    it('Should fail: exit with a random data receipt', async () => {
+      const dummyReceipt = getFakeReceiptBytes(withdrawTxReceipt, '')
       const logIndex = 1
       const data = bufferToHex(
         rlp.encode([
@@ -726,19 +712,16 @@ contract('RootChainManager', async(accounts) => {
           bufferToHex(checkpointData.receiptsRoot),
           bufferToHex(dummyReceipt),
           bufferToHex(rlp.encode(checkpointData.receiptParentNodes)),
-          bufferToHex(checkpointData.path), // branch mask,
+          bufferToHex(checkpointData.path),
           logIndex
         ])
       )
-      // start exit
-      await expectRevert(contracts.root.rootChainManager.exit(data,
-        { from: depositReceiver }), 'revert')
+      await expect(contracts.root.rootChainManager.connect(await ethers.getSigner(depositReceiver)).exit(data)).to.be
+        .reverted
     })
 
-    it('Should fail: exit with a fake amount data in receipt', async() => {
-      const receipt = await childWeb3.eth.getTransactionReceipt(
-        withdrawTx.receipt.transactionHash)
-      const dummyReceipt = getFakeReceiptBytes(receipt, mockValues.bytes32[4])
+    it('Should fail: exit with a fake amount data in receipt', async () => {
+      const dummyReceipt = getFakeReceiptBytes(withdrawTxReceipt, mockValues.bytes32[4])
       const logIndex = 1
       const data = bufferToHex(
         rlp.encode([
@@ -750,16 +733,15 @@ contract('RootChainManager', async(accounts) => {
           bufferToHex(checkpointData.receiptsRoot),
           bufferToHex(dummyReceipt),
           bufferToHex(rlp.encode(checkpointData.receiptParentNodes)),
-          bufferToHex(checkpointData.path), // branch mask,
+          bufferToHex(checkpointData.path),
           logIndex
         ])
       )
-      // start exit
-      await expectRevert(contracts.root.rootChainManager.exit(data,
-        { from: depositReceiver }), 'revert')
+      await expect(contracts.root.rootChainManager.connect(await ethers.getSigner(depositReceiver)).exit(data)).to.be
+        .reverted
     })
 
-    it('Should fail to start exit (changed the block number)', async() => {
+    it('Should fail to start exit (changed the block number)', async () => {
       const logIndex = 1
       const fakeBlockNumber = checkpointData.number + 1
       const data = bufferToHex(
@@ -772,16 +754,16 @@ contract('RootChainManager', async(accounts) => {
           bufferToHex(checkpointData.receiptsRoot),
           bufferToHex(checkpointData.receipt),
           bufferToHex(rlp.encode(checkpointData.receiptParentNodes)),
-          bufferToHex(checkpointData.path), // branch mask,
+          bufferToHex(checkpointData.path),
           logIndex
         ])
       )
-      // start exit
-      await expectRevert(contracts.root.rootChainManager.exit(data,
-        { from: depositReceiver }), 'Leaf index is too big')
+      await expect(
+        contracts.root.rootChainManager.connect(await ethers.getSigner(depositReceiver)).exit(data)
+      ).to.be.revertedWith('Leaf index is too big')
     })
 
-    it('Should start exit', async() => {
+    it('Should start exit', async () => {
       const logIndex = 1
       const data = bufferToHex(
         rlp.encode([
@@ -793,16 +775,15 @@ contract('RootChainManager', async(accounts) => {
           bufferToHex(checkpointData.receiptsRoot),
           bufferToHex(checkpointData.receipt),
           bufferToHex(rlp.encode(checkpointData.receiptParentNodes)),
-          bufferToHex(checkpointData.path), // branch mask,
+          bufferToHex(checkpointData.path),
           logIndex
         ])
       )
-      // start exit
-      exitTx = await contracts.root.rootChainManager.exit(data, { from: depositReceiver })
-      should.exist(exitTx)
+      exitTx = await contracts.root.rootChainManager.connect(await ethers.getSigner(depositReceiver)).exit(data)
+      expect(exitTx).to.exist
     })
 
-    it('Should fail: start exit again', async() => {
+    it('Should fail: start exit again', async () => {
       const logIndex = 1
       const data = bufferToHex(
         rlp.encode([
@@ -814,16 +795,17 @@ contract('RootChainManager', async(accounts) => {
           bufferToHex(checkpointData.receiptsRoot),
           bufferToHex(checkpointData.receipt),
           bufferToHex(rlp.encode(checkpointData.receiptParentNodes)),
-          bufferToHex(checkpointData.path), // branch mask,
+          bufferToHex(checkpointData.path),
           logIndex
         ])
       )
       // start exit
-      await expectRevert(contracts.root.rootChainManager.exit(data,
-        { from: depositReceiver }), 'EXIT_ALREADY_PROCESSED')
+      await expect(
+        contracts.root.rootChainManager.connect(await ethers.getSigner(depositReceiver)).exit(data)
+      ).to.be.revertedWith('RootChainManager: EXIT_ALREADY_PROCESSED')
     })
 
-    it('Should fail to start exit again (change the log index to generate same exit hash)', async() => {
+    it('Should fail to start exit again (change the log index to generate same exit hash)', async () => {
       const logIndex = toHex(Array(63).fill(0).join('') + '1')
       const data = bufferToHex(
         rlp.encode([
@@ -835,47 +817,39 @@ contract('RootChainManager', async(accounts) => {
           bufferToHex(checkpointData.receiptsRoot),
           bufferToHex(checkpointData.receipt),
           bufferToHex(rlp.encode(checkpointData.receiptParentNodes)),
-          bufferToHex(checkpointData.path), // branch mask,
+          bufferToHex(checkpointData.path),
           logIndex
         ])
       )
       // start exit
-      await expectRevert(contracts.root.rootChainManager.exit(data,
-        { from: depositReceiver }), 'EXIT_ALREADY_PROCESSED')
+      await expect(
+        contracts.root.rootChainManager.connect(await ethers.getSigner(depositReceiver)).exit(data)
+      ).to.be.revertedWith('RootChainManager: EXIT_ALREADY_PROCESSED')
     })
 
     it('Should emit Transfer log in exit tx', () => {
-      const logs = logDecoder.decodeLogs(exitTx.receipt.rawLogs)
-      const exitTransferLog = logs.find(l => l.event === 'Transfer')
-      should.exist(exitTransferLog)
+      expect(exitTx)
+        .to.emit(contracts.root.rootChainManager, 'Transfer')
+        .withArgs(mockValues.zeroAddress, depositReceiver, depositTokenId)
     })
 
-    it('Should have more amount in withdrawer account after withdraw', async() => {
+    it('Should have more amount in withdrawer account after withdraw', async () => {
       const newAccountBalance = await dummyERC721.balanceOf(depositReceiver)
-      newAccountBalance.should.be.a.bignumber.that.equals(
-        accountBalance.add(depositAmount)
-      )
+      expect(newAccountBalance).to.equal(accountBalance + depositAmount)
     })
 
-    it('Should have less amount in predicate contract after withdraw', async() => {
-      const newContractBalance = await dummyERC721.balanceOf(contracts.root.erc721Predicate.address)
-      newContractBalance.should.be.a.bignumber.that.equals(
-        contractBalance.sub(withdrawAmount)
-      )
+    it('Should have less amount in predicate contract after withdraw', async () => {
+      const newContractBalance = await dummyERC721.balanceOf(contracts.root.erc721Predicate.target)
+      expect(newContractBalance).to.equal(contractBalance - withdrawAmount)
     })
   })
 
-  describe('Withdraw batch ERC721', async() => {
+  describe('Withdraw batch ERC721', async () => {
     const tokenId1 = mockValues.numbers[4]
     const tokenId2 = mockValues.numbers[5]
     const tokenId3 = mockValues.numbers[8]
     const user = accounts[0]
-    const depositData = abi.encode(
-      ['uint256[]'],
-      [
-        [tokenId1.toString(), tokenId2.toString(), tokenId3.toString()]
-      ]
-    )
+    const depositData = abi.encode(['uint256[]'], [[tokenId1.toString(), tokenId2.toString(), tokenId3.toString()]])
     let contracts
     let rootToken
     let childToken
@@ -883,14 +857,15 @@ contract('RootChainManager', async(accounts) => {
     let checkpointManager
     let erc721Predicate
     let withdrawTx
+    let withdrawTxReceipt
     let checkpointData
     let headerNumber
     let exitTx1
     let exitTx2
     let exitTx3
 
-    before(async() => {
-      contracts = await deployer.deployInitializedContracts(accounts)
+    before(async () => {
+      contracts = await deployInitializedContracts(accounts)
       rootToken = contracts.root.dummyERC721
       childToken = contracts.child.dummyERC721
       rootChainManager = contracts.root.rootChainManager
@@ -901,92 +876,96 @@ contract('RootChainManager', async(accounts) => {
       await rootToken.mint(tokenId3)
     })
 
-    it('User should own tokens on root chain', async() => {
+    it('User should own tokens on root chain', async () => {
       {
         const owner = await rootToken.ownerOf(tokenId1)
-        owner.should.equal(user)
+        expect(owner).to.equal(user)
       }
       {
         const owner = await rootToken.ownerOf(tokenId2)
-        owner.should.equal(user)
+        expect(owner).to.equal(user)
       }
       {
         const owner = await rootToken.ownerOf(tokenId3)
-        owner.should.equal(user)
+        expect(owner).to.equal(user)
       }
     })
 
-    it('Tokens should not exist on child chain', async() => {
-      await expectRevert(childToken.ownerOf(tokenId1), 'ERC721: owner query for nonexistent token')
-      await expectRevert(childToken.ownerOf(tokenId2), 'ERC721: owner query for nonexistent token')
-      await expectRevert(childToken.ownerOf(tokenId3), 'ERC721: owner query for nonexistent token')
+    it('Tokens should not exist on child chain', async () => {
+      await expect(childToken.ownerOf(tokenId1)).to.be.revertedWith('ERC721: owner query for nonexistent token')
+      await expect(childToken.ownerOf(tokenId2)).to.be.revertedWith('ERC721: owner query for nonexistent token')
+      await expect(childToken.ownerOf(tokenId3)).to.be.revertedWith('ERC721: owner query for nonexistent token')
     })
 
-    it('User should be able to approve and deposit', async() => {
-      await rootToken.setApprovalForAll(erc721Predicate.address, true)
-      const depositTx = await rootChainManager.depositFor(user, rootToken.address, depositData)
-      should.exist(depositTx)
-      const syncTx = await syncState({ tx: depositTx })
-      should.exist(syncTx)
+    it('User should be able to approve and deposit', async () => {
+      await rootToken.setApprovalForAll(erc721Predicate.target, true)
+      const depositTx = await rootChainManager.depositFor(user, rootToken.target, depositData)
+      expect(depositTx).to.exist
+      const txReceipt = await depositTx.wait()
+      const syncTx = await syncState(txReceipt)
+      expect(syncTx).to.exist
     })
 
-    it('Predicate should own tokens on root chain', async() => {
+    it('Predicate should own tokens on root chain', async () => {
       {
         const owner = await rootToken.ownerOf(tokenId1)
-        owner.should.equal(erc721Predicate.address)
+        expect(owner).to.equal(erc721Predicate.target)
       }
       {
         const owner = await rootToken.ownerOf(tokenId2)
-        owner.should.equal(erc721Predicate.address)
+        expect(owner).to.equal(erc721Predicate.target)
       }
       {
         const owner = await rootToken.ownerOf(tokenId3)
-        owner.should.equal(erc721Predicate.address)
+        expect(owner).to.equal(erc721Predicate.target)
       }
     })
 
-    it('User should own tokens on child chain', async() => {
+    it('User should own tokens on child chain', async () => {
       {
         const owner = await childToken.ownerOf(tokenId1)
-        owner.should.equal(user)
+        expect(owner).to.equal(user)
       }
       {
         const owner = await childToken.ownerOf(tokenId2)
-        owner.should.equal(user)
+        expect(owner).to.equal(user)
       }
       {
         const owner = await childToken.ownerOf(tokenId3)
-        owner.should.equal(user)
+        expect(owner).to.equal(user)
       }
     })
 
-    it('User should be able to start withdraw', async() => {
+    it('User should be able to start withdraw', async () => {
       withdrawTx = await childToken.withdrawBatch([tokenId1, tokenId2, tokenId3])
-      should.exist(withdrawTx)
+      expect(withdrawTx).to.exist
+      await withdrawTx.wait()
+      withdrawTxReceipt = await web3.eth.getTransactionReceipt(withdrawTx.hash)
     })
 
-    it('Should submit checkpoint', async() => {
+    it('Should submit checkpoint', async () => {
       // submit checkpoint including burn (withdraw) tx
-      checkpointData = await submitCheckpoint(checkpointManager, withdrawTx.receipt)
-      should.exist(checkpointData)
+      checkpointData = await submitCheckpoint(checkpointManager, withdrawTxReceipt)
+      expect(checkpointData).to.exist
     })
 
-    it('Should match checkpoint details', async() => {
+    it('Should match checkpoint details', async () => {
       const root = bufferToHex(checkpointData.header.root)
-      should.exist(root)
+      expect(root).to.exist
 
       // fetch latest header number
       headerNumber = await checkpointManager.currentCheckpointNumber()
-      headerNumber.should.be.bignumber.gt('0')
+      expect(headerNumber).to.be.gt('0')
 
       // fetch header block details and validate
       const headerData = await checkpointManager.headerBlocks(headerNumber)
-      root.should.equal(headerData.root)
+      expect(root).to.equal(headerData.root)
     })
 
-    it('User should fail to exit with WithdrawnBatch', async() => {
-      const logIndex = withdrawTx.receipt.rawLogs
-        .findIndex(log => log.topics[0].toLowerCase() === ERC721_WITHDRAW_BATCH_EVENT_SIG.toLowerCase())
+    it('User should fail to exit with WithdrawnBatch', async () => {
+      const logIndex = withdrawTxReceipt.logs.findIndex(
+        (log) => log.topics[0].toLowerCase() === ERC721_WITHDRAW_BATCH_EVENT_SIG.toLowerCase()
+      )
       const data = bufferToHex(
         rlp.encode([
           headerNumber,
@@ -997,23 +976,23 @@ contract('RootChainManager', async(accounts) => {
           bufferToHex(checkpointData.receiptsRoot),
           bufferToHex(checkpointData.receipt),
           bufferToHex(rlp.encode(checkpointData.receiptParentNodes)),
-          bufferToHex(checkpointData.path), // branch mask,
+          bufferToHex(checkpointData.path),
           logIndex
         ])
       )
       // attempt exit, but fail due to mismatching event signature
       // read PR description of https://github.com/maticnetwork/pos-portal-private/pull/1
-      await expectRevert(contracts.root.rootChainManager.exit(data, { from: user }), 'ERC721Predicate: INVALID_SIGNATURE')
+      await expect(contracts.root.rootChainManager.exit(data)).to.be.revertedWith('ERC721Predicate: INVALID_SIGNATURE')
     })
 
-    it('User should be able to exit tokenId1 with Transfer', async() => {
+    it('User should be able to exit tokenId1 with Transfer', async () => {
       const logIndices = []
-      withdrawTx.receipt.rawLogs.forEach((e, i) => {
+      withdrawTxReceipt.logs.forEach((e, i) => {
         if (e.topics[0].toLowerCase() === ERC721_TRANSFER_EVENT_SIG.toLowerCase()) {
           logIndices.push(i)
         }
       })
-      chai.assert(logIndices.length == 3, 'three tokens were burnt !')
+      expect(logIndices.length).to.equal(3)
 
       const data = bufferToHex(
         rlp.encode([
@@ -1025,28 +1004,27 @@ contract('RootChainManager', async(accounts) => {
           bufferToHex(checkpointData.receiptsRoot),
           bufferToHex(checkpointData.receipt),
           bufferToHex(rlp.encode(checkpointData.receiptParentNodes)),
-          bufferToHex(checkpointData.path), // branch mask,
+          bufferToHex(checkpointData.path),
           logIndices[0]
         ])
       )
-      // start exit, must go through
-      exitTx1 = contracts.root.rootChainManager.exit(data, { from: user })
-      should.exist(exitTx1)
+      exitTx1 = await contracts.root.rootChainManager.exit(data)
+      expect(exitTx1).to.exist
     })
 
-    it('User should own tokenId1 on root chain', async() => {
+    it('User should own tokenId1 on root chain', async () => {
       const owner = await rootToken.ownerOf(tokenId1)
-      owner.should.equal(user)
+      expect(owner).to.equal(user)
     })
 
-    it('User should be able to exit tokenId2 with Transfer', async() => {
+    it('User should be able to exit tokenId2 with Transfer', async () => {
       const logIndices = []
-      withdrawTx.receipt.rawLogs.forEach((e, i) => {
+      withdrawTxReceipt.logs.forEach((e, i) => {
         if (e.topics[0].toLowerCase() === ERC721_TRANSFER_EVENT_SIG.toLowerCase()) {
           logIndices.push(i)
         }
       })
-      chai.assert(logIndices.length == 3, 'three tokens were burnt !')
+      expect(logIndices.length).to.equal(3)
 
       const data = bufferToHex(
         rlp.encode([
@@ -1058,28 +1036,27 @@ contract('RootChainManager', async(accounts) => {
           bufferToHex(checkpointData.receiptsRoot),
           bufferToHex(checkpointData.receipt),
           bufferToHex(rlp.encode(checkpointData.receiptParentNodes)),
-          bufferToHex(checkpointData.path), // branch mask,
+          bufferToHex(checkpointData.path),
           logIndices[1]
         ])
       )
-      // start exit, must go through
-      exitTx2 = contracts.root.rootChainManager.exit(data, { from: user })
-      should.exist(exitTx2)
+      exitTx2 = await contracts.root.rootChainManager.exit(data)
+      expect(exitTx2).to.exist
     })
 
-    it('User should own tokenId2 on root chain', async() => {
+    it('User should own tokenId2 on root chain', async () => {
       const owner = await rootToken.ownerOf(tokenId2)
-      owner.should.equal(user)
+      expect(owner).to.equal(user)
     })
 
-    it('User should be able to exit tokenId3 with Transfer', async() => {
+    it('User should be able to exit tokenId3 with Transfer', async () => {
       const logIndices = []
-      withdrawTx.receipt.rawLogs.forEach((e, i) => {
+      withdrawTxReceipt.logs.forEach((e, i) => {
         if (e.topics[0].toLowerCase() === ERC721_TRANSFER_EVENT_SIG.toLowerCase()) {
           logIndices.push(i)
         }
       })
-      chai.assert(logIndices.length == 3, 'three tokens were burnt !')
+      expect(logIndices.length).to.equal(3)
 
       const data = bufferToHex(
         rlp.encode([
@@ -1091,31 +1068,30 @@ contract('RootChainManager', async(accounts) => {
           bufferToHex(checkpointData.receiptsRoot),
           bufferToHex(checkpointData.receipt),
           bufferToHex(rlp.encode(checkpointData.receiptParentNodes)),
-          bufferToHex(checkpointData.path), // branch mask,
+          bufferToHex(checkpointData.path),
           logIndices[2]
         ])
       )
-      // start exit, must go through
-      exitTx3 = contracts.root.rootChainManager.exit(data, { from: user })
-      should.exist(exitTx3)
+      exitTx3 = await contracts.root.rootChainManager.exit(data)
+      expect(exitTx3).to.exist
     })
 
-    it('User should own tokenId3 on root chain', async() => {
+    it('User should own tokenId3 on root chain', async () => {
       const owner = await rootToken.ownerOf(tokenId3)
-      owner.should.equal(user)
+      expect(owner).to.equal(user)
     })
 
-    it('Tokens should not exist on child chain', async() => {
-      await expectRevert(childToken.ownerOf(tokenId1), 'ERC721: owner query for nonexistent token')
-      await expectRevert(childToken.ownerOf(tokenId2), 'ERC721: owner query for nonexistent token')
-      await expectRevert(childToken.ownerOf(tokenId3), 'ERC721: owner query for nonexistent token')
+    it('Tokens should not exist on child chain', async () => {
+      await expect(childToken.ownerOf(tokenId1)).to.be.revertedWith('ERC721: owner query for nonexistent token')
+      await expect(childToken.ownerOf(tokenId2)).to.be.revertedWith('ERC721: owner query for nonexistent token')
+      await expect(childToken.ownerOf(tokenId3)).to.be.revertedWith('ERC721: owner query for nonexistent token')
     })
   })
 
-  describe('Withdraw ERC721 :: non-deposit account', async() => {
+  describe('Withdraw ERC721 :: non-deposit account', async () => {
     const depositTokenId = mockValues.numbers[4]
-    const depositAmount = new BN('1')
-    const withdrawAmount = new BN('1')
+    const depositAmount = 1n
+    const withdrawAmount = 1n
     const depositReceiver = accounts[0]
     const nonDepositAccount = accounts[1]
     const depositData = abi.encode(['uint256'], [depositTokenId.toString()])
@@ -1124,83 +1100,81 @@ contract('RootChainManager', async(accounts) => {
     let rootChainManager
     let accountBalance
     let contractBalance
-    let transferLog
     let withdrawTx
+    let withdrawTxReceipt
     let checkpointData
     let headerNumber
     let exitTx
 
-    before(async() => {
-      contracts = await deployer.deployInitializedContracts(accounts)
+    before(async () => {
+      contracts = await deployInitializedContracts(accounts)
       dummyERC721 = contracts.root.dummyERC721
       rootChainManager = contracts.root.rootChainManager
       await dummyERC721.mint(depositTokenId)
       accountBalance = await dummyERC721.balanceOf(accounts[0])
-      contractBalance = await dummyERC721.balanceOf(contracts.root.erc721Predicate.address)
+      contractBalance = await dummyERC721.balanceOf(contracts.root.erc721Predicate.target)
     })
 
-    it('Depositor should be able to approve and deposit', async() => {
-      await dummyERC721.approve(contracts.root.erc721Predicate.address, depositTokenId)
-      const depositTx = await rootChainManager.depositFor(depositReceiver, dummyERC721.address, depositData)
-      should.exist(depositTx)
-      const syncTx = await syncState({ tx: depositTx })
-      should.exist(syncTx)
+    it('Depositor should be able to approve and deposit', async () => {
+      await dummyERC721.approve(contracts.root.erc721Predicate.target, depositTokenId)
+      const depositTx = await rootChainManager.depositFor(depositReceiver, dummyERC721.target, depositData)
+      expect(depositTx).to.exist
+      const txReceipt = await depositTx.wait()
+      const syncTx = await syncState(txReceipt)
+      expect(syncTx).to.exist
     })
 
-    it('Deposit amount should be deducted from depositor account', async() => {
+    it('Deposit amount should be deducted from depositor account', async () => {
       const newAccountBalance = await dummyERC721.balanceOf(accounts[0])
-      newAccountBalance.should.be.a.bignumber.that.equals(
-        accountBalance.sub(depositAmount)
-      )
+      expect(newAccountBalance).to.equal(accountBalance - depositAmount)
 
       // update account balance
       accountBalance = newAccountBalance
     })
 
-    it('Deposit amount should be credited to correct contract', async() => {
-      const newContractBalance = await dummyERC721.balanceOf(contracts.root.erc721Predicate.address)
-      newContractBalance.should.be.a.bignumber.that.equals(
-        contractBalance.add(depositAmount)
-      )
+    it('Deposit amount should be credited to correct contract', async () => {
+      const newContractBalance = await dummyERC721.balanceOf(contracts.root.erc721Predicate.target)
+      expect(newContractBalance).to.equal(contractBalance + depositAmount)
 
       // update balance
       contractBalance = newContractBalance
     })
 
-    it('Can receive withdraw tx', async() => {
-      withdrawTx = await contracts.child.dummyERC721.withdraw(depositTokenId, { from: depositReceiver })
-      should.exist(withdrawTx)
+    it('Can receive withdraw tx', async () => {
+      withdrawTx = await contracts.child.dummyERC721
+        .connect(await ethers.getSigner(depositReceiver))
+        .withdraw(depositTokenId)
+      expect(withdrawTx).to.exist
+      await withdrawTx.wait()
+      withdrawTxReceipt = await web3.eth.getTransactionReceipt(withdrawTx.hash)
     })
 
     it('Should emit Transfer log in withdraw tx', () => {
-      const logs = logDecoder.decodeLogs(withdrawTx.receipt.rawLogs)
-      transferLog = logs.find(l => l.event === 'Transfer')
-      should.exist(transferLog)
+      expect(withdrawTx)
+        .to.emit(contracts.child.dummyERC721, 'Transfer')
+        .withArgs(depositReceiver, mockValues.zeroAddress, depositTokenId)
     })
 
-    it('Should submit checkpoint', async() => {
-      // submit checkpoint including burn (withdraw) tx
-      checkpointData = await submitCheckpoint(contracts.root.checkpointManager, withdrawTx.receipt)
-      should.exist(checkpointData)
+    it('Should submit checkpoint', async () => {
+      checkpointData = await submitCheckpoint(contracts.root.checkpointManager, withdrawTxReceipt)
+      expect(checkpointData).to.exist
     })
 
-    it('Should match checkpoint details', async() => {
+    it('Should match checkpoint details', async () => {
       const root = bufferToHex(checkpointData.header.root)
-      should.exist(root)
+      expect(root).to.exist
 
       // fetch latest header number
       headerNumber = await contracts.root.checkpointManager.currentCheckpointNumber()
-      headerNumber.should.be.bignumber.gt('0')
+      expect(headerNumber).to.be.gt('0')
 
       // fetch header block details and validate
       const headerData = await contracts.root.checkpointManager.headerBlocks(headerNumber)
-      root.should.equal(headerData.root)
+      expect(root).to.equal(headerData.root)
     })
 
-    it('Should fail: exit with a random data receipt', async() => {
-      const receipt = await childWeb3.eth.getTransactionReceipt(
-        withdrawTx.receipt.transactionHash)
-      const dummyReceipt = getFakeReceiptBytes(receipt, '')
+    it('Should fail: exit with a random data receipt', async () => {
+      const dummyReceipt = getFakeReceiptBytes(withdrawTxReceipt, '')
       const logIndex = 1
       const data = bufferToHex(
         rlp.encode([
@@ -1212,19 +1186,16 @@ contract('RootChainManager', async(accounts) => {
           bufferToHex(checkpointData.receiptsRoot),
           bufferToHex(dummyReceipt),
           bufferToHex(rlp.encode(checkpointData.receiptParentNodes)),
-          bufferToHex(checkpointData.path), // branch mask,
+          bufferToHex(checkpointData.path),
           logIndex
         ])
       )
-      // start exit
-      await expectRevert(contracts.root.rootChainManager.exit(data,
-        { from: nonDepositAccount }), 'revert')
+      await expect(contracts.root.rootChainManager.connect(await ethers.getSigner(nonDepositAccount)).exit(data)).to.be
+        .reverted
     })
 
-    it('Should fail: exit with a fake amount data in receipt', async() => {
-      const receipt = await childWeb3.eth.getTransactionReceipt(
-        withdrawTx.receipt.transactionHash)
-      const dummyReceipt = getFakeReceiptBytes(receipt, mockValues.bytes32[4])
+    it('Should fail: exit with a fake amount data in receipt', async () => {
+      const dummyReceipt = getFakeReceiptBytes(withdrawTxReceipt, mockValues.bytes32[4])
       const logIndex = 1
       const data = bufferToHex(
         rlp.encode([
@@ -1236,16 +1207,15 @@ contract('RootChainManager', async(accounts) => {
           bufferToHex(checkpointData.receiptsRoot),
           bufferToHex(dummyReceipt),
           bufferToHex(rlp.encode(checkpointData.receiptParentNodes)),
-          bufferToHex(checkpointData.path), // branch mask,
+          bufferToHex(checkpointData.path),
           logIndex
         ])
       )
-      // start exit
-      await expectRevert(contracts.root.rootChainManager.exit(data,
-        { from: nonDepositAccount }), 'revert')
+      await expect(contracts.root.rootChainManager.connect(await ethers.getSigner(nonDepositAccount)).exit(data)).to.be
+        .reverted
     })
 
-    it('Should fail to start exit (changed the block number)', async() => {
+    it('Should fail to start exit (changed the block number)', async () => {
       const logIndex = 1
       const fakeBlockNumber = checkpointData.number + 1
       const data = bufferToHex(
@@ -1258,16 +1228,16 @@ contract('RootChainManager', async(accounts) => {
           bufferToHex(checkpointData.receiptsRoot),
           bufferToHex(checkpointData.receipt),
           bufferToHex(rlp.encode(checkpointData.receiptParentNodes)),
-          bufferToHex(checkpointData.path), // branch mask,
+          bufferToHex(checkpointData.path),
           logIndex
         ])
       )
-      // start exit
-      await expectRevert(contracts.root.rootChainManager.exit(data,
-        { from: nonDepositAccount }), 'Leaf index is too big')
+      await expect(
+        contracts.root.rootChainManager.connect(await ethers.getSigner(nonDepositAccount)).exit(data)
+      ).to.be.revertedWith('Leaf index is too big')
     })
 
-    it('Should start exit', async() => {
+    it('Should start exit', async () => {
       const logIndex = 1
       const data = bufferToHex(
         rlp.encode([
@@ -1279,16 +1249,15 @@ contract('RootChainManager', async(accounts) => {
           bufferToHex(checkpointData.receiptsRoot),
           bufferToHex(checkpointData.receipt),
           bufferToHex(rlp.encode(checkpointData.receiptParentNodes)),
-          bufferToHex(checkpointData.path), // branch mask,
+          bufferToHex(checkpointData.path),
           logIndex
         ])
       )
-      // start exit from non deposit receiver
-      exitTx = await contracts.root.rootChainManager.exit(data, { from: nonDepositAccount })
-      should.exist(exitTx)
+      exitTx = await contracts.root.rootChainManager.connect(await ethers.getSigner(nonDepositAccount)).exit(data)
+      expect(exitTx).to.exist
     })
 
-    it('Should fail: start exit again', async() => {
+    it('Should fail: start exit again', async () => {
       const logIndex = 1
       const data = bufferToHex(
         rlp.encode([
@@ -1300,16 +1269,16 @@ contract('RootChainManager', async(accounts) => {
           bufferToHex(checkpointData.receiptsRoot),
           bufferToHex(checkpointData.receipt),
           bufferToHex(rlp.encode(checkpointData.receiptParentNodes)),
-          bufferToHex(checkpointData.path), // branch mask,
+          bufferToHex(checkpointData.path),
           logIndex
         ])
       )
-      // start exit
-      await expectRevert(contracts.root.rootChainManager.exit(data,
-        { from: nonDepositAccount }), 'EXIT_ALREADY_PROCESSED')
+      await expect(
+        contracts.root.rootChainManager.connect(await ethers.getSigner(nonDepositAccount)).exit(data)
+      ).to.be.revertedWith('RootChainManager: EXIT_ALREADY_PROCESSED')
     })
 
-    it('Should fail to start exit again (change the log index to generate same exit hash)', async() => {
+    it('Should fail to start exit again (change the log index to generate same exit hash)', async () => {
       const logIndex = toHex(Array(63).fill(0).join('') + '1')
       const data = bufferToHex(
         rlp.encode([
@@ -1321,135 +1290,123 @@ contract('RootChainManager', async(accounts) => {
           bufferToHex(checkpointData.receiptsRoot),
           bufferToHex(checkpointData.receipt),
           bufferToHex(rlp.encode(checkpointData.receiptParentNodes)),
-          bufferToHex(checkpointData.path), // branch mask,
+          bufferToHex(checkpointData.path),
           logIndex
         ])
       )
-      // start exit
-      await expectRevert(contracts.root.rootChainManager.exit(data,
-        { from: nonDepositAccount }), 'EXIT_ALREADY_PROCESSED')
+      await expect(
+        contracts.root.rootChainManager.connect(await ethers.getSigner(nonDepositAccount)).exit(data)
+      ).to.be.revertedWith('RootChainManager: EXIT_ALREADY_PROCESSED')
     })
 
     it('Should emit Transfer log in exit tx', () => {
-      const logs = logDecoder.decodeLogs(exitTx.receipt.rawLogs)
-      const exitTransferLog = logs.find(l => l.event === 'Transfer')
-      should.exist(exitTransferLog)
+      expect(exitTx)
+        .to.emit(contracts.root.rootChainManager, 'Transfer')
+        .withArgs(mockValues.zeroAddress, depositReceiver, depositTokenId)
     })
 
-    it('Should have more amount in withdrawer account after withdraw', async() => {
+    it('Should have more amount in withdrawer account after withdraw', async () => {
       const newAccountBalance = await dummyERC721.balanceOf(depositReceiver)
-      newAccountBalance.should.be.a.bignumber.that.equals(
-        accountBalance.add(depositAmount)
-      )
+      expect(newAccountBalance).to.equal(accountBalance + depositAmount)
     })
 
-    it('Should have less amount in predicate contract after withdraw', async() => {
-      const newContractBalance = await dummyERC721.balanceOf(contracts.root.erc721Predicate.address)
-      newContractBalance.should.be.a.bignumber.that.equals(
-        contractBalance.sub(withdrawAmount)
-      )
+    it('Should have less amount in predicate contract after withdraw', async () => {
+      const newContractBalance = await dummyERC721.balanceOf(contracts.root.erc721Predicate.target)
+      expect(newContractBalance).to.equal(contractBalance - withdrawAmount)
     })
   })
 
-  describe('Withdraw single ERC1155', async() => {
+  describe('Withdraw single ERC1155', async () => {
     const tokenId = mockValues.numbers[8]
     const depositAmount = mockValues.amounts[1]
     const withdrawAmount = mockValues.amounts[1]
     const depositReceiver = accounts[0]
     const depositData = abi.encode(
-      [
-        'uint256[]',
-        'uint256[]',
-        'bytes'
-      ],
-      [
-        [tokenId.toString()],
-        [depositAmount.toString()],
-        ['0x0']
-      ]
+      ['uint256[]', 'uint256[]', 'bytes'],
+      [[tokenId.toString()], [depositAmount.toString()], '0x']
     )
     let contracts
     let dummyERC1155
     let rootChainManager
     let accountBalance
     let contractBalance
-    let transferLog
     let withdrawTx
+    let withdrawTxReceipt
     let checkpointData
     let headerNumber
     let exitTx
 
-    before(async() => {
-      contracts = await deployer.deployInitializedContracts(accounts)
+    before(async () => {
+      contracts = await deployInitializedContracts(accounts)
       dummyERC1155 = contracts.root.dummyERC1155
       rootChainManager = contracts.root.rootChainManager
-      const mintAmount = depositAmount.add(mockValues.amounts[2])
+      const mintAmount = depositAmount + mockValues.amounts[2]
       await dummyERC1155.mint(accounts[0], tokenId, mintAmount)
       accountBalance = await dummyERC1155.balanceOf(accounts[0], tokenId)
-      contractBalance = await dummyERC1155.balanceOf(contracts.root.erc1155Predicate.address, tokenId)
+      contractBalance = await dummyERC1155.balanceOf(contracts.root.erc1155Predicate.target, tokenId)
     })
 
-    it('Depositor should be able to approve and deposit', async() => {
-      await dummyERC1155.setApprovalForAll(contracts.root.erc1155Predicate.address, true)
-      const depositTx = await rootChainManager.depositFor(depositReceiver, dummyERC1155.address, depositData)
-      should.exist(depositTx)
-      const syncTx = await syncState({ tx: depositTx })
-      should.exist(syncTx)
+    it('Depositor should be able to approve and deposit', async () => {
+      await dummyERC1155.setApprovalForAll(contracts.root.erc1155Predicate.target, true)
+      const depositTx = await rootChainManager.depositFor(depositReceiver, dummyERC1155.target, depositData)
+      expect(depositTx).to.exist
+      const txReceipt = await depositTx.wait()
+      const syncTx = await syncState(txReceipt)
+      expect(syncTx).to.exist
     })
 
-    it('Deposit amount should be deducted from depositor account', async() => {
+    it('Deposit amount should be deducted from depositor account', async () => {
       const newAccountBalance = await dummyERC1155.balanceOf(accounts[0], tokenId)
-      newAccountBalance.should.be.a.bignumber.that.equals(
-        accountBalance.sub(depositAmount)
-      )
+      expect(newAccountBalance).to.equal(accountBalance - depositAmount)
 
       // update account balance
       accountBalance = newAccountBalance
     })
 
-    it('Deposit amount should be credited to correct contract', async() => {
-      const newContractBalance = await dummyERC1155.balanceOf(contracts.root.erc1155Predicate.address, tokenId)
-      newContractBalance.should.be.a.bignumber.that.equals(
-        contractBalance.add(depositAmount)
-      )
+    it('Deposit amount should be credited to correct contract', async () => {
+      const newContractBalance = await dummyERC1155.balanceOf(contracts.root.erc1155Predicate.target, tokenId)
+      expect(newContractBalance).to.equal(contractBalance + depositAmount)
 
       // update balance
       contractBalance = newContractBalance
     })
 
-    it('Can receive withdraw tx', async() => {
-      withdrawTx = await contracts.child.dummyERC1155.withdrawSingle(tokenId, withdrawAmount, { from: depositReceiver })
-      should.exist(withdrawTx)
+    it('Can receive withdraw tx', async () => {
+      withdrawTx = await contracts.child.dummyERC1155
+        .connect(await ethers.getSigner(depositReceiver))
+        .withdrawSingle(tokenId, withdrawAmount)
+      expect(withdrawTx).to.exist
+      await withdrawTx.wait()
+      withdrawTxReceipt = await web3.eth.getTransactionReceipt(withdrawTx.hash)
     })
 
     it('Should emit Transfer log in withdraw tx', () => {
-      const logs = logDecoder.decodeLogs(withdrawTx.receipt.rawLogs)
-      transferLog = logs.find(l => l.event === 'TransferSingle')
-      should.exist(transferLog)
+      expect(withdrawTx)
+        .to.emit(contracts.child.dummyERC1155, 'TransferSingle')
+        .withArgs(depositReceiver, mockValues.zeroAddress, tokenId, withdrawAmount)
     })
 
-    it('Should submit checkpoint', async() => {
+    it('Should submit checkpoint', async () => {
       // submit checkpoint including burn (withdraw) tx
-      checkpointData = await submitCheckpoint(contracts.root.checkpointManager, withdrawTx.receipt)
-      should.exist(checkpointData)
+      checkpointData = await submitCheckpoint(contracts.root.checkpointManager, withdrawTxReceipt)
+      expect(checkpointData).to.exist
     })
 
-    it('Should match checkpoint details', async() => {
+    it('Should match checkpoint details', async () => {
       const root = bufferToHex(checkpointData.header.root)
-      should.exist(root)
+      expect(root).to.exist
 
       // fetch latest header number
       headerNumber = await contracts.root.checkpointManager.currentCheckpointNumber()
-      headerNumber.should.be.bignumber.gt('0')
+      expect(headerNumber).to.be.gt('0')
 
       // fetch header block details and validate
       const headerData = await contracts.root.checkpointManager.headerBlocks(headerNumber)
-      root.should.equal(headerData.root)
+      expect(root).to.equal(headerData.root)
     })
 
-    it('Should fail: exit with a random data receipt', async() => {
-      const receipt = await childWeb3.eth.getTransactionReceipt(withdrawTx.receipt.transactionHash)
-      const dummyReceipt = getFakeReceiptBytes(receipt, '')
+    it('Should fail: exit with a random data receipt', async () => {
+      const dummyReceipt = getFakeReceiptBytes(withdrawTxReceipt, '')
       const logIndex = 0
       const data = bufferToHex(
         rlp.encode([
@@ -1461,19 +1418,17 @@ contract('RootChainManager', async(accounts) => {
           bufferToHex(checkpointData.receiptsRoot),
           bufferToHex(dummyReceipt),
           bufferToHex(rlp.encode(checkpointData.receiptParentNodes)),
-          bufferToHex(checkpointData.path), // branch mask,
+          bufferToHex(checkpointData.path),
           logIndex
         ])
       )
-      // start exit
-      await expectRevert(contracts.root.rootChainManager.exit(data,
-        { from: depositReceiver }), 'RootChainManager: INVALID_PROOF')
+      await expect(
+        contracts.root.rootChainManager.connect(await ethers.getSigner(depositReceiver)).exit(data)
+      ).to.be.revertedWith('RootChainManager: INVALID_PROOF')
     })
 
-    it('Should fail: exit with a fake amount data in receipt', async() => {
-      const receipt = await childWeb3.eth.getTransactionReceipt(
-        withdrawTx.receipt.transactionHash)
-      const dummyReceipt = getFakeReceiptBytes(receipt, mockValues.bytes32[4])
+    it('Should fail: exit with a fake amount data in receipt', async () => {
+      const dummyReceipt = getFakeReceiptBytes(withdrawTxReceipt, mockValues.bytes32[4])
       const logIndex = 0
       const data = bufferToHex(
         rlp.encode([
@@ -1485,16 +1440,15 @@ contract('RootChainManager', async(accounts) => {
           bufferToHex(checkpointData.receiptsRoot),
           bufferToHex(dummyReceipt),
           bufferToHex(rlp.encode(checkpointData.receiptParentNodes)),
-          bufferToHex(checkpointData.path), // branch mask,
+          bufferToHex(checkpointData.path),
           logIndex
         ])
       )
-      // start exit
-      await expectRevert(contracts.root.rootChainManager.exit(data,
-        { from: depositReceiver }), 'revert')
+      await expect(contracts.root.rootChainManager.connect(await ethers.getSigner(depositReceiver)).exit(data)).to.be
+        .reverted
     })
 
-    it('Should fail to start exit (changed the block number)', async() => {
+    it('Should fail to start exit (changed the block number)', async () => {
       const logIndex = 0
       const fakeBlockNumber = checkpointData.number + 1
       const data = bufferToHex(
@@ -1507,16 +1461,16 @@ contract('RootChainManager', async(accounts) => {
           bufferToHex(checkpointData.receiptsRoot),
           bufferToHex(checkpointData.receipt),
           bufferToHex(rlp.encode(checkpointData.receiptParentNodes)),
-          bufferToHex(checkpointData.path), // branch mask,
+          bufferToHex(checkpointData.path),
           logIndex
         ])
       )
-      // start exit
-      await expectRevert(contracts.root.rootChainManager.exit(data,
-        { from: depositReceiver }), 'Leaf index is too big')
+      await expect(
+        contracts.root.rootChainManager.connect(await ethers.getSigner(depositReceiver)).exit(data)
+      ).to.be.revertedWith('Leaf index is too big')
     })
 
-    it('Should start exit', async() => {
+    it('Should start exit', async () => {
       const logIndex = 0
       const data = bufferToHex(
         rlp.encode([
@@ -1528,17 +1482,15 @@ contract('RootChainManager', async(accounts) => {
           bufferToHex(checkpointData.receiptsRoot),
           bufferToHex(checkpointData.receipt),
           bufferToHex(rlp.encode(checkpointData.receiptParentNodes)),
-          bufferToHex(checkpointData.path), // branch mask,
+          bufferToHex(checkpointData.path),
           logIndex
         ])
       )
-      // start exit
-      exitTx = await contracts.root.rootChainManager.exit(data,
-        { from: depositReceiver })
-      should.exist(exitTx)
+      exitTx = await contracts.root.rootChainManager.connect(await ethers.getSigner(depositReceiver)).exit(data)
+      expect(exitTx).to.exist
     })
 
-    it('Should fail: start exit again', async() => {
+    it('Should fail: start exit again', async () => {
       const logIndex = 0
       const data = bufferToHex(
         rlp.encode([
@@ -1550,16 +1502,16 @@ contract('RootChainManager', async(accounts) => {
           bufferToHex(checkpointData.receiptsRoot),
           bufferToHex(checkpointData.receipt),
           bufferToHex(rlp.encode(checkpointData.receiptParentNodes)),
-          bufferToHex(checkpointData.path), // branch mask,
+          bufferToHex(checkpointData.path),
           logIndex
         ])
       )
-      // start exit
-      await expectRevert(contracts.root.rootChainManager.exit(data,
-        { from: depositReceiver }), 'EXIT_ALREADY_PROCESSED')
+      await expect(
+        contracts.root.rootChainManager.connect(await ethers.getSigner(depositReceiver)).exit(data)
+      ).to.be.revertedWith('RootChainManager: EXIT_ALREADY_PROCESSED')
     })
 
-    it('Should fail to start exit again (change the log index to generate same exit hash)', async() => {
+    it('Should fail to start exit again (change the log index to generate same exit hash)', async () => {
       const logIndex = toHex(Array(64).fill(0).join(''))
       const data = bufferToHex(
         rlp.encode([
@@ -1571,136 +1523,124 @@ contract('RootChainManager', async(accounts) => {
           bufferToHex(checkpointData.receiptsRoot),
           bufferToHex(checkpointData.receipt),
           bufferToHex(rlp.encode(checkpointData.receiptParentNodes)),
-          bufferToHex(checkpointData.path), // branch mask,
+          bufferToHex(checkpointData.path),
           logIndex
         ])
       )
-      // start exit
-      await expectRevert(contracts.root.rootChainManager.exit(data,
-        { from: depositReceiver }), 'EXIT_ALREADY_PROCESSED')
+      await expect(
+        contracts.root.rootChainManager.connect(await ethers.getSigner(depositReceiver)).exit(data)
+      ).to.be.revertedWith('RootChainManager: EXIT_ALREADY_PROCESSED')
     })
 
     it('Should emit Transfer log in exit tx', () => {
-      const logs = logDecoder.decodeLogs(exitTx.receipt.rawLogs)
-      const exitTransferLog = logs.find(l => l.event === 'TransferSingle')
-      should.exist(exitTransferLog)
+      expect(exitTx)
+        .to.emit(contracts.root.rootChainManager, 'TransferSingle')
+        .withArgs(mockValues.zeroAddress, depositReceiver, tokenId, withdrawAmount)
     })
 
-    it('Should have more amount in withdrawer account after withdraw', async() => {
+    it('Should have more amount in withdrawer account after withdraw', async () => {
       const newAccountBalance = await dummyERC1155.balanceOf(depositReceiver, tokenId)
-      newAccountBalance.should.be.a.bignumber.that.equals(
-        accountBalance.add(depositAmount)
-      )
+      expect(newAccountBalance).to.equal(accountBalance + depositAmount)
     })
 
-    it('Should have less amount in predicate contract after withdraw', async() => {
-      const newContractBalance = await dummyERC1155.balanceOf(contracts.root.erc1155Predicate.address, tokenId)
-      newContractBalance.should.be.a.bignumber.that.equals(
-        contractBalance.sub(withdrawAmount)
-      )
+    it('Should have less amount in predicate contract after withdraw', async () => {
+      const newContractBalance = await dummyERC1155.balanceOf(contracts.root.erc1155Predicate.target, tokenId)
+      expect(newContractBalance).to.equal(contractBalance - withdrawAmount)
     })
   })
 
-  describe('Withdraw single ERC1155 :: non-deposit account', async() => {
+  describe('Withdraw single ERC1155 :: non-deposit account', async () => {
     const tokenId = mockValues.numbers[8]
     const depositAmount = mockValues.amounts[1]
     const withdrawAmount = mockValues.amounts[1]
     const depositReceiver = accounts[0]
     const nonDepositAccount = accounts[1]
     const depositData = abi.encode(
-      [
-        'uint256[]',
-        'uint256[]',
-        'bytes'
-      ],
-      [
-        [tokenId.toString()],
-        [depositAmount.toString()],
-        ['0x0']
-      ]
+      ['uint256[]', 'uint256[]', 'bytes'],
+      [[tokenId.toString()], [depositAmount.toString()], '0x']
     )
     let contracts
     let dummyERC1155
     let rootChainManager
     let accountBalance
     let contractBalance
-    let transferLog
     let withdrawTx
+    let withdrawTxReceipt
     let checkpointData
     let headerNumber
     let exitTx
 
-    before(async() => {
-      contracts = await deployer.deployInitializedContracts(accounts)
+    before(async () => {
+      contracts = await deployInitializedContracts(accounts)
       dummyERC1155 = contracts.root.dummyERC1155
       rootChainManager = contracts.root.rootChainManager
-      const mintAmount = depositAmount.add(mockValues.amounts[2])
+      const mintAmount = depositAmount + mockValues.amounts[2]
       await dummyERC1155.mint(accounts[0], tokenId, mintAmount)
       accountBalance = await dummyERC1155.balanceOf(accounts[0], tokenId)
-      contractBalance = await dummyERC1155.balanceOf(contracts.root.erc1155Predicate.address, tokenId)
+      contractBalance = await dummyERC1155.balanceOf(contracts.root.erc1155Predicate.target, tokenId)
     })
 
-    it('Depositor should be able to approve and deposit', async() => {
-      await dummyERC1155.setApprovalForAll(contracts.root.erc1155Predicate.address, true)
-      const depositTx = await rootChainManager.depositFor(depositReceiver, dummyERC1155.address, depositData)
-      should.exist(depositTx)
-      const syncTx = await syncState({ tx: depositTx })
-      should.exist(syncTx)
+    it('Depositor should be able to approve and deposit', async () => {
+      await dummyERC1155.setApprovalForAll(contracts.root.erc1155Predicate.target, true)
+      const depositTx = await rootChainManager.depositFor(depositReceiver, dummyERC1155.target, depositData)
+      expect(depositTx).to.exist
+      const txReceipt = await depositTx.wait()
+      const syncTx = await syncState(txReceipt)
+      expect(syncTx).to.exist
     })
 
-    it('Deposit amount should be deducted from depositor account', async() => {
+    it('Deposit amount should be deducted from depositor account', async () => {
       const newAccountBalance = await dummyERC1155.balanceOf(accounts[0], tokenId)
-      newAccountBalance.should.be.a.bignumber.that.equals(
-        accountBalance.sub(depositAmount)
-      )
+      expect(newAccountBalance).to.equal(accountBalance - depositAmount)
 
       // update account balance
       accountBalance = newAccountBalance
     })
 
-    it('Deposit amount should be credited to correct contract', async() => {
-      const newContractBalance = await dummyERC1155.balanceOf(contracts.root.erc1155Predicate.address, tokenId)
-      newContractBalance.should.be.a.bignumber.that.equals(
-        contractBalance.add(depositAmount)
-      )
+    it('Deposit amount should be credited to correct contract', async () => {
+      const newContractBalance = await dummyERC1155.balanceOf(contracts.root.erc1155Predicate.target, tokenId)
+      expect(newContractBalance).to.equal(contractBalance + depositAmount)
 
       // update balance
       contractBalance = newContractBalance
     })
 
-    it('Can receive withdraw tx', async() => {
-      withdrawTx = await contracts.child.dummyERC1155.withdrawSingle(tokenId, withdrawAmount, { from: depositReceiver })
-      should.exist(withdrawTx)
+    it('Can receive withdraw tx', async () => {
+      withdrawTx = await contracts.child.dummyERC1155
+        .connect(await ethers.getSigner(depositReceiver))
+        .withdrawSingle(tokenId, withdrawAmount)
+      expect(withdrawTx).to.exist
+      await withdrawTx.wait()
+      withdrawTxReceipt = await web3.eth.getTransactionReceipt(withdrawTx.hash)
     })
 
     it('Should emit Transfer log in withdraw tx', () => {
-      const logs = logDecoder.decodeLogs(withdrawTx.receipt.rawLogs)
-      transferLog = logs.find(l => l.event === 'TransferSingle')
-      should.exist(transferLog)
+      expect(withdrawTx)
+        .to.emit(contracts.child.dummyERC1155, 'TransferSingle')
+        .withArgs(depositReceiver, mockValues.zeroAddress, tokenId, withdrawAmount)
     })
 
-    it('Should submit checkpoint', async() => {
+    it('Should submit checkpoint', async () => {
       // submit checkpoint including burn (withdraw) tx
-      checkpointData = await submitCheckpoint(contracts.root.checkpointManager, withdrawTx.receipt)
-      should.exist(checkpointData)
+      checkpointData = await submitCheckpoint(contracts.root.checkpointManager, withdrawTxReceipt)
+      expect(checkpointData).to.exist
     })
 
-    it('Should match checkpoint details', async() => {
+    it('Should match checkpoint details', async () => {
       const root = bufferToHex(checkpointData.header.root)
-      should.exist(root)
+      expect(root).to.exist
 
       // fetch latest header number
       headerNumber = await contracts.root.checkpointManager.currentCheckpointNumber()
-      headerNumber.should.be.bignumber.gt('0')
+      expect(headerNumber).to.be.gt('0')
 
       // fetch header block details and validate
       const headerData = await contracts.root.checkpointManager.headerBlocks(headerNumber)
-      root.should.equal(headerData.root)
+      expect(root).to.equal(headerData.root)
     })
 
-    it('Should fail: exit with a random data receipt', async() => {
-      const receipt = await childWeb3.eth.getTransactionReceipt(withdrawTx.receipt.transactionHash)
-      const dummyReceipt = getFakeReceiptBytes(receipt, '')
+    it('Should fail: exit with a random data receipt', async () => {
+      const dummyReceipt = getFakeReceiptBytes(withdrawTxReceipt, '')
       const logIndex = 0
       const data = bufferToHex(
         rlp.encode([
@@ -1712,19 +1652,17 @@ contract('RootChainManager', async(accounts) => {
           bufferToHex(checkpointData.receiptsRoot),
           bufferToHex(dummyReceipt),
           bufferToHex(rlp.encode(checkpointData.receiptParentNodes)),
-          bufferToHex(checkpointData.path), // branch mask,
+          bufferToHex(checkpointData.path),
           logIndex
         ])
       )
-      // start exit
-      await expectRevert(contracts.root.rootChainManager.exit(data,
-        { from: nonDepositAccount }), 'RootChainManager: INVALID_PROOF')
+      await expect(
+        contracts.root.rootChainManager.connect(await ethers.getSigner(nonDepositAccount)).exit(data)
+      ).to.be.revertedWith('RootChainManager: INVALID_PROOF')
     })
 
-    it('Should fail: exit with a fake amount data in receipt', async() => {
-      const receipt = await childWeb3.eth.getTransactionReceipt(
-        withdrawTx.receipt.transactionHash)
-      const dummyReceipt = getFakeReceiptBytes(receipt, mockValues.bytes32[4])
+    it('Should fail: exit with a fake amount data in receipt', async () => {
+      const dummyReceipt = getFakeReceiptBytes(withdrawTxReceipt, mockValues.bytes32[4])
       const logIndex = 0
       const data = bufferToHex(
         rlp.encode([
@@ -1736,16 +1674,15 @@ contract('RootChainManager', async(accounts) => {
           bufferToHex(checkpointData.receiptsRoot),
           bufferToHex(dummyReceipt),
           bufferToHex(rlp.encode(checkpointData.receiptParentNodes)),
-          bufferToHex(checkpointData.path), // branch mask,
+          bufferToHex(checkpointData.path),
           logIndex
         ])
       )
-      // start exit
-      await expectRevert(contracts.root.rootChainManager.exit(data,
-        { from: nonDepositAccount }), 'revert')
+      await expect(contracts.root.rootChainManager.connect(await ethers.getSigner(nonDepositAccount)).exit(data)).to.be
+        .reverted
     })
 
-    it('Should fail to start exit (changed the block number)', async() => {
+    it('Should fail to start exit (changed the block number)', async () => {
       const logIndex = 0
       const fakeBlockNumber = checkpointData.number + 1
       const data = bufferToHex(
@@ -1758,16 +1695,16 @@ contract('RootChainManager', async(accounts) => {
           bufferToHex(checkpointData.receiptsRoot),
           bufferToHex(checkpointData.receipt),
           bufferToHex(rlp.encode(checkpointData.receiptParentNodes)),
-          bufferToHex(checkpointData.path), // branch mask,
+          bufferToHex(checkpointData.path),
           logIndex
         ])
       )
-      // start exit
-      await expectRevert(contracts.root.rootChainManager.exit(data,
-        { from: nonDepositAccount }), 'Leaf index is too big')
+      await expect(
+        contracts.root.rootChainManager.connect(await ethers.getSigner(nonDepositAccount)).exit(data)
+      ).to.be.revertedWith('Leaf index is too big')
     })
 
-    it('Should start exit', async() => {
+    it('Should start exit', async () => {
       const logIndex = 0
       const data = bufferToHex(
         rlp.encode([
@@ -1779,17 +1716,15 @@ contract('RootChainManager', async(accounts) => {
           bufferToHex(checkpointData.receiptsRoot),
           bufferToHex(checkpointData.receipt),
           bufferToHex(rlp.encode(checkpointData.receiptParentNodes)),
-          bufferToHex(checkpointData.path), // branch mask,
+          bufferToHex(checkpointData.path),
           logIndex
         ])
       )
-      // start exit
-      exitTx = await contracts.root.rootChainManager.exit(data,
-        { from: nonDepositAccount })
-      should.exist(exitTx)
+      exitTx = await contracts.root.rootChainManager.connect(await ethers.getSigner(nonDepositAccount)).exit(data)
+      expect(exitTx).to.exist
     })
 
-    it('Should fail: start exit again', async() => {
+    it('Should fail: start exit again', async () => {
       const logIndex = 0
       const data = bufferToHex(
         rlp.encode([
@@ -1801,16 +1736,16 @@ contract('RootChainManager', async(accounts) => {
           bufferToHex(checkpointData.receiptsRoot),
           bufferToHex(checkpointData.receipt),
           bufferToHex(rlp.encode(checkpointData.receiptParentNodes)),
-          bufferToHex(checkpointData.path), // branch mask,
+          bufferToHex(checkpointData.path),
           logIndex
         ])
       )
-      // start exit
-      await expectRevert(contracts.root.rootChainManager.exit(data,
-        { from: nonDepositAccount }), 'EXIT_ALREADY_PROCESSED')
+      await expect(
+        contracts.root.rootChainManager.connect(await ethers.getSigner(nonDepositAccount)).exit(data)
+      ).to.be.revertedWith('RootChainManager: EXIT_ALREADY_PROCESSED')
     })
 
-    it('Should fail to start exit again (change the log index to generate same exit hash)', async() => {
+    it('Should fail to start exit again (change the log index to generate same exit hash)', async () => {
       const logIndex = toHex(Array(64).fill(0).join(''))
       const data = bufferToHex(
         rlp.encode([
@@ -1822,44 +1757,40 @@ contract('RootChainManager', async(accounts) => {
           bufferToHex(checkpointData.receiptsRoot),
           bufferToHex(checkpointData.receipt),
           bufferToHex(rlp.encode(checkpointData.receiptParentNodes)),
-          bufferToHex(checkpointData.path), // branch mask,
+          bufferToHex(checkpointData.path),
           logIndex
         ])
       )
-      // start exit
-      await expectRevert(contracts.root.rootChainManager.exit(data,
-        { from: nonDepositAccount }), 'EXIT_ALREADY_PROCESSED')
+      await expect(
+        contracts.root.rootChainManager.connect(await ethers.getSigner(nonDepositAccount)).exit(data)
+      ).to.be.revertedWith('RootChainManager: EXIT_ALREADY_PROCESSED')
     })
 
     it('Should emit Transfer log in exit tx', () => {
-      const logs = logDecoder.decodeLogs(exitTx.receipt.rawLogs)
-      const exitTransferLog = logs.find(l => l.event === 'TransferSingle')
-      should.exist(exitTransferLog)
+      expect(exitTx)
+        .to.emit(contracts.root.rootChainManager, 'TransferSingle')
+        .withArgs(mockValues.zeroAddress, depositReceiver, tokenId, withdrawAmount)
     })
 
-    it('Should have more amount in withdrawer account after withdraw', async() => {
+    it('Should have more amount in withdrawer account after withdraw', async () => {
       const newAccountBalance = await dummyERC1155.balanceOf(depositReceiver, tokenId)
-      newAccountBalance.should.be.a.bignumber.that.equals(
-        accountBalance.add(depositAmount)
-      )
+      expect(newAccountBalance).to.equal(accountBalance + depositAmount)
     })
 
-    it('Should have less amount in predicate contract after withdraw', async() => {
-      const newContractBalance = await dummyERC1155.balanceOf(contracts.root.erc1155Predicate.address, tokenId)
-      newContractBalance.should.be.a.bignumber.that.equals(
-        contractBalance.sub(withdrawAmount)
-      )
+    it('Should have less amount in predicate contract after withdraw', async () => {
+      const newContractBalance = await dummyERC1155.balanceOf(contracts.root.erc1155Predicate.target, tokenId)
+      expect(newContractBalance).to.equal(contractBalance - withdrawAmount)
     })
   })
 
-  describe('Withdraw batch ERC1155', async() => {
+  describe('Withdraw batch ERC1155', async () => {
     let erc1155PredicateAddress
     const withdrawAmountA = mockValues.amounts[2]
     const withdrawAmountB = mockValues.amounts[2]
     const withdrawAmountC = mockValues.amounts[1]
-    const depositAmountA = withdrawAmountA.add(mockValues.amounts[0])
-    const depositAmountB = withdrawAmountA.add(mockValues.amounts[9])
-    const depositAmountC = withdrawAmountA.add(mockValues.amounts[6])
+    const depositAmountA = withdrawAmountA + mockValues.amounts[0]
+    const depositAmountB = withdrawAmountA + mockValues.amounts[9]
+    const depositAmountC = withdrawAmountA + mockValues.amounts[6]
     const tokenIdA = mockValues.numbers[4]
     const tokenIdB = mockValues.numbers[5]
     const tokenIdC = mockValues.numbers[8]
@@ -1877,111 +1808,104 @@ contract('RootChainManager', async(accounts) => {
     let contractBalanceA
     let contractBalanceB
     let contractBalanceC
-    let transferBatchLog
     let withdrawTx
+    let withdrawTxReceipt
     let checkpointData
     let headerNumber
     let exitTx
-    let logs
 
-    before(async() => {
-      contracts = await deployer.deployInitializedContracts(accounts)
+    before(async () => {
+      contracts = await deployInitializedContracts(accounts)
       dummyERC1155 = contracts.root.dummyERC1155
       rootChainManager = contracts.root.rootChainManager
       await dummyERC1155.mint(accounts[0], tokenIdA, depositAmountA)
       await dummyERC1155.mint(accounts[0], tokenIdB, depositAmountB)
       await dummyERC1155.mint(accounts[0], tokenIdC, depositAmountC)
       accountBalanceA = await dummyERC1155.balanceOf(accounts[0], tokenIdA)
-      erc1155PredicateAddress = contracts.root.erc1155Predicate.address
-      contractBalanceA = await dummyERC1155.balanceOf(erc1155PredicateAddress, tokenIdA)
       accountBalanceB = await dummyERC1155.balanceOf(accounts[0], tokenIdB)
-      contractBalanceB = await dummyERC1155.balanceOf(erc1155PredicateAddress, tokenIdB)
       accountBalanceC = await dummyERC1155.balanceOf(accounts[0], tokenIdC)
+      erc1155PredicateAddress = contracts.root.erc1155Predicate.target
+      contractBalanceA = await dummyERC1155.balanceOf(erc1155PredicateAddress, tokenIdA)
+      contractBalanceB = await dummyERC1155.balanceOf(erc1155PredicateAddress, tokenIdB)
       contractBalanceC = await dummyERC1155.balanceOf(erc1155PredicateAddress, tokenIdC)
     })
 
-    it('Depositor should be able to approve and deposit', async() => {
-      await dummyERC1155.setApprovalForAll(contracts.root.erc1155Predicate.address, true)
-      const depositTx = await rootChainManager.depositFor(depositReceiver, dummyERC1155.address, depositData)
-      should.exist(depositTx)
-      const syncTx = await syncState({ tx: depositTx })
-      should.exist(syncTx)
+    it('Depositor should be able to approve and deposit', async () => {
+      await dummyERC1155.setApprovalForAll(erc1155PredicateAddress, true)
+      const depositTx = await rootChainManager.depositFor(depositReceiver, dummyERC1155.target, depositData)
+      expect(depositTx).to.exist
+      const txReceipt = await depositTx.wait()
+      const syncTx = await syncState(txReceipt)
+      expect(syncTx).to.exist
     })
 
-    it('Deposit amount should be deducted from depositor account', async() => {
+    it('Deposit amount should be deducted from depositor account', async () => {
       const newAccountBalanceA = await dummyERC1155.balanceOf(accounts[0], tokenIdA)
-      newAccountBalanceA.should.be.a.bignumber.that.equals(
-        accountBalanceA.sub(depositAmountA)
-      )
       const newAccountBalanceB = await dummyERC1155.balanceOf(accounts[0], tokenIdB)
-      newAccountBalanceB.should.be.a.bignumber.that.equals(
-        accountBalanceB.sub(depositAmountB)
-      )
       const newAccountBalanceC = await dummyERC1155.balanceOf(accounts[0], tokenIdC)
-      newAccountBalanceC.should.be.a.bignumber.that.equals(
-        accountBalanceC.sub(depositAmountC)
-      )
+      expect(newAccountBalanceA).to.equal(accountBalanceA - depositAmountA)
+      expect(newAccountBalanceB).to.equal(accountBalanceB - depositAmountB)
+      expect(newAccountBalanceC).to.equal(accountBalanceC - depositAmountC)
       // update account balance
       accountBalanceA = newAccountBalanceA
       accountBalanceB = newAccountBalanceB
       accountBalanceC = newAccountBalanceC
     })
 
-    it('Deposit amount should be credited to correct contract', async() => {
+    it('Deposit amount should be credited to correct contract', async () => {
       const newContractBalanceA = await dummyERC1155.balanceOf(erc1155PredicateAddress, tokenIdA)
-      newContractBalanceA.should.be.a.bignumber.that.equals(
-        contractBalanceA.add(depositAmountA)
-      )
       const newContractBalanceB = await dummyERC1155.balanceOf(erc1155PredicateAddress, tokenIdB)
-      newContractBalanceB.should.be.a.bignumber.that.equals(
-        contractBalanceB.add(depositAmountB)
-      )
       const newContractBalanceC = await dummyERC1155.balanceOf(erc1155PredicateAddress, tokenIdC)
-      newContractBalanceC.should.be.a.bignumber.that.equals(
-        contractBalanceC.add(depositAmountC)
-      )
+      expect(newContractBalanceA).to.equal(contractBalanceA + depositAmountA)
+      expect(newContractBalanceB).to.equal(contractBalanceB + depositAmountB)
+      expect(newContractBalanceC).to.equal(contractBalanceC + depositAmountC)
       // update balance
       contractBalanceA = newContractBalanceA
       contractBalanceB = newContractBalanceB
       contractBalanceC = newContractBalanceC
     })
 
-    it('Can receive withdraw tx', async() => {
-      withdrawTx = await contracts.child.dummyERC1155.withdrawBatch(
-        [tokenIdA, tokenIdB, tokenIdC],
-        [withdrawAmountA, withdrawAmountB, withdrawAmountC],
-        { from: depositReceiver })
-      should.exist(withdrawTx)
+    it('Can receive withdraw tx', async () => {
+      withdrawTx = await contracts.child.dummyERC1155
+        .connect(await ethers.getSigner(depositReceiver))
+        .withdrawBatch([tokenIdA, tokenIdB, tokenIdC], [withdrawAmountA, withdrawAmountB, withdrawAmountC])
+      expect(withdrawTx).to.exist
+      await withdrawTx.wait()
+      withdrawTxReceipt = await web3.eth.getTransactionReceipt(withdrawTx.hash)
     })
 
     it('Should emit Transfer log in withdraw tx', () => {
-      logs = logDecoder.decodeLogs(withdrawTx.receipt.rawLogs)
-      transferBatchLog = logs.find(l => l.event === 'TransferBatch')
-      should.exist(transferBatchLog)
+      expect(withdrawTx)
+        .to.emit(contracts.child.dummyERC1155, 'TransferBatch')
+        .withArgs(
+          depositReceiver,
+          mockValues.zeroAddress,
+          [tokenIdA, tokenIdB, tokenIdC],
+          [withdrawAmountA, withdrawAmountB, withdrawAmountC]
+        )
     })
 
-    it('Should submit checkpoint', async() => {
+    it('Should submit checkpoint', async () => {
       // submit checkpoint including burn (withdraw) tx
-      checkpointData = await submitCheckpoint(contracts.root.checkpointManager, withdrawTx.receipt)
-      should.exist(checkpointData)
+      checkpointData = await submitCheckpoint(contracts.root.checkpointManager, withdrawTxReceipt)
+      expect(checkpointData).to.exist
     })
 
-    it('Should match checkpoint details', async() => {
+    it('Should match checkpoint details', async () => {
       const root = bufferToHex(checkpointData.header.root)
-      should.exist(root)
+      expect(root).to.exist
 
       // fetch latest header number
       headerNumber = await contracts.root.checkpointManager.currentCheckpointNumber()
-      headerNumber.should.be.bignumber.gt('0')
+      expect(headerNumber).to.be.gt('0')
 
       // fetch header block details and validate
       const headerData = await contracts.root.checkpointManager.headerBlocks(headerNumber)
-      root.should.equal(headerData.root)
+      expect(root).to.equal(headerData.root)
     })
 
-    it('Should fail: exit with a random data receipt', async() => {
-      const receipt = await childWeb3.eth.getTransactionReceipt(withdrawTx.receipt.transactionHash)
-      const dummyReceipt = getFakeReceiptBytes(receipt, '')
+    it('Should fail: exit with a random data receipt', async () => {
+      const dummyReceipt = getFakeReceiptBytes(withdrawTxReceipt, '')
       const logIndex = 0
       const data = bufferToHex(
         rlp.encode([
@@ -1993,19 +1917,17 @@ contract('RootChainManager', async(accounts) => {
           bufferToHex(checkpointData.receiptsRoot),
           bufferToHex(dummyReceipt),
           bufferToHex(rlp.encode(checkpointData.receiptParentNodes)),
-          bufferToHex(checkpointData.path), // branch mask,
+          bufferToHex(checkpointData.path),
           logIndex
         ])
       )
-      // start exit
-      await expectRevert(contracts.root.rootChainManager.exit(data,
-        { from: depositReceiver }), 'RootChainManager: INVALID_PROOF')
+      await expect(
+        contracts.root.rootChainManager.connect(await ethers.getSigner(depositReceiver)).exit(data)
+      ).to.be.revertedWith('RootChainManager: INVALID_PROOF')
     })
 
-    it('Should fail: exit with a fake amount data in receipt', async() => {
-      const receipt = await childWeb3.eth.getTransactionReceipt(
-        withdrawTx.receipt.transactionHash)
-      const dummyReceipt = getFakeReceiptBytes(receipt, mockValues.bytes32[4])
+    it('Should fail: exit with a fake amount data in receipt', async () => {
+      const dummyReceipt = getFakeReceiptBytes(withdrawTxReceipt, mockValues.bytes32[4])
       const logIndex = 0
       const data = bufferToHex(
         rlp.encode([
@@ -2017,16 +1939,15 @@ contract('RootChainManager', async(accounts) => {
           bufferToHex(checkpointData.receiptsRoot),
           bufferToHex(dummyReceipt),
           bufferToHex(rlp.encode(checkpointData.receiptParentNodes)),
-          bufferToHex(checkpointData.path), // branch mask,
+          bufferToHex(checkpointData.path),
           logIndex
         ])
       )
-      // start exit
-      await expectRevert(contracts.root.rootChainManager.exit(data,
-        { from: depositReceiver }), 'revert')
+      await expect(contracts.root.rootChainManager.connect(await ethers.getSigner(depositReceiver)).exit(data)).to.be
+        .reverted
     })
 
-    it('Should start exit', async() => {
+    it('Should start exit', async () => {
       const logIndex = 0
       const data = bufferToHex(
         rlp.encode([
@@ -2038,17 +1959,15 @@ contract('RootChainManager', async(accounts) => {
           bufferToHex(checkpointData.receiptsRoot),
           bufferToHex(checkpointData.receipt),
           bufferToHex(rlp.encode(checkpointData.receiptParentNodes)),
-          bufferToHex(checkpointData.path), // branch mask,
+          bufferToHex(checkpointData.path),
           logIndex
         ])
       )
-      // start exit
-      exitTx = await contracts.root.rootChainManager.exit(data,
-        { from: depositReceiver })
-      should.exist(exitTx)
+      exitTx = await contracts.root.rootChainManager.connect(await ethers.getSigner(depositReceiver)).exit(data)
+      expect(exitTx).to.exist
     })
 
-    it('start exit again', async() => {
+    it('start exit again', async () => {
       const logIndex = 0
       const data = bufferToHex(
         rlp.encode([
@@ -2060,54 +1979,53 @@ contract('RootChainManager', async(accounts) => {
           bufferToHex(checkpointData.receiptsRoot),
           bufferToHex(checkpointData.receipt),
           bufferToHex(rlp.encode(checkpointData.receiptParentNodes)),
-          bufferToHex(checkpointData.path), // branch mask,
+          bufferToHex(checkpointData.path),
           logIndex
         ])
       )
-      // start exit
-      await expectRevert(contracts.root.rootChainManager.exit(data,
-        { from: depositReceiver }), 'EXIT_ALREADY_PROCESSED')
+      await expect(
+        contracts.root.rootChainManager.connect(await ethers.getSigner(depositReceiver)).exit(data)
+      ).to.be.revertedWith('RootChainManager: EXIT_ALREADY_PROCESSED')
     })
 
     it('Should emit Transfer log in exit tx', () => {
-      const logs = logDecoder.decodeLogs(exitTx.receipt.rawLogs)
-      const exitTransferLog = logs.find(l => l.event === 'TransferBatch')
-      should.exist(exitTransferLog)
+      expect(exitTx)
+        .to.emit(contracts.root.rootChainManager, 'TransferBatch')
+        .withArgs(
+          mockValues.zeroAddress,
+          depositReceiver,
+          [tokenIdA, tokenIdB, tokenIdC],
+          [withdrawAmountA, withdrawAmountB, withdrawAmountC]
+        )
     })
 
-    it('Should have more amount in withdrawer account after withdraw', async() => {
+    it('Should have more amount in withdrawer account after withdraw', async () => {
       const newAccountBalanceA = await dummyERC1155.balanceOf(depositReceiver, tokenIdA)
-      newAccountBalanceA.should.be.a.bignumber.that.equals(accountBalanceA.add(withdrawAmountA))
       const newAccountBalanceB = await dummyERC1155.balanceOf(depositReceiver, tokenIdB)
-      newAccountBalanceB.should.be.a.bignumber.that.equals(accountBalanceB.add(withdrawAmountB))
       const newAccountBalanceC = await dummyERC1155.balanceOf(depositReceiver, tokenIdC)
-      newAccountBalanceC.should.be.a.bignumber.that.equals(accountBalanceC.add(withdrawAmountC))
+      expect(newAccountBalanceA).to.equal(accountBalanceA + withdrawAmountA)
+      expect(newAccountBalanceB).to.equal(accountBalanceB + withdrawAmountB)
+      expect(newAccountBalanceC).to.equal(accountBalanceC + withdrawAmountC)
     })
 
-    it('Should have less amount in predicate contract after withdraw', async() => {
+    it('Should have less amount in predicate contract after withdraw', async () => {
       const newContractBalanceA = await dummyERC1155.balanceOf(erc1155PredicateAddress, tokenIdA)
-      newContractBalanceA.should.be.a.bignumber.that.equals(
-        contractBalanceA.sub(withdrawAmountA)
-      )
       const newContractBalanceB = await dummyERC1155.balanceOf(erc1155PredicateAddress, tokenIdB)
-      newContractBalanceB.should.be.a.bignumber.that.equals(
-        contractBalanceB.sub(withdrawAmountB)
-      )
       const newContractBalanceC = await dummyERC1155.balanceOf(erc1155PredicateAddress, tokenIdC)
-      newContractBalanceC.should.be.a.bignumber.that.equals(
-        contractBalanceC.sub(withdrawAmountC)
-      )
+      expect(newContractBalanceA).to.equal(contractBalanceA - withdrawAmountA)
+      expect(newContractBalanceB).to.equal(contractBalanceB - withdrawAmountB)
+      expect(newContractBalanceC).to.equal(contractBalanceC - withdrawAmountC)
     })
   })
 
-  describe('Withdraw batch ERC1155 :: non-deposit account', async() => {
+  describe('Withdraw batch ERC1155 :: non-deposit account', async () => {
     let erc1155PredicateAddress
     const withdrawAmountA = mockValues.amounts[2]
     const withdrawAmountB = mockValues.amounts[2]
     const withdrawAmountC = mockValues.amounts[1]
-    const depositAmountA = withdrawAmountA.add(mockValues.amounts[0])
-    const depositAmountB = withdrawAmountA.add(mockValues.amounts[9])
-    const depositAmountC = withdrawAmountA.add(mockValues.amounts[6])
+    const depositAmountA = withdrawAmountA + mockValues.amounts[0]
+    const depositAmountB = withdrawAmountA + mockValues.amounts[9]
+    const depositAmountC = withdrawAmountA + mockValues.amounts[6]
     const tokenIdA = mockValues.numbers[4]
     const tokenIdB = mockValues.numbers[5]
     const tokenIdC = mockValues.numbers[8]
@@ -2126,111 +2044,104 @@ contract('RootChainManager', async(accounts) => {
     let contractBalanceA
     let contractBalanceB
     let contractBalanceC
-    let transferBatchLog
     let withdrawTx
+    let withdrawTxReceipt
     let checkpointData
     let headerNumber
     let exitTx
-    let logs
 
-    before(async() => {
-      contracts = await deployer.deployInitializedContracts(accounts)
+    before(async () => {
+      contracts = await deployInitializedContracts(accounts)
       dummyERC1155 = contracts.root.dummyERC1155
       rootChainManager = contracts.root.rootChainManager
       await dummyERC1155.mint(accounts[0], tokenIdA, depositAmountA)
       await dummyERC1155.mint(accounts[0], tokenIdB, depositAmountB)
       await dummyERC1155.mint(accounts[0], tokenIdC, depositAmountC)
       accountBalanceA = await dummyERC1155.balanceOf(accounts[0], tokenIdA)
-      erc1155PredicateAddress = contracts.root.erc1155Predicate.address
-      contractBalanceA = await dummyERC1155.balanceOf(erc1155PredicateAddress, tokenIdA)
       accountBalanceB = await dummyERC1155.balanceOf(accounts[0], tokenIdB)
-      contractBalanceB = await dummyERC1155.balanceOf(erc1155PredicateAddress, tokenIdB)
       accountBalanceC = await dummyERC1155.balanceOf(accounts[0], tokenIdC)
+      erc1155PredicateAddress = contracts.root.erc1155Predicate.target
+      contractBalanceA = await dummyERC1155.balanceOf(erc1155PredicateAddress, tokenIdA)
+      contractBalanceB = await dummyERC1155.balanceOf(erc1155PredicateAddress, tokenIdB)
       contractBalanceC = await dummyERC1155.balanceOf(erc1155PredicateAddress, tokenIdC)
     })
 
-    it('Depositor should be able to approve and deposit', async() => {
-      await dummyERC1155.setApprovalForAll(contracts.root.erc1155Predicate.address, true)
-      const depositTx = await rootChainManager.depositFor(depositReceiver, dummyERC1155.address, depositData)
-      should.exist(depositTx)
-      const syncTx = await syncState({ tx: depositTx })
-      should.exist(syncTx)
+    it('Depositor should be able to approve and deposit', async () => {
+      await dummyERC1155.setApprovalForAll(erc1155PredicateAddress, true)
+      const depositTx = await rootChainManager.depositFor(depositReceiver, dummyERC1155.target, depositData)
+      expect(depositTx).to.exist
+      const txReceipt = await depositTx.wait()
+      const syncTx = await syncState(txReceipt)
+      expect(syncTx).to.exist
     })
 
-    it('Deposit amount should be deducted from depositor account', async() => {
+    it('Deposit amount should be deducted from depositor account', async () => {
       const newAccountBalanceA = await dummyERC1155.balanceOf(accounts[0], tokenIdA)
-      newAccountBalanceA.should.be.a.bignumber.that.equals(
-        accountBalanceA.sub(depositAmountA)
-      )
       const newAccountBalanceB = await dummyERC1155.balanceOf(accounts[0], tokenIdB)
-      newAccountBalanceB.should.be.a.bignumber.that.equals(
-        accountBalanceB.sub(depositAmountB)
-      )
       const newAccountBalanceC = await dummyERC1155.balanceOf(accounts[0], tokenIdC)
-      newAccountBalanceC.should.be.a.bignumber.that.equals(
-        accountBalanceC.sub(depositAmountC)
-      )
+      expect(newAccountBalanceA).to.equal(accountBalanceA - depositAmountA)
+      expect(newAccountBalanceB).to.equal(accountBalanceB - depositAmountB)
+      expect(newAccountBalanceC).to.equal(accountBalanceC - depositAmountC)
       // update account balance
       accountBalanceA = newAccountBalanceA
       accountBalanceB = newAccountBalanceB
       accountBalanceC = newAccountBalanceC
     })
 
-    it('Deposit amount should be credited to correct contract', async() => {
+    it('Deposit amount should be credited to correct contract', async () => {
       const newContractBalanceA = await dummyERC1155.balanceOf(erc1155PredicateAddress, tokenIdA)
-      newContractBalanceA.should.be.a.bignumber.that.equals(
-        contractBalanceA.add(depositAmountA)
-      )
       const newContractBalanceB = await dummyERC1155.balanceOf(erc1155PredicateAddress, tokenIdB)
-      newContractBalanceB.should.be.a.bignumber.that.equals(
-        contractBalanceB.add(depositAmountB)
-      )
       const newContractBalanceC = await dummyERC1155.balanceOf(erc1155PredicateAddress, tokenIdC)
-      newContractBalanceC.should.be.a.bignumber.that.equals(
-        contractBalanceC.add(depositAmountC)
-      )
+      expect(newContractBalanceA).to.equal(contractBalanceA + depositAmountA)
+      expect(newContractBalanceB).to.equal(contractBalanceB + depositAmountB)
+      expect(newContractBalanceC).to.equal(contractBalanceC + depositAmountC)
       // update balance
       contractBalanceA = newContractBalanceA
       contractBalanceB = newContractBalanceB
       contractBalanceC = newContractBalanceC
     })
 
-    it('Can receive withdraw tx', async() => {
-      withdrawTx = await contracts.child.dummyERC1155.withdrawBatch(
-        [tokenIdA, tokenIdB, tokenIdC],
-        [withdrawAmountA, withdrawAmountB, withdrawAmountC],
-        { from: depositReceiver })
-      should.exist(withdrawTx)
+    it('Can receive withdraw tx', async () => {
+      withdrawTx = await contracts.child.dummyERC1155
+        .connect(await ethers.getSigner(depositReceiver))
+        .withdrawBatch([tokenIdA, tokenIdB, tokenIdC], [withdrawAmountA, withdrawAmountB, withdrawAmountC])
+      expect(withdrawTx).to.exist
+      await withdrawTx.wait()
+      withdrawTxReceipt = await web3.eth.getTransactionReceipt(withdrawTx.hash)
     })
 
     it('Should emit Transfer log in withdraw tx', () => {
-      logs = logDecoder.decodeLogs(withdrawTx.receipt.rawLogs)
-      transferBatchLog = logs.find(l => l.event === 'TransferBatch')
-      should.exist(transferBatchLog)
+      expect(withdrawTx)
+        .to.emit(contracts.child.dummyERC1155, 'TransferBatch')
+        .withArgs(
+          depositReceiver,
+          mockValues.zeroAddress,
+          [tokenIdA, tokenIdB, tokenIdC],
+          [withdrawAmountA, withdrawAmountB, withdrawAmountC]
+        )
     })
 
-    it('Should submit checkpoint', async() => {
+    it('Should submit checkpoint', async () => {
       // submit checkpoint including burn (withdraw) tx
-      checkpointData = await submitCheckpoint(contracts.root.checkpointManager, withdrawTx.receipt)
-      should.exist(checkpointData)
+      checkpointData = await submitCheckpoint(contracts.root.checkpointManager, withdrawTxReceipt)
+      expect(checkpointData).to.exist
     })
 
-    it('Should match checkpoint details', async() => {
+    it('Should match checkpoint details', async () => {
       const root = bufferToHex(checkpointData.header.root)
-      should.exist(root)
+      expect(root).to.exist
 
       // fetch latest header number
       headerNumber = await contracts.root.checkpointManager.currentCheckpointNumber()
-      headerNumber.should.be.bignumber.gt('0')
+      expect(headerNumber).to.be.gt('0')
 
       // fetch header block details and validate
       const headerData = await contracts.root.checkpointManager.headerBlocks(headerNumber)
-      root.should.equal(headerData.root)
+      expect(root).to.equal(headerData.root)
     })
 
-    it('Should fail: exit with a random data receipt', async() => {
-      const receipt = await childWeb3.eth.getTransactionReceipt(withdrawTx.receipt.transactionHash)
-      const dummyReceipt = getFakeReceiptBytes(receipt, '')
+    it('Should fail: exit with a random data receipt', async () => {
+      const dummyReceipt = getFakeReceiptBytes(withdrawTxReceipt, '')
       const logIndex = 0
       const data = bufferToHex(
         rlp.encode([
@@ -2242,19 +2153,17 @@ contract('RootChainManager', async(accounts) => {
           bufferToHex(checkpointData.receiptsRoot),
           bufferToHex(dummyReceipt),
           bufferToHex(rlp.encode(checkpointData.receiptParentNodes)),
-          bufferToHex(checkpointData.path), // branch mask,
+          bufferToHex(checkpointData.path),
           logIndex
         ])
       )
-      // start exit
-      await expectRevert(contracts.root.rootChainManager.exit(data,
-        { from: nonDepositAccount }), 'RootChainManager: INVALID_PROOF')
+      await expect(
+        contracts.root.rootChainManager.connect(await ethers.getSigner(nonDepositAccount)).exit(data)
+      ).to.be.revertedWith('RootChainManager: INVALID_PROOF')
     })
 
-    it('Should fail: exit with a fake amount data in receipt', async() => {
-      const receipt = await childWeb3.eth.getTransactionReceipt(
-        withdrawTx.receipt.transactionHash)
-      const dummyReceipt = getFakeReceiptBytes(receipt, mockValues.bytes32[4])
+    it('Should fail: exit with a fake amount data in receipt', async () => {
+      const dummyReceipt = getFakeReceiptBytes(withdrawTxReceipt, mockValues.bytes32[4])
       const logIndex = 0
       const data = bufferToHex(
         rlp.encode([
@@ -2266,16 +2175,15 @@ contract('RootChainManager', async(accounts) => {
           bufferToHex(checkpointData.receiptsRoot),
           bufferToHex(dummyReceipt),
           bufferToHex(rlp.encode(checkpointData.receiptParentNodes)),
-          bufferToHex(checkpointData.path), // branch mask,
+          bufferToHex(checkpointData.path),
           logIndex
         ])
       )
-      // start exit
-      await expectRevert(contracts.root.rootChainManager.exit(data,
-        { from: nonDepositAccount }), 'revert')
+      await expect(contracts.root.rootChainManager.connect(await ethers.getSigner(nonDepositAccount)).exit(data)).to.be
+        .reverted
     })
 
-    it('Should start exit', async() => {
+    it('Should start exit', async () => {
       const logIndex = 0
       const data = bufferToHex(
         rlp.encode([
@@ -2287,17 +2195,15 @@ contract('RootChainManager', async(accounts) => {
           bufferToHex(checkpointData.receiptsRoot),
           bufferToHex(checkpointData.receipt),
           bufferToHex(rlp.encode(checkpointData.receiptParentNodes)),
-          bufferToHex(checkpointData.path), // branch mask,
+          bufferToHex(checkpointData.path),
           logIndex
         ])
       )
-      // start exit
-      exitTx = await contracts.root.rootChainManager.exit(data,
-        { from: nonDepositAccount })
-      should.exist(exitTx)
+      exitTx = await contracts.root.rootChainManager.connect(await ethers.getSigner(nonDepositAccount)).exit(data)
+      expect(exitTx).to.exist
     })
 
-    it('start exit again', async() => {
+    it('start exit again', async () => {
       const logIndex = 0
       const data = bufferToHex(
         rlp.encode([
@@ -2309,43 +2215,42 @@ contract('RootChainManager', async(accounts) => {
           bufferToHex(checkpointData.receiptsRoot),
           bufferToHex(checkpointData.receipt),
           bufferToHex(rlp.encode(checkpointData.receiptParentNodes)),
-          bufferToHex(checkpointData.path), // branch mask,
+          bufferToHex(checkpointData.path),
           logIndex
         ])
       )
-      // start exit
-      await expectRevert(contracts.root.rootChainManager.exit(data,
-        { from: nonDepositAccount }), 'EXIT_ALREADY_PROCESSED')
+      await expect(
+        contracts.root.rootChainManager.connect(await ethers.getSigner(nonDepositAccount)).exit(data)
+      ).to.be.revertedWith('RootChainManager: EXIT_ALREADY_PROCESSED')
     })
 
     it('Should emit Transfer log in exit tx', () => {
-      const logs = logDecoder.decodeLogs(exitTx.receipt.rawLogs)
-      const exitTransferLog = logs.find(l => l.event === 'TransferBatch')
-      should.exist(exitTransferLog)
+      expect(exitTx)
+        .to.emit(contracts.root.rootChainManager, 'TransferBatch')
+        .withArgs(
+          mockValues.zeroAddress,
+          depositReceiver,
+          [tokenIdA, tokenIdB, tokenIdC],
+          [withdrawAmountA, withdrawAmountB, withdrawAmountC]
+        )
     })
 
-    it('Should have more amount in withdrawer account after withdraw', async() => {
+    it('Should have more amount in withdrawer account after withdraw', async () => {
       const newAccountBalanceA = await dummyERC1155.balanceOf(depositReceiver, tokenIdA)
-      newAccountBalanceA.should.be.a.bignumber.that.equals(accountBalanceA.add(withdrawAmountA))
       const newAccountBalanceB = await dummyERC1155.balanceOf(depositReceiver, tokenIdB)
-      newAccountBalanceB.should.be.a.bignumber.that.equals(accountBalanceB.add(withdrawAmountB))
       const newAccountBalanceC = await dummyERC1155.balanceOf(depositReceiver, tokenIdC)
-      newAccountBalanceC.should.be.a.bignumber.that.equals(accountBalanceC.add(withdrawAmountC))
+      expect(newAccountBalanceA).to.equal(accountBalanceA + withdrawAmountA)
+      expect(newAccountBalanceB).to.equal(accountBalanceB + withdrawAmountB)
+      expect(newAccountBalanceC).to.equal(accountBalanceC + withdrawAmountC)
     })
 
-    it('Should have less amount in predicate contract after withdraw', async() => {
+    it('Should have less amount in predicate contract after withdraw', async () => {
       const newContractBalanceA = await dummyERC1155.balanceOf(erc1155PredicateAddress, tokenIdA)
-      newContractBalanceA.should.be.a.bignumber.that.equals(
-        contractBalanceA.sub(withdrawAmountA)
-      )
       const newContractBalanceB = await dummyERC1155.balanceOf(erc1155PredicateAddress, tokenIdB)
-      newContractBalanceB.should.be.a.bignumber.that.equals(
-        contractBalanceB.sub(withdrawAmountB)
-      )
       const newContractBalanceC = await dummyERC1155.balanceOf(erc1155PredicateAddress, tokenIdC)
-      newContractBalanceC.should.be.a.bignumber.that.equals(
-        contractBalanceC.sub(withdrawAmountC)
-      )
+      expect(newContractBalanceA).to.equal(contractBalanceA - withdrawAmountA)
+      expect(newContractBalanceB).to.equal(contractBalanceB - withdrawAmountB)
+      expect(newContractBalanceC).to.equal(contractBalanceC - withdrawAmountC)
     })
   })
 
@@ -2373,60 +2278,68 @@ contract('RootChainManager', async(accounts) => {
     let checkpointManager
     let burnTx1
     let burnTx2
+    let burnTx1Receipt
+    let burnTx2Receipt
     let checkpointData1
     let checkpointData2
     let headerNumber1
     let headerNumber2
+    let exitTx1
+    let exitTx2
 
-    before(async() => {
-      contracts = await deployer.deployInitializedContracts(accounts)
+    before(async () => {
+      contracts = await deployInitializedContracts(accounts)
       rootChainManager = contracts.root.rootChainManager
       rootMintableERC721 = contracts.root.dummyMintableERC721
       childMintableERC721 = contracts.child.dummyMintableERC721
       mintableERC721Predicate = contracts.root.mintableERC721Predicate
       checkpointManager = contracts.root.checkpointManager
-      await childMintableERC721.mint(alice, tokenId, { from: admin })
+      await childMintableERC721.connect(await ethers.getSigner(admin)).mint(alice, tokenId)
     })
 
-    it('Alice should have token on child chain', async() => {
+    it('Alice should have token on child chain', async () => {
       const owner = await childMintableERC721.ownerOf(tokenId)
-      owner.should.equal(alice)
+      expect(owner).to.equal(alice)
     })
 
-    it('Token should not exist on root chain', async() => {
-      await expectRevert(rootMintableERC721.ownerOf(tokenId), 'ERC721: owner query for nonexistent token')
+    it('Token should not exist on root chain', async () => {
+      await expect(rootMintableERC721.ownerOf(tokenId)).to.be.revertedWith('ERC721: owner query for nonexistent token')
     })
 
-    it('Alice should be able to send burn tx', async() => {
-      burnTx1 = await childMintableERC721.withdraw(tokenId, { from: alice })
-      should.exist(burnTx1)
+    it('Alice should be able to send burn tx', async () => {
+      burnTx1 = await childMintableERC721.connect(await ethers.getSigner(alice)).withdraw(tokenId)
+      expect(burnTx1).to.exist
+      await burnTx1.wait()
+      burnTx1Receipt = await web3.eth.getTransactionReceipt(burnTx1.hash)
     })
 
-    it('Token should be burned on child chain', async() => {
-      await expectRevert(childMintableERC721.ownerOf(tokenId), 'ERC721: owner query for nonexistent token')
+    it('Token should be burned on child chain', async () => {
+      await expect(childMintableERC721.ownerOf(tokenId)).to.be.revertedWith('ERC721: owner query for nonexistent token')
     })
 
-    it('Checkpoint should be submitted', async() => {
+    it('Checkpoint should be submitted', async () => {
       // submit checkpoint including burn (withdraw) tx
-      checkpointData1 = await submitCheckpoint(checkpointManager, burnTx1.receipt)
-      should.exist(checkpointData1)
+      checkpointData1 = await submitCheckpoint(checkpointManager, burnTx1Receipt)
+      expect(checkpointData1).to.exist
     })
 
-    it('Checkpoint details should match', async() => {
+    it('Checkpoint details should match', async () => {
       const root = bufferToHex(checkpointData1.header.root)
-      should.exist(root)
+      expect(root).to.exist
 
       // fetch latest header number
       headerNumber1 = await contracts.root.checkpointManager.currentCheckpointNumber()
-      headerNumber1.should.be.bignumber.gt('0')
+      expect(headerNumber1).to.be.gt('0')
 
       // fetch header block details and validate
       const headerData = await contracts.root.checkpointManager.headerBlocks(headerNumber1)
-      root.should.equal(headerData.root)
+      expect(root).to.equal(headerData.root)
     })
 
-    it('Alice should be able to send exit tx', async() => {
-      const logIndex = burnTx1.receipt.rawLogs.findIndex(log => log.topics[0].toLowerCase() === ERC721_TRANSFER_EVENT_SIG.toLowerCase())
+    it('Alice should be able to send exit tx', async () => {
+      const logIndex = burnTx1Receipt.logs.findIndex(
+        (log) => log.topics[0].toLowerCase() === ERC721_TRANSFER_EVENT_SIG.toLowerCase()
+      )
       const data = bufferToHex(
         rlp.encode([
           headerNumber1,
@@ -2437,76 +2350,81 @@ contract('RootChainManager', async(accounts) => {
           bufferToHex(checkpointData1.receiptsRoot),
           bufferToHex(checkpointData1.receipt),
           bufferToHex(rlp.encode(checkpointData1.receiptParentNodes)),
-          bufferToHex(checkpointData1.path), // branch mask,
+          bufferToHex(checkpointData1.path),
           logIndex
         ])
       )
-      const exitTx = await contracts.root.rootChainManager.exit(data, { from: alice })
-      should.exist(exitTx)
+      exitTx1 = await contracts.root.rootChainManager.connect(await ethers.getSigner(alice)).exit(data)
+      expect(exitTx1).to.exist
     })
 
-    it('Token should be minted for Alice on root chain', async() => {
+    it('Token should be minted for Alice on root chain', async () => {
       const owner = await rootMintableERC721.ownerOf(tokenId)
-      owner.should.equal(alice)
+      expect(owner).to.equal(alice)
     })
 
-    it('Alice should be able to deposit token', async() => {
-      await rootMintableERC721.approve(mintableERC721Predicate.address, tokenId, { from: alice })
+    it('Alice should be able to deposit token', async () => {
+      await rootMintableERC721.connect(await ethers.getSigner(alice)).approve(mintableERC721Predicate.target, tokenId)
       const depositData = abi.encode(['uint256'], [tokenId.toString()])
-      const depositTx = await rootChainManager.depositFor(alice, rootMintableERC721.address, depositData, { from: alice })
-      should.exist(depositTx)
-      const syncTx = await syncState({ tx: depositTx })
-      should.exist(syncTx)
+      const depositTx = await rootChainManager
+        .connect(await ethers.getSigner(alice))
+        .depositFor(alice, rootMintableERC721.target, depositData)
+      expect(depositTx).to.exist
+      const txReceipt = await depositTx.wait()
+      const syncTx = await syncState(txReceipt)
+      expect(syncTx).to.exist
     })
 
-    it('Token should be transferred to predicate on root chain', async() => {
+    it('Token should be transferred to predicate on root chain', async () => {
       const owner = await rootMintableERC721.ownerOf(tokenId)
-      owner.should.equal(mintableERC721Predicate.address)
+      expect(owner).to.equal(mintableERC721Predicate.target)
     })
 
-    it('Token should be minted for Alice on child chain', async() => {
+    it('Token should be minted for Alice on child chain', async () => {
       const owner = await childMintableERC721.ownerOf(tokenId)
-      // const owner = await childMintableERC721.ownerOf(tokenId)
-      // owner.should.equal(alice)
-      owner.should.equal(alice)
+      expect(owner).to.equal(alice)
     })
 
-    it('Alice should transfer token to bob', async() => {
-      await childMintableERC721.transferFrom(alice, bob, tokenId, { from: alice })
+    it('Alice should transfer token to bob', async () => {
+      await childMintableERC721.connect(await ethers.getSigner(alice)).transferFrom(alice, bob, tokenId)
       const owner = await childMintableERC721.ownerOf(tokenId)
-      owner.should.equal(bob)
+      expect(owner).to.equal(bob)
     })
 
-    it('Bob should be able to burn token', async() => {
-      burnTx2 = await childMintableERC721.withdraw(tokenId, { from: bob })
-      should.exist(burnTx2)
+    it('Bob should be able to burn token', async () => {
+      burnTx2 = await childMintableERC721.connect(await ethers.getSigner(bob)).withdraw(tokenId)
+      expect(burnTx2).to.exist
+      await burnTx2.wait()
+      burnTx2Receipt = await web3.eth.getTransactionReceipt(burnTx2.hash)
     })
 
-    it('Token should be burned on child chain', async() => {
-      await expectRevert(childMintableERC721.ownerOf(tokenId), 'ERC721: owner query for nonexistent token')
+    it('Token should be burned on child chain', async () => {
+      await expect(childMintableERC721.ownerOf(tokenId)).to.be.revertedWith('ERC721: owner query for nonexistent token')
     })
 
-    it('checkpoint should be submitted', async() => {
+    it('checkpoint should be submitted', async () => {
       // submit checkpoint including burn (withdraw) tx
-      checkpointData2 = await submitCheckpoint(checkpointManager, burnTx2.receipt)
-      should.exist(checkpointData2)
+      checkpointData2 = await submitCheckpoint(checkpointManager, burnTx2Receipt)
+      expect(checkpointData2).to.exist
     })
 
-    it('checkpoint details should match', async() => {
+    it('checkpoint details should match', async () => {
       const root = bufferToHex(checkpointData2.header.root)
-      should.exist(root)
+      expect(root).to.exist
 
       // fetch latest header number
       headerNumber2 = await contracts.root.checkpointManager.currentCheckpointNumber()
-      headerNumber2.should.be.bignumber.gt('0')
+      expect(headerNumber2).to.be.gt('0')
 
       // fetch header block details and validate
       const headerData = await contracts.root.checkpointManager.headerBlocks(headerNumber2)
-      root.should.equal(headerData.root)
+      expect(root).to.equal(headerData.root)
     })
 
-    it('bob should be able to exit token', async() => {
-      const logIndex = burnTx1.receipt.rawLogs.findIndex(log => log.topics[0].toLowerCase() === ERC721_TRANSFER_EVENT_SIG.toLowerCase())
+    it('bob should be able to exit token', async () => {
+      const logIndex = burnTx2Receipt.logs.findIndex(
+        (log) => log.topics[0].toLowerCase() === ERC721_TRANSFER_EVENT_SIG.toLowerCase()
+      )
       const data = bufferToHex(
         rlp.encode([
           headerNumber2,
@@ -2517,42 +2435,45 @@ contract('RootChainManager', async(accounts) => {
           bufferToHex(checkpointData2.receiptsRoot),
           bufferToHex(checkpointData2.receipt),
           bufferToHex(rlp.encode(checkpointData2.receiptParentNodes)),
-          bufferToHex(checkpointData2.path), // branch mask,
+          bufferToHex(checkpointData2.path),
           logIndex
         ])
       )
-      const exitTx = await contracts.root.rootChainManager.exit(data, { from: bob })
-      should.exist(exitTx)
+      exitTx2 = await contracts.root.rootChainManager.connect(await ethers.getSigner(bob)).exit(data)
+      expect(exitTx2).to.exist
     })
 
-    it('Token should be transferred to Bob on root chain', async() => {
+    it('Token should be transferred to Bob on root chain', async () => {
       const owner = await rootMintableERC721.ownerOf(tokenId)
-      owner.should.equal(bob)
+      expect(owner).to.equal(bob)
     })
 
-    it('Bob should transfer token to Charlie', async() => {
-      await rootMintableERC721.transferFrom(bob, charlie, tokenId, { from: bob })
+    it('Bob should transfer token to Charlie', async () => {
+      await rootMintableERC721.connect(await ethers.getSigner(bob)).transferFrom(bob, charlie, tokenId)
       const owner = await rootMintableERC721.ownerOf(tokenId)
-      owner.should.equal(charlie)
+      expect(owner).to.equal(charlie)
     })
 
-    it('Charlie should be able to deposit token for Daniel', async() => {
-      await rootMintableERC721.approve(mintableERC721Predicate.address, tokenId, { from: charlie })
+    it('Charlie should be able to deposit token for Daniel', async () => {
+      await rootMintableERC721.connect(await ethers.getSigner(charlie)).approve(mintableERC721Predicate.target, tokenId)
       const depositData = abi.encode(['uint256'], [tokenId.toString()])
-      const depositTx = await rootChainManager.depositFor(daniel, rootMintableERC721.address, depositData, { from: charlie })
-      should.exist(depositTx)
-      const syncTx = await syncState({ tx: depositTx })
-      should.exist(syncTx)
+      const depositTx = await rootChainManager
+        .connect(await ethers.getSigner(charlie))
+        .depositFor(daniel, rootMintableERC721.target, depositData)
+      expect(depositTx).to.exist
+      const txReceipt = await depositTx.wait()
+      const syncTx = await syncState(txReceipt)
+      expect(syncTx).to.exist
     })
 
-    it('Token should be transferred to predicate on root chain', async() => {
+    it('Token should be transferred to predicate on root chain', async () => {
       const owner = await rootMintableERC721.ownerOf(tokenId)
-      owner.should.equal(mintableERC721Predicate.address)
+      expect(owner).to.equal(mintableERC721Predicate.target)
     })
 
-    it('Token should be minted for Daniel on child chain', async() => {
+    it('Token should be minted for Daniel on child chain', async () => {
       const owner = await childMintableERC721.ownerOf(tokenId)
-      owner.should.equal(daniel)
+      expect(owner).to.equal(daniel)
     })
   })
 })

@@ -1,268 +1,291 @@
-import chai from 'chai'
-import chaiAsPromised from 'chai-as-promised'
-import chaiBN from 'chai-bn'
-import BN from 'bn.js'
-import { AbiCoder } from 'ethers/utils'
-import { expectRevert } from '@openzeppelin/test-helpers'
+import { AbiCoder } from 'ethers'
+import { deployFreshRootContracts } from '../helpers/deployerNew.js'
+import { expect } from 'chai'
+import { getERC20TransferLog } from '../helpers/logs.js'
+import { mockValues, etherAddress } from '../helpers/constants.js'
 
-import * as deployer from '../helpers/deployer'
-import { mockValues, etherAddress } from '../helpers/constants'
-import logDecoder from '../helpers/log-decoder.js'
-import { getERC20TransferLog } from '../helpers/logs'
-
-// Enable and inject BN dependency
-chai
-  .use(chaiAsPromised)
-  .use(chaiBN(BN))
-  .should()
-
-const should = chai.should()
 const abi = new AbiCoder()
 
 contract('EtherPredicate', (accounts) => {
   describe('lockTokens', () => {
     const depositAmount = mockValues.amounts[4]
     const depositReceiver = mockValues.addresses[7]
-    const depositor = accounts[1]
+    let depositor
     let etherPredicate
-    let lockTokensTx
-    let lockedLog
 
-    before(async() => {
-      const contracts = await deployer.deployFreshRootContracts(accounts)
+    before(async () => {
+      depositor = await ethers.getSigner(accounts[1])
+      const contracts = await deployFreshRootContracts(accounts)
       etherPredicate = contracts.etherPredicate
     })
 
-    it('Should be able to receive lockTokens tx', async() => {
+    it('Should be able to receive lockTokens tx', async () => {
       const depositData = abi.encode(['uint256'], [depositAmount.toString()])
-      lockTokensTx = await etherPredicate.lockTokens(depositor, depositReceiver, etherAddress, depositData)
-      should.exist(lockTokensTx)
+      await expect(etherPredicate.lockTokens(depositor.address, depositReceiver, etherAddress, depositData))
+        .to.emit(etherPredicate, 'LockedEther')
+        .withArgs(depositor.address, depositReceiver, depositAmount)
     })
 
-    it('Should emit LockedEther log', () => {
-      const logs = logDecoder.decodeLogs(lockTokensTx.receipt.rawLogs)
-      lockedLog = logs.find(l => l.event === 'LockedEther')
-      should.exist(lockedLog)
-    })
+    // @note Already verified in the above test
+    // it('Should emit LockedEther log', () => {
+    //   const logs = logDecoder.decodeLogs(lockTokensTx.receipt.rawLogs)
+    //   lockedLog = logs.find(l => l.event === 'LockedEther')
+    //   should.exist(lockedLog)
+    // })
 
-    describe('Correct values should be emitted in LockedEther log', () => {
-      it('Event should be emitted by correct contract', () => {
-        lockedLog.address.should.equal(
-          etherPredicate.address.toLowerCase()
-        )
-      })
+    // describe('Correct values should be emitted in LockedEther log', () => {
+    //   it('Event should be emitted by correct contract', () => {
+    //     lockedLog.address.should.equal(
+    //       etherPredicate.address.toLowerCase()
+    //     )
+    //   })
 
-      it('Should emit proper depositor', () => {
-        lockedLog.args.depositor.should.equal(depositor)
-      })
+    //   it('Should emit proper depositor', () => {
+    //     lockedLog.args.depositor.should.equal(depositor)
+    //   })
 
-      it('Should emit correct amount', () => {
-        const lockedLogAmount = new BN(lockedLog.args.amount.toString())
-        lockedLogAmount.should.be.bignumber.that.equals(depositAmount)
-      })
+    //   it('Should emit correct amount', () => {
+    //     const lockedLogAmount = new BN(lockedLog.args.amount.toString())
+    //     lockedLogAmount.should.be.bignumber.that.equals(depositAmount)
+    //   })
 
-      it('Should emit correct deposit receiver', () => {
-        lockedLog.args.depositReceiver.should.equal(depositReceiver)
-      })
-    })
+    //   it('Should emit correct deposit receiver', () => {
+    //     lockedLog.args.depositReceiver.should.equal(depositReceiver)
+    //   })
+    // })
   })
 
   describe('lockTokens called by non manager', () => {
     const depositAmount = mockValues.amounts[3]
-    const depositor = accounts[1]
+    let depositor
     const depositReceiver = accounts[2]
-    const depositData = abi.encode(['uint256'], [depositAmount.toString()])
     let etherPredicate
 
-    before(async() => {
-      const contracts = await deployer.deployFreshRootContracts(accounts)
+    before(async () => {
+      depositor = await ethers.getSigner(accounts[1])
+      const contracts = await deployFreshRootContracts(accounts)
       etherPredicate = contracts.etherPredicate
     })
 
-    it('Should revert with correct reason', async() => {
-      await expectRevert(
-        etherPredicate.lockTokens(depositor, depositReceiver, etherAddress, depositData, { from: depositor }),
-        'EtherPredicate: INSUFFICIENT_PERMISSIONS')
+    it('Should revert with correct reason', async () => {
+      const depositData = abi.encode(['uint256'], [depositAmount.toString()])
+      await expect(
+        etherPredicate.connect(depositor).lockTokens(depositor.address, depositReceiver, etherAddress, depositData)
+      ).to.be.revertedWith('EtherPredicate: INSUFFICIENT_PERMISSIONS')
     })
   })
 
   describe('Send ether to predicate', () => {
     const depositAmount = mockValues.amounts[3]
+    let manager
+    let nonManager
     let etherPredicate
 
-    before(async() => {
-      const contracts = await deployer.deployFreshRootContracts(accounts)
+    before(async () => {
+      manager = await ethers.getSigner(accounts[0])
+      nonManager = await ethers.getSigner(accounts[1])
+      const contracts = await deployFreshRootContracts(accounts)
       etherPredicate = contracts.etherPredicate
     })
 
-    it('Should accept from manager', async() => {
-      const sendTx = await etherPredicate.send(depositAmount)
-      should.exist(sendTx)
+    it('Should accept from manager', async () => {
+      const tx = await manager.sendTransaction({
+        to: etherPredicate.target,
+        value: depositAmount
+      })
+      const receipt = await tx.wait()
+      expect(receipt.status).to.equal(1)
+      const newBalance = await ethers.provider.getBalance(etherPredicate.target)
+      expect(newBalance).to.equal(depositAmount)
     })
 
-    it('Should reject from non manager', async() => {
-      await expectRevert(
-        etherPredicate.send(depositAmount, { from: accounts[1] }),
-        'EtherPredicate: INSUFFICIENT_PERMISSIONS'
-      )
+    it('Should reject from non manager', async () => {
+      await expect(
+        nonManager.sendTransaction({
+          to: etherPredicate.target,
+          value: depositAmount
+        })
+      ).to.be.revertedWith('EtherPredicate: INSUFFICIENT_PERMISSIONS')
     })
   })
 
   describe('exitTokens', () => {
     const withdrawAmount = mockValues.amounts[2]
-    const depositAmount = withdrawAmount.add(mockValues.amounts[3])
+    const depositAmount = withdrawAmount + mockValues.amounts[3]
     const withdrawer = mockValues.addresses[8]
     let etherPredicate
+    let manager
     let oldAccountBalance
     let oldContractBalance
-    let exitTokensTx
 
-    before(async() => {
-      const contracts = await deployer.deployFreshRootContracts(accounts)
+    before(async () => {
+      manager = await ethers.getSigner(accounts[0])
+      const contracts = await deployFreshRootContracts(accounts)
       etherPredicate = contracts.etherPredicate
-      await etherPredicate.send(depositAmount)
-      oldAccountBalance = new BN(await web3.eth.getBalance(withdrawer))
-      oldContractBalance = new BN(await web3.eth.getBalance(etherPredicate.address))
+      await manager.sendTransaction({
+        to: etherPredicate.target,
+        value: depositAmount
+      })
+      oldAccountBalance = await ethers.provider.getBalance(withdrawer)
+      oldContractBalance = await ethers.provider.getBalance(etherPredicate.target)
     })
 
     it('Predicate should have balance', () => {
-      oldContractBalance.should.be.a.bignumber.greaterThan(withdrawAmount)
+      expect(oldContractBalance).to.be.gt(withdrawAmount)
     })
 
-    it('Should be able to receive exitTokens tx', async() => {
+    it('Should be able to receive exitTokens tx', async () => {
       const burnLog = getERC20TransferLog({
         from: withdrawer,
         to: mockValues.zeroAddress,
         amount: withdrawAmount
       })
-      exitTokensTx = await etherPredicate.exitTokens(etherAddress, burnLog)
-      should.exist(exitTokensTx)
+      await expect(etherPredicate.exitTokens(etherPredicate.target, etherAddress, burnLog))
+        .to.emit(etherPredicate, 'ExitedEther')
+        .withArgs(withdrawer, withdrawAmount)
     })
 
-    it('Withdraw amount should be deducted from contract', async() => {
-      const newContractBalance = new BN(await web3.eth.getBalance(etherPredicate.address))
-      newContractBalance.should.be.a.bignumber.that.equals(
-        oldContractBalance.sub(withdrawAmount)
-      )
+    it('Withdraw amount should be deducted from contract', async () => {
+      const newContractBalance = await ethers.provider.getBalance(etherPredicate.target)
+      expect(newContractBalance).to.equal(oldContractBalance - withdrawAmount)
     })
 
-    it('Withdraw amount should be credited to correct address', async() => {
-      const newAccountBalance = new BN(await web3.eth.getBalance(withdrawer))
-      newAccountBalance.should.be.a.bignumber.that.equals(
-        oldAccountBalance.add(withdrawAmount)
-      )
+    it('Withdraw amount should be credited to correct address', async () => {
+      const newAccountBalance = await ethers.provider.getBalance(withdrawer)
+      expect(newAccountBalance).to.equal(oldAccountBalance + withdrawAmount)
     })
   })
 
   describe('exitTokens called by different user', () => {
     const withdrawAmount = mockValues.amounts[2]
-    const depositAmount = withdrawAmount.add(mockValues.amounts[3])
+    const depositAmount = withdrawAmount + mockValues.amounts[3]
     const withdrawer = mockValues.addresses[8]
-    const exitCaller = mockValues.addresses[3]
-    let exitTokensTx
     let etherPredicate
+    let manager
     let oldAccountBalance
     let oldContractBalance
 
-    before(async() => {
-      const contracts = await deployer.deployFreshRootContracts(accounts)
+    before(async () => {
+      manager = await ethers.getSigner(accounts[0])
+      const contracts = await deployFreshRootContracts(accounts)
       etherPredicate = contracts.etherPredicate
-      await etherPredicate.send(depositAmount)
-      oldAccountBalance = new BN(await web3.eth.getBalance(withdrawer))
-      oldContractBalance = new BN(await web3.eth.getBalance(etherPredicate.address))
+      await manager.sendTransaction({
+        to: etherPredicate.target,
+        value: depositAmount
+      })
+      oldAccountBalance = await ethers.provider.getBalance(withdrawer)
+      oldContractBalance = await ethers.provider.getBalance(etherPredicate.target)
     })
 
-    it('Should be able to receive exitTokens tx', async() => {
+    it('Should be able to receive exitTokens tx', async () => {
       const burnLog = getERC20TransferLog({
         from: withdrawer,
         to: mockValues.zeroAddress,
         amount: withdrawAmount
       })
-      exitTokensTx = await etherPredicate.exitTokens(etherAddress, burnLog)
-      should.exist(exitTokensTx)
+      await expect(etherPredicate.exitTokens(etherPredicate.target, etherAddress, burnLog))
+        .to.emit(etherPredicate, 'ExitedEther')
+        .withArgs(withdrawer, withdrawAmount)
     })
 
-    it('Withdraw amount should be deducted from contract', async() => {
-      const newContractBalance = new BN(await web3.eth.getBalance(etherPredicate.address))
-      newContractBalance.should.be.a.bignumber.that.equals(
-        oldContractBalance.sub(withdrawAmount)
-      )
+    it('Withdraw amount should be deducted from contract', async () => {
+      const newContractBalance = await ethers.provider.getBalance(etherPredicate.target)
+      expect(newContractBalance).to.equal(oldContractBalance - withdrawAmount)
     })
 
-    it('Withdraw amount should be credited to correct address', async() => {
-      const newAccountBalance = new BN(await web3.eth.getBalance(withdrawer))
-      newAccountBalance.should.be.a.bignumber.that.equals(
-        oldAccountBalance.add(withdrawAmount)
-      )
+    it('Withdraw amount should be credited to correct address', async () => {
+      const newAccountBalance = await ethers.provider.getBalance(withdrawer)
+      expect(newAccountBalance).to.equal(oldAccountBalance + withdrawAmount)
     })
   })
 
   describe('exitTokens with incorrect burn transaction signature', () => {
     const withdrawAmount = mockValues.amounts[2]
-    const depositAmount = withdrawAmount.add(mockValues.amounts[3])
+    const depositAmount = withdrawAmount + mockValues.amounts[3]
     const withdrawer = mockValues.addresses[8]
+    let manager
     let etherPredicate
 
-    before(async() => {
-      const contracts = await deployer.deployFreshRootContracts(accounts)
+    before(async () => {
+      manager = await ethers.getSigner(accounts[0])
+      const contracts = await deployFreshRootContracts(accounts)
       etherPredicate = contracts.etherPredicate
-      await etherPredicate.send(depositAmount)
+      await manager.sendTransaction({
+        to: etherPredicate.target,
+        value: depositAmount
+      })
     })
 
-    it('Should revert with correct reason', async() => {
+    it('Should revert with correct reason', async () => {
       const burnLog = getERC20TransferLog({
         overrideSig: mockValues.bytes32[2],
         from: withdrawer,
         to: mockValues.zeroAddress,
         amount: withdrawAmount
       })
-      await expectRevert(etherPredicate.exitTokens(etherAddress, burnLog), 'EtherPredicate: INVALID_SIGNATURE')
+      await expect(etherPredicate.exitTokens(etherPredicate.target, etherAddress, burnLog)).to.be.revertedWith(
+        'EtherPredicate: INVALID_SIGNATURE'
+      )
     })
   })
 
   describe('exitTokens called using normal transfer log instead of burn', () => {
     const withdrawAmount = mockValues.amounts[2]
-    const depositAmount = withdrawAmount.add(mockValues.amounts[3])
+    const depositAmount = withdrawAmount + mockValues.amounts[3]
     const withdrawer = mockValues.addresses[8]
+    let manager
     let etherPredicate
 
-    before(async() => {
-      const contracts = await deployer.deployFreshRootContracts(accounts)
+    before(async () => {
+      manager = await ethers.getSigner(accounts[0])
+      const contracts = await deployFreshRootContracts(accounts)
       etherPredicate = contracts.etherPredicate
-      await etherPredicate.send(depositAmount)
+      await manager.sendTransaction({
+        to: etherPredicate.target,
+        value: depositAmount
+      })
     })
 
-    it('Should revert with correct reason', async() => {
+    it('Should revert with correct reason', async () => {
       const burnLog = getERC20TransferLog({
         from: withdrawer,
         to: mockValues.addresses[8],
         amount: withdrawAmount
       })
-      await expectRevert(etherPredicate.exitTokens(etherAddress, burnLog), 'EtherPredicate: INVALID_RECEIVER')
+      await expect(etherPredicate.exitTokens(etherPredicate.target, etherAddress, burnLog)).to.be.revertedWith(
+        'EtherPredicate: INVALID_RECEIVER'
+      )
     })
   })
 
   describe('exitTokens called by non manager', () => {
     const withdrawAmount = mockValues.amounts[2]
-    const depositAmount = withdrawAmount.add(mockValues.amounts[3])
+    const depositAmount = withdrawAmount + mockValues.amounts[3]
     const withdrawer = mockValues.addresses[8]
     let etherPredicate
+    let manager
+    let nonManager
 
-    before(async() => {
-      const contracts = await deployer.deployFreshRootContracts(accounts)
+    before(async () => {
+      manager = await ethers.getSigner(accounts[0])
+      nonManager = await ethers.getSigner(accounts[1])
+      const contracts = await deployFreshRootContracts(accounts)
       etherPredicate = contracts.etherPredicate
-      await etherPredicate.send(depositAmount)
+      await manager.sendTransaction({
+        to: etherPredicate.target,
+        value: depositAmount
+      })
     })
 
-    it('Should revert with correct reason', async() => {
+    it('Should revert with correct reason', async () => {
       const burnLog = getERC20TransferLog({
         from: withdrawer,
         to: mockValues.addresses[8],
         amount: withdrawAmount
       })
-      await expectRevert(
-        etherPredicate.exitTokens(etherAddress, burnLog, { from: accounts[2] }),
-        'EtherPredicate: INSUFFICIENT_PERMISSIONS')
+      await expect(
+        etherPredicate.connect(nonManager).exitTokens(etherPredicate.target, etherAddress, burnLog)
+      ).to.be.revertedWith('EtherPredicate: INSUFFICIENT_PERMISSIONS')
     })
   })
 })

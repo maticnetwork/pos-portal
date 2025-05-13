@@ -1,14 +1,4 @@
-import BN from 'bn.js'
-
-// export const rootRPC = 'http://localhost:8545'
-// export const childRPC = 'http://localhost:9545'
-
-// export const rootWeb3 = new web3.constructor(
-//   new web3.providers.HttpProvider(rootRPC)
-// )
-// export const childWeb3 = new web3.constructor(
-//   new web3.providers.HttpProvider(childRPC)
-// )
+import { toBigInt } from 'ethers'
 
 export const rootRPC = 'http://localhost:9545'
 export const childRPC = 'http://localhost:8545'
@@ -45,27 +35,27 @@ export const mockValues = {
     '0x00000000000000000000000000000000000000000000000003c68af0bb140000'
   ],
   amounts: [
-    new BN('100000000000000000'),
-    new BN('200000000000000000'),
-    new BN('500000000000000000'),
-    new BN('1000000000000000000'),
-    new BN('2000000000000000000'),
-    new BN('5000000000000000000'),
-    new BN('10000000000000000000'),
-    new BN('20000000000000000000'),
-    new BN('50000000000000000000'),
-    new BN('200000000000000000000')
+    toBigInt(100000000000000000n),
+    toBigInt(200000000000000000n),
+    toBigInt(500000000000000000n),
+    toBigInt(1000000000000000000n),
+    toBigInt(2000000000000000000n),
+    toBigInt(5000000000000000000n),
+    toBigInt(10000000000000000000n),
+    toBigInt(20000000000000000000n),
+    toBigInt(50000000000000000000n),
+    toBigInt(200000000000000000000n)
   ],
   numbers: [
-    1,
-    2,
-    5,
-    10,
-    20,
-    50,
-    100,
-    200,
-    500,
-    2000
+    toBigInt(1n),
+    toBigInt(2n),
+    toBigInt(5n),
+    toBigInt(10n),
+    toBigInt(20n),
+    toBigInt(50n),
+    toBigInt(100n),
+    toBigInt(200n),
+    toBigInt(500n),
+    toBigInt(2000n)
   ]
 }

@@ -1,20 +1,9 @@
-import chai from 'chai'
-import chaiAsPromised from 'chai-as-promised'
-import chaiBN from 'chai-bn'
-import BN from 'bn.js'
-import { defaultAbiCoder as abi } from 'ethers/utils/abi-coder'
+import { AbiCoder } from 'ethers'
+import { deployFreshChildContracts } from '../helpers/deployerNew.js'
+import { expect } from 'chai'
+import { mockValues } from '../helpers/constants.js'
 
-import * as deployer from '../helpers/deployer'
-import { mockValues } from '../helpers/constants'
-import logDecoder from '../helpers/log-decoder.js'
-import { expectRevert } from '@openzeppelin/test-helpers'
-
-chai
-  .use(chaiAsPromised)
-  .use(chaiBN(BN))
-  .should()
-
-const should = chai.should()
+const abi = new AbiCoder()
 
 contract('ChildERC20', (accounts) => {
   describe('Should mint tokens on deposit', () => {
@@ -23,53 +12,51 @@ contract('ChildERC20', (accounts) => {
     const depositData = abi.encode(['uint256'], [depositAmount.toString()])
     let contracts
     let oldAccountBalance
-    let depositTx
-    let transferLog
 
-    before(async() => {
-      contracts = await deployer.deployFreshChildContracts(accounts)
+    before(async () => {
+      contracts = await deployFreshChildContracts(accounts)
       oldAccountBalance = await contracts.dummyERC20.balanceOf(depositReceiver)
       const DEPOSITOR_ROLE = await contracts.dummyERC20.DEPOSITOR_ROLE()
       await contracts.dummyERC20.grantRole(DEPOSITOR_ROLE, accounts[0])
     })
 
-    it('Can receive deposit tx', async() => {
-      depositTx = await contracts.dummyERC20.deposit(depositReceiver, depositData)
-      should.exist(depositTx)
+    it('Can receive deposit tx', async () => {
+      await expect(contracts.dummyERC20.deposit(depositReceiver, depositData))
+        .to.emit(contracts.dummyERC20, 'Transfer')
+        .withArgs(mockValues.zeroAddress, depositReceiver, depositAmount)
     })
 
-    it('Should emit Transfer log', () => {
-      const logs = logDecoder.decodeLogs(depositTx.receipt.rawLogs)
-      transferLog = logs.find(l => l.event === 'Transfer')
-      should.exist(transferLog)
-    })
+    // @note Already verified in the above test
+    // it('Should emit Transfer log', () => {
+    //   const logs = logDecoder.decodeLogs(depositTx.receipt.rawLogs)
+    //   transferLog = logs.find(l => l.event === 'Transfer')
+    //   should.exist(transferLog)
+    // })
 
-    describe('Correct values should be emitted in Transfer log', () => {
-      it('Event should be emitted by correct contract', () => {
-        transferLog.address.should.equal(
-          contracts.dummyERC20.address.toLowerCase()
-        )
-      })
+    // describe('Correct values should be emitted in Transfer log', () => {
+    //   it('Event should be emitted by correct contract', () => {
+    //     transferLog.address.should.equal(
+    //       contracts.dummyERC20.address.toLowerCase()
+    //     )
+    //   })
 
-      it('Should emit proper From', () => {
-        transferLog.args.from.should.equal(mockValues.zeroAddress)
-      })
+    //   it('Should emit proper From', () => {
+    //     transferLog.args.from.should.equal(mockValues.zeroAddress)
+    //   })
 
-      it('Should emit proper To', () => {
-        transferLog.args.to.should.equal(depositReceiver)
-      })
+    //   it('Should emit proper To', () => {
+    //     transferLog.args.to.should.equal(depositReceiver)
+    //   })
 
-      it('Should emit correct amount', () => {
-        const transferLogAmount = new BN(transferLog.args.value.toString())
-        transferLogAmount.should.be.bignumber.that.equals(depositAmount)
-      })
-    })
+    //   it('Should emit correct amount', () => {
+    //     const transferLogAmount = new BN(transferLog.args.value.toString())
+    //     transferLogAmount.should.be.bignumber.that.equals(depositAmount)
+    //   })
+    // })
 
-    it('Deposit amount should be credited to deposit receiver', async() => {
+    it('Deposit amount should be credited to deposit receiver', async () => {
       const newAccountBalance = await contracts.dummyERC20.balanceOf(depositReceiver)
-      newAccountBalance.should.be.a.bignumber.that.equals(
-        oldAccountBalance.add(depositAmount)
-      )
+      expect(newAccountBalance).to.be.equal(oldAccountBalance + depositAmount)
     })
   })
 
@@ -79,30 +66,27 @@ contract('ChildERC20', (accounts) => {
     const depositData = abi.encode(['uint256'], [depositAmount.toString()])
     let dummyERC20
 
-    before(async() => {
-      const contracts = await deployer.deployFreshChildContracts(accounts)
+    before(async () => {
+      const contracts = await deployFreshChildContracts(accounts)
       dummyERC20 = contracts.dummyERC20
     })
 
-    it('Tx should revert with proper reason', async() => {
-      await expectRevert(
-        dummyERC20.deposit(depositReceiver, depositData, { from: accounts[1] }),
-        'Transaction has been reverted by the EVM'
-      )
+    it('Tx should revert with proper reason', async () => {
+      await expect(
+        dummyERC20.connect(await ethers.getSigner(accounts[1])).deposit(depositReceiver, depositData)
+      ).to.be.revertedWith('ChildERC20: INSUFFICIENT_PERMISSIONS')
     })
   })
 
   describe('Should burn tokens on withdraw', () => {
     const withdrawAmount = mockValues.amounts[2]
-    const depositAmount = withdrawAmount.add(mockValues.amounts[3])
+    const depositAmount = withdrawAmount + mockValues.amounts[3]
     const user = accounts[0]
     let contracts
     let oldAccountBalance
-    let withdrawTx
-    let transferLog
 
-    before(async() => {
-      contracts = await deployer.deployFreshChildContracts(accounts)
+    before(async () => {
+      contracts = await deployFreshChildContracts(accounts)
       const DEPOSITOR_ROLE = await contracts.dummyERC20.DEPOSITOR_ROLE()
       await contracts.dummyERC20.grantRole(DEPOSITOR_ROLE, accounts[0])
       const depositData = abi.encode(['uint256'], [depositAmount.toString()])
@@ -110,43 +94,43 @@ contract('ChildERC20', (accounts) => {
       oldAccountBalance = await contracts.dummyERC20.balanceOf(user)
     })
 
-    it('Can receive withdraw tx', async() => {
-      withdrawTx = await contracts.dummyERC20.withdraw(withdrawAmount)
-      should.exist(withdrawTx)
+    it('Can receive withdraw tx', async () => {
+      await expect(contracts.dummyERC20.withdraw(withdrawAmount))
+        .to.emit(contracts.dummyERC20, 'Transfer')
+        .withArgs(user, mockValues.zeroAddress, withdrawAmount)
     })
 
-    it('Should emit Transfer log', () => {
-      const logs = logDecoder.decodeLogs(withdrawTx.receipt.rawLogs)
-      transferLog = logs.find(l => l.event === 'Transfer')
-      should.exist(transferLog)
-    })
+    // @note Already verified in the above test
+    // it('Should emit Transfer log', () => {
+    //   const logs = logDecoder.decodeLogs(withdrawTx.receipt.rawLogs)
+    //   transferLog = logs.find(l => l.event === 'Transfer')
+    //   should.exist(transferLog)
+    // })
 
-    describe('Correct values should be emitted in Transfer log', () => {
-      it('Event should be emitted by correct contract', () => {
-        transferLog.address.should.equal(
-          contracts.dummyERC20.address.toLowerCase()
-        )
-      })
+    // describe('Correct values should be emitted in Transfer log', () => {
+    //   it('Event should be emitted by correct contract', () => {
+    //     transferLog.address.should.equal(
+    //       contracts.dummyERC20.address.toLowerCase()
+    //     )
+    //   })
 
-      it('Should emit proper From', () => {
-        transferLog.args.from.should.equal(user)
-      })
+    //   it('Should emit proper From', () => {
+    //     transferLog.args.from.should.equal(user)
+    //   })
 
-      it('Should emit proper To', () => {
-        transferLog.args.to.should.equal(mockValues.zeroAddress)
-      })
+    //   it('Should emit proper To', () => {
+    //     transferLog.args.to.should.equal(mockValues.zeroAddress)
+    //   })
 
-      it('Should emit correct amount', () => {
-        const transferLogAmount = new BN(transferLog.args.value.toString())
-        transferLogAmount.should.be.bignumber.that.equals(withdrawAmount)
-      })
-    })
+    //   it('Should emit correct amount', () => {
+    //     const transferLogAmount = new BN(transferLog.args.value.toString())
+    //     transferLogAmount.should.be.bignumber.that.equals(withdrawAmount)
+    //   })
+    // })
 
-    it('Withdraw amount should be deducted from user', async() => {
+    it('Withdraw amount should be deducted from user', async () => {
       const newAccountBalance = await contracts.dummyERC20.balanceOf(user)
-      newAccountBalance.should.be.a.bignumber.that.equals(
-        oldAccountBalance.sub(withdrawAmount)
-      )
+      expect(newAccountBalance).to.be.equal(oldAccountBalance - withdrawAmount)
     })
   })
 })
