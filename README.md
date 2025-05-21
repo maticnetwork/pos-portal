@@ -1,6 +1,6 @@
 # Matic PoS (Proof-of-Stake) portal contracts
 
-![Build Status](https://github.com/maticnetwork/pos-portal/workflows/CI/badge.svg)
+[![Build Status](https://github.com/maticnetwork/pos-portal/workflows/CI/badge.svg)](https://github.com/maticnetwork/pos-portal/actions/workflows/test.yml)
 
 Smart contracts that powers the PoS (proof-of-stake) based bridge mechanism for [Matic Network](https://matic.network). 
 
