@@ -1,6 +1,12 @@
 pragma solidity 0.6.6;
 
 interface IRootChainManager {
+    struct TokenStoppageStatus {
+        bool isDepositDisabled;
+        bool isExitDisabled;
+        uint256 lastExitBlockNumber;
+    }
+
     event TokenMapped(
         address indexed rootToken,
         address indexed childToken,
@@ -10,6 +16,13 @@ interface IRootChainManager {
     event PredicateRegistered(
         bytes32 indexed tokenType,
         address indexed predicateAddress
+    );
+
+    event StoppageStatusChanged(
+        address indexed rootToken,
+        bool isDepositDisabled,
+        bool isExitDisabled,
+        uint256 lastExitBlockNumber
     );
 
     function registerPredicate(bytes32 tokenType, address predicateAddress)
