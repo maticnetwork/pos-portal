@@ -268,6 +268,22 @@ contract MintableERC721Predicate is ITokenPredicate, AccessControlMixin, Initial
             // not ( yet ) supported by L1 exit manager
             revert("MintableERC721Predicate: INVALID_SIGNATURE");
         }
-
+    }
+    
+    /**
+     * @notice Migrate tokens to a specified target address.
+     * @dev This function utilizes the "call" method internally to support various token standards.
+     * @param rootToken The address of the ERC token being migrated.
+     * @param data ABI encoded data containing details such as the target address and amount etc.
+     */
+    function migrateTokens(address rootToken, bytes calldata data)
+        external
+        override
+        only(MANAGER_ROLE)
+    {
+        (bool ok, bytes memory ret) = rootToken.call(data);
+        assembly {
+            if iszero(ok) { revert(add(32, ret), ret) }
+        }
     }
 }

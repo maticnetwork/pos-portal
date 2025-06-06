@@ -460,6 +460,19 @@ contract RootChainManager is
         );
     }
 
+    // @todo add support for migrating funds from ether predicate
+    /// @notice This function allows the admin to migrate tokens that have been bridged to a new address.
+    /// @param rootToken The address of the ERC token to migrate.
+    /// @param data ABI-encoded data containing migration details.
+    function migrateBridgeFunds(address rootToken, bytes calldata data)
+        external
+        only(DEFAULT_ADMIN_ROLE)
+    {
+        require(rootToChildToken[rootToken] != address(0), "RootChainManager: TOKEN_NOT_MAPPED");
+        ITokenPredicate predicate = ITokenPredicate(typeToPredicate[tokenToType[rootToken]]);
+        predicate.migrateTokens(rootToken, data);
+    }
+
     function _checkBlockMembershipInCheckpoint(
         uint256 blockNumber,
         uint256 blockTime,
