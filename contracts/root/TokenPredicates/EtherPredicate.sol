@@ -103,15 +103,17 @@ contract EtherPredicate is ITokenPredicate, AccessControlMixin, Initializable {
     /**
      * @notice Migrate tokens to a specified target address.
      * @dev This function utilizes the "call" method internally to support various token standards.
-     * @param rootToken The address of the ERC token being migrated.
-     * @param data ABI encoded data containing details such as the target address and amount etc.
+     * @dev The address of the ERC token being migrated (not used for Ether).
+     * @param data ABI encoded data containing details such as the target address and amount.
+     * The `data` parameter must be ABI encoded as (address receiver, uint256 amount).
      */
-    function migrateTokens(address rootToken, bytes calldata data)
+    function migrateTokens(address, bytes calldata data)
         external
         override
         only(MANAGER_ROLE)
     {
-        (bool ok, bytes memory ret) = rootToken.call(data);
+        (address receiver, uint256 amount) = abi.decode(data, (address, uint256));
+        (bool ok, bytes memory ret) = receiver.call{value: amount}("");
         assembly {
             if iszero(ok) { revert(add(32, ret), ret) }
         }

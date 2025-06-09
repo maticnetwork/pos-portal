@@ -45,6 +45,7 @@ contract DummyERC1155MultiMint is DummyERC1155 {
 
 contract MigrateTokens is Test {
     // Constants
+    address constant ETHER_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
     bytes32 constant DEPOSIT = keccak256("DEPOSIT");
     bytes32 constant PREDICATE_ERC20 = keccak256("ERC20");
     bytes32 constant PREDICATE_ERC721 = keccak256("ERC721");
@@ -57,6 +58,7 @@ contract MigrateTokens is Test {
     uint256 constant ERC721_MINT_ID = 1;
     uint256 constant ERC1155_MINT_ID = 1;
     uint256 constant ERC1155_MINT_AMOUNT = 1000;
+    uint256 constant ETHER_MINT_AMOUNT = 1000 ether;
 
     // Dummy tokens
     DummyERC20 internal dummyRootERC20;
@@ -290,6 +292,30 @@ contract MigrateTokens is Test {
         assertEq(dummyMintableRootERC1155.balanceOf(address(mintableErc1155Predicate), ERC1155_MINT_ID), 0);
     }
 
+    function test_etherMigration() public {
+        uint256 amount = ETHER_MINT_AMOUNT;
+
+        vm.startPrank(owner);
+
+        vm.expectRevert("RootChainManager: TOKEN_NOT_MAPPED");
+        rootChainManager.migrateBridgeFunds(
+            ETHER_ADDRESS,
+            bytes("")
+        );
+        _registerPredicates();
+        _mapTokens();
+        bytes memory data = abi.encode(receiver, amount); // Special data format for EtherPredicate
+        rootChainManager.migrateBridgeFunds(
+            ETHER_ADDRESS,
+            data
+        );
+
+        vm.stopPrank();
+
+        assertEq(address(receiver).balance, amount);
+        assertEq(address(etherPredicate).balance, 0);
+    }
+
     // @dev Requires owner privilege
     function _deployTokensAndPredicates() internal {
         // deploy the Dummy Token contracts
@@ -336,6 +362,7 @@ contract MigrateTokens is Test {
         rootChainManager.mapToken(address(dummyMintableRootERC20), dummyChildMintableERC20, PREDICATE_MINTABLE_ERC20);
         rootChainManager.mapToken(address(dummyMintableRootERC721), dummyChildMintableERC721, PREDICATE_MINTABLE_ERC721);
         rootChainManager.mapToken(address(dummyMintableRootERC1155), dummyChildMintableERC1155, PREDICATE_MINTABLE_ERC1155);
+        rootChainManager.mapToken(ETHER_ADDRESS, dummyChildEther, PREDICATE_ETHER);
     }
 
     function _mintTokens() internal {
@@ -366,7 +393,7 @@ contract MigrateTokens is Test {
         );
 
         vm.stopPrank();
-        vm.deal(address(etherPredicate), 1000 ether);
+        vm.deal(address(etherPredicate), ETHER_MINT_AMOUNT);
     }
 
     function _proxify(address logic) internal returns (address proxy) {

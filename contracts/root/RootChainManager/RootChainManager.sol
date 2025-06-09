@@ -460,8 +460,8 @@ contract RootChainManager is
         );
     }
 
-    // @todo add support for migrating funds from ether predicate
     /// @notice This function allows the admin to migrate tokens that have been bridged to a new address.
+    /// @dev NOTE: Requires the receiver and the amount to be specified in the `data` parameter for EtherPredicate.
     /// @param rootToken The address of the ERC token to migrate.
     /// @param data ABI-encoded data containing migration details.
     function migrateBridgeFunds(address rootToken, bytes calldata data)
