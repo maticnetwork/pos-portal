@@ -10,9 +10,11 @@ libs = [
 ]
 remappings = [
     "@openzeppelin/=node_modules/@openzeppelin/",
+    "@openzeppelin-v5/=lib/openzeppelin-contracts-v5/contracts",
     "forge-std/=lib/forge-std/src/",
     "hardhat/=node_modules/hardhat/",
     "truffle/=node_modules/truffle/",
+    "safe-smart-account/=lib/safe-smart-account/contracts/",
 ]
 
 evm_version = "shanghai"

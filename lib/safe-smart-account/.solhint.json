@@ -1,0 +1,19 @@
+{
+    "extends": "solhint:recommended",
+    "plugins": [],
+    "rules": {
+        "compiler-version": "off",
+        "func-visibility": [
+            "warn",
+            {
+                "ignoreConstructors": true
+            }
+        ],
+        "not-rely-on-time": "off",
+        "reason-string": "off",
+        "no-empty-blocks": "off",
+        "avoid-low-level-calls": "off",
+        "gas-custom-errors": "off",
+        "imports-order": "warn"
+    }
+}

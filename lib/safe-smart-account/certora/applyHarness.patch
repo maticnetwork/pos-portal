@@ -1,0 +1,124 @@
+diff -druN Safe.sol Safe.sol
+--- Safe.sol	2025-05-27 10:10:59
++++ Safe.sol	2025-05-27 10:10:59
+@@ -75,22 +75,25 @@
+          * so we create a Safe with 0 owners and threshold 1.
+          * This is an unusable Safe, perfect for the singleton
+          */
+-        threshold = 1;
++        // threshold = 1; MUNGED: remove and add to constructor of the harness
+     }
+ 
+     /**
+      * @inheritdoc ISafe
+      */
+     function setup(
+-        address[] calldata _owners,
++        address[] memory _owners,
+         uint256 _threshold,
+         address to,
+-        bytes calldata data,
++        bytes memory data,
+         address fallbackHandler,
+         address paymentToken,
+         uint256 payment,
+         address payable paymentReceiver
+-    ) external override {
++    ) public override {
++        // MUNGED: had to change the method visibility and location of the variables to be able to call it from the harness
++        // constructor
++
+         // Emit the setup event optimistically. This ensures that changes such as `addOwner` and `changeThreshold` that are part
+         // of the  `to.delegatecall(data)` that happen in the `setupModules` call emit events in order relative to the setup
+         // event, making it easier for off-chain indexers to reliably reconstruct the Safe configuration.
+@@ -397,9 +400,6 @@
+         return keccak256(abi.encode(DOMAIN_SEPARATOR_TYPEHASH, chainId, this));
+     }
+ 
+-    /**
+-     * @inheritdoc ISafe
+-     */
+     function getTransactionHash(
+         address to,
+         uint256 value,
+@@ -411,7 +411,9 @@
+         address gasToken,
+         address refundReceiver,
+         uint256 _nonce
+-    ) public view override returns (bytes32 txHash) {
++    ) internal view returns (bytes32 txHash) {
++        // MUNGED: The function was made internal to enable CVL summaries.
++
+         bytes32 domainHash = domainSeparator();
+ 
+         // We opted for using assembly code here, because the way Solidity compiler we use (0.7.6) allocates memory is
+@@ -466,7 +468,8 @@
+             // Store the domain separator
+             mstore(add(ptr, 32), domainHash)
+             // Calculate the hash
+-            txHash := keccak256(add(ptr, 30), 66)
++            //txHash := keccak256(add(ptr, 30), 66) // old
++            txHash := keccak256(add(ptr, 0), 128) // new
+         }
+         /* solhint-enable no-inline-assembly */
+     }
+diff -druN base/Executor.sol base/Executor.sol
+--- base/Executor.sol	2025-05-27 10:10:59
++++ base/Executor.sol	2025-05-27 10:10:59
+@@ -26,12 +26,8 @@
+         uint256 txGas
+     ) internal returns (bool success) {
+         if (operation == Enum.Operation.DelegateCall) {
+-            /* solhint-disable no-inline-assembly */
+-            /// @solidity memory-safe-assembly
+-            assembly {
+-                success := delegatecall(txGas, to, add(data, 0x20), mload(data), 0, 0)
+-            }
+-            /* solhint-enable no-inline-assembly */
++            // MUNGED lets just be a bit more optimistic, `execute` does nothing for `DELEGATECALL` and always returns true
++            return true;
+         } else {
+             /* solhint-disable no-inline-assembly */
+             /// @solidity memory-safe-assembly
+diff -druN base/FallbackManager.sol base/FallbackManager.sol
+--- base/FallbackManager.sol	2025-05-27 10:10:59
++++ base/FallbackManager.sol	2025-05-27 10:10:59
+@@ -61,7 +61,8 @@
+             // not going beyond the scratch space, etc)
+             // Solidity docs: https://docs.soliditylang.org/en/latest/assembly.html#memory-safety
+ 
+-            let handler := sload(FALLBACK_HANDLER_STORAGE_SLOT)
++            // let handler := sload(FALLBACK_HANDLER_STORAGE_SLOT)
++            let handler := and(0xffffffffffffffffffffffffffffffffffffffff, sload(FALLBACK_HANDLER_STORAGE_SLOT))
+ 
+             if iszero(handler) {
+                 return(0, 0)
+diff -druN interfaces/ISafe.sol interfaces/ISafe.sol
+--- interfaces/ISafe.sol	2025-05-27 10:10:59
++++ interfaces/ISafe.sol	2025-05-27 10:10:59
+@@ -117,7 +117,7 @@
+      */
+     function domainSeparator() external view returns (bytes32);
+ 
+-    /**
++    /*
+      * @notice Returns transaction hash to be signed by owners.
+      * @param to Destination address.
+      * @param value Ether value.
+@@ -130,7 +130,6 @@
+      * @param refundReceiver Address of receiver of gas payment (or 0 if tx.origin).
+      * @param _nonce Transaction nonce.
+      * @return Transaction hash.
+-     */
+     function getTransactionHash(
+         address to,
+         uint256 value,
+@@ -143,6 +142,8 @@
+         address refundReceiver,
+         uint256 _nonce
+     ) external view returns (bytes32);
++     */
++    // MUNGED: The function was made internal to enable CVL summaries.
+ 
+     /**
+      * External getter function for state variables.
