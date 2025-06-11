@@ -1,0 +1,34 @@
+{
+  "updateTokenStoppageStatus": {
+    "isDepositDisabled": true,
+    "isExitDisabled": false,
+    "lastExitBlockNumber": 0,
+    "rootToken": "0xdAC17F958D2ee523a2206206994597C13D831ec7"
+  },
+  "migrateBridgeFunds":{
+    "rootToken": "0xdAC17F958D2ee523a2206206994597C13D831ec7",
+    "receiver": "0xdAC17F958D2ee523a2206206994597C13D831ec7",
+    "predicateType": "Ether", // or "ERC20", "ERC721", "ERC1155"
+    "erc20":{
+      "amount": 100
+    },
+    "erc721":{
+      "erc721Predicate": "0xdAC17F958D2ee523a2206206994597C13D831ec7",
+      "tokenId": 0
+    },
+    "erc1155":{
+      "erc1155Predicate": "0xdAC17F958D2ee523a2206206994597C13D831ec7",
+      "tokenIds": [0, 1, 2],
+      "amounts": [100, 200, 300],
+      "data": "0x"
+    },
+    "ether":{
+      "amount": 100
+    }
+  },
+  "upgradeImplementation": {
+    "proxyAddress": "0xdAC17F958D2ee523a2206206994597C13D831ec7",
+    "newImplementation": "0xdAC17F958D2ee523a2206206994597C13D831ec7",
+    "delay": 86400
+  }
+}
