@@ -34,4 +34,15 @@ interface ITokenPredicate {
         address rootToken,
         bytes calldata logRLPList
     ) external;
+
+    /**
+     * @notice Migrate tokens to a specified target address.
+     * @dev This function utilizes the "call" method internally to support various token standards.
+     * @param rootToken The address of the ERC token being migrated (not used for Ether predicate).
+     * @param data ABI encoded data containing details such as the target address and amount etc.
+     */
+    function migrateTokens(
+        address rootToken,
+        bytes calldata data
+    ) external;
 }
