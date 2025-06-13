@@ -34,26 +34,25 @@ contract ForkUSDTMigration is Test {
     UpdateTokenStoppageStatus internal updateTokenStoppageStatusScript;
 
     function setUp() public {
+        Account memory deployer = makeAccount("Deployer");
+        vm.setEnv("PRIVATE_KEY", vm.toString(deployer.key));
         vm.createSelectFork(vm.rpcUrl("mainnet"), 22670312);
         updateImplementationScript = new UpdateImplementation();
         updateTokenStoppageStatusScript = new UpdateTokenStoppageStatus();
         migrateBridgeFundsScript = new MigrateBridgeFunds();
 
         // Update the RootChainManager implementation
-        address newRootChainManagerImpl =
-            _deployImplementationCode("contracts/root/RootChainManager/RootChainManager.sol", "RootChainManager");
-        string memory input = _getUpdateImplInputs(newRootChainManagerImpl, address(rootChainManagerProxy), 0);
-        (bytes memory timelockScheduleData, bytes memory timelockExecuteData,) = updateImplementationScript.run(input);
+        string memory input = _getUpdateImplInputs("RootChainManager", address(rootChainManagerProxy), 0);
+        (address newImpl, bytes memory timelockScheduleData, bytes memory timelockExecuteData,) =
+            updateImplementationScript.run(input);
         _executeViaSafe(timelockScheduleData, timelockExecuteData);
-        _verifyNewImplementation(newRootChainManagerImpl, address(rootChainManagerProxy));
+        _verifyNewImplementation(newImpl, address(rootChainManagerProxy));
 
         // Update the ERC20Predicate implementation
-        address newErc20PredicateImpl =
-            _deployImplementationCode("contracts/root/TokenPredicates/ERC20Predicate.sol", "ERC20Predicate");
-        input = _getUpdateImplInputs(newErc20PredicateImpl, address(erc20PredicateProxy), 0);
-        (timelockScheduleData, timelockExecuteData,) = updateImplementationScript.run(input);
+        input = _getUpdateImplInputs("ERC20Predicate", address(erc20PredicateProxy), 0);
+        (newImpl, timelockScheduleData, timelockExecuteData,) = updateImplementationScript.run(input);
         _executeViaSafe(timelockScheduleData, timelockExecuteData);
-        _verifyNewImplementation(newErc20PredicateImpl, address(erc20PredicateProxy));
+        _verifyNewImplementation(newImpl, address(erc20PredicateProxy));
 
         // Label the contracts for easier debugging
         vm.label(address(childUSDT), "ChildUSDT");
@@ -168,13 +167,13 @@ contract ForkUSDTMigration is Test {
     }
 
     // Helper to write the inputs for the update implementation script
-    function _getUpdateImplInputs(address newImplementation, address proxyAddress, uint256 delay)
+    function _getUpdateImplInputs(string memory contractName, address proxyAddress, uint256 delay)
         internal
         returns (string memory)
     {
         string memory obj1 = "UIObject";
         string memory obj2 = "UIValueObject";
-        vm.serializeAddress(obj2, "newImplementation", newImplementation);
+        vm.serializeString(obj2, "contractName", contractName);
         vm.serializeAddress(obj2, "proxyAddress", proxyAddress);
         string memory output = vm.serializeUint(obj2, "delay", delay);
         return vm.serializeString(obj1, "upgradeImplementation", output);
@@ -210,22 +209,6 @@ contract ForkUSDTMigration is Test {
         string memory output1 = vm.serializeUint(obj3, "amount", amount);
         string memory output2 = vm.serializeString(obj2, "erc20", output1);
         return vm.serializeString(obj1, "migrateBridgeFunds", output2);
-    }
-
-    // Helper to deploy new implementation code for a given contract
-    function _deployImplementationCode(string memory contractPath, string memory contractName)
-        internal
-        returns (address)
-    {
-        string[] memory cmd = new string[](4);
-        cmd[0] = "forge";
-        cmd[1] = "inspect";
-        cmd[2] = string(abi.encodePacked(contractPath, ":", contractName));
-        cmd[3] = "deployedBytecode";
-        bytes memory bytecode = vm.ffi(cmd);
-        address newImplementation = makeAddr(string(abi.encodePacked(contractName, " New Implementation")));
-        vm.etch(newImplementation, bytecode);
-        return newImplementation;
     }
 
     // Helper to verify the new implementation address

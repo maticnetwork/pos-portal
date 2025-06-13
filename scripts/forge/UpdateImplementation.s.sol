@@ -13,19 +13,23 @@ contract UpdateImplementation is Script {
     string internal input = "scripts/forge/inputs.json";
     bool internal isStringInput; // flag used to determine if input is a string or a file path
 
+    address internal timelockController = 0xCaf0aa768A3AE1297DF20072419Db8Bb8b5C8cEf;
+
     address internal newImplementation;
     address internal proxyAddress;
+    string internal contractName;
     uint256 internal delay;
 
     // Helper function to run the script with a string input helpful for testing
-    function run(string memory _input) public returns (bytes memory, bytes memory, bytes32) {
+    function run(string memory _input) public returns (address, bytes memory, bytes memory, bytes32) {
         isStringInput = true;
         input = _input;
         return run();
     }
 
-    function run() public returns (bytes memory, bytes memory, bytes32) {
+    function run() public returns (address, bytes memory, bytes memory, bytes32) {
         _readInputs();
+        _deployImplementation();
 
         bytes memory updateImplementationData =
             abi.encodeCall(UpgradableProxy.updateImplementation, (newImplementation));
@@ -58,13 +62,14 @@ contract UpdateImplementation is Script {
             bytes32(0) // salt
         );
 
+        console.log("Timelock Operation Hash:", vm.toString(timelockHash));
+        console.log("Send to Timelock Controller: %s\n", timelockController);
         console.log("************************** CALLDATA START **************************\n");
-        console.log("Timelock Schedule Data:", vm.toString(timelockScheduleData));
-        console.log("Timelock Execute Data:", vm.toString(timelockExecuteData));
-        console.log("Timelock Operation Hash: %s\n", vm.toString(timelockHash));
+        console.log("Timelock Schedule Data: %s\n", vm.toString(timelockScheduleData));
+        console.log("Timelock Execute Data: %s\n", vm.toString(timelockExecuteData));
         console.log("************************** CALLDATA END **************************\n");
 
-        return (timelockScheduleData, timelockExecuteData, timelockHash);
+        return (newImplementation, timelockScheduleData, timelockExecuteData, timelockHash);
     }
 
     function _readInputs() internal {
@@ -74,20 +79,32 @@ contract UpdateImplementation is Script {
         } else {
             inputJson = vm.readFile(input);
         }
-        newImplementation = vm.parseJsonAddress(inputJson, ".upgradeImplementation.newImplementation");
         proxyAddress = vm.parseJsonAddress(inputJson, ".upgradeImplementation.proxyAddress");
+        contractName = vm.parseJsonString(inputJson, ".upgradeImplementation.contractName");
         delay = vm.parseJsonUint(inputJson, ".upgradeImplementation.delay");
 
         _checkInputs();
     }
 
     function _checkInputs() internal view {
-        require(newImplementation != address(0), "New implementation address cannot be zero");
         require(proxyAddress != address(0), "Proxy address cannot be zero");
+        require(bytes(contractName).length > 0, "Contract name cannot be empty");
 
-        console.log("New Implementation:", newImplementation);
         console.log("Proxy Address:", proxyAddress);
-        console.log("Delay: %s\n", vm.toString(delay));
+        console.log("Delay:", vm.toString(delay));
+    }
+
+    function _deployImplementation() internal {
+        uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
+
+        vm.startBroadcast(deployerPrivateKey);
+
+        string memory contractPath = string.concat("out/", contractName, ".sol/", contractName, ".json");
+        newImplementation = deployCode(contractPath);
+
+        console.log("Deployed %s at %s", contractName, newImplementation);
+
+        vm.stopBroadcast();
     }
 
     function _hashOperation(address target, uint256 value, bytes memory data, bytes32 predecessor, bytes32 salt)
