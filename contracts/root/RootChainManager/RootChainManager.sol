@@ -446,7 +446,7 @@ contract RootChainManager is
             "RootChainManager: TOKEN_NOT_MAPPED"
         );
 
-        stoppageStatus[rootToken] = IRootChainManager.TokenStoppageStatus(
+        stoppageStatus[rootToken] = TokenStoppageStatus(
           isDepositDisable,
           isExitDisabled,
           lastExitBlockNumber
