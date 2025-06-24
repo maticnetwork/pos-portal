@@ -48,7 +48,7 @@ contract RootChainManagerTest is Test {
     address internal dummyChildERC1155 = makeAddr("dummyChildERC1155");
 
     event StateSynced(uint256 indexed id, address indexed contractAddress, bytes data);
-    event StoppageStatusChanged(
+    event MigrationStatusChanged(
         address indexed rootToken, bool isDepositDisabled, bool isExitDisabled, uint256 lastExitBlockNumber
     );
 
@@ -87,7 +87,7 @@ contract RootChainManagerTest is Test {
     function test_depositFor_disabled() public {
         // Step 1: verify that the token is not mapped yet
         vm.expectRevert("RootChainManager: TOKEN_NOT_MAPPED");
-        _updateTokenStoppageStatus(address(dummyRootERC20), true, false, 0);
+        _updateTokenMigrationStatus(address(dummyRootERC20), true, false, 0);
 
         // Step 2: verify that the deposit is enabled by default
         _mapTokens();
@@ -98,10 +98,10 @@ contract RootChainManagerTest is Test {
         emit StateSynced(1, address(0), syncData);
         rootChainManager.depositFor(address(this), address(dummyRootERC20), bytes("100"));
 
-        // Step 3: verify that the deposit is disabled after updating the token stoppage status
+        // Step 3: verify that the deposit is disabled after updating the token migration status
         vm.expectEmit();
-        emit StoppageStatusChanged(address(dummyRootERC20), true, false, 0);
-        _updateTokenStoppageStatus(address(dummyRootERC20), true, false, 0);
+        emit MigrationStatusChanged(address(dummyRootERC20), true, false, 0);
+        _updateTokenMigrationStatus(address(dummyRootERC20), true, false, 0);
 
         vm.expectRevert("RootChainManager: DEPOSIT_DISABLED");
         rootChainManager.depositFor(address(this), address(dummyRootERC20), bytes("100"));
@@ -119,10 +119,10 @@ contract RootChainManagerTest is Test {
         );
         rootChainManager.depositFor(address(this), address(dummyRootERC1155), bytes("100"));
 
-        // Step 5: verify that the deposit is working again after updating the token stoppage status
+        // Step 5: verify that the deposit is working again after updating the token migration status
         vm.expectEmit();
-        emit StoppageStatusChanged(address(dummyRootERC20), false, false, 0);
-        _updateTokenStoppageStatus(address(dummyRootERC20), false, false, 0);
+        emit MigrationStatusChanged(address(dummyRootERC20), false, false, 0);
+        _updateTokenMigrationStatus(address(dummyRootERC20), false, false, 0);
 
         vm.expectEmit();
         emit StateSynced(1, address(0), syncData);
@@ -137,14 +137,14 @@ contract RootChainManagerTest is Test {
         return abi.encode(action, abi.encode(user, rootToken, depositData));
     }
 
-    function _updateTokenStoppageStatus(
+    function _updateTokenMigrationStatus(
         address token,
         bool isDepositDisabled,
         bool isExitDisabled,
         uint256 lastExitBlockNumber
     ) internal {
         vm.prank(owner);
-        rootChainManager.updateTokenStoppageStatus(token, isDepositDisabled, isExitDisabled, lastExitBlockNumber);
+        rootChainManager.updateTokenMigrationStatus(token, isDepositDisabled, isExitDisabled, lastExitBlockNumber);
     }
 
     function _mapTokens() internal {

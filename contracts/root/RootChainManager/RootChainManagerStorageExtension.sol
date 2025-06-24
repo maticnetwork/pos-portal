@@ -8,7 +8,7 @@ import {IRootChainManager} from "./IRootChainManager.sol";
  * It is used to APPEND additional storage for the RootChainManager.
  */
 abstract contract RootChainManagerStorageExtension {
-    /// @notice Mapping to track the stoppage status of tokens.
-    /// @dev Maps token address to its stoppage status as defined in IRootChainManager.
-    mapping(address => IRootChainManager.TokenStoppageStatus) public stoppageStatus;
+    /// @notice Mapping to track the migration status of tokens.
+    /// @dev Maps token address to its migration status as defined in IRootChainManager.
+    mapping(address => IRootChainManager.TokenMigrationStatus) public migrationStatus;
 }

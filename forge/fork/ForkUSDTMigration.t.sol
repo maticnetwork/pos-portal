@@ -9,7 +9,7 @@ import {MigrateBridgeFunds} from "../../scripts/forge/MigrateBridgeFunds.s.sol";
 import {RootChainManager} from "../../scripts/helpers/interfaces/RootChainManager.generated.sol";
 import {Safe} from "safe-smart-account/Safe.sol";
 import {UpdateImplementation} from "../../scripts/forge/UpdateImplementation.s.sol";
-import {UpdateTokenStoppageStatus} from "../../scripts/forge/UpdateTokenStoppageStatus.s.sol";
+import {UpdateTokenMigrationStatus} from "../../scripts/forge/UpdateTokenMigrationStatus.s.sol";
 import {IERC20} from "../../scripts/helpers/interfaces/IERC20.generated.sol";
 
 contract ForkUSDTMigration is Test {
@@ -31,14 +31,14 @@ contract ForkUSDTMigration is Test {
 
     MigrateBridgeFunds internal migrateBridgeFundsScript;
     UpdateImplementation internal updateImplementationScript;
-    UpdateTokenStoppageStatus internal updateTokenStoppageStatusScript;
+    UpdateTokenMigrationStatus internal updateTokenMigrationStatusScript;
 
     function setUp() public {
         Account memory deployer = makeAccount("Deployer");
         vm.setEnv("PRIVATE_KEY", vm.toString(deployer.key));
         vm.createSelectFork(vm.rpcUrl("mainnet"), 22670312);
         updateImplementationScript = new UpdateImplementation();
-        updateTokenStoppageStatusScript = new UpdateTokenStoppageStatus();
+        updateTokenMigrationStatusScript = new UpdateTokenMigrationStatus();
         migrateBridgeFundsScript = new MigrateBridgeFunds();
 
         // Update the RootChainManager implementation
@@ -68,8 +68,8 @@ contract ForkUSDTMigration is Test {
 
     function test_deposit_disabled() public {
         // Disable USDT deposit
-        string memory input = _getUpdateTokenStoppageStatusInputs(address(usdt), true, false, 0);
-        bytes memory callData = updateTokenStoppageStatusScript.run(input);
+        string memory input = _getUpdateTokenMigrationStatusInputs(address(usdt), true, false, 0);
+        bytes memory callData = updateTokenMigrationStatusScript.run(input);
         vm.prank(address(safeMultisig));
         (bool success,) = address(rootChainManagerProxy).call(callData); // Making sure the calldata is correct
         assertTrue(success, "Failed to disable USDT deposit");
@@ -82,8 +82,8 @@ contract ForkUSDTMigration is Test {
 
     function test_exit_disabled() public {
         // Disable USDT exit
-        string memory input = _getUpdateTokenStoppageStatusInputs(address(usdt), false, true, 104); // Last exit block number is set to 104 for hardcoded data
-        bytes memory callData = updateTokenStoppageStatusScript.run(input);
+        string memory input = _getUpdateTokenMigrationStatusInputs(address(usdt), false, true, 104); // Last exit block number is set to 104 for hardcoded data
+        bytes memory callData = updateTokenMigrationStatusScript.run(input);
         vm.prank(address(safeMultisig));
         (bool success,) = address(rootChainManagerProxy).call(callData); // Making sure the calldata is correct
         assertTrue(success, "Failed to disable USDT exit");
@@ -179,8 +179,8 @@ contract ForkUSDTMigration is Test {
         return vm.serializeString(obj1, "upgradeImplementation", output);
     }
 
-    // Helper to write the inputs for the update token stoppage status script
-    function _getUpdateTokenStoppageStatusInputs(
+    // Helper to write the inputs for the update token migration status script
+    function _getUpdateTokenMigrationStatusInputs(
         address rootToken,
         bool isDepositDisabled,
         bool isExitDisabled,
@@ -192,7 +192,7 @@ contract ForkUSDTMigration is Test {
         vm.serializeBool(obj2, "isDepositDisabled", isDepositDisabled);
         vm.serializeBool(obj2, "isExitDisabled", isExitDisabled);
         string memory output = vm.serializeUint(obj2, "lastExitBlockNumber", lastExitBlockNumber);
-        return vm.serializeString(obj1, "updateTokenStoppageStatus", output);
+        return vm.serializeString(obj1, "updateTokenMigrationStatus", output);
     }
 
     // Helper to write the inputs for the migrate bridge funds script

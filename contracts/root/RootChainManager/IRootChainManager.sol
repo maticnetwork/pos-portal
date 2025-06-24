@@ -1,7 +1,7 @@
 pragma solidity 0.6.6;
 
 interface IRootChainManager {
-    struct TokenStoppageStatus {
+    struct TokenMigrationStatus {
         bool isDepositDisabled;
         bool isExitDisabled;
         uint256 lastExitBlockNumber;
@@ -18,7 +18,7 @@ interface IRootChainManager {
         address indexed predicateAddress
     );
 
-    event StoppageStatusChanged(
+    event MigrationStatusChanged(
         address indexed rootToken,
         bool isDepositDisabled,
         bool isExitDisabled,

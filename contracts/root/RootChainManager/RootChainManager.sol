@@ -300,7 +300,7 @@ contract RootChainManager is
         address rootToken,
         bytes memory depositData
     ) private {
-        if (stoppageStatus[rootToken].isDepositDisabled) {
+        if (migrationStatus[rootToken].isDepositDisabled) {
             revert("RootChainManager: DEPOSIT_DISABLED");
         }
         bytes32 tokenType = tokenToType[rootToken];
@@ -382,8 +382,8 @@ contract RootChainManager is
             rootToken != address(0),
             "RootChainManager: TOKEN_NOT_MAPPED"
         );
-        if (stoppageStatus[rootToken].isExitDisabled &&
-            stoppageStatus[rootToken].lastExitBlockNumber > blockNumber) {
+        if (migrationStatus[rootToken].isExitDisabled &&
+            migrationStatus[rootToken].lastExitBlockNumber > blockNumber) {
             revert("RootChainManager: EXIT_DISABLED");
         }
 
@@ -428,14 +428,14 @@ contract RootChainManager is
     }
 
     /**
-     * @notice Update the stoppage status for a given root token.
+     * @notice Update the migration status for a given root token.
      * @dev Allows admin to enable/disable deposits and exits for a token, and set the block number after which exits are stopped.
      * @param rootToken Address of the root token.
      * @param isDepositDisable Boolean indicating if deposits are disabled.
      * @param isExitDisabled Boolean indicating if exits are disabled.
      * @param lastExitBlockNumber Block number after which exits are stopped for this token.
      */
-    function updateTokenStoppageStatus(
+    function updateTokenMigrationStatus(
       address rootToken,
       bool isDepositDisable,
       bool isExitDisabled,
@@ -446,13 +446,13 @@ contract RootChainManager is
             "RootChainManager: TOKEN_NOT_MAPPED"
         );
 
-        stoppageStatus[rootToken] = TokenStoppageStatus(
+        migrationStatus[rootToken] = TokenMigrationStatus(
           isDepositDisable,
           isExitDisabled,
           lastExitBlockNumber
         );
 
-        emit StoppageStatusChanged(
+        emit MigrationStatusChanged(
             rootToken,
             isDepositDisable,
             isExitDisabled,

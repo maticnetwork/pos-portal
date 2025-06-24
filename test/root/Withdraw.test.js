@@ -352,7 +352,7 @@ contract('RootChainManager', async (accounts) => {
     it('Should fail: exit disabled', async () => {
       await executeExitWorkflow()
       lastExitBlockNumber = checkpointData.header.start + 1
-      updateTokenStoppageStatus(dummyERC20.target, isDepositDisable, isExitDisabled, lastExitBlockNumber)
+      updateTokenMigrationStatus(dummyERC20.target, isDepositDisable, isExitDisabled, lastExitBlockNumber)
 
       const logIndex = 0
       const data = bufferToHex(
@@ -458,21 +458,21 @@ contract('RootChainManager', async (accounts) => {
     })
 
     it('Should exit: after enabling again', async () => {
-      await updateTokenStoppageStatus(dummyERC20.target, isDepositDisable, false, lastExitBlockNumber)
+      await updateTokenMigrationStatus(dummyERC20.target, isDepositDisable, false, lastExitBlockNumber)
       await startExit()
     })
 
     it('Should exit: lastExitBlockNumber less than the l2 exit block number', async () => {
       await executeExitWorkflow()
       lastExitBlockNumber = checkpointData.header.start + 1
-      await updateTokenStoppageStatus(dummyERC20.target, isDepositDisable, isExitDisabled, lastExitBlockNumber - 2)
+      await updateTokenMigrationStatus(dummyERC20.target, isDepositDisable, isExitDisabled, lastExitBlockNumber - 2)
       await startExit()
     })
 
     it('Should exit: lastExitBlockNumber equal to the l2 exit block number', async () => {
       await executeExitWorkflow()
       lastExitBlockNumber = checkpointData.header.start + 1
-      await updateTokenStoppageStatus(dummyERC20.target, isDepositDisable, isExitDisabled, lastExitBlockNumber - 1)
+      await updateTokenMigrationStatus(dummyERC20.target, isDepositDisable, isExitDisabled, lastExitBlockNumber - 1)
       await startExit()
     })
 
@@ -516,11 +516,11 @@ contract('RootChainManager', async (accounts) => {
       expect(root).to.equal(headerData.root)
     }
 
-    async function updateTokenStoppageStatus(target, isDepositDisable, isExitDisabled, lastExitBlockNumber) {
+    async function updateTokenMigrationStatus(target, isDepositDisable, isExitDisabled, lastExitBlockNumber) {
       await expect(
-        rootChainManager.updateTokenStoppageStatus(target, isDepositDisable, isExitDisabled, lastExitBlockNumber)
+        rootChainManager.updateTokenMigrationStatus(target, isDepositDisable, isExitDisabled, lastExitBlockNumber)
       )
-        .to.emit(rootChainManager, 'StoppageStatusChanged')
+        .to.emit(rootChainManager, 'MigrationStatusChanged')
         .withArgs(target, isDepositDisable, isExitDisabled, lastExitBlockNumber)
     }
 

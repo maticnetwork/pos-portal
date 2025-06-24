@@ -5,11 +5,11 @@ import "forge-std/Script.sol";
 import {RootChainManager} from "../../scripts/helpers/interfaces/RootChainManager.generated.sol";
 
 /**
- * @title UpdateTokenStoppageStatus
- * @notice This script generates calldata for the `updateTokenStoppageStatus` function of the RootChainManager contract.
- * @dev It supports updating the stoppage status of a token for deposits and exits.
+ * @title UpdateTokenMigrationStatus
+ * @notice This script generates calldata for the `updateTokenMigrationStatus` function of the RootChainManager contract.
+ * @dev It supports updating the migration status of a token for deposits and exits.
  */
-contract UpdateTokenStoppageStatus is Script {
+contract UpdateTokenMigrationStatus is Script {
     string internal input = "scripts/forge/inputs.json";
     bool internal isStringInput; // flag used to determine if input is a string or a file path
 
@@ -29,7 +29,7 @@ contract UpdateTokenStoppageStatus is Script {
         _readInputs();
 
         bytes memory data = abi.encodeCall(
-            RootChainManager.updateTokenStoppageStatus,
+            RootChainManager.updateTokenMigrationStatus,
             (rootToken, isDepositDisabled, isExitDisabled, lastExitBlockNumber)
         );
 
@@ -46,14 +46,14 @@ contract UpdateTokenStoppageStatus is Script {
         } else {
             inputJson = vm.readFile(input);
         }
-        rootToken = vm.parseJsonAddress(inputJson, ".updateTokenStoppageStatus.rootToken");
-        isDepositDisabled = vm.parseJsonBool(inputJson, ".updateTokenStoppageStatus.isDepositDisabled");
-        isExitDisabled = vm.parseJsonBool(inputJson, ".updateTokenStoppageStatus.isExitDisabled");
-        lastExitBlockNumber = vm.parseJsonUint(inputJson, ".updateTokenStoppageStatus.lastExitBlockNumber");
+        rootToken = vm.parseJsonAddress(inputJson, ".updateTokenMigrationStatus.rootToken");
+        isDepositDisabled = vm.parseJsonBool(inputJson, ".updateTokenMigrationStatus.isDepositDisabled");
+        isExitDisabled = vm.parseJsonBool(inputJson, ".updateTokenMigrationStatus.isExitDisabled");
+        lastExitBlockNumber = vm.parseJsonUint(inputJson, ".updateTokenMigrationStatus.lastExitBlockNumber");
 
         _checkInputs();
 
-        console.log("Generating calldata for updateTokenStoppageStatus ...");
+        console.log("Generating calldata for updateTokenMigrationStatus ...");
         console.log("Root Token: %s", rootToken);
         console.log("Is Deposit Disabled: %s", isDepositDisabled);
         console.log("Is Exit Disabled: %s", isExitDisabled);
@@ -62,7 +62,7 @@ contract UpdateTokenStoppageStatus is Script {
 
     function _checkInputs() internal view {
         require(rootToken != address(0), "Root token address cannot be zero");
-        require(isDepositDisabled || isExitDisabled, "At least one stoppage status must be true");
+        require(isDepositDisabled || isExitDisabled, "At least one migration status must be true");
         if (isExitDisabled) {
             require(lastExitBlockNumber > 0, "Last exit block number must be greater than zero if exit is disabled");
         }
