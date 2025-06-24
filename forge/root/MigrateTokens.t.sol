@@ -69,6 +69,16 @@ contract MigrateTokens is Test {
         _registerPredicates();
         _mapTokens();
 
+        vm.expectRevert("RootChainManager: NOT_MIGRATED");
+        rootChainManager.migrateBridgeFunds(address(dummyRootERC20), bytes(""));
+
+        rootChainManager.updateTokenMigrationStatus(
+            address(dummyRootERC20),
+            true, // isDepositDisabled
+            true, // isExitDisabled
+            0 // lastExitBlockNumber
+        );
+
         bytes memory data = abi.encodeWithSelector(IERC20.transfer.selector, receiver, amount);
         rootChainManager.migrateBridgeFunds(address(dummyRootERC20), data);
 

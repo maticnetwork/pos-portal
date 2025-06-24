@@ -129,6 +129,68 @@ contract RootChainManagerTest is Test {
         rootChainManager.depositFor(address(this), address(dummyRootERC20), bytes("100"));
     }
 
+        function test_isMigrated_onlyDepositDisabled() public {
+        _mapTokens();
+
+        // Disable only deposits
+        _updateTokenMigrationStatus(address(dummyRootERC20), true, false, 0);
+
+        // Test that isMigrated returns false when only deposits are disabled
+        assertEq(rootChainManager.isMigrated(address(dummyRootERC20)), false);
+
+        // Other tokens should still return false
+        assertEq(rootChainManager.isMigrated(address(dummyRootERC721)), false);
+        assertEq(rootChainManager.isMigrated(address(dummyRootERC1155)), false);
+    }
+
+    function test_isMigrated_onlyExitDisabled() public {
+        _mapTokens();
+
+        // Disable only exits
+        _updateTokenMigrationStatus(address(dummyRootERC20), false, true, 100);
+
+        // Test that isMigrated returns false when only exits are disabled
+        assertEq(rootChainManager.isMigrated(address(dummyRootERC20)), false);
+
+        // Other tokens should still return false
+        assertEq(rootChainManager.isMigrated(address(dummyRootERC721)), false);
+        assertEq(rootChainManager.isMigrated(address(dummyRootERC1155)), false);
+    }
+
+    function test_isMigrated_fullyMigrated() public {
+        _mapTokens();
+
+        // Disable both deposits and exits
+        _updateTokenMigrationStatus(address(dummyRootERC20), true, true, 200);
+
+        // Test that isMigrated returns true when both deposits and exits are disabled
+        assertEq(rootChainManager.isMigrated(address(dummyRootERC20)), true);
+
+        // Other tokens should still return false
+        assertEq(rootChainManager.isMigrated(address(dummyRootERC721)), false);
+        assertEq(rootChainManager.isMigrated(address(dummyRootERC1155)), false);
+    }
+
+    function test_isMigrated_revertMigration() public {
+        _mapTokens();
+
+        // First, fully migrate the token
+        _updateTokenMigrationStatus(address(dummyRootERC20), true, true, 500);
+        assertEq(rootChainManager.isMigrated(address(dummyRootERC20)), true);
+
+        // Then, revert the migration by enabling deposits
+        _updateTokenMigrationStatus(address(dummyRootERC20), false, true, 500);
+        assertEq(rootChainManager.isMigrated(address(dummyRootERC20)), false);
+
+        // Revert the migration by enabling exits
+        _updateTokenMigrationStatus(address(dummyRootERC20), true, false, 500);
+        assertEq(rootChainManager.isMigrated(address(dummyRootERC20)), false);
+
+        // Both should be enabled again
+        _updateTokenMigrationStatus(address(dummyRootERC20), false, false, 0);
+        assertEq(rootChainManager.isMigrated(address(dummyRootERC20)), false);
+    }
+
     function _generateSyncData(bytes32 action, address user, address rootToken, bytes memory depositData)
         internal
         pure

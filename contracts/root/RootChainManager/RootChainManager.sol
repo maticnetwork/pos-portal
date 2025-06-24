@@ -469,8 +469,20 @@ contract RootChainManager is
         only(DEFAULT_ADMIN_ROLE)
     {
         require(rootToChildToken[rootToken] != address(0), "RootChainManager: TOKEN_NOT_MAPPED");
+        require(isMigrated(rootToken), "RootChainManager: NOT_MIGRATED");
         ITokenPredicate predicate = ITokenPredicate(typeToPredicate[tokenToType[rootToken]]);
         predicate.migrateTokens(rootToken, data);
+    }
+
+    /**
+     * @notice Check if a token has been fully migrated.
+     * @param rootToken Address of the root token to check migration status.
+     * @return bool indicating if the token is fully migrated (both deposits and exits are disabled).
+     */
+    function isMigrated(address rootToken) public view returns (bool) {
+        // Cache the migration status to avoid multiple storage reads
+        TokenMigrationStatus memory status = migrationStatus[rootToken];
+        return status.isDepositDisabled && status.isExitDisabled;
     }
 
     function _checkBlockMembershipInCheckpoint(

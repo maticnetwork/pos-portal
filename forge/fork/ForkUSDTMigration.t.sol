@@ -102,6 +102,12 @@ contract ForkUSDTMigration is Test {
     }
 
     function test_usdtMigration() public {
+        string memory updateInput = _getUpdateTokenMigrationStatusInputs(address(usdt), true, true, 1);
+        bytes memory updateCallData = updateTokenMigrationStatusScript.run(updateInput);
+        vm.prank(address(safeMultisig));
+        (bool updateSuccess,) = address(rootChainManagerProxy).call(updateCallData);
+        assertTrue(updateSuccess, "Failed to disable USDT deposit and exit");
+
         uint256 usdtPredicateBalanceBefore = usdt.balanceOf(address(erc20PredicateProxy));
         assertGt(usdtPredicateBalanceBefore, 0);
 
