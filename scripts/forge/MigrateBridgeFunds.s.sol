@@ -7,7 +7,7 @@ import {RootChainManager} from "../../scripts/helpers/interfaces/RootChainManage
 /**
  * @title MigrateBridgeFunds
  * @notice This script generates calldata for the `migrateBridgeFunds` function of the RootChainManager contract.
- * @dev It supports migrating ERC20, ERC721, ERC1155 tokens, and Ether from the root chain to a specified receiver.
+ * @dev It supports migrating ERC20 from the root chain to a specified receiver.
  */
 contract MigrateBridgeFunds is Script {
     string internal input = "scripts/forge/inputs.json";
@@ -17,22 +17,9 @@ contract MigrateBridgeFunds is Script {
     address internal receiver;
     string internal predicateType;
     bool internal isERC20;
-    bool internal isERC721;
-    bool internal isERC1155;
-    bool internal isEther;
 
     // For ERC20
     uint256 internal erc20Amount;
-    // For ERC721
-    address internal erc721Predicate;
-    uint256 internal erc721TokenId;
-    // For ERC1155
-    address internal erc1155Predicate;
-    uint256[] internal erc1155TokenIds;
-    uint256[] internal erc1155Amounts;
-    bytes internal erc1155Data;
-    // For Ether
-    uint256 internal etherAmount;
 
     // Helper function to run the script with a string input helpful for testing
     function run(string memory _input) public returns (bytes memory) {
@@ -47,24 +34,6 @@ contract MigrateBridgeFunds is Script {
         bytes memory output;
         if (isERC20) {
             bytes memory data = abi.encodeWithSignature("transfer(address,uint256)", receiver, erc20Amount);
-            output = abi.encodeCall(RootChainManager.migrateBridgeFunds, (rootToken, data));
-        } else if (isERC721) {
-            bytes memory data = abi.encodeWithSignature(
-                "transferFrom(address,address,uint256)", erc721Predicate, receiver, erc721TokenId
-            );
-            output = abi.encodeCall(RootChainManager.migrateBridgeFunds, (rootToken, data));
-        } else if (isERC1155) {
-            bytes memory data = abi.encodeWithSignature(
-                "safeBatchTransferFrom(address,address,uint256[],uint256[],bytes)",
-                erc1155Predicate,
-                receiver,
-                erc1155TokenIds,
-                erc1155Amounts,
-                erc1155Data
-            );
-            output = abi.encodeCall(RootChainManager.migrateBridgeFunds, (rootToken, data));
-        } else if (isEther) {
-            bytes memory data = abi.encode(receiver, etherAmount);
             output = abi.encodeCall(RootChainManager.migrateBridgeFunds, (rootToken, data));
         }
 
@@ -87,26 +56,13 @@ contract MigrateBridgeFunds is Script {
 
         bytes32 predicateHash = keccak256(abi.encodePacked(predicateType));
         isERC20 = predicateHash == keccak256("ERC20");
-        isERC721 = predicateHash == keccak256("ERC721");
-        isERC1155 = predicateHash == keccak256("ERC1155");
-        isEther = predicateHash == keccak256("Ether");
 
-        if (!isERC20 && !isERC721 && !isERC1155 && !isEther) {
+        if (!isERC20) {
             revert("Unsupported predicate type provided in input");
         }
 
         if (isERC20) {
             erc20Amount = vm.parseJsonUint(inputJson, ".migrateBridgeFunds.erc20.amount");
-        } else if (isERC721) {
-            erc721Predicate = vm.parseJsonAddress(inputJson, ".migrateBridgeFunds.erc721.erc721Predicate");
-            erc721TokenId = vm.parseJsonUint(inputJson, ".migrateBridgeFunds.erc721.tokenId");
-        } else if (isERC1155) {
-            erc1155Predicate = vm.parseJsonAddress(inputJson, ".migrateBridgeFunds.erc1155.erc1155Predicate");
-            erc1155TokenIds = vm.parseJsonUintArray(inputJson, ".migrateBridgeFunds.erc1155.tokenIds");
-            erc1155Amounts = vm.parseJsonUintArray(inputJson, ".migrateBridgeFunds.erc1155.amounts");
-            erc1155Data = vm.parseJsonBytes(inputJson, ".migrateBridgeFunds.erc1155.data");
-        } else if (isEther) {
-            etherAmount = vm.parseJsonUint(inputJson, ".migrateBridgeFunds.ether.amount");
         }
         _checkInputs();
     }
@@ -123,31 +79,6 @@ contract MigrateBridgeFunds is Script {
         if (isERC20) {
             require(erc20Amount > 0, "ERC20 amount must be greater than zero");
             console.log("ERC20 Amount: %s\n", vm.toString(erc20Amount));
-        } else if (isERC721) {
-            require(erc721Predicate != address(0), "ERC721 predicate address cannot be zero");
-            console.log("ERC721 Token ID: %s\n", vm.toString(erc721TokenId));
-        } else if (isERC1155) {
-            require(erc1155Predicate != address(0), "ERC1155 predicate address cannot be zero");
-            require(
-                erc1155TokenIds.length > 0 && erc1155Amounts.length > 0
-                    && erc1155TokenIds.length == erc1155Amounts.length,
-                "ERC1155 token IDs and amounts cannot be empty or mismatched"
-            );
-            for (uint256 i = 0; i < erc1155Amounts.length; i++) {
-                require(erc1155Amounts[i] > 0, "ERC1155 amount must be greater than zero");
-            }
-            console.log("ERC1155 Token IDs:");
-            for (uint256 i = 0; i < erc1155TokenIds.length; i++) {
-                console.log("%s", vm.toString(erc1155TokenIds[i]));
-            }
-            console.log("ERC1155 Amounts:");
-            for (uint256 i = 0; i < erc1155Amounts.length; i++) {
-                console.log("%s", vm.toString(erc1155Amounts[i]));
-            }
-            console.log("ERC1155 Data: %s\n", vm.toString(erc1155Data));
-        } else if (isEther) {
-            require(etherAmount > 0, "Ether amount must be greater than zero");
-            console.log("Ether Amount: %s\n", vm.toString(etherAmount));
         }
     }
 }

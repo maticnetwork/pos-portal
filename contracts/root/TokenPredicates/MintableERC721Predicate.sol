@@ -269,21 +269,18 @@ contract MintableERC721Predicate is ITokenPredicate, AccessControlMixin, Initial
             revert("MintableERC721Predicate: INVALID_SIGNATURE");
         }
     }
-    
+
     /**
-     * @notice Migrate tokens to a specified target address.
-     * @dev This function utilizes the "call" method internally to support various token standards.
-     * @param rootToken The address of the ERC token being migrated.
-     * @param data ABI encoded data containing details such as the target address and amount etc.
+     * @notice Allows migration of tokens from the predicate to another address.
+     * @dev Note: Only allowed for ERC20 standard as of now.
+     * @param target The target address.
+     * @param data ABI encoded information including details like the token amount, and other relevant data.
      */
-    function migrateTokens(address rootToken, bytes calldata data)
+    function migrateTokens(address target, bytes calldata data)
         external
         override
         only(MANAGER_ROLE)
     {
-        (bool ok, bytes memory ret) = rootToken.call(data);
-        assembly {
-            if iszero(ok) { revert(add(32, ret), ret) }
-        }
+        revert("MintableERC721Predicate: MIGRATION_DISABLED");
     }
 }
