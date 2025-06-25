@@ -15,6 +15,7 @@ import {IERC20} from "../../scripts/helpers/interfaces/IERC20.generated.sol";
 contract ForkUSDTMigration is Test {
     // constants
     bytes32 constant PREDICATE_ERC20 = keccak256("ERC20");
+    bytes32 constant MIGRATION_MANAGER_ROLE = keccak256("MIGRATION_MANAGER_ROLE");
 
     address internal destination = makeAddr("Destination");
 
@@ -42,14 +43,16 @@ contract ForkUSDTMigration is Test {
         migrateBridgeFundsScript = new MigrateBridgeFunds();
 
         // Update the RootChainManager implementation
-        string memory input = _getUpdateImplInputs("RootChainManager", address(rootChainManagerProxy), 0);
+        bytes memory updateData =
+            abi.encodeCall(RootChainManager.grantRole, (MIGRATION_MANAGER_ROLE, address(safeMultisig))); // @remind setting this to safeMultisig to simulate execution via timelock
+        string memory input = _getUpdateImplInputs("RootChainManager", address(rootChainManagerProxy), updateData, 0);
         (address newImpl, bytes memory timelockScheduleData, bytes memory timelockExecuteData,) =
             updateImplementationScript.run(input);
         _executeViaSafe(timelockScheduleData, timelockExecuteData);
         _verifyNewImplementation(newImpl, address(rootChainManagerProxy));
 
         // Update the ERC20Predicate implementation
-        input = _getUpdateImplInputs("ERC20Predicate", address(erc20PredicateProxy), 0);
+        input = _getUpdateImplInputs("ERC20Predicate", address(erc20PredicateProxy), bytes(""), 0);
         (newImpl, timelockScheduleData, timelockExecuteData,) = updateImplementationScript.run(input);
         _executeViaSafe(timelockScheduleData, timelockExecuteData);
         _verifyNewImplementation(newImpl, address(erc20PredicateProxy));
@@ -173,14 +176,17 @@ contract ForkUSDTMigration is Test {
     }
 
     // Helper to write the inputs for the update implementation script
-    function _getUpdateImplInputs(string memory contractName, address proxyAddress, uint256 delay)
-        internal
-        returns (string memory)
-    {
+    function _getUpdateImplInputs(
+        string memory contractName,
+        address proxyAddress,
+        bytes memory updateData,
+        uint256 delay
+    ) internal returns (string memory) {
         string memory obj1 = "UIObject";
         string memory obj2 = "UIValueObject";
         vm.serializeString(obj2, "contractName", contractName);
         vm.serializeAddress(obj2, "proxyAddress", proxyAddress);
+        vm.serializeBytes(obj2, "updateData", updateData);
         string memory output = vm.serializeUint(obj2, "delay", delay);
         return vm.serializeString(obj1, "upgradeImplementation", output);
     }
@@ -262,7 +268,7 @@ contract ForkUSDTMigration is Test {
             signature // signatures
         );
 
-        safeMultisig.execTransaction(
+        (bool success) = safeMultisig.execTransaction(
             timelockController,
             0,
             timelockExecuteData,
@@ -274,6 +280,7 @@ contract ForkUSDTMigration is Test {
             payable(0x0000000000000000000000000000000000000000), // refundReceiver
             signature // signatures
         );
+        vm.assertTrue(success, "Failed to execute timelock operation");
 
         vm.stopPrank();
     }

@@ -67,6 +67,7 @@ contract RootChainManagerTest is Test {
         // setup
         vm.startPrank(owner);
 
+        rootChainManager.grantRole(rootChainManager.MIGRATION_MANAGER_ROLE(), owner);
         rootChainManager.setStateSender(address(new DummyStateSender()));
 
         rootChainManager.registerPredicate(PREDICATE_ERC20, address(new MockERC20Predicate()));
@@ -129,7 +130,7 @@ contract RootChainManagerTest is Test {
         rootChainManager.depositFor(address(this), address(dummyRootERC20), bytes("100"));
     }
 
-        function test_isMigrated_onlyDepositDisabled() public {
+    function test_isMigrated_onlyDepositDisabled() public {
         _mapTokens();
 
         // Disable only deposits

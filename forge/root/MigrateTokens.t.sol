@@ -44,6 +44,7 @@ contract MigrateTokens is Test {
         rootChainManager.initialize(owner);
 
         vm.startPrank(owner);
+        rootChainManager.grantRole(rootChainManager.MIGRATION_MANAGER_ROLE(), owner);
         rootChainManager.setStateSender(address(new DummyStateSender()));
         _deployTokensAndPredicates();
         vm.stopPrank();

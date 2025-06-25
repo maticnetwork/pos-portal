@@ -1,4 +1,4 @@
-import { AbiCoder } from 'ethers'
+import { AbiCoder, keccak256 } from 'ethers'
 import { bufferToHex, rlp } from 'ethereumjs-util'
 import { constructERC1155DepositData, syncState } from '../helpers/utils.js'
 import { deployInitializedContracts } from '../helpers/deployerNew.js'
@@ -330,6 +330,7 @@ contract('RootChainManager', async (accounts) => {
     let totalDepositedAmount = 0n
     const withdrawAmount = mockValues.amounts[1]
     const depositReceiver = accounts[0]
+    const migrationManager = accounts[1]
     const depositData = abi.encode(['uint256'], [depositAmount.toString()])
     const isDepositDisable = false
     const isExitDisabled = true
@@ -347,6 +348,8 @@ contract('RootChainManager', async (accounts) => {
       contracts = await deployInitializedContracts(accounts)
       dummyERC20 = contracts.root.dummyERC20
       rootChainManager = contracts.root.rootChainManager
+      let migrationManagerRole = ethers.toUtf8Bytes('MIGRATION_MANAGER_ROLE')
+      await rootChainManager.grantRole(keccak256(migrationManagerRole), migrationManager)
     })
 
     it('Should fail: exit disabled', async () => {
@@ -518,7 +521,9 @@ contract('RootChainManager', async (accounts) => {
 
     async function updateTokenMigrationStatus(target, isDepositDisable, isExitDisabled, lastExitBlockNumber) {
       await expect(
-        rootChainManager.updateTokenMigrationStatus(target, isDepositDisable, isExitDisabled, lastExitBlockNumber)
+        rootChainManager
+          .connect(await ethers.getSigner(migrationManager))
+          .updateTokenMigrationStatus(target, isDepositDisable, isExitDisabled, lastExitBlockNumber)
       )
         .to.emit(rootChainManager, 'MigrationStatusChanged')
         .withArgs(target, isDepositDisable, isExitDisabled, lastExitBlockNumber)

@@ -19,6 +19,7 @@ contract UpdateImplementation is Script {
     address internal proxyAddress;
     string internal contractName;
     uint256 internal delay;
+    bytes internal updateData;
 
     // Helper function to run the script with a string input helpful for testing
     function run(string memory _input) public returns (address, bytes memory, bytes memory, bytes32) {
@@ -31,8 +32,14 @@ contract UpdateImplementation is Script {
         _readInputs();
         _deployImplementation();
 
-        bytes memory updateImplementationData =
-            abi.encodeCall(UpgradableProxy.updateImplementation, (newImplementation));
+        bytes memory updateImplementationData;
+        if (updateData.length == 0) {
+            console.log("No update data provided, using updateImplementation");
+            updateImplementationData = abi.encodeCall(UpgradableProxy.updateImplementation, (newImplementation));
+        } else {
+            console.log("Update data provided, using updateAndCall");
+            updateImplementationData = abi.encodeCall(UpgradableProxy.updateAndCall, (newImplementation, updateData));
+        }
         bytes memory timelockScheduleData = abi.encodeCall(
             TimelockController.schedule,
             (
@@ -82,6 +89,7 @@ contract UpdateImplementation is Script {
         proxyAddress = vm.parseJsonAddress(inputJson, ".upgradeImplementation.proxyAddress");
         contractName = vm.parseJsonString(inputJson, ".upgradeImplementation.contractName");
         delay = vm.parseJsonUint(inputJson, ".upgradeImplementation.delay");
+        updateData = vm.parseJsonBytes(inputJson, ".upgradeImplementation.updateData");
 
         _checkInputs();
     }
@@ -90,7 +98,9 @@ contract UpdateImplementation is Script {
         require(proxyAddress != address(0), "Proxy address cannot be zero");
         require(bytes(contractName).length > 0, "Contract name cannot be empty");
 
+        console.log("Contract Name:", contractName);
         console.log("Proxy Address:", proxyAddress);
+        console.log("Update Data:", vm.toString(updateData));
         console.log("Delay:", vm.toString(delay));
     }
 

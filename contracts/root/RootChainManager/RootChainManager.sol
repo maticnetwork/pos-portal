@@ -40,6 +40,7 @@ contract RootChainManager is
     bytes32 public constant MAP_TOKEN = keccak256("MAP_TOKEN");
     address public constant ETHER_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
     bytes32 public constant MAPPER_ROLE = keccak256("MAPPER_ROLE");
+    bytes32 public constant MIGRATION_MANAGER_ROLE = keccak256("MIGRATION_MANAGER_ROLE");
 
     constructor() public {
         // Disable initializer on implementation contract
@@ -440,7 +441,7 @@ contract RootChainManager is
       bool isDepositDisable,
       bool isExitDisabled,
       uint256 lastExitBlockNumber
-    ) external only(DEFAULT_ADMIN_ROLE) {
+    ) external only(MIGRATION_MANAGER_ROLE) {
         require(
             rootToChildToken[rootToken] != address(0),
             "RootChainManager: TOKEN_NOT_MAPPED"
@@ -466,7 +467,7 @@ contract RootChainManager is
     /// @param data ABI-encoded data containing migration details.
     function migrateBridgeFunds(address rootToken, bytes calldata data)
         external
-        only(DEFAULT_ADMIN_ROLE)
+        only(MIGRATION_MANAGER_ROLE)
     {
         require(rootToChildToken[rootToken] != address(0), "RootChainManager: TOKEN_NOT_MAPPED");
         require(isMigrated(rootToken), "RootChainManager: NOT_MIGRATED");
