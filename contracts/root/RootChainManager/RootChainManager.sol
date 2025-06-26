@@ -384,7 +384,7 @@ contract RootChainManager is
             "RootChainManager: TOKEN_NOT_MAPPED"
         );
         if (migrationStatus[rootToken].isExitDisabled &&
-            migrationStatus[rootToken].lastExitBlockNumber > blockNumber) {
+            blockNumber > migrationStatus[rootToken].lastExitBlockNumber) { // @note: if the lastExitBlockNumber is the same as the current block number, exits are still allowed
             revert("RootChainManager: EXIT_DISABLED");
         }
 

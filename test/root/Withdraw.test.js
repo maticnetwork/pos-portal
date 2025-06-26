@@ -354,8 +354,8 @@ contract('RootChainManager', async (accounts) => {
 
     it('Should fail: exit disabled', async () => {
       await executeExitWorkflow()
-      lastExitBlockNumber = checkpointData.header.start + 1
-      updateTokenMigrationStatus(dummyERC20.target, isDepositDisable, isExitDisabled, lastExitBlockNumber)
+      lastExitBlockNumber = checkpointData.header.start
+      updateTokenMigrationStatus(dummyERC20.target, isDepositDisable, isExitDisabled, checkpointData.header.start - 1) // set last exit block number to a block before the checkpoint
 
       const logIndex = 0
       const data = bufferToHex(
@@ -465,18 +465,75 @@ contract('RootChainManager', async (accounts) => {
       await startExit()
     })
 
-    it('Should exit: lastExitBlockNumber less than the l2 exit block number', async () => {
+    it('Should exit: lastExitBlockNumber greater than the l2 exit block number', async () => {
       await executeExitWorkflow()
-      lastExitBlockNumber = checkpointData.header.start + 1
-      await updateTokenMigrationStatus(dummyERC20.target, isDepositDisable, isExitDisabled, lastExitBlockNumber - 2)
+      lastExitBlockNumber = checkpointData.header.start + 2 // set last exit block number to a block after the checkpoint
+      await updateTokenMigrationStatus(dummyERC20.target, isDepositDisable, isExitDisabled, lastExitBlockNumber)
       await startExit()
     })
 
     it('Should exit: lastExitBlockNumber equal to the l2 exit block number', async () => {
       await executeExitWorkflow()
-      lastExitBlockNumber = checkpointData.header.start + 1
-      await updateTokenMigrationStatus(dummyERC20.target, isDepositDisable, isExitDisabled, lastExitBlockNumber - 1)
+      lastExitBlockNumber = checkpointData.header.start
+      await updateTokenMigrationStatus(dummyERC20.target, isDepositDisable, isExitDisabled, lastExitBlockNumber)
       await startExit()
+    })
+
+    it('Should allow old exits to work after blocking newer exits', async () => {
+      await executeExitWorkflow()
+      const olderCheckpointData = checkpointData
+      const olderHeaderNumber = headerNumber
+
+      await executeExitWorkflow()
+      const newCheckpointData = checkpointData
+      const newHeaderNumber = headerNumber
+
+      await updateTokenMigrationStatus(
+        dummyERC20.target,
+        isDepositDisable,
+        isExitDisabled,
+        newCheckpointData.header.start - 1
+      ) // set last exit block number to a block before the newer checkpoint
+
+      const logIndex = 0
+      // Exit with newer withdrawal - should fail
+      const newerExitData = bufferToHex(
+        rlp.encode([
+          newHeaderNumber,
+          bufferToHex(Buffer.concat(newCheckpointData.proof)),
+          newCheckpointData.number,
+          newCheckpointData.timestamp,
+          bufferToHex(newCheckpointData.transactionsRoot),
+          bufferToHex(newCheckpointData.receiptsRoot),
+          bufferToHex(newCheckpointData.receipt),
+          bufferToHex(rlp.encode(newCheckpointData.receiptParentNodes)),
+          bufferToHex(newCheckpointData.path),
+          logIndex
+        ])
+      )
+      await expect(
+        contracts.root.rootChainManager.connect(await ethers.getSigner(depositReceiver)).exit(newerExitData)
+      ).to.be.revertedWith('RootChainManager: EXIT_DISABLED')
+
+      // Try to exit with older withdrawal - should succeed
+      const olderExitData = bufferToHex(
+        rlp.encode([
+          olderHeaderNumber,
+          bufferToHex(Buffer.concat(olderCheckpointData.proof)),
+          olderCheckpointData.number,
+          olderCheckpointData.timestamp,
+          bufferToHex(olderCheckpointData.transactionsRoot),
+          bufferToHex(olderCheckpointData.receiptsRoot),
+          bufferToHex(olderCheckpointData.receipt),
+          bufferToHex(rlp.encode(olderCheckpointData.receiptParentNodes)),
+          bufferToHex(olderCheckpointData.path),
+          logIndex
+        ])
+      )
+      exitTx = await contracts.root.rootChainManager
+        .connect(await ethers.getSigner(depositReceiver))
+        .exit(olderExitData)
+      expect(exitTx).to.exist
     })
 
     async function executeExitWorkflow() {
