@@ -5,6 +5,7 @@ import "forge-std/Test.sol";
 
 import {ERC20Predicate} from "../../scripts/helpers/interfaces/ERC20Predicate.generated.sol";
 import {Enum} from "safe-smart-account/libraries/Enum.sol";
+import {GrantRole} from "../../scripts/forge/GrantRole.s.sol";
 import {MigrateBridgeFunds} from "../../scripts/forge/MigrateBridgeFunds.s.sol";
 import {RootChainManager} from "../../scripts/helpers/interfaces/RootChainManager.generated.sol";
 import {Safe} from "safe-smart-account/Safe.sol";
@@ -30,6 +31,7 @@ contract ForkUSDTMigration is Test {
         RootChainManager(payable(0xA0c68C638235ee32657e8f720a23ceC1bFc77C77));
     Safe internal safeMultisig = Safe(payable(0xFa7D2a996aC6350f4b56C043112Da0366a59b74c));
 
+    GrantRole internal grantRoleScript;
     MigrateBridgeFunds internal migrateBridgeFundsScript;
     UpdateImplementation internal updateImplementationScript;
     UpdateTokenMigrationStatus internal updateTokenMigrationStatusScript;
@@ -41,10 +43,11 @@ contract ForkUSDTMigration is Test {
         updateImplementationScript = new UpdateImplementation();
         updateTokenMigrationStatusScript = new UpdateTokenMigrationStatus();
         migrateBridgeFundsScript = new MigrateBridgeFunds();
+        grantRoleScript = new GrantRole();
 
         // Update the RootChainManager implementation
-        bytes memory updateData =
-            abi.encodeCall(RootChainManager.grantRole, (MIGRATION_MANAGER_ROLE, address(safeMultisig))); // @remind setting this to safeMultisig to simulate execution via timelock
+        string memory grantRoleInput = _getGrantRoleInputs("MIGRATION_MANAGER_ROLE", address(safeMultisig));
+        bytes memory updateData = grantRoleScript.run(grantRoleInput);
         string memory input = _getUpdateImplInputs("RootChainManager", address(rootChainManagerProxy), updateData, 0);
         (address newImpl, bytes memory timelockScheduleData, bytes memory timelockExecuteData,) =
             updateImplementationScript.run(input);
@@ -242,6 +245,15 @@ contract ForkUSDTMigration is Test {
             result[pad + i] = str[i];
         }
         return string(result);
+    }
+
+    // Helper to write the inputs for the grant role script
+    function _getGrantRoleInputs(string memory role, address account) internal returns (string memory) {
+        string memory obj1 = "GRObject";
+        string memory obj2 = "GRValueObject";
+        vm.serializeString(obj2, "role", role);
+        string memory output = vm.serializeAddress(obj2, "account", account);
+        return vm.serializeString(obj1, "grantRole", output);
     }
 
     // Helper to write the inputs for the update implementation script
