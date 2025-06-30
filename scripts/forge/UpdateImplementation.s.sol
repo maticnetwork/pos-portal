@@ -69,8 +69,12 @@ contract UpdateImplementation is Script {
             bytes32(0) // salt
         );
 
-        console.log("Timelock Operation Hash:", vm.toString(timelockHash));
+        console.log("Timelock Operation Hash: %s\n", vm.toString(timelockHash));
+
+        console.log("--------------------------------------------------------------------\n");
         console.log("Send to Timelock Controller: %s\n", timelockController);
+        console.log("--------------------------------------------------------------------\n");
+
         console.log("************************** CALLDATA START **************************\n");
         console.log("Timelock Schedule Data: %s\n", vm.toString(timelockScheduleData));
         console.log("Timelock Execute Data: %s\n", vm.toString(timelockExecuteData));
