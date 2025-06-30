@@ -5,11 +5,11 @@
     "lastExitBlockNumber": 0,
     "rootToken": "0xdAC17F958D2ee523a2206206994597C13D831ec7"
   },
-  "migrateBridgeFunds":{
+  "migrateBridgeFunds": {
     "rootToken": "0xdAC17F958D2ee523a2206206994597C13D831ec7",
     "receiver": "0xdAC17F958D2ee523a2206206994597C13D831ec7",
     "predicateType": "ERC20", // Only ERC20 supported
-    "erc20":{
+    "erc20": {
       "amount": 100
     }
   },
@@ -22,5 +22,15 @@
   "grantRole": {
     "role": "MIGRATION_MANAGER_ROLE",
     "account": "0xdAC17F958D2ee523a2206206994597C13D831ec7"
+  },
+  "upgradeImplementationPOS": {
+    "contractName": "UChildERC20",
+    "proxyAddress": "0xc2132d05d31c914a87c6611c10748aeb04b58e8f",
+    "implementationAddress": "0x4350806Aa2508A44aaB4cB87A0EeCE362D882f11",
+    "updateData": "0x"
+  },
+  "transferOwnershipPOS": {
+    "newOwner": "0x000000000000000000000000000000000000dead",
+    "targetProxy": "0xc2132d05d31c914a87c6611c10748aeb04b58e8f"
   }
 }
