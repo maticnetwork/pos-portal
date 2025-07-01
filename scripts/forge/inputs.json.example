@@ -32,5 +32,9 @@
   "transferOwnershipPOS": {
     "newOwner": "0x000000000000000000000000000000000000dead",
     "targetProxy": "0xc2132d05d31c914a87c6611c10748aeb04b58e8f"
+  },
+  "upgradeToUSDT0": {
+    "newAdmin": "0x4350806Aa2508A44aaB4cB87A0EeCE362D882f11",
+    "oftContract": "0xc2132d05d31c914a87c6611c10748aeb04b58e8f"
   }
 }
