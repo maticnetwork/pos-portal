@@ -19,9 +19,10 @@ contract EIP712Base is Initializable {
     );
     bytes32 internal domainSeperator;
 
-    // supposed to be called once while initializing.
-    // one of the contractsa that inherits this contract follows proxy pattern
-    // so it is not possible to do this in a constructor
+    /**
+    @dev supposed to be called once while initializing. 
+        One of the contracts that inherits this contract follows a proxy pattern, so it is not possible to use a constructor.
+     */ 
     function _initializeEIP712(
         string memory name
     )
@@ -41,6 +42,10 @@ contract EIP712Base is Initializable {
                 bytes32(getChainId())
             )
         );
+    }
+
+    function DOMAIN_SEPARATOR() public view returns (bytes32) {
+        return domainSeperator;
     }
 
     function getDomainSeperator() public view returns (bytes32) {
