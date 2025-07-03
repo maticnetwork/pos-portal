@@ -15,7 +15,6 @@ contract TransferOwnershipPOS is Script {
     address internal multisig = 0x355b8E02e7F5301E6fac9b7cAc1D6D9c86C0343f;
 
     address internal newOwner;
-    address internal targetProxy;
 
     // Helper function to run the script with a string input helpful for testing
     function run(string memory _input) public returns (address, bytes memory) {
@@ -48,17 +47,14 @@ contract TransferOwnershipPOS is Script {
             inputJson = vm.readFile(input);
         }
         newOwner = vm.parseJsonAddress(inputJson, ".transferOwnershipPOS.newOwner");
-        targetProxy = vm.parseJsonAddress(inputJson, ".transferOwnershipPOS.targetProxy");
 
 
         _checkInputs();
     }
 
     function _checkInputs() internal view {
-        require(targetProxy != address(0), "Target proxy cannot be zero");
         require(newOwner != address(0), "New owner cannot be zero");
 
         console.log("New Owner:", newOwner);
-        console.log("Target Proxy:", targetProxy);
     }
 }
