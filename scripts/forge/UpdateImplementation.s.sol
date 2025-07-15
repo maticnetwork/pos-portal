@@ -30,7 +30,10 @@ contract UpdateImplementation is Script {
 
     function run() public returns (address, bytes memory, bytes memory, bytes32) {
         _readInputs();
-        _deployImplementation();
+                if(newImplementation == address(0)) {
+            console.log("No implementation address provided, deploying a new implementation");
+            _deployImplementation();
+        }
 
         bytes memory updateImplementationData;
         if (updateData.length == 0) {
@@ -94,8 +97,13 @@ contract UpdateImplementation is Script {
         contractName = vm.parseJsonString(inputJson, ".upgradeImplementation.contractName");
         delay = vm.parseJsonUint(inputJson, ".upgradeImplementation.delay");
         updateData = vm.parseJsonBytes(inputJson, ".upgradeImplementation.updateData");
-
+        address implementationAddress = vm.parseJsonAddress(inputJson, ".upgradeImplementation.implementationAddress");
         _checkInputs();
+
+        if (implementationAddress != address(0)) {
+            console.log("Using provided implementation address:", implementationAddress);
+            newImplementation = implementationAddress;
+        }
     }
 
     function _checkInputs() internal view {

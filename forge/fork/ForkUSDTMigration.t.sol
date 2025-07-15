@@ -3,6 +3,7 @@ pragma solidity ^0.8.4;
 
 import "forge-std/Test.sol";
 
+import {AccessControlMixin} from "scripts/helpers/interfaces/AccessControlMixin.generated.sol";
 import {ERC20Predicate} from "../../scripts/helpers/interfaces/ERC20Predicate.generated.sol";
 import {Enum} from "safe-smart-account/libraries/Enum.sol";
 import {GrantRole} from "../../scripts/forge/GrantRole.s.sol";
@@ -48,14 +49,15 @@ contract ForkUSDTMigration is Test {
         // Update the RootChainManager implementation
         string memory grantRoleInput = _getGrantRoleInputs("MIGRATION_MANAGER_ROLE", address(safeMultisig));
         bytes memory updateData = grantRoleScript.run(grantRoleInput);
-        string memory input = _getUpdateImplInputs("RootChainManager", address(rootChainManagerProxy), updateData, 0);
+        string memory input =
+            _getUpdateImplInputs("RootChainManager", address(rootChainManagerProxy), address(0), updateData, 0);
         (address newImpl, bytes memory timelockScheduleData, bytes memory timelockExecuteData,) =
             updateImplementationScript.run(input);
         _executeViaSafe(timelockScheduleData, timelockExecuteData);
         _verifyNewImplementation(newImpl, address(rootChainManagerProxy));
 
         // Update the ERC20Predicate implementation
-        input = _getUpdateImplInputs("ERC20Predicate", address(erc20PredicateProxy), bytes(""), 0);
+        input = _getUpdateImplInputs("ERC20Predicate", address(erc20PredicateProxy), address(0), bytes(""), 0);
         (newImpl, timelockScheduleData, timelockExecuteData,) = updateImplementationScript.run(input);
         _executeViaSafe(timelockScheduleData, timelockExecuteData);
         _verifyNewImplementation(newImpl, address(erc20PredicateProxy));
@@ -70,6 +72,40 @@ contract ForkUSDTMigration is Test {
     function test_setup() public view {
         assertEq(rootChainManagerProxy.rootToChildToken(address(usdt)), childUSDT);
         assertEq(erc20PredicateProxy.TOKEN_TYPE(), PREDICATE_ERC20);
+    }
+
+    function test_rollback_RootChainManager() public {
+        bytes32 migrationManagerRole = rootChainManagerProxy.MIGRATION_MANAGER_ROLE();
+        assertTrue(
+            rootChainManagerProxy.hasRole(migrationManagerRole, address(safeMultisig)),
+            "Migration Manager role should be granted to the multisig"
+        );
+
+        address previousImplementation = 0x639f13D5f30B47c792b6851238c05D0b623C77DE;
+
+        bytes memory updateData =
+            abi.encodeCall(AccessControlMixin.revokeRole, (migrationManagerRole, address(safeMultisig)));
+        string memory input = _getUpdateImplInputs(
+            "RootChainManager", address(rootChainManagerProxy), previousImplementation, updateData, 0
+        );
+
+        (, bytes memory timelockScheduleData, bytes memory timelockExecuteData,) = updateImplementationScript.run(input);
+
+        _executeViaSafe(timelockScheduleData, timelockExecuteData);
+        _verifyNewImplementation(previousImplementation, address(rootChainManagerProxy));
+        assertFalse(rootChainManagerProxy.hasRole(migrationManagerRole, address(safeMultisig)));
+    }
+
+    function test_rollback_ERC20Predicate() public {
+        bytes memory timelockScheduleData =
+            hex"01d5062a00000000000000000000000040ec5b33f54e0e8a33a975908c5ba1c14e5bbbdf000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000024025b22bc000000000000000000000000b1fd4ae726c64a793588001eb465c46bd1bdf1cb00000000000000000000000000000000000000000000000000000000";
+        bytes memory timelockExecuteData =
+            hex"134008d300000000000000000000000040ec5b33f54e0e8a33a975908c5ba1c14e5bbbdf000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000a0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000024025b22bc000000000000000000000000b1fd4ae726c64a793588001eb465c46bd1bdf1cb00000000000000000000000000000000000000000000000000000000";
+
+        _executeViaSafe(timelockScheduleData, timelockExecuteData);
+
+        address previousImplementation = 0xB1fd4ae726c64A793588001EB465c46BD1BdF1cB;
+        _verifyNewImplementation(previousImplementation, address(erc20PredicateProxy));
     }
 
     function test_deposit_disabled() public {
@@ -260,6 +296,7 @@ contract ForkUSDTMigration is Test {
     function _getUpdateImplInputs(
         string memory contractName,
         address proxyAddress,
+        address implementationAddress,
         bytes memory updateData,
         uint256 delay
     ) internal returns (string memory) {
@@ -267,6 +304,7 @@ contract ForkUSDTMigration is Test {
         string memory obj2 = "UIValueObject";
         vm.serializeString(obj2, "contractName", contractName);
         vm.serializeAddress(obj2, "proxyAddress", proxyAddress);
+        vm.serializeAddress(obj2, "implementationAddress", implementationAddress);
         vm.serializeBytes(obj2, "updateData", updateData);
         string memory output = vm.serializeUint(obj2, "delay", delay);
         return vm.serializeString(obj1, "upgradeImplementation", output);
