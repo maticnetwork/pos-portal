@@ -30,7 +30,7 @@ contract UpdateImplementation is Script {
 
     function run() public returns (address, bytes memory, bytes memory, bytes32) {
         _readInputs();
-                if(newImplementation == address(0)) {
+        if (newImplementation == address(0)) {
             console.log("No implementation address provided, deploying a new implementation");
             _deployImplementation();
         }
@@ -102,8 +102,8 @@ contract UpdateImplementation is Script {
 
         if (implementationAddress != address(0)) {
             console.log("Using provided implementation address:", implementationAddress);
-            newImplementation = implementationAddress;
         }
+        newImplementation = implementationAddress;
     }
 
     function _checkInputs() internal view {
