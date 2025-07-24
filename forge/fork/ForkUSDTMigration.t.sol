@@ -25,6 +25,7 @@ contract ForkUSDTMigration is Test {
     address internal multisigOwner1 = 0xA7499Aa6464c078EeB940da2fc95C6aCd010c3Cc;
     address internal rootChainManagerProxyOwner = 0xCaf0aa768A3AE1297DF20072419Db8Bb8b5C8cEf;
     address internal timelockController = 0xCaf0aa768A3AE1297DF20072419Db8Bb8b5C8cEf;
+    address internal multisend = 0xA238CBeb142c10Ef7Ad8442C6D1f9E89e07e7761;
 
     IERC20 internal usdt = IERC20(0xdAC17F958D2ee523a2206206994597C13D831ec7);
     ERC20Predicate internal erc20PredicateProxy = ERC20Predicate(0x40ec5B33f54e0E8A33A975908C5BA1c14e5BbbDf);
@@ -46,17 +47,36 @@ contract ForkUSDTMigration is Test {
         migrateBridgeFundsScript = new MigrateBridgeFunds();
         grantRoleScript = new GrantRole();
 
-        // Update the RootChainManager implementation
-        string memory grantRoleInput = _getGrantRoleInputs("MIGRATION_MANAGER_ROLE", address(safeMultisig));
-        bytes memory updateData = grantRoleScript.run(grantRoleInput);
+        // Step 1:Generate update implementation data: Update RootChainManager implementation
         string memory input =
-            _getUpdateImplInputs("RootChainManager", address(rootChainManagerProxy), address(0), updateData, 0);
+            _getUpdateImplInputs("RootChainManager", address(rootChainManagerProxy), address(0), bytes(""), 0);
         (address newImpl, bytes memory timelockScheduleData, bytes memory timelockExecuteData,) =
             updateImplementationScript.run(input);
-        _executeViaSafe(timelockScheduleData, timelockExecuteData);
+
+        // Step 2: Generate grant role data: Grant MIGRATION_MANAGER_ROLE to multisig
+        string memory grantRoleInput = _getGrantRoleInputs("MIGRATION_MANAGER_ROLE", address(safeMultisig));
+        bytes memory grantRoleData = grantRoleScript.run(grantRoleInput);
+
+        _changeSafeThreshold(1); // Set the Safe threshold to 1 for easy execution
+
+        // Step 3: Batch transactions using MultiSend
+        _executeScheduleOperation(timelockScheduleData);
+        bytes[] memory transactionsData = new bytes[](2);
+        transactionsData[0] = timelockExecuteData;
+        transactionsData[1] = grantRoleData;
+        address[] memory targets = new address[](2);
+        targets[0] = timelockController;
+        targets[1] = address(rootChainManagerProxy);
+        _executeViaSafeBatch(transactionsData, targets);
         _verifyNewImplementation(newImpl, address(rootChainManagerProxy));
 
-        // Update the ERC20Predicate implementation
+        // Verify that the role was granted as part of the batch
+        assertTrue(
+            rootChainManagerProxy.hasRole(MIGRATION_MANAGER_ROLE, address(safeMultisig)),
+            "Migration Manager role should be granted to the multisig"
+        );
+
+        // Step 4: Update the ERC20Predicate implementation
         input = _getUpdateImplInputs("ERC20Predicate", address(erc20PredicateProxy), address(0), bytes(""), 0);
         (newImpl, timelockScheduleData, timelockExecuteData,) = updateImplementationScript.run(input);
         _executeViaSafe(timelockScheduleData, timelockExecuteData);
@@ -349,11 +369,15 @@ contract ForkUSDTMigration is Test {
         assertEq(actualImplementation, expectedImplementation, "New implementation address mismatch");
     }
 
+    // Helper function to change the threshold of the Safe multisig
+    function _changeSafeThreshold(uint256 newThreshold) internal {
+        vm.prank(address(safeMultisig));
+        safeMultisig.changeThreshold(newThreshold);
+        assertEq(safeMultisig.getThreshold(), newThreshold, "Safe threshold change failed");
+    }
+
     // Helper to schedule and execute the timelock via the Safe account
     function _executeViaSafe(bytes memory timelockScheduleData, bytes memory timelockExecuteData) internal {
-        vm.prank(address(safeMultisig));
-        safeMultisig.changeThreshold(1); // set threshold to 1 for easy execution
-
         bytes32 operationHash = safeMultisig.getTransactionHash(
             timelockController,
             0, // value
@@ -367,13 +391,13 @@ contract ForkUSDTMigration is Test {
             0
         );
 
-        vm.startPrank(multisigOwner1);
-
+        vm.prank(multisigOwner1);
         safeMultisig.approveHash(operationHash);
 
         bytes memory signature =
             abi.encodePacked(abi.encodePacked(bytes32(uint256(uint160(multisigOwner1))), bytes32(0), uint8(1)));
 
+        vm.prank(multisigOwner1);
         safeMultisig.execTransaction(
             timelockController,
             0,
@@ -387,6 +411,7 @@ contract ForkUSDTMigration is Test {
             signature // signatures
         );
 
+        vm.prank(multisigOwner1);
         (bool success) = safeMultisig.execTransaction(
             timelockController,
             0,
@@ -400,7 +425,111 @@ contract ForkUSDTMigration is Test {
             signature // signatures
         );
         vm.assertTrue(success, "Failed to execute timelock operation");
+    }
 
-        vm.stopPrank();
+    // Helper function to execute a batch of transactions via Safe
+    function _executeViaSafeBatch(bytes[] memory transactionsData, address[] memory targets) internal {
+        bytes[] memory multisendTransactions = new bytes[](transactionsData.length);
+
+        for (uint256 i = 0; i < transactionsData.length; i++) {
+            bytes memory transactionData = transactionsData[i];
+            bytes memory transaction = _formatMultisendTransaction(uint8(0), targets[i], 0, transactionData);
+            multisendTransactions[i] = transaction;
+        }
+
+        bytes memory multisendData = _batchTransactions(multisendTransactions);
+
+        _executeBatchOperation(multisendData);
+    }
+
+    // Helper function to format a transaction for the Safe multisig
+    function _formatMultisendTransaction(uint8 operationType, address to, uint256 value, bytes memory data)
+        internal
+        pure
+        returns (bytes memory)
+    {
+        return abi.encodePacked(operationType, to, value, uint256(data.length), data);
+    }
+
+    // Helper function to batch multiple transactions into a single call
+    function _batchTransactions(bytes[] memory transactions) internal pure returns (bytes memory) {
+        bytes memory multiSendData;
+        for (uint256 i = 0; i < transactions.length; i++) {
+            multiSendData = abi.encodePacked(multiSendData, transactions[i]);
+        }
+        return multiSendData;
+    }
+
+    // Helper function to execute a scheduled operation via the Safe multisig
+    function _executeScheduleOperation(bytes memory timelockScheduleData) internal {
+        bytes32 operationHash = safeMultisig.getTransactionHash(
+            timelockController,
+            0,
+            timelockScheduleData,
+            Enum.Operation.Call,
+            0,
+            0,
+            0,
+            0x0000000000000000000000000000000000000000,
+            payable(0x0000000000000000000000000000000000000000),
+            0
+        );
+
+        vm.prank(multisigOwner1);
+        safeMultisig.approveHash(operationHash);
+
+        bytes memory signature = abi.encodePacked(bytes32(uint256(uint160(multisigOwner1))), bytes32(0), uint8(1));
+
+        vm.prank(multisigOwner1);
+        safeMultisig.execTransaction(
+            timelockController,
+            0,
+            timelockScheduleData,
+            Enum.Operation.Call,
+            3_000_000,
+            0,
+            3_000_000,
+            0x0000000000000000000000000000000000000000,
+            payable(0x0000000000000000000000000000000000000000),
+            signature
+        );
+    }
+
+    // Helper function to execute a batch operation via Safe multisig
+    function _executeBatchOperation(bytes memory multiSendData) internal {
+        bytes memory multiSendCallData = abi.encodeWithSignature("multiSend(bytes)", multiSendData);
+
+        bytes32 batchHash = safeMultisig.getTransactionHash(
+            multisend,
+            0,
+            multiSendCallData,
+            Enum.Operation.DelegateCall,
+            0,
+            0,
+            0,
+            0x0000000000000000000000000000000000000000,
+            payable(0x0000000000000000000000000000000000000000),
+            1
+        );
+
+        vm.prank(multisigOwner1);
+        safeMultisig.approveHash(batchHash);
+
+        bytes memory signature = abi.encodePacked(bytes32(uint256(uint160(multisigOwner1))), bytes32(0), uint8(1));
+
+        vm.prank(multisigOwner1);
+        bool success = safeMultisig.execTransaction(
+            multisend,
+            0,
+            multiSendCallData,
+            Enum.Operation.DelegateCall,
+            3_000_000,
+            0,
+            3_000_000,
+            0x0000000000000000000000000000000000000000,
+            payable(0x0000000000000000000000000000000000000000),
+            signature
+        );
+        vm.assertTrue(success, "Failed to execute Safe batch transaction");
     }
 }
