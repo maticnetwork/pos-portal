@@ -2,7 +2,7 @@
 
 ![Build Status](https://github.com/maticnetwork/pos-portal/workflows/CI/badge.svg)
 
-Smart contracts that powers the PoS (proof-of-stake) based bridge mechanism for [Matic Network](https://matic.network). 
+Smart contracts that powers the PoS (proof-of-stake) based bridge mechanism for [Matic Network](https://matic.network).
 
 ## Audits
 
@@ -19,45 +19,65 @@ Install package from **NPM** using
 npm i @maticnetwork/pos-portal
 ```
 
-## Develop
+## Hardhat Build
 
-Make sure you've NodeJS & NPM installed
-
-```bash
-node --version
-v10.24.1
-
-npm --version
-6.14.12
-```
-
-## Test
-
-Make sure you have installed NVM and switched to the correct node version
-
-```bash
-nvm -v
-0.39.7
-
-nvm use
-npm run test
-```
-
-Clone repository & install all dependencies
+Make sure you have installed NodeJS, NVM & NPM.
+Clone repository, switch to the required node version & install all dependencies
 
 ```bash
 git clone https://github.com/maticnetwork/pos-portal
 cd pos-portal
 
+nvm i
+nvm use
 npm i
-```
-
-Compile all contracts
-
-```bash
-npm run template:process
 npm run build
 ```
+
+## Hardhat Tests
+
+After building as mentioned above, run the following command to run Hardhat tests
+
+```bash
+npm run test
+```
+
+## Foundry Build
+
+Make sure you have installed Foundry.
+Run the following command to run Foundry build
+
+```bash
+./scripts/helpers/generateInterfaces.sh # generate interfaces with updated solc version
+forge build
+```
+
+## Foundry Tests
+
+Modify the following in the `.env` file (create one if it doesn't exist)
+
+```env
+# Infura API token - used for fork testing
+INFURA_TOKEN=
+# Deployer private key - your private key, that has enough funds to deploy contracts on forked networks
+PRIVATE_KEY=
+```
+
+After building as mentioned above, run the following command to run Foundry tests
+
+```bash
+forge test
+```
+
+### Known Issues
+
+- `ForkupgradeMPT.t.sol` can take a while to complete. if it does, you can run the following command to skip it
+
+```bash
+forge test --no-match-test "SkipCI"
+```
+
+## Other Build Options [Deprecated]
 
 If you prefer not using docker for compiling contracts, consider setting `docker: false` in truffle-config.js.
 
