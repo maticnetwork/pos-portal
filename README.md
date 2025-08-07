@@ -48,7 +48,7 @@ Make sure you have installed Foundry.
 Run the following command to run Foundry build
 
 ```bash
-./scripts/helpers/generateInterfaces.sh # generate interfaces with updated solc version
+npm run generate:interfaces # generate interfaces with updated solc version
 forge build
 ```
 
