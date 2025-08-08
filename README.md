@@ -1,8 +1,8 @@
-# Matic PoS (Proof-of-Stake) portal contracts
+# Polygon PoS (Proof-of-Stake) portal contracts
 
 ![Build Status](https://github.com/maticnetwork/pos-portal/workflows/CI/badge.svg)
 
-Smart contracts that powers the PoS (proof-of-stake) based bridge mechanism for [Matic Network](https://matic.network).
+Smart contracts that powers the PoS (proof-of-stake) based bridge mechanism for [Polygon Network](https://polygon.technology/).
 
 ## Audits
 
@@ -25,7 +25,7 @@ Make sure you have installed NodeJS, NVM & NPM.
 Clone repository, switch to the required node version & install all dependencies
 
 ```bash
-git clone https://github.com/maticnetwork/pos-portal
+git clone https://github.com/0xPolygon/pos-portal
 cd pos-portal
 
 nvm i
