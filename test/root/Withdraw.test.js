@@ -1,4 +1,4 @@
-import { AbiCoder, keccak256 } from 'ethers'
+import { AbiCoder, keccak256, getAddress, zeroPadValue } from 'ethers'
 import { bufferToHex, rlp } from 'ethereumjs-util'
 import { constructERC1155DepositData, syncState } from '../helpers/utils.js'
 import { deployInitializedContracts } from '../helpers/deployerNew.js'
@@ -334,22 +334,46 @@ contract('RootChainManager', async (accounts) => {
     const depositData = abi.encode(['uint256'], [depositAmount.toString()])
     const isDepositDisable = false
     const isExitDisabled = true
+    const usdtAddress = '0xdAC17F958D2ee523a2206206994597C13D831ec7'
     let checkpointData
     let contracts
     let dummyERC20
+    let childDummyERC20
     let exitTx
     let headerNumber
     let lastExitBlockNumber
     let rootChainManager
+    let childChainManager
     let withdrawTx
     let withdrawTxReceipt
 
     before(async () => {
       contracts = await deployInitializedContracts(accounts)
-      dummyERC20 = contracts.root.dummyERC20
+      // Deploy DummyERC20 as USDT since only USDT is allowed to be migrated
+      const DummyERC20 = await ethers.getContractFactory('DummyERC20')
+      const dummyERC20Artifact = await artifacts.readArtifact('DummyERC20')
+      const runtimeBytecode = dummyERC20Artifact.deployedBytecode
+      await network.provider.send('hardhat_setCode', [usdtAddress, runtimeBytecode])
+      dummyERC20 = DummyERC20.attach(usdtAddress)
+      console.log('dummyERC20.target:', dummyERC20.target)
+
+      await dummyERC20.mint(depositAmount * 10n) // Mint enough for multiple deposits
+
       rootChainManager = contracts.root.rootChainManager
       let migrationManagerRole = ethers.toUtf8Bytes('MIGRATION_MANAGER_ROLE')
       await rootChainManager.grantRole(keccak256(migrationManagerRole), migrationManager)
+      childChainManager = contracts.child.childChainManager
+      childDummyERC20 = contracts.child.dummyERC20
+
+      // manually map usdt to child token
+      await setRootToChildMapping(rootChainManager.target, usdtAddress, childDummyERC20.target)
+      await setChildToRootMapping(rootChainManager.target, childDummyERC20.target, usdtAddress)
+      const ERC20Type = await contracts.root.erc20Predicate.TOKEN_TYPE()
+      await setRootToTokenTypeMapping(rootChainManager.target, usdtAddress, ERC20Type.toString())
+
+      // manually map childtoken to usdt
+      await setRootToChildMapping(childChainManager.target, usdtAddress, childDummyERC20.target)
+      await setChildToRootMapping(childChainManager.target, childDummyERC20.target, usdtAddress)
     })
 
     it('Should fail: exit disabled', async () => {
@@ -535,6 +559,33 @@ contract('RootChainManager', async (accounts) => {
         .exit(olderExitData)
       expect(exitTx).to.exist
     })
+
+    async function setRootToChildMapping(manager, rootUSDT, childToken) {
+      const p = 3n
+      const slot = keccak256(abi.encode(['address', 'uint256'], [getAddress(rootUSDT), p]))
+      const word = zeroPadValue(getAddress(childToken), 32)
+
+      await network.provider.send('hardhat_setStorageAt', [getAddress(manager), slot, word])
+      await network.provider.send('evm_mine', [])
+    }
+
+    async function setChildToRootMapping(manager, childUSDT, rootToken) {
+      const p = 4n
+      const slot = keccak256(abi.encode(['address', 'uint256'], [getAddress(childUSDT), p]))
+      const word = zeroPadValue(getAddress(rootToken), 32)
+
+      await network.provider.send('hardhat_setStorageAt', [getAddress(manager), slot, word])
+      await network.provider.send('evm_mine', [])
+    }
+
+    async function setRootToTokenTypeMapping(manager, rootToken, tokenType) {
+      const p = 5n
+      const slot = keccak256(abi.encode(['address', 'uint256'], [getAddress(rootToken), p]))
+      const word = tokenType
+
+      await network.provider.send('hardhat_setStorageAt', [getAddress(manager), slot, word])
+      await network.provider.send('evm_mine', [])
+    }
 
     async function executeExitWorkflow() {
       // Approve and deposit

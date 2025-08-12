@@ -41,6 +41,7 @@ contract RootChainManager is
     address public constant ETHER_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
     bytes32 public constant MAPPER_ROLE = keccak256("MAPPER_ROLE");
     bytes32 public constant MIGRATION_MANAGER_ROLE = keccak256("MIGRATION_MANAGER_ROLE");
+    address public constant USDT_ADDRESS = 0xdAC17F958D2ee523a2206206994597C13D831ec7;
 
     constructor() public {
         // Disable initializer on implementation contract
@@ -197,6 +198,7 @@ contract RootChainManager is
         address rootToken,
         address childToken
     ) external override only(DEFAULT_ADMIN_ROLE) {
+        require(rootToken != USDT_ADDRESS, "RootChainManager: USDT_NOT_ALLOWED");
         rootToChildToken[rootToken] = address(0);
         childToRootToken[childToken] = address(0);
         tokenToType[rootToken] = bytes32(0);
@@ -216,6 +218,7 @@ contract RootChainManager is
         address childToken,
         bytes32 tokenType
     ) external override only(DEFAULT_ADMIN_ROLE) {
+        require(rootToken != USDT_ADDRESS, "RootChainManager: USDT_NOT_ALLOWED");
         // cleanup old mapping
         address oldChildToken = rootToChildToken[rootToken];
         address oldRootToken = childToRootToken[childToken];
@@ -442,6 +445,7 @@ contract RootChainManager is
       bool isExitDisabled,
       uint256 lastExitBlockNumber
     ) external only(MIGRATION_MANAGER_ROLE) {
+        require(rootToken == USDT_ADDRESS, "RootChainManager: ONLY_USDT_ALLOWED");
         require(
             rootToChildToken[rootToken] != address(0),
             "RootChainManager: TOKEN_NOT_MAPPED"

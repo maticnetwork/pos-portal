@@ -34,6 +34,10 @@ contract RootChainManagerTest is Test {
     bytes32 constant PREDICATE_ERC20 = keccak256("ERC20");
     bytes32 constant PREDICATE_ERC721 = keccak256("ERC721");
     bytes32 constant PREDICATE_ERC1155 = keccak256("ERC1155");
+    address constant USDT_ADDRESS = 0xdAC17F958D2ee523a2206206994597C13D831ec7;
+
+    DummyERC20 internal usdtRootToken = DummyERC20(USDT_ADDRESS);
+    address internal usdtChildToken = makeAddr("dummyUsdtChild");
 
     RootChainManager internal rootChainManager;
     DummyERC20 internal dummyRootERC20;
@@ -51,6 +55,7 @@ contract RootChainManagerTest is Test {
     event MigrationStatusChanged(
         address indexed rootToken, bool isDepositDisabled, bool isExitDisabled, uint256 lastExitBlockNumber
     );
+    event TokenMapped(address indexed rootToken, address indexed childToken, bytes32 indexed tokenType);
 
     function setUp() public {
         // deploy the RootChainManager contract
@@ -63,6 +68,9 @@ contract RootChainManagerTest is Test {
         dummyRootERC20 = new DummyERC20("Dummy Root ERC20", "ERC20");
         dummyRootERC721 = new DummyERC721("Dummy Root ERC721", "ERC721");
         dummyRootERC1155 = new DummyERC1155("ERC1155_URI");
+
+        // Deploy dummy USDT contract and etch its bytecode to the USDT address
+        vm.etch(USDT_ADDRESS, type(DummyERC20).runtimeCode);
 
         // setup
         vm.startPrank(owner);
@@ -86,26 +94,30 @@ contract RootChainManagerTest is Test {
     }
 
     function test_depositFor_disabled() public {
+        // Step 0: verify that only the usdt is allowed to be migrated
+        vm.expectRevert("RootChainManager: ONLY_USDT_ALLOWED");
+        _updateTokenMigrationStatus(address(dummyRootERC20), true, false, 0);
+
         // Step 1: verify that the token is not mapped yet
         vm.expectRevert("RootChainManager: TOKEN_NOT_MAPPED");
-        _updateTokenMigrationStatus(address(dummyRootERC20), true, false, 0);
+        _updateTokenMigrationStatus(address(usdtRootToken), true, false, 0);
 
         // Step 2: verify that the deposit is enabled by default
         _mapTokens();
-        deal(address(dummyRootERC20), address(this), 100);
-        bytes memory syncData = _generateSyncData(DEPOSIT, address(this), address(dummyRootERC20), bytes("100"));
+        deal(address(usdtRootToken), address(this), 100);
+        bytes memory syncData = _generateSyncData(DEPOSIT, address(this), address(usdtRootToken), bytes("100"));
 
         vm.expectEmit();
         emit StateSynced(1, address(0), syncData);
-        rootChainManager.depositFor(address(this), address(dummyRootERC20), bytes("100"));
+        rootChainManager.depositFor(address(this), address(usdtRootToken), bytes("100"));
 
         // Step 3: verify that the deposit is disabled after updating the token migration status
         vm.expectEmit();
-        emit MigrationStatusChanged(address(dummyRootERC20), true, false, 0);
-        _updateTokenMigrationStatus(address(dummyRootERC20), true, false, 0);
+        emit MigrationStatusChanged(address(usdtRootToken), true, false, 0);
+        _updateTokenMigrationStatus(address(usdtRootToken), true, false, 0);
 
         vm.expectRevert("RootChainManager: DEPOSIT_DISABLED");
-        rootChainManager.depositFor(address(this), address(dummyRootERC20), bytes("100"));
+        rootChainManager.depositFor(address(this), address(usdtRootToken), bytes("100"));
 
         // Step 4: verify that deposits for other predicates are still enabled
         vm.expectEmit();
@@ -122,22 +134,22 @@ contract RootChainManagerTest is Test {
 
         // Step 5: verify that the deposit is working again after updating the token migration status
         vm.expectEmit();
-        emit MigrationStatusChanged(address(dummyRootERC20), false, false, 0);
-        _updateTokenMigrationStatus(address(dummyRootERC20), false, false, 0);
+        emit MigrationStatusChanged(address(usdtRootToken), false, false, 0);
+        _updateTokenMigrationStatus(address(usdtRootToken), false, false, 0);
 
         vm.expectEmit();
         emit StateSynced(1, address(0), syncData);
-        rootChainManager.depositFor(address(this), address(dummyRootERC20), bytes("100"));
+        rootChainManager.depositFor(address(this), address(usdtRootToken), bytes("100"));
     }
 
     function test_isMigrated_onlyDepositDisabled() public {
         _mapTokens();
 
         // Disable only deposits
-        _updateTokenMigrationStatus(address(dummyRootERC20), true, false, 0);
+        _updateTokenMigrationStatus(address(usdtRootToken), true, false, 0);
 
         // Test that isMigrated returns false when only deposits are disabled
-        assertEq(rootChainManager.isMigrated(address(dummyRootERC20)), false);
+        assertEq(rootChainManager.isMigrated(address(usdtRootToken)), false);
 
         // Other tokens should still return false
         assertEq(rootChainManager.isMigrated(address(dummyRootERC721)), false);
@@ -148,10 +160,10 @@ contract RootChainManagerTest is Test {
         _mapTokens();
 
         // Disable only exits
-        _updateTokenMigrationStatus(address(dummyRootERC20), false, true, 100);
+        _updateTokenMigrationStatus(address(usdtRootToken), false, true, 100);
 
         // Test that isMigrated returns false when only exits are disabled
-        assertEq(rootChainManager.isMigrated(address(dummyRootERC20)), false);
+        assertEq(rootChainManager.isMigrated(address(usdtRootToken)), false);
 
         // Other tokens should still return false
         assertEq(rootChainManager.isMigrated(address(dummyRootERC721)), false);
@@ -162,10 +174,10 @@ contract RootChainManagerTest is Test {
         _mapTokens();
 
         // Disable both deposits and exits
-        _updateTokenMigrationStatus(address(dummyRootERC20), true, true, 200);
+        _updateTokenMigrationStatus(address(usdtRootToken), true, true, 200);
 
         // Test that isMigrated returns true when both deposits and exits are disabled
-        assertEq(rootChainManager.isMigrated(address(dummyRootERC20)), true);
+        assertEq(rootChainManager.isMigrated(address(usdtRootToken)), true);
 
         // Other tokens should still return false
         assertEq(rootChainManager.isMigrated(address(dummyRootERC721)), false);
@@ -176,20 +188,59 @@ contract RootChainManagerTest is Test {
         _mapTokens();
 
         // First, fully migrate the token
-        _updateTokenMigrationStatus(address(dummyRootERC20), true, true, 500);
-        assertEq(rootChainManager.isMigrated(address(dummyRootERC20)), true);
+        _updateTokenMigrationStatus(address(usdtRootToken), true, true, 500);
+        assertEq(rootChainManager.isMigrated(address(usdtRootToken)), true);
 
         // Then, revert the migration by enabling deposits
-        _updateTokenMigrationStatus(address(dummyRootERC20), false, true, 500);
-        assertEq(rootChainManager.isMigrated(address(dummyRootERC20)), false);
+        _updateTokenMigrationStatus(address(usdtRootToken), false, true, 500);
+        assertEq(rootChainManager.isMigrated(address(usdtRootToken)), false);
 
         // Revert the migration by enabling exits
-        _updateTokenMigrationStatus(address(dummyRootERC20), true, false, 500);
-        assertEq(rootChainManager.isMigrated(address(dummyRootERC20)), false);
+        _updateTokenMigrationStatus(address(usdtRootToken), true, false, 500);
+        assertEq(rootChainManager.isMigrated(address(usdtRootToken)), false);
 
         // Both should be enabled again
-        _updateTokenMigrationStatus(address(dummyRootERC20), false, false, 0);
-        assertEq(rootChainManager.isMigrated(address(dummyRootERC20)), false);
+        _updateTokenMigrationStatus(address(usdtRootToken), false, false, 0);
+        assertEq(rootChainManager.isMigrated(address(usdtRootToken)), false);
+    }
+
+    function test_cleanMapToken_revert() public {
+        _mapTokens();
+
+        address nonAdmin = makeAddr("nonAdmin");
+        vm.expectRevert("RootChainManager: INSUFFICIENT_PERMISSIONS");
+        vm.prank(nonAdmin);
+        rootChainManager.cleanMapToken(address(dummyRootERC20), dummyChildERC20);
+
+        // Should revert when trying to clean USDT mapping
+        vm.expectRevert("RootChainManager: USDT_NOT_ALLOWED");
+        vm.prank(owner);
+        rootChainManager.cleanMapToken(address(usdtRootToken), usdtChildToken);
+    }
+
+    function test_cleanMapToken() public {
+        _mapTokens();
+
+        // Verify tokens are mapped before cleaning
+        assertEq(rootChainManager.rootToChildToken(address(dummyRootERC20)), dummyChildERC20);
+        assertEq(rootChainManager.childToRootToken(dummyChildERC20), address(dummyRootERC20));
+        assertEq(rootChainManager.tokenToType(address(dummyRootERC20)), PREDICATE_ERC20);
+
+        // Test successful clean
+        vm.expectEmit();
+        emit TokenMapped(address(dummyRootERC20), dummyChildERC20, bytes32(0));
+        vm.prank(owner);
+        rootChainManager.cleanMapToken(address(dummyRootERC20), dummyChildERC20);
+
+        // Verify tokens are unmapped after cleaning
+        assertEq(rootChainManager.rootToChildToken(address(dummyRootERC20)), address(0));
+        assertEq(rootChainManager.childToRootToken(dummyChildERC20), address(0));
+        assertEq(rootChainManager.tokenToType(address(dummyRootERC20)), bytes32(0));
+
+        // Test that other tokens are still mapped
+        assertEq(rootChainManager.rootToChildToken(address(usdtRootToken)), usdtChildToken);
+        assertEq(rootChainManager.childToRootToken(usdtChildToken), address(usdtRootToken));
+        assertEq(rootChainManager.tokenToType(address(usdtRootToken)), PREDICATE_ERC20);
     }
 
     function _generateSyncData(bytes32 action, address user, address rootToken, bytes memory depositData)
@@ -212,6 +263,7 @@ contract RootChainManagerTest is Test {
 
     function _mapTokens() internal {
         vm.startPrank(owner);
+        rootChainManager.mapToken(address(usdtRootToken), usdtChildToken, PREDICATE_ERC20);
         rootChainManager.mapToken(address(dummyRootERC20), dummyChildERC20, PREDICATE_ERC20);
         rootChainManager.mapToken(address(dummyRootERC721), dummyChildERC721, PREDICATE_ERC721);
         rootChainManager.mapToken(address(dummyRootERC1155), dummyChildERC1155, PREDICATE_ERC1155);
