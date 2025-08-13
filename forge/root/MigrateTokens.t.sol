@@ -74,6 +74,7 @@ contract MigrateTokens is Test {
         vm.expectRevert("RootChainManager: NOT_MIGRATED");
         rootChainManager.migrateBridgeFunds(address(usdtRootToken), bytes(""));
 
+        // @note since only the USDT token is able to migrate, we use USDT for this test
         rootChainManager.updateTokenMigrationStatus(
             address(usdtRootToken),
             true, // isDepositDisabled

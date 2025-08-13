@@ -335,9 +335,12 @@ contract('RootChainManager', async (accounts) => {
     const isDepositDisable = false
     const isExitDisabled = true
     const usdtAddress = '0xdAC17F958D2ee523a2206206994597C13D831ec7'
+    const childUsdtAddress = '0xc2132D05D31c914a87C6611C10748AEb04B58e8F'
     let checkpointData
     let contracts
-    let dummyERC20
+    let usdt
+    let usdtChild
+    let rootDummyERC20
     let childDummyERC20
     let exitTx
     let headerNumber
@@ -349,37 +352,71 @@ contract('RootChainManager', async (accounts) => {
 
     before(async () => {
       contracts = await deployInitializedContracts(accounts)
-      // Deploy DummyERC20 as USDT since only USDT is allowed to be migrated
+      // Deploy USDT separately since only USDT is allowed to be migrated
       const DummyERC20 = await ethers.getContractFactory('DummyERC20')
-      const dummyERC20Artifact = await artifacts.readArtifact('DummyERC20')
-      const runtimeBytecode = dummyERC20Artifact.deployedBytecode
+      const dummyUsdtArtifact = await artifacts.readArtifact('DummyERC20')
+      const runtimeBytecode = dummyUsdtArtifact.deployedBytecode
       await network.provider.send('hardhat_setCode', [usdtAddress, runtimeBytecode])
-      dummyERC20 = DummyERC20.attach(usdtAddress)
-      console.log('dummyERC20.target:', dummyERC20.target)
-
-      await dummyERC20.mint(depositAmount * 10n) // Mint enough for multiple deposits
+      usdt = DummyERC20.attach(usdtAddress)
+      await usdt.mint(depositAmount * 10n) // Mint enough for multiple deposits
+      // Deploy Child USDT separately
+      const DummyERC20Child = await ethers.getContractFactory('ChildERC20')
+      const dummyUsdtChildArtifact = await artifacts.readArtifact('ChildERC20')
+      const childRuntimeBytecode = dummyUsdtChildArtifact.deployedBytecode
+      await network.provider.send('hardhat_setCode', [childUsdtAddress, childRuntimeBytecode])
+      usdtChild = DummyERC20Child.attach(childUsdtAddress)
 
       rootChainManager = contracts.root.rootChainManager
-      let migrationManagerRole = ethers.toUtf8Bytes('MIGRATION_MANAGER_ROLE')
-      await rootChainManager.grantRole(keccak256(migrationManagerRole), migrationManager)
+      let migrationManagerRole = await rootChainManager.MIGRATION_MANAGER_ROLE()
+      await rootChainManager.grantRole(migrationManagerRole, migrationManager)
       childChainManager = contracts.child.childChainManager
+      rootDummyERC20 = contracts.root.dummyERC20
       childDummyERC20 = contracts.child.dummyERC20
+      await rootDummyERC20.mint(depositAmount * 10n)
 
-      // manually map usdt to child token
-      await setRootToChildMapping(rootChainManager.target, usdtAddress, childDummyERC20.target)
-      await setChildToRootMapping(rootChainManager.target, childDummyERC20.target, usdtAddress)
+      // manually map USDT to child token
+      await setRootToChildMapping(rootChainManager.target, usdt.target, usdtChild.target)
+      await setChildToRootMapping(rootChainManager.target, usdtChild.target, usdt.target)
       const ERC20Type = await contracts.root.erc20Predicate.TOKEN_TYPE()
-      await setRootToTokenTypeMapping(rootChainManager.target, usdtAddress, ERC20Type.toString())
+      await setRootToTokenTypeMapping(rootChainManager.target, usdt.target, ERC20Type.toString())
 
-      // manually map childtoken to usdt
-      await setRootToChildMapping(childChainManager.target, usdtAddress, childDummyERC20.target)
-      await setChildToRootMapping(childChainManager.target, childDummyERC20.target, usdtAddress)
+      // manually map childtoken to USDT
+      await setRootToChildMapping(childChainManager.target, usdt.target, usdtChild.target)
+      await setChildToRootMapping(childChainManager.target, usdtChild.target, usdt.target)
+
+      // manually set the DEPOSITOR_ROLE for child USDT to the childChainManager
+      await setDepositorRole(usdtChild.target, childChainManager.target)
     })
 
-    it('Should fail: exit disabled', async () => {
-      await executeExitWorkflow()
+    it('should exit: for regular ERC20', async () => {
+      await executeExitWorkflow(rootDummyERC20, childDummyERC20)
+
+      const logIndex = 0
+      const data = bufferToHex(
+        rlp.encode([
+          headerNumber,
+          bufferToHex(Buffer.concat(checkpointData.proof)),
+          checkpointData.number,
+          checkpointData.timestamp,
+          bufferToHex(checkpointData.transactionsRoot),
+          bufferToHex(checkpointData.receiptsRoot),
+          bufferToHex(checkpointData.receipt),
+          bufferToHex(rlp.encode(checkpointData.receiptParentNodes)),
+          bufferToHex(checkpointData.path),
+          logIndex
+        ])
+      )
+      exitTx = await contracts.root.rootChainManager.connect(await ethers.getSigner(depositReceiver)).exit(data)
+      expect(exitTx).to.exist
+      expect(exitTx)
+        .to.emit(contracts.root.rootChainManager, 'Transfer')
+        .withArgs(mockValues.zeroAddress, depositReceiver, withdrawAmount)
+    })
+
+    it('Should fail: exit disabled for USDT only', async () => {
+      await executeExitWorkflow(usdt, usdtChild)
       lastExitBlockNumber = checkpointData.header.start
-      updateTokenMigrationStatus(dummyERC20.target, isDepositDisable, isExitDisabled, checkpointData.header.start - 1) // set last exit block number to a block before the checkpoint
+      await updateTokenMigrationStatus(usdt.target, isDepositDisable, isExitDisabled, checkpointData.header.start - 1) // set last exit block number to a block before the checkpoint
 
       const logIndex = 0
       const data = bufferToHex(
@@ -485,35 +522,35 @@ contract('RootChainManager', async (accounts) => {
     })
 
     it('Should exit: after enabling again', async () => {
-      await updateTokenMigrationStatus(dummyERC20.target, isDepositDisable, false, lastExitBlockNumber)
+      await updateTokenMigrationStatus(usdt.target, isDepositDisable, false, lastExitBlockNumber)
       await startExit()
     })
 
     it('Should exit: lastExitBlockNumber greater than the l2 exit block number', async () => {
-      await executeExitWorkflow()
+      await executeExitWorkflow(usdt, usdtChild)
       lastExitBlockNumber = checkpointData.header.start + 2 // set last exit block number to a block after the checkpoint
-      await updateTokenMigrationStatus(dummyERC20.target, isDepositDisable, isExitDisabled, lastExitBlockNumber)
+      await updateTokenMigrationStatus(usdt.target, isDepositDisable, isExitDisabled, lastExitBlockNumber)
       await startExit()
     })
 
     it('Should exit: lastExitBlockNumber equal to the l2 exit block number', async () => {
-      await executeExitWorkflow()
+      await executeExitWorkflow(usdt, usdtChild)
       lastExitBlockNumber = checkpointData.header.start
-      await updateTokenMigrationStatus(dummyERC20.target, isDepositDisable, isExitDisabled, lastExitBlockNumber)
+      await updateTokenMigrationStatus(usdt.target, isDepositDisable, isExitDisabled, lastExitBlockNumber)
       await startExit()
     })
 
     it('Should allow old exits to work after blocking newer exits', async () => {
-      await executeExitWorkflow()
+      await executeExitWorkflow(usdt, usdtChild)
       const olderCheckpointData = checkpointData
       const olderHeaderNumber = headerNumber
 
-      await executeExitWorkflow()
+      await executeExitWorkflow(usdt, usdtChild)
       const newCheckpointData = checkpointData
       const newHeaderNumber = headerNumber
 
       await updateTokenMigrationStatus(
-        dummyERC20.target,
+        usdt.target,
         isDepositDisable,
         isExitDisabled,
         newCheckpointData.header.start - 1
@@ -578,6 +615,54 @@ contract('RootChainManager', async (accounts) => {
       await network.provider.send('evm_mine', [])
     }
 
+    async function setDepositorRole(childToken, depositorAddress) {
+      // DEPOSITOR_ROLE = keccak256("DEPOSITOR_ROLE")
+      const DEPOSITOR_ROLE = await childDummyERC20.DEPOSITOR_ROLE()
+
+      // _roles mapping is at slot 6 in ChildERC20
+      const rolesSlot = 6n
+
+      // Calculate the storage slot for _roles[DEPOSITOR_ROLE]
+      const roleDataSlot = keccak256(abi.encode(['bytes32', 'uint256'], [DEPOSITOR_ROLE, rolesSlot]))
+
+      // RoleData struct layout:
+      // - members._inner._values.length (slot A)
+      // - members._inner._indexes mapping (slot A+1)
+      // - adminRole (slot A+2)
+
+      // Set the array length to 1 (we're adding one address)
+      const arrayLengthSlot = roleDataSlot
+      await network.provider.send('hardhat_setStorageAt', [
+        getAddress(childToken),
+        arrayLengthSlot,
+        '0x0000000000000000000000000000000000000000000000000000000000000001'
+      ])
+
+      // Set the first element of the array (the depositor address as bytes32)
+      const arrayElementSlot = keccak256(abi.encode(['uint256'], [arrayLengthSlot]))
+      const depositorBytes32 = zeroPadValue(getAddress(depositorAddress), 32)
+      await network.provider.send('hardhat_setStorageAt', [getAddress(childToken), arrayElementSlot, depositorBytes32])
+
+      // Set the index mapping: _indexes[depositorBytes32] = 1 (position in array + 1)
+      const indexesMapSlot = BigInt(roleDataSlot) + 1n
+      const indexMappingSlot = keccak256(abi.encode(['bytes32', 'uint256'], [depositorBytes32, indexesMapSlot]))
+      await network.provider.send('hardhat_setStorageAt', [
+        getAddress(childToken),
+        indexMappingSlot,
+        '0x0000000000000000000000000000000000000000000000000000000000000001'
+      ])
+
+      // Set adminRole to DEFAULT_ADMIN_ROLE (0x00) at slot A+2
+      const adminRoleSlot = BigInt(roleDataSlot) + 2n
+      await network.provider.send('hardhat_setStorageAt', [
+        getAddress(childToken),
+        `0x${adminRoleSlot.toString(16)}`,
+        '0x0000000000000000000000000000000000000000000000000000000000000000'
+      ])
+
+      await network.provider.send('evm_mine', [])
+    }
+
     async function setRootToTokenTypeMapping(manager, rootToken, tokenType) {
       const p = 5n
       const slot = keccak256(abi.encode(['address', 'uint256'], [getAddress(rootToken), p]))
@@ -587,7 +672,7 @@ contract('RootChainManager', async (accounts) => {
       await network.provider.send('evm_mine', [])
     }
 
-    async function executeExitWorkflow() {
+    async function executeExitWorkflow(dummyERC20, dummyChildERC20) {
       // Approve and deposit
       await dummyERC20.approve(contracts.root.erc20Predicate.target, depositAmount)
       const depositTx = await rootChainManager.depositFor(depositReceiver, dummyERC20.target, depositData)
@@ -598,13 +683,11 @@ contract('RootChainManager', async (accounts) => {
       expect(syncTx).to.exist
 
       // Withdraw
-      withdrawTx = await contracts.child.dummyERC20
-        .connect(await ethers.getSigner(depositReceiver))
-        .withdraw(withdrawAmount)
+      withdrawTx = await dummyChildERC20.connect(await ethers.getSigner(depositReceiver)).withdraw(withdrawAmount)
       expect(withdrawTx).to.exist
 
       expect(withdrawTx)
-        .to.emit(contracts.child.dummyERC20, 'Transfer')
+        .to.emit(dummyChildERC20, 'Transfer')
         .withArgs(depositReceiver, mockValues.zeroAddress, withdrawAmount)
 
       await withdrawTx.wait()

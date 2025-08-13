@@ -212,8 +212,9 @@ contract RootChainManagerTest is Test {
         vm.prank(nonAdmin);
         rootChainManager.cleanMapToken(address(dummyRootERC20), dummyChildERC20);
 
-        // Should revert when trying to clean USDT mapping
-        vm.expectRevert("RootChainManager: USDT_NOT_ALLOWED");
+        // Should revert when trying to clean migrated token
+        _updateTokenMigrationStatus(address(usdtRootToken), true, true, 0);
+        vm.expectRevert("RootChainManager: CANNOT_CLEAN_MIGRATED_TOKEN");
         vm.prank(owner);
         rootChainManager.cleanMapToken(address(usdtRootToken), usdtChildToken);
     }
@@ -236,6 +237,53 @@ contract RootChainManagerTest is Test {
         assertEq(rootChainManager.rootToChildToken(address(dummyRootERC20)), address(0));
         assertEq(rootChainManager.childToRootToken(dummyChildERC20), address(0));
         assertEq(rootChainManager.tokenToType(address(dummyRootERC20)), bytes32(0));
+
+        // Test that other tokens are still mapped
+        assertEq(rootChainManager.rootToChildToken(address(usdtRootToken)), usdtChildToken);
+        assertEq(rootChainManager.childToRootToken(usdtChildToken), address(usdtRootToken));
+        assertEq(rootChainManager.tokenToType(address(usdtRootToken)), PREDICATE_ERC20);
+    }
+
+    function test_remapToken_revert() public {
+        _mapTokens();
+
+        address nonAdmin = makeAddr("nonAdmin");
+        address newChildToken = makeAddr("newChildToken");
+
+        vm.expectRevert("RootChainManager: INSUFFICIENT_PERMISSIONS");
+        vm.prank(nonAdmin);
+        rootChainManager.remapToken(address(dummyRootERC20), newChildToken, PREDICATE_ERC20);
+
+        // Should revert when trying to remap migrated token
+        _updateTokenMigrationStatus(address(usdtRootToken), true, true, 0);
+        vm.expectRevert("RootChainManager: CANNOT_REMAP_MIGRATED_TOKEN");
+        vm.prank(owner);
+        rootChainManager.remapToken(address(usdtRootToken), newChildToken, PREDICATE_ERC20);
+    }
+
+    function test_remapToken() public {
+        _mapTokens();
+
+        address newChildToken = makeAddr("newChildToken");
+
+        // Verify tokens are mapped before remapping
+        assertEq(rootChainManager.rootToChildToken(address(dummyRootERC20)), dummyChildERC20);
+        assertEq(rootChainManager.childToRootToken(dummyChildERC20), address(dummyRootERC20));
+        assertEq(rootChainManager.tokenToType(address(dummyRootERC20)), PREDICATE_ERC20);
+
+        // Test successful remap - should emit TokenMapped event with new mapping
+        vm.expectEmit();
+        emit TokenMapped(address(dummyRootERC20), newChildToken, PREDICATE_ERC20);
+        vm.prank(owner);
+        rootChainManager.remapToken(address(dummyRootERC20), newChildToken, PREDICATE_ERC20);
+
+        // Verify tokens are remapped correctly
+        assertEq(rootChainManager.rootToChildToken(address(dummyRootERC20)), newChildToken);
+        assertEq(rootChainManager.childToRootToken(newChildToken), address(dummyRootERC20));
+        assertEq(rootChainManager.tokenToType(address(dummyRootERC20)), PREDICATE_ERC20);
+
+        // Verify old child token mapping is cleaned up
+        assertEq(rootChainManager.childToRootToken(dummyChildERC20), address(0));
 
         // Test that other tokens are still mapped
         assertEq(rootChainManager.rootToChildToken(address(usdtRootToken)), usdtChildToken);

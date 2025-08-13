@@ -198,7 +198,7 @@ contract RootChainManager is
         address rootToken,
         address childToken
     ) external override only(DEFAULT_ADMIN_ROLE) {
-        require(rootToken != USDT_ADDRESS, "RootChainManager: USDT_NOT_ALLOWED");
+        require(!isMigrated(rootToken), "RootChainManager: CANNOT_CLEAN_MIGRATED_TOKEN");
         rootToChildToken[rootToken] = address(0);
         childToRootToken[childToken] = address(0);
         tokenToType[rootToken] = bytes32(0);
@@ -218,7 +218,7 @@ contract RootChainManager is
         address childToken,
         bytes32 tokenType
     ) external override only(DEFAULT_ADMIN_ROLE) {
-        require(rootToken != USDT_ADDRESS, "RootChainManager: USDT_NOT_ALLOWED");
+        require(!isMigrated(rootToken), "RootChainManager: CANNOT_REMAP_MIGRATED_TOKEN");
         // cleanup old mapping
         address oldChildToken = rootToChildToken[rootToken];
         address oldRootToken = childToRootToken[childToken];
