@@ -4,14 +4,14 @@ pragma solidity ^0.8.4;
 import "forge-std/Test.sol";
 
 import {UChildUSDT0} from "scripts/helpers/interfaces/UChildUSDT0.generated.sol";
-import {UpgradeToUSDT0} from "../../scripts/forge/UpgradeToUSDT0.s.sol";
-import {UpdateImplementationPOS} from "../../scripts/forge/UpdateImplementationPOS.s.sol";
-import {TransferOwnershipPOS} from "../../scripts/forge/TransferOwnershipPOS.s.sol";
+import {UpgradeToUSDT0} from "scripts/forge/upgrade-to-usdt0/UpgradeToUSDT0.s.sol";
+import {UpdateImplementationMultisig} from "scripts/forge/update-impl-multisig/UpdateImplementationMultisig.s.sol";
+import {TransferOwnership} from "scripts/forge/transfer-ownership/TransferOwnership.s.sol";
 
 contract ForkUpgradeToUSDT0 is Test {
     UpgradeToUSDT0 public upgradeToUSDT0;
-    UpdateImplementationPOS public updateImplementationPOS;
-    TransferOwnershipPOS public transferOwnershipPOS;
+    UpdateImplementationMultisig public updateImplementationMultisig;
+    TransferOwnership public transferOwnership;
 
     address balanceHolder = address(0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174);
     address multisig = address(0x3a635c48836E7c0B9aEB378640B0BfD516985cF5);
@@ -22,14 +22,13 @@ contract ForkUpgradeToUSDT0 is Test {
     address usdtProxy = address(0xc2132D05D31c914a87C6611C10748AEb04B58e8F);
 
     Account deployer = makeAccount("deployer");
-    string contractName = "UChildUSDT0";
 
     function setUp() public {
         vm.createSelectFork(vm.rpcUrl("polygon_pos"));
 
         upgradeToUSDT0 = new UpgradeToUSDT0();
-        updateImplementationPOS = new UpdateImplementationPOS();
-        transferOwnershipPOS = new TransferOwnershipPOS();
+        updateImplementationMultisig = new UpdateImplementationMultisig();
+        transferOwnership = new TransferOwnership();
     }
 
     function testUpgradeToUSDT0() public {
@@ -38,8 +37,9 @@ contract ForkUpgradeToUSDT0 is Test {
         string memory inputs = _getUpgradeToUSDT0Inputs(newAdmin, oftContract);
         (, bytes memory initData) = upgradeToUSDT0.run(inputs);
 
-        string memory updateInputs = _getUpdateImplInputs(contractName, usdtProxy, newChildUSDT0Impl, initData);
-        (address newImplementation, bytes memory updateData) = updateImplementationPOS.run(updateInputs);
+        string memory updateInputs = _getUpdateImplInputs(usdtProxy, newChildUSDT0Impl, initData, multisig);
+        (address newImplementation, bytes memory updateData) =
+            updateImplementationMultisig.run(updateInputs, "UChildUSDT0");
 
         vm.prank(multisig);
         (bool success,) = usdtProxy.call(updateData);
@@ -59,44 +59,44 @@ contract ForkUpgradeToUSDT0 is Test {
             "New admin should have DEFAULT_ADMIN_ROLE"
         );
 
-        string memory transferOwnershipInputs = _getTransferOwnershipInputs(newProxyOwner);
-        (, bytes memory transferOwnershipData) = transferOwnershipPOS.run(transferOwnershipInputs);
+        string memory transferOwnershipInputs = _getTransferOwnershipInputs(multisig, newProxyOwner);
+        (, bytes memory transferOwnershipData) = transferOwnership.run(transferOwnershipInputs);
 
         vm.prank(multisig);
         (bool transferSuccess,) = usdtProxy.call(transferOwnershipData);
         vm.assertTrue(transferSuccess, "Transfer ownership failed");
 
-        (,bytes memory proxyOwnerData) = usdtProxy.call(abi.encodeWithSignature("proxyOwner()"));
+        (, bytes memory proxyOwnerData) = usdtProxy.call(abi.encodeWithSignature("proxyOwner()"));
         address proxyOwner = abi.decode(proxyOwnerData, (address));
         vm.assertEq(proxyOwner, newProxyOwner, "Proxy owner mismatch after transfer ownership");
     }
 
     function _getUpgradeToUSDT0Inputs(address _newAdmin, address _oftContract) internal returns (string memory) {
         string memory obj1 = "UUObject";
-        string memory obj2 = "UUValueObject";
-        vm.serializeAddress(obj2, "newAdmin", _newAdmin);
-        string memory output = vm.serializeAddress(obj2, "oftContract", _oftContract);
-        return vm.serializeString(obj1, "upgradeToUSDT0", output);
+        vm.serializeAddress(obj1, "newAdmin", _newAdmin);
+        string memory output = vm.serializeAddress(obj1, "oftContract", _oftContract);
+        return output;
     }
 
-    function _getUpdateImplInputs(string memory _contractName, address _proxyAddress, address _implementationAddress, bytes memory _updateData)
-        internal
-        returns (string memory)
-    {
+    function _getUpdateImplInputs(
+        address _proxyAddress,
+        address _implementationAddress,
+        bytes memory _updateData,
+        address _multisig
+    ) internal returns (string memory) {
         string memory obj1 = "UIObject";
-        string memory obj2 = "UIValueObject";
-        vm.serializeString(obj2, "contractName", _contractName);
-        vm.serializeAddress(obj2, "proxyAddress", _proxyAddress);
-        vm.serializeAddress(obj2, "implementationAddress", _implementationAddress);
-        string memory output = vm.serializeBytes(obj2, "updateData", _updateData);
-        return vm.serializeString(obj1, "upgradeImplementationPOS", output);
+        vm.serializeAddress(obj1, "proxyAddress", _proxyAddress);
+        vm.serializeAddress(obj1, "implementationAddress", _implementationAddress);
+        vm.serializeBytes(obj1, "updateData", _updateData);
+        string memory output = vm.serializeAddress(obj1, "multisig", _multisig);
+        return output;
     }
 
-    function _getTransferOwnershipInputs(address _newOwner) internal returns (string memory) {
+    function _getTransferOwnershipInputs(address _multisig, address _newOwner) internal returns (string memory) {
         string memory obj1 = "TOObject";
-        string memory obj2 = "TOValueObject";
-        string memory output = vm.serializeAddress(obj2, "newOwner", _newOwner);
-        return vm.serializeString(obj1, "transferOwnershipPOS", output);
+        vm.serializeAddress(obj1, "multisig", _multisig);
+        string memory output = vm.serializeAddress(obj1, "newOwner", _newOwner);
+        return output;
     }
 
     function _verifyNewImplementation(address expectedImplementation, address proxyAddress) internal {
