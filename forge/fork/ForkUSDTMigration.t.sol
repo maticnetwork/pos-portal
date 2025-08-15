@@ -19,13 +19,12 @@ contract ForkUSDTMigration is Test {
     bytes32 constant PREDICATE_ERC20 = keccak256("ERC20");
     bytes32 constant MIGRATION_MANAGER_ROLE = keccak256("MIGRATION_MANAGER_ROLE");
 
-    address internal destination = makeAddr("Destination");
-
     address internal childUSDT = 0xc2132D05D31c914a87C6611C10748AEb04B58e8F;
-    address internal multisigOwner1 = 0xA7499Aa6464c078EeB940da2fc95C6aCd010c3Cc;
-    address internal rootChainManagerProxyOwner = 0xCaf0aa768A3AE1297DF20072419Db8Bb8b5C8cEf;
-    address internal timelockController = 0xCaf0aa768A3AE1297DF20072419Db8Bb8b5C8cEf;
+    address internal fundsReceiver = 0x6C96dE32CEa08842dcc4058c14d3aaAD7Fa41dee;
+    address internal migrationManager = 0xFa7D2a996aC6350f4b56C043112Da0366a59b74c;
     address internal multisend = 0xA238CBeb142c10Ef7Ad8442C6D1f9E89e07e7761;
+    address internal multisigOwner1 = 0xAB4045C93e4eFFa9b325F706C9a690Ed00d08958;
+    address internal timelockController = 0xCaf0aa768A3AE1297DF20072419Db8Bb8b5C8cEf;
 
     IERC20 internal usdt = IERC20(0xdAC17F958D2ee523a2206206994597C13D831ec7);
     ERC20Predicate internal erc20PredicateProxy = ERC20Predicate(0x40ec5B33f54e0E8A33A975908C5BA1c14e5BbbDf);
@@ -41,7 +40,7 @@ contract ForkUSDTMigration is Test {
     function setUp() public {
         Account memory deployer = makeAccount("Deployer");
         vm.setEnv("PRIVATE_KEY", vm.toString(deployer.key));
-        vm.createSelectFork(vm.rpcUrl("mainnet"), 22670312);
+        vm.createSelectFork(vm.rpcUrl("mainnet"));
         updateImplementationScript = new UpdateImplementation();
         updateTokenMigrationStatusScript = new UpdateTokenMigrationStatus();
         migrateBridgeFundsScript = new MigrateBridgeFunds();
@@ -54,7 +53,7 @@ contract ForkUSDTMigration is Test {
             updateImplementationScript.run(input);
 
         // Step 2: Generate grant role data: Grant MIGRATION_MANAGER_ROLE to multisig
-        string memory grantRoleInput = _getGrantRoleInputs("MIGRATION_MANAGER_ROLE", address(safeMultisig));
+        string memory grantRoleInput = _getGrantRoleInputs("MIGRATION_MANAGER_ROLE", migrationManager);
         bytes memory grantRoleData = grantRoleScript.run(grantRoleInput);
 
         _changeSafeThreshold(1); // Set the Safe threshold to 1 for easy execution
@@ -72,7 +71,7 @@ contract ForkUSDTMigration is Test {
 
         // Verify that the role was granted as part of the batch
         assertTrue(
-            rootChainManagerProxy.hasRole(MIGRATION_MANAGER_ROLE, address(safeMultisig)),
+            rootChainManagerProxy.hasRole(MIGRATION_MANAGER_ROLE, migrationManager),
             "Migration Manager role should be granted to the multisig"
         );
 
@@ -95,25 +94,32 @@ contract ForkUSDTMigration is Test {
     }
 
     function test_rollback_RootChainManager() public {
+        address previousImplementation = 0x639f13D5f30B47c792b6851238c05D0b623C77DE;
+
         bytes32 migrationManagerRole = rootChainManagerProxy.MIGRATION_MANAGER_ROLE();
         assertTrue(
-            rootChainManagerProxy.hasRole(migrationManagerRole, address(safeMultisig)),
+            rootChainManagerProxy.hasRole(migrationManagerRole, migrationManager),
             "Migration Manager role should be granted to the multisig"
         );
 
-        address previousImplementation = 0x639f13D5f30B47c792b6851238c05D0b623C77DE;
+        // @todo: update with proper salt
+        bytes memory timelockScheduleData =
+            hex"01d5062a000000000000000000000000a0c68c638235ee32657e8f720a23cec1bfc77c77000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c000000000000000000000000000000000000000000000000000000000000000007a66cf4e1fbdd0411bfcbe0e0e917ba268e8712d17346aaf1f06c88a71b77d5800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000024025b22bc000000000000000000000000639f13d5f30b47c792b6851238c05d0b623c77de00000000000000000000000000000000000000000000000000000000";
+        bytes memory timelockExecuteData =
+            hex"134008d3000000000000000000000000a0c68c638235ee32657e8f720a23cec1bfc77c77000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000a000000000000000000000000000000000000000000000000000000000000000007a66cf4e1fbdd0411bfcbe0e0e917ba268e8712d17346aaf1f06c88a71b77d580000000000000000000000000000000000000000000000000000000000000024025b22bc000000000000000000000000639f13d5f30b47c792b6851238c05d0b623c77de00000000000000000000000000000000000000000000000000000000";
+        bytes memory revokeRoleData = hex"d547741f739a51874800ca2ea551f6738888eda63da7b0ffed906ab18243498239604e96000000000000000000000000fa7d2a996ac6350f4b56c043112da0366a59b74c";
 
-        bytes memory updateData =
-            abi.encodeCall(AccessControlMixin.revokeRole, (migrationManagerRole, address(safeMultisig)));
-        string memory input = _getUpdateImplInputs(
-            "RootChainManager", address(rootChainManagerProxy), previousImplementation, updateData, 0
-        );
+        _executeScheduleOperation(timelockScheduleData);
+        bytes[] memory transactionsData = new bytes[](2);
+        transactionsData[0] = timelockExecuteData;
+        transactionsData[1] = revokeRoleData;
+        address[] memory targets = new address[](2);
+        targets[0] = timelockController;
+        targets[1] = address(rootChainManagerProxy);
+        _executeViaSafeBatch(transactionsData, targets);
 
-        (, bytes memory timelockScheduleData, bytes memory timelockExecuteData,) = updateImplementationScript.run(input);
-
-        _executeViaSafe(timelockScheduleData, timelockExecuteData);
         _verifyNewImplementation(previousImplementation, address(rootChainManagerProxy));
-        assertFalse(rootChainManagerProxy.hasRole(migrationManagerRole, address(safeMultisig)));
+        assertFalse(rootChainManagerProxy.hasRole(migrationManagerRole, migrationManager));
     }
 
     function test_rollback_ERC20Predicate() public {
@@ -252,6 +258,7 @@ contract ForkUSDTMigration is Test {
         (bool updateSuccess,) = address(rootChainManagerProxy).call(updateCallData);
         assertTrue(updateSuccess, "Failed to disable USDT deposit and exit");
 
+        uint256 fundsReceiverBalanceBefore = usdt.balanceOf(fundsReceiver);
         uint256 usdtPredicateBalanceBefore = usdt.balanceOf(address(erc20PredicateProxy));
         assertGt(usdtPredicateBalanceBefore, 0);
 
@@ -264,7 +271,7 @@ contract ForkUSDTMigration is Test {
             "USDT Predicate Balance Before", string(abi.encodePacked("$", integerPartWithCommas, ".", fractionalStr))
         );
 
-        string memory input = _getMigrateBridgeFundsInputs(address(usdt), destination, usdtPredicateBalanceBefore);
+        string memory input = _getMigrateBridgeFundsInputs(address(usdt), fundsReceiver, usdtPredicateBalanceBefore);
 
         bytes memory callData = migrateBridgeFundsScript.run(input);
         vm.prank(address(safeMultisig));
@@ -275,8 +282,8 @@ contract ForkUSDTMigration is Test {
             usdt.balanceOf(address(erc20PredicateProxy)), 0, "USDT Predicate balance should be zero after migration"
         );
         assertEq(
-            usdt.balanceOf(destination),
-            usdtPredicateBalanceBefore,
+            usdt.balanceOf(fundsReceiver),
+            usdtPredicateBalanceBefore + fundsReceiverBalanceBefore,
             "USDT Receiver balance should be equal to the predicate balance before migration"
         );
     }
