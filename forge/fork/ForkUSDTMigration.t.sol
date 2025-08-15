@@ -47,8 +47,9 @@ contract ForkUSDTMigration is Test {
         grantRoleScript = new GrantRole();
 
         // Step 1:Generate update implementation data: Update RootChainManager implementation
-        string memory input =
-            _getUpdateImplInputs(address(rootChainManagerProxy), address(0), bytes(""), 0, bytes32(0), timelockController);
+        string memory input = _getUpdateImplInputs(
+            address(rootChainManagerProxy), address(0), bytes(""), 0, bytes32(0), timelockController
+        );
         (address newImpl, bytes memory timelockScheduleData, bytes memory timelockExecuteData,) =
             updateImplementationScript.run(input, "RootChainManager");
 
@@ -76,7 +77,8 @@ contract ForkUSDTMigration is Test {
         );
 
         // Step 4: Update the ERC20Predicate implementation
-        input = _getUpdateImplInputs(address(erc20PredicateProxy), address(0), bytes(""), 0, bytes32(0), timelockController);
+        input =
+            _getUpdateImplInputs(address(erc20PredicateProxy), address(0), bytes(""), 0, bytes32(0), timelockController);
         (newImpl, timelockScheduleData, timelockExecuteData,) = updateImplementationScript.run(input, "ERC20Predicate");
         _executeViaSafe(timelockScheduleData, timelockExecuteData);
         _verifyNewImplementation(newImpl, address(erc20PredicateProxy));
@@ -106,7 +108,8 @@ contract ForkUSDTMigration is Test {
             hex"01d5062a000000000000000000000000a0c68c638235ee32657e8f720a23cec1bfc77c77000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c00000000000000000000000000000000000000000000000000000000000000000a0961fe860bb84bb41e62c3c5be685cb04f1ad7893c287f2cbcf5794ae21809800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000024025b22bc000000000000000000000000639f13d5f30b47c792b6851238c05d0b623c77de00000000000000000000000000000000000000000000000000000000";
         bytes memory timelockExecuteData =
             hex"134008d3000000000000000000000000a0c68c638235ee32657e8f720a23cec1bfc77c77000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000a00000000000000000000000000000000000000000000000000000000000000000a0961fe860bb84bb41e62c3c5be685cb04f1ad7893c287f2cbcf5794ae2180980000000000000000000000000000000000000000000000000000000000000024025b22bc000000000000000000000000639f13d5f30b47c792b6851238c05d0b623c77de00000000000000000000000000000000000000000000000000000000";
-        bytes memory revokeRoleData = hex"d547741f739a51874800ca2ea551f6738888eda63da7b0ffed906ab18243498239604e96000000000000000000000000fa7d2a996ac6350f4b56c043112da0366a59b74c";
+        bytes memory revokeRoleData =
+            hex"d547741f739a51874800ca2ea551f6738888eda63da7b0ffed906ab18243498239604e96000000000000000000000000fa7d2a996ac6350f4b56c043112da0366a59b74c";
 
         _executeScheduleOperation(timelockScheduleData);
         bytes[] memory transactionsData = new bytes[](2);

@@ -6,7 +6,7 @@ import {UpdateImplementationTimelock} from "scripts/forge/update-impl-timelock/U
 contract RootChainManagerUpdate is UpdateImplementationTimelock {
     string internal constant CONTRACT_NAME = "RootChainManager";
 
-    function run() override public returns (address, bytes memory, bytes memory, bytes32) {
+    function run() public override returns (address, bytes memory, bytes memory, bytes32) {
         contractName = CONTRACT_NAME;
         return super.run();
     }

@@ -27,9 +27,9 @@ contract UpdateImplementationMultisig is Script {
         return run();
     }
 
-    function run() virtual public returns (address, bytes memory) {
+    function run() public virtual returns (address, bytes memory) {
         _readInputs();
-        if(newImplementation == address(0)) {
+        if (newImplementation == address(0)) {
             console.log("No implementation address provided, deploying a new implementation");
             _deployImplementation();
         }

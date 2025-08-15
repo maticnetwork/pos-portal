@@ -6,7 +6,7 @@ import {UpdateImplementationMultisig} from "scripts/forge/update-impl-multisig/U
 contract UChildUSDT0Update is UpdateImplementationMultisig {
     string internal constant CONTRACT_NAME = "UChildUSDT0";
 
-    function run() override public returns (address, bytes memory) {
+    function run() public override returns (address, bytes memory) {
         contractName = CONTRACT_NAME;
         return super.run();
     }

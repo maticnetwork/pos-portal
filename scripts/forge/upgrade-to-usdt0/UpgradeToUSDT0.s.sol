@@ -24,11 +24,7 @@ contract UpgradeToUSDT0 is Script {
     function run() public returns (address, bytes memory) {
         _readInputs();
 
-        bytes memory data = abi.encodeWithSignature(
-            "upgradeToUSDT0(address,address)",
-            newAdmin,
-            oftContract
-        );
+        bytes memory data = abi.encodeWithSignature("upgradeToUSDT0(address,address)", newAdmin, oftContract);
 
         console.log("************************** CALLDATA START **************************\n");
         console.log("%s\n", vm.toString(data));
@@ -46,7 +42,6 @@ contract UpgradeToUSDT0 is Script {
         }
         newAdmin = vm.parseJsonAddress(inputJson, ".newAdmin");
         oftContract = vm.parseJsonAddress(inputJson, ".oftContract");
-
 
         _checkInputs();
     }

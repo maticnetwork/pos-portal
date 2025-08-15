@@ -6,7 +6,7 @@ import {UpdateImplementationTimelock} from "scripts/forge/update-impl-timelock/U
 contract ERC20PredicateUpdate is UpdateImplementationTimelock {
     string internal constant CONTRACT_NAME = "ERC20Predicate";
 
-    function run() override public returns (address, bytes memory, bytes memory, bytes32) {
+    function run() public override returns (address, bytes memory, bytes memory, bytes32) {
         contractName = CONTRACT_NAME;
         return super.run();
     }

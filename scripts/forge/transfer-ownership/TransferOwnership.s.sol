@@ -12,7 +12,6 @@ contract TransferOwnership is Script {
     string internal input = "scripts/forge/transfer-ownership/input.json";
     bool internal isStringInput; // flag used to determine if input is a string or a file path
 
-
     address internal newOwner;
     address internal multisig;
 
@@ -48,7 +47,6 @@ contract TransferOwnership is Script {
         }
         multisig = vm.parseJsonAddress(inputJson, ".multisig");
         newOwner = vm.parseJsonAddress(inputJson, ".newOwner");
-
 
         _checkInputs();
     }

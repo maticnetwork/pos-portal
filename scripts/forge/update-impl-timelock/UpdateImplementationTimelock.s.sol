@@ -22,14 +22,17 @@ contract UpdateImplementationTimelock is Script {
     bytes32 internal salt;
 
     // Helper function to run the script with a string input helpful for testing
-    function run(string memory _input, string memory _contractName) public returns (address, bytes memory, bytes memory, bytes32) {
+    function run(string memory _input, string memory _contractName)
+        public
+        returns (address, bytes memory, bytes memory, bytes32)
+    {
         isStringInput = true;
         input = _input;
         contractName = _contractName;
         return run();
     }
 
-    function run() virtual public returns (address, bytes memory, bytes memory, bytes32) {
+    function run() public virtual returns (address, bytes memory, bytes memory, bytes32) {
         _readInputs();
         if (newImplementation == address(0)) {
             console.log("No implementation address provided, deploying a new implementation");
