@@ -2,7 +2,7 @@
 pragma solidity ^0.8.29;
 
 import "forge-std/Script.sol";
-import {RootChainManager} from "../../scripts/helpers/interfaces/RootChainManager.generated.sol";
+import {RootChainManager} from "scripts/helpers/interfaces/RootChainManager.generated.sol";
 
 /**
  * @title MigrateBridgeFunds
@@ -10,7 +10,7 @@ import {RootChainManager} from "../../scripts/helpers/interfaces/RootChainManage
  * @dev It supports migrating ERC20 from the root chain to a specified receiver.
  */
 contract MigrateBridgeFunds is Script {
-    string internal input = "scripts/forge/inputs.json";
+    string internal input = "scripts/forge/migrate-bridge-funds/input.json";
     bool internal isStringInput; // flag used to determine if input is a string or a file path
 
     address internal rootToken;
@@ -50,9 +50,9 @@ contract MigrateBridgeFunds is Script {
         } else {
             inputJson = vm.readFile(input);
         }
-        rootToken = vm.parseJsonAddress(inputJson, ".migrateBridgeFunds.rootToken");
-        receiver = vm.parseJsonAddress(inputJson, ".migrateBridgeFunds.receiver");
-        predicateType = vm.parseJsonString(inputJson, ".migrateBridgeFunds.predicateType");
+        rootToken = vm.parseJsonAddress(inputJson, ".rootToken");
+        receiver = vm.parseJsonAddress(inputJson, ".receiver");
+        predicateType = vm.parseJsonString(inputJson, ".predicateType");
 
         bytes32 predicateHash = keccak256(abi.encodePacked(predicateType));
         isERC20 = predicateHash == keccak256("ERC20");
@@ -62,7 +62,7 @@ contract MigrateBridgeFunds is Script {
         }
 
         if (isERC20) {
-            erc20Amount = vm.parseJsonUint(inputJson, ".migrateBridgeFunds.erc20.amount");
+            erc20Amount = vm.parseJsonUint(inputJson, ".erc20.amount");
         }
         _checkInputs();
     }

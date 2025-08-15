@@ -2,19 +2,19 @@
 pragma solidity ^0.8.29;
 
 import "forge-std/Script.sol";
-import {UpgradableProxy} from "../../scripts/helpers/interfaces/UpgradableProxy.generated.sol";
+import {UpgradableProxy} from "scripts/helpers/interfaces/UpgradableProxy.generated.sol";
 
 /**
- * @title TransferOwnershipPOS
+ * @title TransferOwnership
  * @notice This script generates calldata for the `transferOwnership` function of the UpgradableProxy contract.
  */
-contract TransferOwnershipPOS is Script {
-    string internal input = "scripts/forge/inputs.json";
+contract TransferOwnership is Script {
+    string internal input = "scripts/forge/transfer-ownership/input.json";
     bool internal isStringInput; // flag used to determine if input is a string or a file path
 
-    address internal multisig = 0x355b8E02e7F5301E6fac9b7cAc1D6D9c86C0343f;
 
     address internal newOwner;
+    address internal multisig;
 
     // Helper function to run the script with a string input helpful for testing
     function run(string memory _input) public returns (address, bytes memory) {
@@ -46,13 +46,15 @@ contract TransferOwnershipPOS is Script {
         } else {
             inputJson = vm.readFile(input);
         }
-        newOwner = vm.parseJsonAddress(inputJson, ".transferOwnershipPOS.newOwner");
+        multisig = vm.parseJsonAddress(inputJson, ".multisig");
+        newOwner = vm.parseJsonAddress(inputJson, ".newOwner");
 
 
         _checkInputs();
     }
 
     function _checkInputs() internal view {
+        require(multisig != address(0), "Multisig address cannot be zero");
         require(newOwner != address(0), "New owner cannot be zero");
 
         console.log("New Owner:", newOwner);

@@ -2,7 +2,7 @@
 pragma solidity ^0.8.29;
 
 import "forge-std/Script.sol";
-import {RootChainManager} from "../../scripts/helpers/interfaces/RootChainManager.generated.sol";
+import {RootChainManager} from "scripts/helpers/interfaces/RootChainManager.generated.sol";
 
 /**
  * @title UpdateTokenMigrationStatus
@@ -10,7 +10,7 @@ import {RootChainManager} from "../../scripts/helpers/interfaces/RootChainManage
  * @dev It supports updating the migration status of a token for deposits and exits.
  */
 contract UpdateTokenMigrationStatus is Script {
-    string internal input = "scripts/forge/inputs.json";
+    string internal input = "scripts/forge/update-token-migration-status/input.json";
     bool internal isStringInput; // flag used to determine if input is a string or a file path
 
     address internal rootToken;
@@ -46,10 +46,10 @@ contract UpdateTokenMigrationStatus is Script {
         } else {
             inputJson = vm.readFile(input);
         }
-        rootToken = vm.parseJsonAddress(inputJson, ".updateTokenMigrationStatus.rootToken");
-        isDepositDisabled = vm.parseJsonBool(inputJson, ".updateTokenMigrationStatus.isDepositDisabled");
-        isExitDisabled = vm.parseJsonBool(inputJson, ".updateTokenMigrationStatus.isExitDisabled");
-        lastExitBlockNumber = vm.parseJsonUint(inputJson, ".updateTokenMigrationStatus.lastExitBlockNumber");
+        rootToken = vm.parseJsonAddress(inputJson, ".rootToken");
+        isDepositDisabled = vm.parseJsonBool(inputJson, ".isDepositDisabled");
+        isExitDisabled = vm.parseJsonBool(inputJson, ".isExitDisabled");
+        lastExitBlockNumber = vm.parseJsonUint(inputJson, ".lastExitBlockNumber");
 
         _checkInputs();
 

@@ -9,7 +9,7 @@ import {AccessControlMixin} from "scripts/helpers/interfaces/AccessControlMixin.
  * @notice This script generates calldata for the `grantRole` function of the RootChainManager contract.
  */
 contract GrantRole is Script {
-    string internal input = "scripts/forge/inputs.json";
+    string internal input = "scripts/forge/grant-role/input.json";
     bool internal isStringInput; // flag used to determine if input is a string or a file path
 
     bytes32 internal role;
@@ -40,8 +40,8 @@ contract GrantRole is Script {
         } else {
             inputJson = vm.readFile(input);
         }
-        role = keccak256(abi.encodePacked(vm.parseJsonString(inputJson, ".grantRole.role")));
-        account = vm.parseJsonAddress(inputJson, ".grantRole.account");
+        role = keccak256(abi.encodePacked(vm.parseJsonString(inputJson, ".role")));
+        account = vm.parseJsonAddress(inputJson, ".account");
         _checkInputs();
     }
 

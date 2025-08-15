@@ -4,15 +4,15 @@ pragma solidity ^0.8.4;
 import "forge-std/Test.sol";
 
 import {AccessControlMixin} from "scripts/helpers/interfaces/AccessControlMixin.generated.sol";
-import {ERC20Predicate} from "../../scripts/helpers/interfaces/ERC20Predicate.generated.sol";
+import {ERC20Predicate} from "scripts/helpers/interfaces/ERC20Predicate.generated.sol";
 import {Enum} from "safe-smart-account/libraries/Enum.sol";
-import {GrantRole} from "../../scripts/forge/GrantRole.s.sol";
-import {MigrateBridgeFunds} from "../../scripts/forge/MigrateBridgeFunds.s.sol";
-import {RootChainManager} from "../../scripts/helpers/interfaces/RootChainManager.generated.sol";
+import {GrantRole} from "scripts/forge/grant-role/GrantRole.s.sol";
+import {MigrateBridgeFunds} from "scripts/forge/migrate-bridge-funds/MigrateBridgeFunds.s.sol";
+import {RootChainManager} from "scripts/helpers/interfaces/RootChainManager.generated.sol";
 import {Safe} from "safe-smart-account/Safe.sol";
-import {UpdateImplementation} from "../../scripts/forge/UpdateImplementation.s.sol";
-import {UpdateTokenMigrationStatus} from "../../scripts/forge/UpdateTokenMigrationStatus.s.sol";
-import {IERC20} from "../../scripts/helpers/interfaces/IERC20.generated.sol";
+import {UpdateImplementationTimelock} from "scripts/forge/update-impl-timelock/UpdateImplementationTimelock.s.sol";
+import {UpdateTokenMigrationStatus} from "scripts/forge/update-token-migration-status/UpdateTokenMigrationStatus.s.sol";
+import {IERC20} from "scripts/helpers/interfaces/IERC20.generated.sol";
 
 contract ForkUSDTMigration is Test {
     // constants
@@ -34,23 +34,23 @@ contract ForkUSDTMigration is Test {
 
     GrantRole internal grantRoleScript;
     MigrateBridgeFunds internal migrateBridgeFundsScript;
-    UpdateImplementation internal updateImplementationScript;
+    UpdateImplementationTimelock internal updateImplementationScript;
     UpdateTokenMigrationStatus internal updateTokenMigrationStatusScript;
 
     function setUp() public {
         Account memory deployer = makeAccount("Deployer");
         vm.setEnv("PRIVATE_KEY", vm.toString(deployer.key));
         vm.createSelectFork(vm.rpcUrl("mainnet"));
-        updateImplementationScript = new UpdateImplementation();
+        updateImplementationScript = new UpdateImplementationTimelock();
         updateTokenMigrationStatusScript = new UpdateTokenMigrationStatus();
         migrateBridgeFundsScript = new MigrateBridgeFunds();
         grantRoleScript = new GrantRole();
 
         // Step 1:Generate update implementation data: Update RootChainManager implementation
         string memory input =
-            _getUpdateImplInputs("RootChainManager", address(rootChainManagerProxy), address(0), bytes(""), 0);
+            _getUpdateImplInputs(address(rootChainManagerProxy), address(0), bytes(""), 0, bytes32(0), timelockController);
         (address newImpl, bytes memory timelockScheduleData, bytes memory timelockExecuteData,) =
-            updateImplementationScript.run(input);
+            updateImplementationScript.run(input, "RootChainManager");
 
         // Step 2: Generate grant role data: Grant MIGRATION_MANAGER_ROLE to multisig
         string memory grantRoleInput = _getGrantRoleInputs("MIGRATION_MANAGER_ROLE", migrationManager);
@@ -76,8 +76,8 @@ contract ForkUSDTMigration is Test {
         );
 
         // Step 4: Update the ERC20Predicate implementation
-        input = _getUpdateImplInputs("ERC20Predicate", address(erc20PredicateProxy), address(0), bytes(""), 0);
-        (newImpl, timelockScheduleData, timelockExecuteData,) = updateImplementationScript.run(input);
+        input = _getUpdateImplInputs(address(erc20PredicateProxy), address(0), bytes(""), 0, bytes32(0), timelockController);
+        (newImpl, timelockScheduleData, timelockExecuteData,) = updateImplementationScript.run(input, "ERC20Predicate");
         _executeViaSafe(timelockScheduleData, timelockExecuteData);
         _verifyNewImplementation(newImpl, address(erc20PredicateProxy));
 
@@ -326,28 +326,28 @@ contract ForkUSDTMigration is Test {
     // Helper to write the inputs for the grant role script
     function _getGrantRoleInputs(string memory role, address account) internal returns (string memory) {
         string memory obj1 = "GRObject";
-        string memory obj2 = "GRValueObject";
-        vm.serializeString(obj2, "role", role);
-        string memory output = vm.serializeAddress(obj2, "account", account);
-        return vm.serializeString(obj1, "grantRole", output);
+        vm.serializeString(obj1, "role", role);
+        string memory output = vm.serializeAddress(obj1, "account", account);
+        return output;
     }
 
     // Helper to write the inputs for the update implementation script
     function _getUpdateImplInputs(
-        string memory contractName,
         address proxyAddress,
         address implementationAddress,
         bytes memory updateData,
-        uint256 delay
+        uint256 delay,
+        bytes32 salt,
+        address timelock
     ) internal returns (string memory) {
         string memory obj1 = "UIObject";
-        string memory obj2 = "UIValueObject";
-        vm.serializeString(obj2, "contractName", contractName);
-        vm.serializeAddress(obj2, "proxyAddress", proxyAddress);
-        vm.serializeAddress(obj2, "implementationAddress", implementationAddress);
-        vm.serializeBytes(obj2, "updateData", updateData);
-        string memory output = vm.serializeUint(obj2, "delay", delay);
-        return vm.serializeString(obj1, "upgradeImplementation", output);
+        vm.serializeAddress(obj1, "proxyAddress", proxyAddress);
+        vm.serializeAddress(obj1, "implementationAddress", implementationAddress);
+        vm.serializeBytes(obj1, "updateData", updateData);
+        vm.serializeUint(obj1, "delay", delay);
+        vm.serializeBytes32(obj1, "salt", salt);
+        string memory output = vm.serializeAddress(obj1, "timelock", timelock);
+        return output;
     }
 
     // Helper to write the inputs for the update token migration status script
@@ -358,12 +358,11 @@ contract ForkUSDTMigration is Test {
         uint256 lastExitBlockNumber
     ) internal returns (string memory) {
         string memory obj1 = "UTSSObject";
-        string memory obj2 = "UTSSValueObject";
-        vm.serializeAddress(obj2, "rootToken", rootToken);
-        vm.serializeBool(obj2, "isDepositDisabled", isDepositDisabled);
-        vm.serializeBool(obj2, "isExitDisabled", isExitDisabled);
-        string memory output = vm.serializeUint(obj2, "lastExitBlockNumber", lastExitBlockNumber);
-        return vm.serializeString(obj1, "updateTokenMigrationStatus", output);
+        vm.serializeAddress(obj1, "rootToken", rootToken);
+        vm.serializeBool(obj1, "isDepositDisabled", isDepositDisabled);
+        vm.serializeBool(obj1, "isExitDisabled", isExitDisabled);
+        string memory output = vm.serializeUint(obj1, "lastExitBlockNumber", lastExitBlockNumber);
+        return output;
     }
 
     // Helper to write the inputs for the migrate bridge funds script
@@ -372,14 +371,13 @@ contract ForkUSDTMigration is Test {
         returns (string memory)
     {
         string memory obj1 = "MBFObject";
-        string memory obj2 = "MBFValueObject";
-        string memory obj3 = "ERC20ValueObject";
-        vm.serializeAddress(obj2, "rootToken", rootToken);
-        vm.serializeAddress(obj2, "receiver", receiver);
-        vm.serializeString(obj2, "predicateType", "ERC20");
-        string memory output1 = vm.serializeUint(obj3, "amount", amount);
-        string memory output2 = vm.serializeString(obj2, "erc20", output1);
-        return vm.serializeString(obj1, "migrateBridgeFunds", output2);
+        string memory obj2 = "ERC20ValueObject";
+        vm.serializeAddress(obj1, "rootToken", rootToken);
+        vm.serializeAddress(obj1, "receiver", receiver);
+        vm.serializeString(obj1, "predicateType", "ERC20");
+        string memory output1 = vm.serializeUint(obj2, "amount", amount);
+        string memory output2 = vm.serializeString(obj1, "erc20", output1);
+        return output2;
     }
 
     // Helper to verify the new implementation address

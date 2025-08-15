@@ -2,32 +2,32 @@
 pragma solidity ^0.8.29;
 
 import "forge-std/Script.sol";
-import {UpgradableProxy} from "../../scripts/helpers/interfaces/UpgradableProxy.generated.sol";
+import {UpgradableProxy} from "scripts/helpers/interfaces/UpgradableProxy.generated.sol";
 
 /**
- * @title UpdateImplementationPOS
- * @notice This script generates calldata for the `updateImplementation` function of the UpgradableProxy contract.
+ * @title UpdateImplementationMultisig
+ * @notice This script generates calldata for the `updateImplementation` or the `updateAndCall` function of the UpgradableProxy contract which is sent via the multisig.
  */
-contract UpdateImplementationPOS is Script {
-    string internal input = "scripts/forge/inputs.json";
+contract UpdateImplementationMultisig is Script {
+    string internal input;
     bool internal isStringInput; // flag used to determine if input is a string or a file path
-
-    address internal multisig = 0x355b8E02e7F5301E6fac9b7cAc1D6D9c86C0343f;
 
     address internal newImplementation;
     address internal proxyAddress;
     string internal contractName;
-    uint256 internal delay;
     bytes internal updateData;
+    uint256 internal delay;
+    address internal multisig;
 
     // Helper function to run the script with a string input helpful for testing
-    function run(string memory _input) public returns (address, bytes memory) {
+    function run(string memory _input, string memory _contractName) public returns (address, bytes memory) {
         isStringInput = true;
         input = _input;
+        contractName = _contractName;
         return run();
     }
 
-    function run() public returns (address, bytes memory) {
+    function run() virtual public returns (address, bytes memory) {
         _readInputs();
         if(newImplementation == address(0)) {
             console.log("No implementation address provided, deploying a new implementation");
@@ -55,16 +55,18 @@ contract UpdateImplementationPOS is Script {
     }
 
     function _readInputs() internal {
+        require(bytes(contractName).length > 0, "Contract name must be provided");
+
         string memory inputJson;
         if (isStringInput) {
             inputJson = input;
         } else {
-            inputJson = vm.readFile(input);
+            inputJson = vm.readFile(string.concat("scripts/forge/update-impl-multisig/", contractName, "/input.json"));
         }
-        proxyAddress = vm.parseJsonAddress(inputJson, ".upgradeImplementationPOS.proxyAddress");
-        contractName = vm.parseJsonString(inputJson, ".upgradeImplementationPOS.contractName");
-        updateData = vm.parseJsonBytes(inputJson, ".upgradeImplementationPOS.updateData");
-        address implementationAddress = vm.parseJsonAddress(inputJson, ".upgradeImplementationPOS.implementationAddress");
+        proxyAddress = vm.parseJsonAddress(inputJson, ".proxyAddress");
+        updateData = vm.parseJsonBytes(inputJson, ".updateData");
+        multisig = vm.parseJsonAddress(inputJson, ".multisig");
+        address implementationAddress = vm.parseJsonAddress(inputJson, ".implementationAddress");
         _checkInputs();
 
         if (implementationAddress != address(0)) {
@@ -76,6 +78,7 @@ contract UpdateImplementationPOS is Script {
     function _checkInputs() internal view {
         require(proxyAddress != address(0), "Proxy address cannot be zero");
         require(bytes(contractName).length > 0, "Contract name cannot be empty");
+        require(multisig != address(0), "Multisig address cannot be zero");
 
         console.log("Contract Name:", contractName);
         console.log("Proxy Address:", proxyAddress);

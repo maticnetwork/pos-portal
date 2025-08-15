@@ -8,7 +8,7 @@ import "forge-std/Script.sol";
  * @notice This script generates calldata for the `upgradeToUSDT0` function of the new USDT0 contract.
  */
 contract UpgradeToUSDT0 is Script {
-    string internal input = "scripts/forge/inputs.json";
+    string internal input = "scripts/forge/upgrade-to-usdt0/input.json";
     bool internal isStringInput; // flag used to determine if input is a string or a file path
 
     address internal newAdmin;
@@ -44,8 +44,8 @@ contract UpgradeToUSDT0 is Script {
         } else {
             inputJson = vm.readFile(input);
         }
-        newAdmin = vm.parseJsonAddress(inputJson, ".upgradeToUSDT0.newAdmin");
-        oftContract = vm.parseJsonAddress(inputJson, ".upgradeToUSDT0.oftContract");
+        newAdmin = vm.parseJsonAddress(inputJson, ".newAdmin");
+        oftContract = vm.parseJsonAddress(inputJson, ".oftContract");
 
 
         _checkInputs();
