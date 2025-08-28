@@ -24,7 +24,7 @@ contract ForkUpgradeToUSDT0 is Test {
     Account deployer = makeAccount("deployer");
 
     function setUp() public {
-        vm.createSelectFork(vm.rpcUrl("polygon_pos"));
+        vm.createSelectFork(vm.rpcUrl("polygon_pos"), 75718151);
 
         upgradeToUSDT0 = new UpgradeToUSDT0();
         updateImplementationMultisig = new UpdateImplementationMultisig();
