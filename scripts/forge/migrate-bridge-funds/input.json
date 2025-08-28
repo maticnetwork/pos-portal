@@ -1,8 +1,0 @@
-{
-  "rootToken": "0xdAC17F958D2ee523a2206206994597C13D831ec7",
-  "receiver": "0x6C96dE32CEa08842dcc4058c14d3aaAD7Fa41dee",
-  "predicateType": "ERC20",
-  "erc20": {
-    "amount": 0
-  }
-}

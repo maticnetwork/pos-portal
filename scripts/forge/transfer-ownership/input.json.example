@@ -1,0 +1,4 @@
+{
+  "previousOwner": "0xPREVIOUS_OWNER_ADDRESS (the address of the previous owner)",
+  "newOwner": "0xNEW_OWNER_ADDRESS (the Ethereum address that will be granted ownership)"
+}

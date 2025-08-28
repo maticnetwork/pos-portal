@@ -13,7 +13,7 @@ contract TransferOwnership is Script {
     bool internal isStringInput; // flag used to determine if input is a string or a file path
 
     address internal newOwner;
-    address internal multisig;
+    address internal previousOwner;
 
     // Helper function to run the script with a string input helpful for testing
     function run(string memory _input) public returns (address, bytes memory) {
@@ -28,7 +28,7 @@ contract TransferOwnership is Script {
         bytes memory data = abi.encodeCall(UpgradableProxy.transferProxyOwnership, (newOwner));
 
         console.log("--------------------------------------------------------------------\n");
-        console.log("Send to Multisig: %s\n", multisig);
+        console.log("Send to: %s\n", previousOwner);
         console.log("--------------------------------------------------------------------\n");
 
         console.log("************************** CALLDATA START **************************\n");
@@ -45,14 +45,14 @@ contract TransferOwnership is Script {
         } else {
             inputJson = vm.readFile(input);
         }
-        multisig = vm.parseJsonAddress(inputJson, ".multisig");
+        previousOwner = vm.parseJsonAddress(inputJson, ".previousOwner");
         newOwner = vm.parseJsonAddress(inputJson, ".newOwner");
 
         _checkInputs();
     }
 
     function _checkInputs() internal view {
-        require(multisig != address(0), "Multisig address cannot be zero");
+        require(previousOwner != address(0), "previousOwner address cannot be zero");
         require(newOwner != address(0), "New owner cannot be zero");
 
         console.log("New Owner:", newOwner);
