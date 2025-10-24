@@ -10,9 +10,11 @@ libs = [
 ]
 remappings = [
     "@openzeppelin/=node_modules/@openzeppelin/",
+    "@openzeppelin-v5/=lib/openzeppelin-contracts-v5/contracts",
     "forge-std/=lib/forge-std/src/",
     "hardhat/=node_modules/hardhat/",
     "truffle/=node_modules/truffle/",
+    "safe-smart-account/=lib/safe-smart-account/contracts/",
 ]
 
 evm_version = "shanghai"
@@ -22,7 +24,7 @@ gas_limit = "18446744073709551615"
 
 ffi = true
 
-fs_permissions = [{ access = "read", path = "./forge/"}, { access = "read", path = "./out/"}, { access = "read", path = "./lib/"}, { access = "read", path = "./test/"}, { access = "read", path = "./contracts/"}]
+fs_permissions = [{ access = "read", path = "./forge/"}, { access = "read", path = "./out/"}, { access = "read", path = "./lib/"}, { access = "read", path = "./test/"}, { access = "read", path = "./contracts/"}, { access = "read", path = "./scripts/"}]
 
 
 [rpc_endpoints]

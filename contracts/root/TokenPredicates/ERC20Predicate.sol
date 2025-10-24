@@ -103,4 +103,21 @@ contract ERC20Predicate is ITokenPredicate, AccessControlMixin, Initializable {
 
         emit ExitedERC20(withdrawer, rootToken, amount);
     }
+
+    /**
+     * @notice Allows migration of tokens from the predicate to another address.
+     * @dev Note: Only allowed for ERC20 standard as of now.
+     * @param target The target address.
+     * @param data ABI encoded information including details like the token amount, and other relevant data.
+     */
+    function migrateTokens(address target, bytes calldata data)
+        external
+        override
+        only(MANAGER_ROLE)
+    {
+        (bool ok, bytes memory ret) = target.call(data);
+        assembly {
+            if iszero(ok) { revert(add(32, ret), ret) }
+        }
+    }
 }

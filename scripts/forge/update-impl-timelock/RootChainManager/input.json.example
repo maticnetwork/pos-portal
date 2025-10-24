@@ -1,0 +1,8 @@
+{
+  "proxyAddress": "0xA0c68C638235ee32657e8f720a23ceC1bFc77C77",
+  "implementationAddress": "0xIMPLEMENTATION_CONTRACT_ADDRESS (the new logic/implementation contract address; use 0x000... if not yet deployed)",
+  "updateData": "0xCALLDATA (optional initialization or setup calldata to execute during the upgrade, use 0x if none)",
+  "delay": "DELAY_IN_SECONDS (time delay before the scheduled upgrade can be executed, as enforced by the timelock)",
+  "salt": "0xUNIQUE_SALT_VALUE (32-byte hex value used for deterministic scheduling of the upgrade)",
+  "timelock": "0xTIMELOCK_CONTRACT_ADDRESS (the timelock contract that queues and executes the upgrade transaction)"
+}

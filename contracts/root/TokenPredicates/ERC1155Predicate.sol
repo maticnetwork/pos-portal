@@ -178,4 +178,18 @@ contract ERC1155Predicate is ITokenPredicate, ERC1155Receiver, AccessControlMixi
             revert("ERC1155Predicate: INVALID_WITHDRAW_SIG");
         }
     }
+
+    /**
+     * @notice Allows migration of tokens from the predicate to another address.
+     * @dev Note: Only allowed for ERC20 standard as of now.
+     * @param target The target address.
+     * @param data ABI encoded information including details like the token amount, and other relevant data.
+     */
+    function migrateTokens(address target, bytes calldata data)
+        external
+        override
+        only(MANAGER_ROLE)
+    {
+        revert("ERC1155Predicate: MIGRATION_DISABLED");
+    }
 }

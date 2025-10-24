@@ -3,6 +3,7 @@ pragma solidity 0.6.6;
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {IRootChainManager} from "./IRootChainManager.sol";
 import {RootChainManagerStorage} from "./RootChainManagerStorage.sol";
+import {RootChainManagerStorageExtension} from "./RootChainManagerStorageExtension.sol";
 import {IStateSender} from "../StateSender/IStateSender.sol";
 import {ICheckpointManager} from "../ICheckpointManager.sol";
 import {RLPReader} from "../../lib/RLPReader.sol";
@@ -23,7 +24,8 @@ contract RootChainManager is
     RootChainManagerStorage, // created to match old storage layout while upgrading
     AccessControlMixin,
     NativeMetaTransaction,
-    ContextMixin
+    ContextMixin,
+    RootChainManagerStorageExtension
 {
     using ExitPayloadReader for bytes;
     using ExitPayloadReader for ExitPayloadReader.ExitPayload;
@@ -38,6 +40,8 @@ contract RootChainManager is
     bytes32 public constant MAP_TOKEN = keccak256("MAP_TOKEN");
     address public constant ETHER_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
     bytes32 public constant MAPPER_ROLE = keccak256("MAPPER_ROLE");
+    bytes32 public constant MIGRATION_MANAGER_ROLE = keccak256("MIGRATION_MANAGER_ROLE");
+    address public constant USDT_ADDRESS = 0xdAC17F958D2ee523a2206206994597C13D831ec7;
 
     constructor() public {
         // Disable initializer on implementation contract
@@ -194,6 +198,7 @@ contract RootChainManager is
         address rootToken,
         address childToken
     ) external override only(DEFAULT_ADMIN_ROLE) {
+        require(!isMigrated(rootToken), "RootChainManager: CANNOT_CLEAN_MIGRATED_TOKEN");
         rootToChildToken[rootToken] = address(0);
         childToRootToken[childToken] = address(0);
         tokenToType[rootToken] = bytes32(0);
@@ -213,6 +218,7 @@ contract RootChainManager is
         address childToken,
         bytes32 tokenType
     ) external override only(DEFAULT_ADMIN_ROLE) {
+        require(!isMigrated(rootToken), "RootChainManager: CANNOT_REMAP_MIGRATED_TOKEN");
         // cleanup old mapping
         address oldChildToken = rootToChildToken[rootToken];
         address oldRootToken = childToRootToken[childToken];
@@ -298,6 +304,9 @@ contract RootChainManager is
         address rootToken,
         bytes memory depositData
     ) private {
+        if (migrationStatus[rootToken].isDepositDisabled) {
+            revert("RootChainManager: DEPOSIT_DISABLED");
+        }
         bytes32 tokenType = tokenToType[rootToken];
         require(
             rootToChildToken[rootToken] != address(0x0) &&
@@ -348,11 +357,12 @@ contract RootChainManager is
         ExitPayloadReader.ExitPayload memory payload = inputData.toExitPayload();
 
         bytes memory branchMaskBytes = payload.getBranchMaskAsBytes();
+        uint256 blockNumber = payload.getBlockNumber();
         // checking if exit has already been processed
         // unique exit is identified using hash of (blockNumber, branchMask, receiptLogIndex)
         bytes32 exitHash = keccak256(
             abi.encodePacked(
-                payload.getBlockNumber(),
+                blockNumber,
                 // first 2 nibbles are dropped while generating nibble array
                 // this allows branch masks that are valid but bypass exitHash check (changing first 2 nibbles only)
                 // so converting to nibble array and then hashing it
@@ -376,6 +386,10 @@ contract RootChainManager is
             rootToken != address(0),
             "RootChainManager: TOKEN_NOT_MAPPED"
         );
+        if (migrationStatus[rootToken].isExitDisabled &&
+            blockNumber > migrationStatus[rootToken].lastExitBlockNumber) { // @note: if the lastExitBlockNumber is the same as the current block number, exits are still allowed
+            revert("RootChainManager: EXIT_DISABLED");
+        }
 
         address predicateAddress = typeToPredicate[
             tokenToType[rootToken]
@@ -415,6 +429,65 @@ contract RootChainManager is
             rootToken,
             log.toRlpBytes()
         );
+    }
+
+    /**
+     * @notice Update the migration status for a given root token.
+     * @dev Allows admin to enable/disable deposits and exits for a token, and set the block number after which exits are stopped.
+     * @param rootToken Address of the root token.
+     * @param isDepositDisable Boolean indicating if deposits are disabled.
+     * @param isExitDisabled Boolean indicating if exits are disabled.
+     * @param lastExitBlockNumber Block number after which exits are stopped for this token.
+     */
+    function updateTokenMigrationStatus(
+      address rootToken,
+      bool isDepositDisable,
+      bool isExitDisabled,
+      uint256 lastExitBlockNumber
+    ) external only(MIGRATION_MANAGER_ROLE) {
+        require(rootToken == USDT_ADDRESS, "RootChainManager: ONLY_USDT_ALLOWED");
+        require(
+            rootToChildToken[rootToken] != address(0),
+            "RootChainManager: TOKEN_NOT_MAPPED"
+        );
+
+        migrationStatus[rootToken] = TokenMigrationStatus(
+          isDepositDisable,
+          isExitDisabled,
+          lastExitBlockNumber
+        );
+
+        emit MigrationStatusChanged(
+            rootToken,
+            isDepositDisable,
+            isExitDisabled,
+            lastExitBlockNumber
+        );
+    }
+
+    /// @notice This function allows the admin to migrate tokens that have been bridged to a new address.
+    /// @dev NOTE: Requires the receiver and the amount to be specified in the `data` parameter for EtherPredicate.
+    /// @param rootToken The address of the ERC token to migrate.
+    /// @param data ABI-encoded data containing migration details.
+    function migrateBridgeFunds(address rootToken, bytes calldata data)
+        external
+        only(MIGRATION_MANAGER_ROLE)
+    {
+        require(rootToChildToken[rootToken] != address(0), "RootChainManager: TOKEN_NOT_MAPPED");
+        require(isMigrated(rootToken), "RootChainManager: NOT_MIGRATED");
+        ITokenPredicate predicate = ITokenPredicate(typeToPredicate[tokenToType[rootToken]]);
+        predicate.migrateTokens(rootToken, data);
+    }
+
+    /**
+     * @notice Check if a token has been fully migrated.
+     * @param rootToken Address of the root token to check migration status.
+     * @return bool indicating if the token is fully migrated (both deposits and exits are disabled).
+     */
+    function isMigrated(address rootToken) public view returns (bool) {
+        // Cache the migration status to avoid multiple storage reads
+        TokenMigrationStatus memory status = migrationStatus[rootToken];
+        return status.isDepositDisabled && status.isExitDisabled;
     }
 
     function _checkBlockMembershipInCheckpoint(
