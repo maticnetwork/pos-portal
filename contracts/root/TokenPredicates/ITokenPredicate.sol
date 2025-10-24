@@ -34,4 +34,15 @@ interface ITokenPredicate {
         address rootToken,
         bytes calldata logRLPList
     ) external;
+
+    /**
+     * @notice Allows migration of tokens from the predicate to another address.
+     * @dev Note: Only allowed for ERC20 standard as of now.
+     * @param target The target address.
+     * @param data ABI encoded information including details like the token amount, and other relevant data.
+     */
+    function migrateTokens(
+        address target,
+        bytes calldata data
+    ) external;
 }

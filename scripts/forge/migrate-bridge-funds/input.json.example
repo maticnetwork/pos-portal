@@ -1,0 +1,8 @@
+{
+  "rootToken": "0xROOT_TOKEN_CONTRACT_ADDRESS (ERC20 token contract on the root chain)",
+  "receiver": "0xRECEIVER_WALLET_ADDRESS (the account that should receive the tokens)",
+  "predicateType": "TOKEN_STANDARD (e.g., ERC20, ERC721, ERC1155)",
+  "erc20": {
+    "amount": "TOKEN_AMOUNT"
+  }
+}

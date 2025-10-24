@@ -1,0 +1,6 @@
+{
+  "proxyAddress": "0xc2132D05D31c914a87C6611C10748AEb04B58e8F",
+  "implementationAddress": "0xIMPLEMENTATION_CONTRACT_ADDRESS (the new logic/implementation contract address; use 0x000... if not yet deployed)",
+  "updateData": "0xCALLDATA (optional initialization or setup calldata to execute during the upgrade, use 0x if none)",
+  "multisig": "0xMULTISIG_CONTRACT_ADDRESS (the multisig wallet authorized to perform the upgrade)"
+}

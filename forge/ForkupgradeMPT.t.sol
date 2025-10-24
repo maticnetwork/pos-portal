@@ -1,7 +1,7 @@
 pragma solidity ^0.8.4;
 
-import {RootChainManagerProxy} from "../scripts/helpers/interfaces/RootChainManagerProxy.generated.sol";
-import {RootChainManager} from "../scripts/helpers/interfaces/RootChainManager.generated.sol";
+import {RootChainManagerProxy} from "scripts/helpers/interfaces/RootChainManagerProxy.generated.sol";
+import {RootChainManager} from "scripts/helpers/interfaces/RootChainManager.generated.sol";
 
 import {ExitPayloadReader} from "./ExitPayloadReader.sol";
 import {MerklePatriciaProof} from "./MerklePatriciaProof.sol";
@@ -33,20 +33,20 @@ contract ForkupgradeMPT is Test {
     bytes32 outOfBalance20Error = keccak256(hex"08c379a00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000002645524332303a205472616e7366657220616d6f756e7420657863656564732062616c616e63650000000000000000000000000000000000000000000000000000");
     bytes32 exceedsBalance20Error = keccak256(hex"08c379a00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000002645524332303a207472616e7366657220616d6f756e7420657863656564732062616c616e63650000000000000000000000000000000000000000000000000000");
     bytes32 safeERC20lowlevelError = keccak256(hex"08c379a0000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000205361666545524332303a206c6f772d6c6576656c2063616c6c206661696c6564");
- 
-    function setUp() public {                             
+
+    function setUp() public {
         mainnetFork = vm.createFork(vm.rpcUrl("mainnet"), 20910000);
         vm.selectFork(mainnetFork);
     }
 
     function test_UpgradeMPTSkipCI() public {
         assertEq(vm.activeFork(), mainnetFork);
-        
+
         address rootChainManagerImpl = deployCode("out/RootChainManager.sol/RootChainManager.json");
-       
+
         vm.prank(address(timelock));
         RootChainManagerProxy(payable(rootChainManagerProxy)).updateImplementation(rootChainManagerImpl);
-        
+
         // load tx to be replayed
         string memory txsJson = vm.readFile("forge/batchExit.json");
         bytes memory txs = vm.parseJson(txsJson);
@@ -69,14 +69,14 @@ contract ForkupgradeMPT is Test {
 
             // Calculate the storage slots we need to manipulate to replay the tx
             bytes32 slotprocessedExits = keccak256(abi.encode(index, 6));
-           
+
             // RootChainManager
             vm.store(rootChainManagerProxy, slotprocessedExits, 0);
-           
+
             // Pretend to be the the exitor and replay tx
             vm.prank(obj.from);
             (bool successSchedule, bytes memory dataSchedule) = rootChainManagerProxy.call(obj.input);
-            if (successSchedule == false) {        
+            if (successSchedule == false) {
                 if(obj.isError) {
                     console.log("successful failure");
                     intentionalError += 1;
@@ -107,7 +107,7 @@ contract ForkupgradeMPT is Test {
                     successesButError += 1;
                     continue;
                 }
-                
+
                 console.log("actual error");
                 console.logBytes(dataSchedule);
                 assembly {

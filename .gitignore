@@ -28,3 +28,4 @@ forge-cache
 artifacts
 out
 scripts/helpers/interfaces
+lib/

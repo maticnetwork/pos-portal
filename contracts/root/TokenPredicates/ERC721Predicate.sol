@@ -138,4 +138,18 @@ contract ERC721Predicate is ITokenPredicate, AccessControlMixin, Initializable, 
 
         emit ExitedERC721(withdrawer, rootToken, tokenId);
     }
+
+    /**
+     * @notice Allows migration of tokens from the predicate to another address.
+     * @dev Note: Only allowed for ERC20 standard as of now.
+     * @param target The target address.
+     * @param data ABI encoded information including details like the token amount, and other relevant data.
+     */
+    function migrateTokens(address target, bytes calldata data)
+        external
+        override
+        only(MANAGER_ROLE)
+    {
+        revert("ERC721Predicate: MIGRATION_DISABLED");
+    }
 }

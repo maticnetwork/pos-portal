@@ -1,0 +1,6 @@
+{
+  "isDepositDisabled": "BOOLEAN_FLAG (true = deposits are disabled for this token, false = deposits are allowed)",
+  "isExitDisabled": "BOOLEAN_FLAG (true = exits/withdrawals are disabled, false = exits are allowed)",
+  "lastExitBlockNumber": "BLOCK_NUMBER (the last root chain block number processed for exits; use 0 if none yet)",
+  "rootToken": "0xROOT_TOKEN_CONTRACT_ADDRESS (the ERC20/ERC721/ERC1155 token contract address on the root chain)"
+}

@@ -63,5 +63,5 @@ jobs:
 
       - name: Run Forge tests
         run: |
-          forge test -vvv --no-match-test "SkipCI"
+          forge test -vvv --no-match-test "SkipCI" --no-match-contract "Fork"
         id: test
