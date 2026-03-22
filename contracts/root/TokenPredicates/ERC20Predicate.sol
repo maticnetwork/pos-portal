@@ -115,9 +115,15 @@ contract ERC20Predicate is ITokenPredicate, AccessControlMixin, Initializable {
         override
         only(MANAGER_ROLE)
     {
+        require(data.length >= 4, "ERC20Predicate: invalid data length");
+        bytes4 selector = data[0] | (bytes4(data[1]) >> 8) | (bytes4(data[2]) >> 16) | (bytes4(data[3]) >> 24);
+        require(
+            selector == bytes4(keccak256("transfer(address,uint256)")),
+            "ERC20Predicate: only transfer allowed"
+        );
         (bool ok, bytes memory ret) = target.call(data);
         assembly {
-            if iszero(ok) { revert(add(32, ret), ret) }
+            if iszero(ok) { revert(add(32, ret), mload(ret)) }
         }
     }
 }
