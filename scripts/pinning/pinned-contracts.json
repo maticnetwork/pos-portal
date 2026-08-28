@@ -1,8 +1,14 @@
 {
-  "_comment": "Inventory of the live PoS bridge: the managers, the token predicates, their immutable proxy shells, and the child-token code that many mapped tokens share. Individually mapped tokens are deliberately NOT tracked — only code that is immutable or shared. 'solc' + 'optimizer' + 'evmVersion' are the settings the contract was DEPLOYED with (from its verified metadata on Sourcify/Etherscan), not the repo defaults: this repo spans three different optimizer configurations. Note that 'runs' matters even when the optimizer is disabled — solc still reads it when choosing the function dispatcher, so the proxy shells reproduce only at (enabled=false, runs<=200). 'liveness' guards against the system being re-pointed at a DIFFERENT address: 'target'+'sig'(+'args') is a call whose returned address must still equal this entry's 'address'. Bytecode at a fixed address is immutable, so the bytecode comparison alone can never catch a proxy upgrade — that has already happened here twice (RootChainManager and ERC20Predicate were both re-pointed in Aug 2025). Add it to anything reached through a pointer. 'knownDrift' documents an entry the repo is deliberately AHEAD of chain on: it reports but does not fail, and the verifier flags the exemption as stale if the contract ever starts reproducing again. 'exclude':true entries are documented but skipped. Deployed-but-out-of-repo contracts (UChildUSDT0, the USDC.e FiatToken suite, WBTC's implementation) live in their own repos and are not tracked here.",
+  "_comment": "Inventory of the live PoS bridge: the managers, the token predicates, their immutable proxy shells, and the child-token code that many mapped tokens share. Individually mapped tokens are deliberately NOT tracked \u2014 only code that is immutable or shared. 'solc' + 'optimizer' + 'evmVersion' are the settings the contract was DEPLOYED with (from its verified metadata on Sourcify/Etherscan), not the repo defaults: this repo spans three different optimizer configurations. Note that 'runs' matters even when the optimizer is disabled \u2014 solc still reads it when choosing the function dispatcher, so the proxy shells reproduce only at (enabled=false, runs<=200). 'liveness' guards against the system being re-pointed at a DIFFERENT address: 'target'+'sig'(+'args') is a call whose returned address must still equal this entry's 'address'. Bytecode at a fixed address is immutable, so the bytecode comparison alone can never catch a proxy upgrade \u2014 that has already happened here twice (RootChainManager and ERC20Predicate were both re-pointed in Aug 2025). Add it to anything reached through a pointer. 'knownDrift' documents an entry the repo is deliberately AHEAD of chain on: it reports but does not fail, and the verifier flags the exemption as stale if the contract ever starts reproducing again. 'exclude':true entries are documented but skipped. Where the live system runs a source this repo has since moved past, the old source is FROZEN under a legacy/ directory rather than recorded as drift \u2014 see contracts/common/legacy/ and contracts/lib/legacy/. Those files are load-bearing: they are the only sources that reproduce their deployments, and editing them silently breaks verification. Deployed-but-out-of-repo contracts (UChildUSDT0, the USDC.e FiatToken suite) live in their own repos and are not tracked here.",
   "rpc": {
-    "1": { "env": "MAINNET_RPC_URL", "default": "https://mainnet.gateway.tenderly.co" },
-    "137": { "env": "POLYGON_POS_RPC_URL", "default": "https://polygon.gateway.tenderly.co" }
+    "1": {
+      "env": "MAINNET_RPC_URL",
+      "default": "https://mainnet.gateway.tenderly.co"
+    },
+    "137": {
+      "env": "POLYGON_POS_RPC_URL",
+      "default": "https://polygon.gateway.tenderly.co"
+    }
   },
   "contracts": [
     {
@@ -12,9 +18,12 @@
       "file": "contracts/root/RootChainManager/RootChainManagerProxy.sol",
       "artifact": "RootChainManagerProxy",
       "solc": "0.6.6",
-      "optimizer": { "enabled": false, "runs": 200 },
+      "optimizer": {
+        "enabled": false,
+        "runs": 200
+      },
       "evmVersion": "istanbul",
-      "note": "Immutable entry point of the whole root bridge; the address every integrator hardcodes. Reproduces from UpgradableProxy, which was restored to its deployed form (the zero-address check in updateImplementation and the public/memory updateAndCall signature) precisely so these shells stay verifiable — they can never be redeployed."
+      "note": "Immutable entry point of the whole root bridge; the address every integrator hardcodes. Reproduces from UpgradableProxy, which was restored to its deployed form (the zero-address check in updateImplementation and the public/memory updateAndCall signature) precisely so these shells stay verifiable \u2014 they can never be redeployed."
     },
     {
       "chain": "1",
@@ -23,7 +32,10 @@
       "file": "contracts/root/TokenPredicates/ERC20PredicateProxy.sol",
       "artifact": "ERC20PredicateProxy",
       "solc": "0.6.6",
-      "optimizer": { "enabled": false, "runs": 200 },
+      "optimizer": {
+        "enabled": false,
+        "runs": 200
+      },
       "evmVersion": "istanbul",
       "liveness": {
         "target": "0xA0c68C638235ee32657e8f720a23ceC1bFc77C77",
@@ -39,7 +51,10 @@
       "file": "contracts/root/TokenPredicates/ERC721PredicateProxy.sol",
       "artifact": "ERC721PredicateProxy",
       "solc": "0.6.6",
-      "optimizer": { "enabled": false, "runs": 200 },
+      "optimizer": {
+        "enabled": false,
+        "runs": 200
+      },
       "evmVersion": "istanbul",
       "liveness": {
         "target": "0xA0c68C638235ee32657e8f720a23ceC1bFc77C77",
@@ -54,7 +69,10 @@
       "file": "contracts/root/TokenPredicates/ERC1155PredicateProxy.sol",
       "artifact": "ERC1155PredicateProxy",
       "solc": "0.6.6",
-      "optimizer": { "enabled": false, "runs": 200 },
+      "optimizer": {
+        "enabled": false,
+        "runs": 200
+      },
       "evmVersion": "istanbul",
       "liveness": {
         "target": "0xA0c68C638235ee32657e8f720a23ceC1bFc77C77",
@@ -69,7 +87,10 @@
       "file": "contracts/root/TokenPredicates/MintableERC20PredicateProxy.sol",
       "artifact": "MintableERC20PredicateProxy",
       "solc": "0.6.6",
-      "optimizer": { "enabled": false, "runs": 200 },
+      "optimizer": {
+        "enabled": false,
+        "runs": 200
+      },
       "evmVersion": "istanbul",
       "liveness": {
         "target": "0xA0c68C638235ee32657e8f720a23ceC1bFc77C77",
@@ -84,7 +105,10 @@
       "file": "contracts/root/TokenPredicates/MintableERC721PredicateProxy.sol",
       "artifact": "MintableERC721PredicateProxy",
       "solc": "0.6.6",
-      "optimizer": { "enabled": false, "runs": 200 },
+      "optimizer": {
+        "enabled": false,
+        "runs": 200
+      },
       "evmVersion": "istanbul",
       "liveness": {
         "target": "0xA0c68C638235ee32657e8f720a23ceC1bFc77C77",
@@ -99,7 +123,10 @@
       "file": "contracts/root/TokenPredicates/MintableERC1155PredicateProxy.sol",
       "artifact": "MintableERC1155PredicateProxy",
       "solc": "0.6.6",
-      "optimizer": { "enabled": false, "runs": 200 },
+      "optimizer": {
+        "enabled": false,
+        "runs": 200
+      },
       "evmVersion": "istanbul",
       "liveness": {
         "target": "0xA0c68C638235ee32657e8f720a23ceC1bFc77C77",
@@ -114,14 +141,17 @@
       "file": "contracts/root/TokenPredicates/ChainExitERC1155PredicateProxy.sol",
       "artifact": "ChainExitERC1155PredicateProxy",
       "solc": "0.6.6",
-      "optimizer": { "enabled": true, "runs": 200 },
+      "optimizer": {
+        "enabled": true,
+        "runs": 200
+      },
       "evmVersion": "istanbul",
       "liveness": {
         "target": "0xA0c68C638235ee32657e8f720a23ceC1bFc77C77",
         "sig": "typeToPredicate(bytes32)(address)",
         "args": "0x316d3b16328ca1dbcc5aeb9caf982584129f3ad000dc7219dd7dd6727f72fe93"
       },
-      "note": "The one proxy shell deployed with the optimizer ON — every other one has it off. Deployed later than the rest, alongside the ChainExit predicate."
+      "note": "The one proxy shell deployed with the optimizer ON \u2014 every other one has it off. Deployed later than the rest, alongside the ChainExit predicate."
     },
     {
       "chain": "1",
@@ -130,7 +160,10 @@
       "file": "contracts/root/TokenPredicates/EtherPredicateProxy.sol",
       "artifact": "EtherPredicateProxy",
       "solc": "0.6.6",
-      "optimizer": { "enabled": false, "runs": 200 },
+      "optimizer": {
+        "enabled": false,
+        "runs": 200
+      },
       "evmVersion": "istanbul",
       "liveness": {
         "target": "0xA0c68C638235ee32657e8f720a23ceC1bFc77C77",
@@ -146,14 +179,17 @@
       "file": "contracts/root/RootChainManager/RootChainManager.sol",
       "artifact": "RootChainManager",
       "solc": "0.6.6",
-      "optimizer": { "enabled": true, "runs": 999999 },
+      "optimizer": {
+        "enabled": true,
+        "runs": 999999
+      },
       "evmVersion": "istanbul",
       "upgradeable": true,
       "liveness": {
         "target": "0xA0c68C638235ee32657e8f720a23ceC1bFc77C77",
         "sig": "implementation()(address)"
       },
-      "note": "UPGRADEABLE impl behind RootChainManagerProxy, redeployed Aug 2025 with the token-bridging pause and the migration-manager role (broadcast/RootChainManagerUpdate.s.sol). Deployed via forge, hence runs=999999 — the older contracts here were deployed via hardhat at runs=200."
+      "note": "UPGRADEABLE impl behind RootChainManagerProxy, redeployed Aug 2025 with the token-bridging pause and the migration-manager role (broadcast/RootChainManagerUpdate.s.sol). Deployed via forge, hence runs=999999 \u2014 the older contracts here were deployed via hardhat at runs=200."
     },
     {
       "chain": "1",
@@ -162,14 +198,17 @@
       "file": "contracts/root/TokenPredicates/ERC20Predicate.sol",
       "artifact": "ERC20Predicate",
       "solc": "0.6.6",
-      "optimizer": { "enabled": true, "runs": 999999 },
+      "optimizer": {
+        "enabled": true,
+        "runs": 999999
+      },
       "evmVersion": "istanbul",
       "upgradeable": true,
       "liveness": {
         "target": "0x40ec5B33f54e0E8A33A975908C5BA1c14e5BbbDf",
         "sig": "implementation()(address)"
       },
-      "note": "UPGRADEABLE impl behind ERC20PredicateProxy, redeployed Aug 2025 (broadcast/ERC20PredicateUpdate.s.sol). The ONLY predicate with a real migrateTokens — which is why that function lives in IMigratableTokenPredicate rather than ITokenPredicate: putting it on the shared interface forces a stub into the other seven predicates, none of which were redeployed, and every one of them stops reproducing."
+      "note": "UPGRADEABLE impl behind ERC20PredicateProxy, redeployed Aug 2025 (broadcast/ERC20PredicateUpdate.s.sol). The ONLY predicate with a real migrateTokens \u2014 which is why that function lives in IMigratableTokenPredicate rather than ITokenPredicate: putting it on the shared interface forces a stub into the other seven predicates, none of which were redeployed, and every one of them stops reproducing."
     },
     {
       "chain": "1",
@@ -178,7 +217,10 @@
       "file": "contracts/root/TokenPredicates/ERC721Predicate.sol",
       "artifact": "ERC721Predicate",
       "solc": "0.6.6",
-      "optimizer": { "enabled": true, "runs": 200 },
+      "optimizer": {
+        "enabled": true,
+        "runs": 200
+      },
       "evmVersion": "istanbul",
       "upgradeable": true,
       "liveness": {
@@ -193,7 +235,10 @@
       "file": "contracts/root/TokenPredicates/ERC1155Predicate.sol",
       "artifact": "ERC1155Predicate",
       "solc": "0.6.6",
-      "optimizer": { "enabled": true, "runs": 200 },
+      "optimizer": {
+        "enabled": true,
+        "runs": 200
+      },
       "evmVersion": "istanbul",
       "upgradeable": true,
       "liveness": {
@@ -208,7 +253,10 @@
       "file": "contracts/root/TokenPredicates/MintableERC20Predicate.sol",
       "artifact": "MintableERC20Predicate",
       "solc": "0.6.6",
-      "optimizer": { "enabled": true, "runs": 200 },
+      "optimizer": {
+        "enabled": true,
+        "runs": 200
+      },
       "evmVersion": "istanbul",
       "upgradeable": true,
       "liveness": {
@@ -223,7 +271,10 @@
       "file": "contracts/root/TokenPredicates/MintableERC721Predicate.sol",
       "artifact": "MintableERC721Predicate",
       "solc": "0.6.6",
-      "optimizer": { "enabled": true, "runs": 200 },
+      "optimizer": {
+        "enabled": true,
+        "runs": 200
+      },
       "evmVersion": "istanbul",
       "upgradeable": true,
       "liveness": {
@@ -238,7 +289,10 @@
       "file": "contracts/root/TokenPredicates/MintableERC1155Predicate.sol",
       "artifact": "MintableERC1155Predicate",
       "solc": "0.6.6",
-      "optimizer": { "enabled": true, "runs": 200 },
+      "optimizer": {
+        "enabled": true,
+        "runs": 200
+      },
       "evmVersion": "istanbul",
       "upgradeable": true,
       "liveness": {
@@ -253,7 +307,10 @@
       "file": "contracts/root/TokenPredicates/EtherPredicate.sol",
       "artifact": "EtherPredicate",
       "solc": "0.6.6",
-      "optimizer": { "enabled": true, "runs": 200 },
+      "optimizer": {
+        "enabled": true,
+        "runs": 200
+      },
       "evmVersion": "istanbul",
       "upgradeable": true,
       "liveness": {
@@ -268,10 +325,12 @@
       "file": "contracts/root/TokenPredicates/ChainExitERC1155Predicate.sol",
       "artifact": "ChainExitERC1155Predicate",
       "solc": "0.6.6",
-      "optimizer": { "enabled": true, "runs": 200 },
+      "optimizer": {
+        "enabled": true,
+        "runs": 200
+      },
       "evmVersion": "istanbul",
       "upgradeable": true,
-      "knownDrift": "repo ahead: exitTokens is external/calldata, deployed is public/memory",
       "liveness": {
         "target": "0xDB2382413bCb9c2F1B6b62B52238558266361D68",
         "sig": "implementation()(address)"
@@ -285,7 +344,10 @@
       "file": "contracts/child/ChildChainManager/ChildChainManagerProxy.sol",
       "artifact": "ChildChainManagerProxy",
       "solc": "0.6.6",
-      "optimizer": { "enabled": false, "runs": 200 },
+      "optimizer": {
+        "enabled": false,
+        "runs": 200
+      },
       "evmVersion": "istanbul",
       "note": "Immutable entry point of the child bridge; the only address authorised to mint deposited tokens on Polygon."
     },
@@ -296,15 +358,17 @@
       "file": "contracts/child/ChildChainManager/ChildChainManager.sol",
       "artifact": "ChildChainManager",
       "solc": "0.6.6",
-      "optimizer": { "enabled": true, "runs": 200 },
+      "optimizer": {
+        "enabled": true,
+        "runs": 200
+      },
       "evmVersion": "istanbul",
       "upgradeable": true,
-      "knownDrift": "repo ahead: cleanMapToken emits TokenUnmapped, deployed emits TokenMapped",
       "liveness": {
         "target": "0xA6FA4fB5f76172d178d61B04b0ecd319C5d1C0aa",
         "sig": "implementation()(address)"
       },
-      "note": "DOCUMENTED DRIFT, pre-dates the migration work, and a small one: the local and deployed runtimes are the same length and differ in exactly one PUSH32 — the event topic emitted by cleanMapToken. The repo added a distinct TokenUnmapped event; the deployed impl still reuses TokenMapped. Upgradeable, so a redeploy resolves it."
+      "note": "DOCUMENTED DRIFT, pre-dates the migration work, and a small one: the local and deployed runtimes are the same length and differ in exactly one PUSH32 \u2014 the event topic emitted by cleanMapToken. The repo added a distinct TokenUnmapped event; the deployed impl still reuses TokenMapped. Upgradeable, so a redeploy resolves it."
     },
     {
       "chain": "137",
@@ -313,7 +377,10 @@
       "file": "contracts/child/ChildToken/UpgradeableChildERC20/UChildERC20Proxy.sol",
       "artifact": "UChildERC20Proxy",
       "solc": "0.6.6",
-      "optimizer": { "enabled": false, "runs": 200 },
+      "optimizer": {
+        "enabled": false,
+        "runs": 200
+      },
       "evmVersion": "istanbul",
       "liveness": {
         "target": "0xA6FA4fB5f76172d178d61B04b0ecd319C5d1C0aa",
@@ -329,31 +396,52 @@
       "file": "contracts/child/ChildToken/UpgradeableChildERC20/UChildERC20Proxy.sol",
       "artifact": "UChildERC20Proxy",
       "solc": "0.6.6",
-      "optimizer": { "enabled": false, "runs": 200 },
+      "optimizer": {
+        "enabled": false,
+        "runs": 200
+      },
       "evmVersion": "istanbul",
       "liveness": {
         "target": "0xA6FA4fB5f76172d178d61B04b0ecd319C5d1C0aa",
         "sig": "rootToChildToken(address)(address)",
         "args": "0x6B175474E89094C44Da98b954EedeAC495271d0F"
       },
-      "note": "Second metadata group of the same shell (byte-identical logic to the AAVE instance, different CBOR blob — compiled from a differently-laid-out flattening). WBTC and others share this one."
+      "note": "Second metadata group of the same shell (byte-identical logic to the AAVE instance, different CBOR blob \u2014 compiled from a differently-laid-out flattening). WBTC and others share this one."
     },
     {
       "chain": "137",
-      "name": "UChildERC20 (impl, UNI)",
+      "name": "UChildERC20 (impl, WBTC)",
+      "address": "0x7FFB3d637014488b63fb9858E279385685AFc1e2",
+      "file": "contracts/child/ChildToken/UpgradeableChildERC20/UChildERC20.sol",
+      "artifact": "UChildERC20",
+      "solc": "0.6.6",
+      "optimizer": {
+        "enabled": false,
+        "runs": 200
+      },
+      "evmVersion": "istanbul",
+      "upgradeable": true,
+      "liveness": {
+        "target": "0x1BFD67037B42Cf73acF2047067bd4F2C47D9BfD6",
+        "sig": "implementation()(address)"
+      },
+      "note": "The current child-ERC20 implementation: the one with changeName(). WBTC is pinned as its representative \u2014 each mapped token deploys its own copy at its own address, but they all run this runtime, so verifying it once covers the class. UChildDAI extends this same source. Built on the frozen EIP712BaseLegacy/NativeMetaTransactionLegacy chain (see contracts/common/legacy/): the modern EIP712Base is live too, under RootChainManager, and the two cannot be merged without breaking one of them."
+    },
+    {
+      "chain": "137",
+      "name": "UChildERC20 (superseded, pre-changeName)",
       "address": "0x55FFBeE7323CC4647E294f5f1e72A3cC978dA5dB",
       "file": "contracts/child/ChildToken/UpgradeableChildERC20/UChildERC20.sol",
       "artifact": "UChildERC20",
       "solc": "0.6.6",
-      "optimizer": { "enabled": false, "runs": 200 },
+      "optimizer": {
+        "enabled": false,
+        "runs": 200
+      },
       "evmVersion": "istanbul",
       "upgradeable": true,
-      "knownDrift": "repo ahead: adds changeName(), drops ChainConstants/ERC712_VERSION",
-      "liveness": {
-        "target": "0xb33EaAd8d922B1083446DC23f610c2567fB5180f",
-        "sig": "implementation()(address)"
-      },
-      "note": "DOCUMENTED DRIFT. UNI is the representative of the dominant child-ERC20 implementation: AAVE, UNI, CRV, SUSHI, BAL and GHST all point at byte-identical copies of this runtime at distinct addresses, so one entry covers the class. The repo since added changeName() and moved the EIP-712 version off ChainConstants; none of those impls were redeployed. Upgradeable, so a redeploy resolves it."
+      "exclude": true,
+      "note": "DOCUMENTED, NOT VERIFIED. An earlier build of the same contract, before changeName() was added \u2014 14214 bytes against the current 14791. Still live behind AAVE, UNI, CRV, SUSHI, BAL and GHST, which were never upgraded to the current implementation. It cannot be reproduced from UChildERC20.sol at the same time as the WBTC/DAI cohort above, and freezing a second copy of the whole token just to verify a superseded build is not worth the source it would cost. Recorded here so the cohort is visible rather than silently unchecked; it drops out entirely once those six tokens are upgraded."
     },
     {
       "chain": "137",
@@ -362,15 +450,17 @@
       "file": "contracts/child/ChildToken/DappTokens/UChildDAI.sol",
       "artifact": "UChildDAI",
       "solc": "0.6.6",
-      "optimizer": { "enabled": false, "runs": 200 },
+      "optimizer": {
+        "enabled": false,
+        "runs": 200
+      },
       "evmVersion": "istanbul",
       "upgradeable": true,
-      "knownDrift": "repo ahead: inherits the drifted UChildERC20 (changeName / ERC712_VERSION)",
       "liveness": {
         "target": "0x8f3Cf7ad23Cd3CaDbD9735AFf958023239c6A063",
         "sig": "implementation()(address)"
       },
-      "note": "DOCUMENTED DRIFT, inherited wholesale from UChildERC20 above — UChildDAI itself has not changed. Resolves at the same time UChildERC20 does."
+      "note": "DOCUMENTED DRIFT, inherited wholesale from UChildERC20 above \u2014 UChildDAI itself has not changed. Resolves at the same time UChildERC20 does."
     }
   ]
 }

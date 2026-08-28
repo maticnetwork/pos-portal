@@ -98,7 +98,7 @@ eight token predicates, the immutable proxy shells and the child-token code that
 tokens share. **Individual mapped tokens are out of scope** — only immutable or shared code is
 tracked.
 
-Three things are worth knowing before editing a contract in that inventory:
+Four things are worth knowing before editing a contract in that inventory:
 
 - **The proxy shells can never be redeployed.** `UpgradableProxy` is held at the exact source
   the live shells were compiled from. Improving it silently breaks reproducibility for all
@@ -112,11 +112,26 @@ Three things are worth knowing before editing a contract in that inventory:
   forces a stub into all eight predicates, and any predicate not redeployed alongside it stops
   reproducing. That is why migration lives in `IMigratableTokenPredicate`, implemented only by
   `ERC20Predicate`.
+- **`legacy/` directories are load-bearing, not dead code.** Where the live system still runs a
+  source this repo has moved past, the old source is frozen rather than lost:
+  `contracts/common/legacy/` holds the pre-refactor EIP-712 chain the child tokens were built
+  on (the modern `EIP712Base` is live too, under `RootChainManager` — the two cannot be merged
+  without breaking one of them), and `contracts/lib/legacy/` holds the hardened RLP reader that
+  `ChainExitERC1155Predicate` was deployed against, before it was replaced with the upstream
+  library in 2021. Deleting or "tidying" either one breaks verification for the deployments
+  that depend on it.
 
-Contracts the repo is deliberately ahead of the chain on carry a `knownDrift` note in the
-inventory: they are reported but do not fail the check, and the verifier flags the exemption as
-stale if the contract ever starts reproducing again. The check runs in CI on `master` only —
-`staging` is expected to diverge.
+The inventory should stay fully green. If a contract needs to change ahead of a deploy, put the
+change on its own branch and merge it when the deploy happens, rather than landing it on
+`master` and marking the entry as drift. The verifier does support a `knownDrift` escape hatch —
+it reports without failing, and flags the exemption as stale if the contract starts reproducing
+again — but nothing uses it today, and it is meant for cases that cannot be resolved any other
+way. The check runs in CI on `master` only.
+
+One entry is deliberately `exclude`d: an earlier build of `UChildERC20`, from before
+`changeName()` was added, is still live behind AAVE, UNI, CRV, SUSHI, BAL and GHST. It cannot
+be reproduced from the same source as the current build, so it is documented rather than
+verified, and drops out once those tokens are upgraded.
 
 ## Other Build Options [Deprecated]
 

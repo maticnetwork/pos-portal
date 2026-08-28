@@ -28,7 +28,8 @@ forge-cache
 artifacts
 out
 scripts/helpers/interfaces
-lib/
+# only the Foundry dependency dir at the repo root, not contracts/lib
+/lib/
 
 # Working dir for scripts/pinning/verify-bytecode.sh (builds, fetched code, diffs)
 verify-onchain

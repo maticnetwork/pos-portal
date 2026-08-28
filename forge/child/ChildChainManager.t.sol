@@ -76,7 +76,6 @@ contract ChildChainManagerTest_Uninitialized is UninitializedState {
 
 abstract contract InitializedState is UninitializedState {
     event TokenMapped(address indexed rootToken, address indexed childToken);
-    event TokenUnmapped(address indexed rootToken, address indexed childToken);
 
     address internal immutable ALIEN = makeAddr("alien");
 
@@ -225,8 +224,10 @@ contract ChildChainManagerTest_Initialized is InitializedState {
 
         childChainManager.mapToken(rootToken, childToken);
 
+        // The deployed implementation reuses TokenMapped here rather than emitting a distinct
+        // TokenUnmapped; see scripts/pinning/pinned-contracts.json.
         vm.expectEmit();
-        emit TokenUnmapped(rootToken, childToken);
+        emit TokenMapped(rootToken, childToken);
 
         childChainManager.cleanMapToken(rootToken, childToken);
 

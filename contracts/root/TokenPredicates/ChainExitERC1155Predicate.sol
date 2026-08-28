@@ -12,7 +12,7 @@ import {
     ERC1155Receiver
 } from "@openzeppelin/contracts/token/ERC1155/ERC1155Receiver.sol";
 import {AccessControlMixin} from "../../common/AccessControlMixin.sol";
-import {RLPReader} from "../../lib/RLPReader.sol";
+import {RLPReaderLegacy as RLPReader} from "../../lib/legacy/RLPReaderLegacy.sol";
 import {ITokenPredicate} from "./ITokenPredicate.sol";
 import {Initializable} from "../../common/Initializable.sol";
 
@@ -175,15 +175,14 @@ contract ChainExitERC1155Predicate is
      * @notice Validates log signature, withdrawer address
      * then sends the correct tokenId, amount to withdrawer
      * callable only by manager
-     * @notice address unused, but being kept for abi compatability
      * @param rootToken Token which gets withdrawn
      * @param log Valid ChainExit log from child chain
      */
     function exitTokens(
         address,
         address rootToken,
-        bytes calldata log
-    ) external override only(MANAGER_ROLE) {
+        bytes memory log
+    ) public override only(MANAGER_ROLE) {
         RLPReader.RLPItem[] memory logRLPList = log.toRlpItem().toList();
         RLPReader.RLPItem[] memory logTopicRLPList = logRLPList[1].toList();
         bytes memory logData = logRLPList[2].toBytes();
