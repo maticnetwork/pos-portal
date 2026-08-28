@@ -128,10 +128,21 @@ it reports without failing, and flags the exemption as stale if the contract sta
 again — but nothing uses it today, and it is meant for cases that cannot be resolved any other
 way. The check runs in CI on `master` only.
 
-One entry is deliberately `exclude`d: an earlier build of `UChildERC20`, from before
-`changeName()` was added, is still live behind AAVE, UNI, CRV, SUSHI, BAL and GHST. It cannot
-be reproduced from the same source as the current build, so it is documented rather than
-verified, and drops out once those tokens are upgraded.
+Nothing is `exclude`d and nothing is marked as drift: all 30 entries reproduce.
+
+Six of them are the same contract at six addresses. AAVE, UNI, CRV, SUSHI, BAL and GHST still run
+the child-ERC20 build from before `changeName()` was added, and each deploys its own instance of
+the implementation, so the six entries are 14161 identical bytes at six different addresses. Only
+UNI's happens to sit at the address you would guess. They reproduce from
+`UChildERC20Superseded.sol`, which is that build's verified source with its flattened preamble
+swapped for imports of the identical modules already in the repo — the match proves those modules
+are byte-for-byte what was inlined. `UChildERC20.sol` is the same contract plus `changeName()` and
+cannot produce both.
+
+They are six entries rather than one representative because the `liveness` pointer is per token:
+if any of the six is upgraded to the current implementation, that entry goes `STALE_POINTER` and
+gets removed, which one shared entry would quietly hide. The same build is also what nearly every
+mapped ERC20 on Amoy runs.
 
 ## Other Build Options [Deprecated]
 

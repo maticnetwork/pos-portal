@@ -1,5 +1,5 @@
 {
-  "_comment": "Inventory of the live PoS bridge: the managers, the token predicates, their immutable proxy shells, and the child-token code that many mapped tokens share. Individually mapped tokens are deliberately NOT tracked \u2014 only code that is immutable or shared. 'solc' + 'optimizer' + 'evmVersion' are the settings the contract was DEPLOYED with (from its verified metadata on Sourcify/Etherscan), not the repo defaults: this repo spans three different optimizer configurations. Note that 'runs' matters even when the optimizer is disabled \u2014 solc still reads it when choosing the function dispatcher, so the proxy shells reproduce only at (enabled=false, runs<=200). 'liveness' guards against the system being re-pointed at a DIFFERENT address: 'target'+'sig'(+'args') is a call whose returned address must still equal this entry's 'address'. Bytecode at a fixed address is immutable, so the bytecode comparison alone can never catch a proxy upgrade \u2014 that has already happened here twice (RootChainManager and ERC20Predicate were both re-pointed in Aug 2025). Add it to anything reached through a pointer. 'knownDrift' documents an entry the repo is deliberately AHEAD of chain on: it reports but does not fail, and the verifier flags the exemption as stale if the contract ever starts reproducing again. 'exclude':true entries are documented but skipped. Where the live system runs a source this repo has since moved past, the old source is FROZEN under a legacy/ directory rather than recorded as drift \u2014 see contracts/common/legacy/ and contracts/lib/legacy/. Those files are load-bearing: they are the only sources that reproduce their deployments, and editing them silently breaks verification. Deployed-but-out-of-repo contracts live in their own repos and are not tracked here: UChildUSDT0 (USDT), and UChildAdministrableERC20 (USDC.e, 0xDD9185DB084f5C4fFf3b4f70E7bA62123b812226). Note that USDC.e's shell IS a UChildERC20Proxy, but compiled with solc 0.6.12 \u2014 this repo's sources are hard-pinned to 0.6.6 and cannot reproduce it, so it is a third proxy build outside the two pinned here. Neither USDC.e contract has ever been upgraded: same implementation from deployment (2020-09-27) to today.",
+  "_comment": "Inventory of the live PoS bridge: the managers, the token predicates, their immutable proxy shells, and the child-token code that many mapped tokens share. Individually mapped tokens are deliberately NOT tracked \u2014 only code that is immutable or shared. 'solc' + 'optimizer' + 'evmVersion' are the settings the contract was DEPLOYED with (from its verified metadata on Sourcify/Etherscan), not the repo defaults: this repo spans three different optimizer configurations. Note that 'runs' matters even when the optimizer is disabled \u2014 solc still reads it when choosing the function dispatcher, so the proxy shells reproduce only at (enabled=false, runs<=200). 'liveness' guards against the system being re-pointed at a DIFFERENT address: 'target'+'sig'(+'args') is a call whose returned address must still equal this entry's 'address'. Bytecode at a fixed address is immutable, so the bytecode comparison alone can never catch a proxy upgrade \u2014 that has already happened here twice (RootChainManager and ERC20Predicate were both re-pointed in Aug 2025). Add it to anything reached through a pointer. 'knownDrift' documents an entry the repo is deliberately AHEAD of chain on: it reports but does not fail, and the verifier flags the exemption as stale if the contract ever starts reproducing again. 'exclude':true entries are documented but skipped; nothing uses it today. Where the live system runs a source this repo has since moved past, the old source is FROZEN under a legacy/ directory rather than recorded as drift \u2014 see contracts/common/legacy/ and contracts/lib/legacy/. Those files are load-bearing: they are the only sources that reproduce their deployments, and editing them silently breaks verification. Deployed-but-out-of-repo contracts live in their own repos and are not tracked here: UChildUSDT0 (USDT), and UChildAdministrableERC20 (USDC.e, 0xDD9185DB084f5C4fFf3b4f70E7bA62123b812226). Note that USDC.e's shell IS a UChildERC20Proxy, but compiled with solc 0.6.12 \u2014 this repo's sources are hard-pinned to 0.6.6 and cannot reproduce it, so it is a third proxy build outside the two pinned here. Neither USDC.e contract has ever been upgraded: same implementation from deployment (2020-09-27) to today.",
   "rpc": {
     "1": {
       "env": "MAINNET_RPC_URL",
@@ -429,19 +429,111 @@
     },
     {
       "chain": "137",
-      "name": "UChildERC20 (superseded, pre-changeName)",
+      "name": "UChildERC20 (superseded, UNI)",
       "address": "0x55FFBeE7323CC4647E294f5f1e72A3cC978dA5dB",
-      "file": "contracts/child/ChildToken/UpgradeableChildERC20/UChildERC20.sol",
-      "artifact": "UChildERC20",
+      "file": "contracts/child/ChildToken/UpgradeableChildERC20/UChildERC20Superseded.sol",
+      "artifact": "UChildERC20Superseded",
       "solc": "0.6.6",
       "optimizer": {
         "enabled": false,
         "runs": 200
       },
       "evmVersion": "istanbul",
-      "upgradeable": true,
-      "exclude": true,
-      "note": "DOCUMENTED, NOT VERIFIED. An earlier build of the same contract, before changeName() was added \u2014 14214 bytes against the current 14791. Still live behind AAVE, UNI, CRV, SUSHI, BAL and GHST, which were never upgraded to the current implementation. It cannot be reproduced from UChildERC20.sol at the same time as the WBTC/DAI cohort above, and freezing a second copy of the whole token just to verify a superseded build is not worth the source it would cost. Recorded here so the cohort is visible rather than silently unchecked; it drops out entirely once those six tokens are upgraded."
+      "liveness": {
+        "target": "0xb33EaAd8d922B1083446DC23f610c2567fB5180f",
+        "sig": "implementation()(address)"
+      },
+      "note": "The child-ERC20 build from before changeName() was added, and the runtime behind six of the largest mapped tokens on Polygon. Each of them deploys its own instance of the implementation at its own address, so these six entries are the same 14161 bytes at six addresses, all reproducing from the one frozen source in UChildERC20Superseded.sol. Kept as six entries rather than one representative because the liveness pointer is per token: if any of them is upgraded to the current implementation, that entry goes STALE_POINTER and drops out, which a single representative would hide. UChildERC20.sol is the same contract plus changeName() and cannot produce this build."
+    },
+    {
+      "chain": "137",
+      "name": "UChildERC20 (superseded, AAVE)",
+      "address": "0xad3B0017de2065CBeFF6655Fa7A83b42B9e4a3ce",
+      "file": "contracts/child/ChildToken/UpgradeableChildERC20/UChildERC20Superseded.sol",
+      "artifact": "UChildERC20Superseded",
+      "solc": "0.6.6",
+      "optimizer": {
+        "enabled": false,
+        "runs": 200
+      },
+      "evmVersion": "istanbul",
+      "liveness": {
+        "target": "0xD6DF932A45C0f255f85145f286eA0b292B21C90B",
+        "sig": "implementation()(address)"
+      },
+      "note": "Own instance of the superseded implementation; see the UNI entry for the class."
+    },
+    {
+      "chain": "137",
+      "name": "UChildERC20 (superseded, CRV)",
+      "address": "0x98125B30e2C3081A7f4625801ca249eCDFc59EA2",
+      "file": "contracts/child/ChildToken/UpgradeableChildERC20/UChildERC20Superseded.sol",
+      "artifact": "UChildERC20Superseded",
+      "solc": "0.6.6",
+      "optimizer": {
+        "enabled": false,
+        "runs": 200
+      },
+      "evmVersion": "istanbul",
+      "liveness": {
+        "target": "0x172370d5Cd63279eFa6d502DAB29171933a610AF",
+        "sig": "implementation()(address)"
+      },
+      "note": "Own instance of the superseded implementation; see the UNI entry for the class."
+    },
+    {
+      "chain": "137",
+      "name": "UChildERC20 (superseded, SUSHI)",
+      "address": "0x070E7D3151C89eD13893c84baAe0a3F7fDb1E2e6",
+      "file": "contracts/child/ChildToken/UpgradeableChildERC20/UChildERC20Superseded.sol",
+      "artifact": "UChildERC20Superseded",
+      "solc": "0.6.6",
+      "optimizer": {
+        "enabled": false,
+        "runs": 200
+      },
+      "evmVersion": "istanbul",
+      "liveness": {
+        "target": "0x0b3F868E0BE5597D5DB7fEB59E1CADBb0fdDa50a",
+        "sig": "implementation()(address)"
+      },
+      "note": "Own instance of the superseded implementation; see the UNI entry for the class."
+    },
+    {
+      "chain": "137",
+      "name": "UChildERC20 (superseded, BAL)",
+      "address": "0xf957DB7230B879cc905a7afA87748d8b7dA7689e",
+      "file": "contracts/child/ChildToken/UpgradeableChildERC20/UChildERC20Superseded.sol",
+      "artifact": "UChildERC20Superseded",
+      "solc": "0.6.6",
+      "optimizer": {
+        "enabled": false,
+        "runs": 200
+      },
+      "evmVersion": "istanbul",
+      "liveness": {
+        "target": "0x9a71012B13CA4d3D0Cdc72A177DF3ef03b0E76A3",
+        "sig": "implementation()(address)"
+      },
+      "note": "Own instance of the superseded implementation; see the UNI entry for the class."
+    },
+    {
+      "chain": "137",
+      "name": "UChildERC20 (superseded, GHST)",
+      "address": "0x5004bc7E5B718c245cA859DB349Dd012CFD58395",
+      "file": "contracts/child/ChildToken/UpgradeableChildERC20/UChildERC20Superseded.sol",
+      "artifact": "UChildERC20Superseded",
+      "solc": "0.6.6",
+      "optimizer": {
+        "enabled": false,
+        "runs": 200
+      },
+      "evmVersion": "istanbul",
+      "liveness": {
+        "target": "0x385Eeac5cB85A38A9a07A70c73e0a3271CfB54A7",
+        "sig": "implementation()(address)"
+      },
+      "note": "Own instance of the superseded implementation; see the UNI entry for the class."
     },
     {
       "chain": "137",
