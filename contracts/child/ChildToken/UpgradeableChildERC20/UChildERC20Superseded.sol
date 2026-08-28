@@ -8,9 +8,10 @@ import {ChainConstants} from "../../../common/legacy/ChainConstants.sol";
 import {ContextMixin} from "../../../common/ContextMixin.sol";
 
 /**
- * @notice FROZEN. The child-ERC20 implementation from before changeName() was added, still the
- * runtime behind six of the largest mapped tokens on Polygon and behind almost every mapped ERC20
- * on Amoy.
+ * @notice FROZEN. The child-ERC20 implementation from before changeName() was added, and the one
+ * nearly every mapped ERC20 actually runs: ~2,085 of the ~2,107 proxied child tokens on Polygon
+ * (about 99%, measured Aug 2026), and 19 of 20 sampled on Amoy. The build in UChildERC20.sol,
+ * despite being the newer one, is behind roughly ten tokens.
  * @dev The contract text below is the verified source of the deployed implementations verbatim,
  * with two edits that touch metadata only and never the runtime: the flattened preamble is
  * replaced by imports of the identical modules this repo already holds, and the contract is

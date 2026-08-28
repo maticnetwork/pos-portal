@@ -133,16 +133,24 @@ Nothing is `exclude`d and nothing is marked as drift: all 30 entries reproduce.
 Six of them are the same contract at six addresses. AAVE, UNI, CRV, SUSHI, BAL and GHST still run
 the child-ERC20 build from before `changeName()` was added, and each deploys its own instance of
 the implementation, so the six entries are 14161 identical bytes at six different addresses. Only
-UNI's happens to sit at the address you would guess. They reproduce from
-`UChildERC20Superseded.sol`, which is that build's verified source with its flattened preamble
+UNI's happens to sit at the address you would guess.
+
+That build is not a legacy tail — it is what **~2,085 of the ~2,107** proxied mapped ERC20s on
+Polygon run, about **99 %** (measured Aug 2026 by walking `RootChainManager`'s full `TokenMapped`
+history). The newer build that `UChildERC20 (impl, WBTC)` pins is behind roughly **ten** tokens;
+`UChildDAI` covers exactly one. Those counts are in the entry notes on purpose: to identify any
+mapped token's implementation, read `implementation()` on the child token and compare that
+address's runtime against these entries — the 99 % entry will match almost every time.
+
+The six reproduce from `UChildERC20Superseded.sol`, which is that build's verified source with its flattened preamble
 swapped for imports of the identical modules already in the repo — the match proves those modules
 are byte-for-byte what was inlined. `UChildERC20.sol` is the same contract plus `changeName()` and
 cannot produce both.
 
 They are six entries rather than one representative because the `liveness` pointer is per token:
 if any of the six is upgraded to the current implementation, that entry goes `STALE_POINTER` and
-gets removed, which one shared entry would quietly hide. The same build is also what nearly every
-mapped ERC20 on Amoy runs.
+gets removed, which one shared entry would quietly hide. The same build is what nearly every mapped
+ERC20 on Amoy runs too — 19 of 20 sampled.
 
 ## Other Build Options [Deprecated]
 
