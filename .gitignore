@@ -18,8 +18,6 @@ contractAddresses.json
 
 tenderly.yaml
 
-contracts/ChainConstants.sol
-
 contracts/dump.json
 
 .env
@@ -31,5 +29,5 @@ scripts/helpers/interfaces
 # only the Foundry dependency dir at the repo root, not contracts/lib
 /lib/
 
-# Working dir for scripts/pinning/verify-bytecode.sh (builds, fetched code, diffs)
-verify-onchain
+# Working dirs for scripts/pinning/verify-bytecode.sh (builds, fetched code, diffs)
+verify-onchain*
