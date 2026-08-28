@@ -335,7 +335,7 @@
         "target": "0xDB2382413bCb9c2F1B6b62B52238558266361D68",
         "sig": "implementation()(address)"
       },
-      "note": "DOCUMENTED DRIFT, pre-dates the migration work. The deployed impl still has `exitTokens(address, address, bytes memory) public`; the repo tightened ITokenPredicate to `bytes calldata ... external`, and every other predicate was redeployed with that signature while this deprecated one was not. Reverting it would mean reverting the interface for all eight predicates, so the drift is recorded instead. It is an upgradeable impl, not an immutable pin, so it can be resolved by a redeploy whenever the contract is next touched."
+      "note": "Deprecated and never redeployed, so it reproduces only from the sources of its own era: `exitTokens(address, address, bytes memory) public` rather than the tightened ITokenPredicate signature the other predicates carry, and RLPReaderLegacy rather than the upstream library. Both are frozen for its sake \u2014 see contracts/lib/legacy/. Upgradeable, not an immutable pin, so a redeploy would let all of that go."
     },
     {
       "chain": "137",
@@ -368,7 +368,7 @@
         "target": "0xA6FA4fB5f76172d178d61B04b0ecd319C5d1C0aa",
         "sig": "implementation()(address)"
       },
-      "note": "DOCUMENTED DRIFT, pre-dates the migration work, and a small one: the local and deployed runtimes are the same length and differ in exactly one PUSH32 \u2014 the event topic emitted by cleanMapToken. The repo added a distinct TokenUnmapped event; the deployed impl still reuses TokenMapped. Upgradeable, so a redeploy resolves it."
+      "note": "Reproduces only while cleanMapToken re-emits TokenMapped, as the 2020 deployment does. The distinct TokenUnmapped event added in March 2023 (dcb6eca) moves one PUSH32 and breaks the match \u2014 which is why it lives on the branch that verifies testnet, whose Amoy implementation does have it. Upgradeable, so a redeploy on mainnet would flip which side reproduces."
     },
     {
       "chain": "137",
@@ -460,7 +460,7 @@
         "target": "0x8f3Cf7ad23Cd3CaDbD9735AFf958023239c6A063",
         "sig": "implementation()(address)"
       },
-      "note": "DOCUMENTED DRIFT, inherited wholesale from UChildERC20 above \u2014 UChildDAI itself has not changed. Resolves at the same time UChildERC20 does."
+      "note": "Extends the same UChildERC20 source as the entry above and inherits its constraints wholesale: the frozen legacy EIP-712 chain and ChainConstants. UChildDAI itself carries nothing extra that pinning has to hold."
     }
   ]
 }
