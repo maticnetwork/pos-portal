@@ -77,6 +77,47 @@ forge test
 forge test --no-match-test "SkipCI"
 ```
 
+## Verifying against the deployed bridge
+
+`master` is meant to mirror what is actually deployed. `scripts/pinning/verify-bytecode.sh`
+checks that claim: it compiles every core bridge contract with the compiler settings it was
+deployed with and compares the result against `eth_getCode` on Ethereum and Polygon.
+
+```bash
+scripts/pinning/verify-bytecode.sh        # all chains
+scripts/pinning/verify-bytecode.sh 1      # Ethereum mainnet only
+```
+
+Needs `jq`, `python3` and Foundry. It uses keyless public RPCs by default; export
+`MAINNET_RPC_URL` / `POLYGON_POS_RPC_URL` to override. Everything it downloads and builds goes
+into the gitignored `verify-onchain/` directory, including a hex dump of both sides of any
+mismatch under `verify-onchain/diffs/`.
+
+The inventory lives in `scripts/pinning/pinned-contracts.json` and covers the managers, the
+eight token predicates, the immutable proxy shells and the child-token code that many mapped
+tokens share. **Individual mapped tokens are out of scope** — only immutable or shared code is
+tracked.
+
+Three things are worth knowing before editing a contract in that inventory:
+
+- **The proxy shells can never be redeployed.** `UpgradableProxy` is held at the exact source
+  the live shells were compiled from. Improving it silently breaks reproducibility for all
+  twelve of them, so any change belongs in a new contract, not that one.
+- **Compiler settings are per-contract, not global.** The predicates deployed in 2020-21 used
+  optimizer runs 200; `RootChainManager` and `ERC20Predicate` were redeployed via Foundry in
+  2025 at runs 999999; the proxy shells were deployed with the optimizer *off*. Note that
+  `runs` still affects output when the optimizer is disabled — solc consults it when choosing
+  the function dispatcher.
+- **A shared interface is a deployment constraint.** Adding a method to `ITokenPredicate`
+  forces a stub into all eight predicates, and any predicate not redeployed alongside it stops
+  reproducing. That is why migration lives in `IMigratableTokenPredicate`, implemented only by
+  `ERC20Predicate`.
+
+Contracts the repo is deliberately ahead of the chain on carry a `knownDrift` note in the
+inventory: they are reported but do not fail the check, and the verifier flags the exemption as
+stale if the contract ever starts reproducing again. The check runs in CI on `master` only —
+`staging` is expected to diverge.
+
 ## Other Build Options [Deprecated]
 
 If you prefer not using docker for compiling contracts, consider setting `docker: false` in truffle-config.js.

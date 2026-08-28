@@ -29,3 +29,6 @@ artifacts
 out
 scripts/helpers/interfaces
 lib/
+
+# Working dir for scripts/pinning/verify-bytecode.sh (builds, fetched code, diffs)
+verify-onchain
