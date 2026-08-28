@@ -31,3 +31,7 @@ scripts/helpers/interfaces
 
 # Working dirs for scripts/pinning/verify-bytecode.sh (builds, fetched code, diffs)
 verify-onchain*
+
+# Bytecode cache from importing scripts/pinning/compare_bytecode.py as a module
+__pycache__/
+*.pyc
