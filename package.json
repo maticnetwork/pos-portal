@@ -13,9 +13,6 @@
     "fmt:js:fix": "prettier --log-level warn scripts/**/*.js test/**/*.js --write",
     "generate:interfaces": "scripts/helpers/generateInterfaces.sh",
     "lint:js": "eslint test/**/*.js",
-    "lint:sol:fix": "solhint --fix 'contracts/**/*.sol'",
-    "lint:sol": "solhint 'contracts/**/*.sol'",
-    "lint": "npm run lint:sol && npm run lint:js",
     "template:process": "node scripts/process-templates.js",
     "test": "hardhat test",
     "testrpc": "anvil --port 9545 --chain-id 53227 --gas-limit 8000000 --gas-price 0 --hardfork istanbul --mnemonic 'clock radar mass judge dismiss just intact mind resemble fringe diary casino'"
@@ -54,7 +51,6 @@
     "nunjucks": "^3.2.1",
     "prettier": "^3.5.3",
     "safe-buffer": "^5.2.1",
-    "solhint": "^3.4.0",
     "tsx": "^4.19.4"
   },
   "eslintConfig": {

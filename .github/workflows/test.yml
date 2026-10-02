@@ -43,13 +43,10 @@ jobs:
       - name: Lint JS
         run: npm run lint:js
 
-      # Errors fail the build; warnings do not. See .solhintrc — several
-      # `solhint:recommended` rules assume >=0.8 and are disabled for 0.6.6.
-      - name: Lint Solidity
-        run: npm run lint:sol
-
-      # `forge fmt --check` is deliberately absent: current Foundry releases
-      # cannot format pre-0.8 sources, and every contract here is pinned to 0.6.6.
+      # No Solidity linter or formatter runs here, deliberately. `forge fmt` cannot
+      # handle pre-0.8 sources, and solhint's useful output on this codebase was 3
+      # findings against 75 that were either cosmetic or landed on contracts frozen
+      # for bytecode reproduction (see scripts/pinning/).
 
       - name: Generate interfaces
         run: npm run generate:interfaces
