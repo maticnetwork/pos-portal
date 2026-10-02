@@ -368,7 +368,7 @@
         "target": "0xA6FA4fB5f76172d178d61B04b0ecd319C5d1C0aa",
         "sig": "implementation()(address)"
       },
-      "note": "Reproduces only while cleanMapToken re-emits TokenMapped, as the 2020 deployment does. The distinct TokenUnmapped event added in March 2023 (dcb6eca) moves one PUSH32 and breaks the match \u2014 which is why it lives on the branch that verifies testnet, whose Amoy implementation does have it. Upgradeable, so a redeploy on mainnet would flip which side reproduces."
+      "note": "Reproduces only while cleanMapToken re-emits TokenMapped, as the 2020 deployment does. The distinct TokenUnmapped event added in March 2023 (dcb6eca) moves one PUSH32 and breaks the match. Amoy's implementation still emits TokenUnmapped and is to be upgraded to this build, so testnet matches mainnet."
     },
     {
       "chain": "137",

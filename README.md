@@ -79,7 +79,7 @@ forge test --no-match-test "SkipCI"
 
 ## Verifying against the deployed bridge
 
-`master` is meant to mirror what is actually deployed. `scripts/pinning/verify-bytecode.sh`
+The tree reproduces the bridge deployed on mainnet, byte for byte. `scripts/pinning/verify-bytecode.sh`
 checks that claim: it compiles every core bridge contract with the compiler settings it was
 deployed with and compares the result against `eth_getCode` on Ethereum and Polygon.
 
@@ -122,11 +122,11 @@ Four things are worth knowing before editing a contract in that inventory:
   that depend on it.
 
 The inventory should stay fully green. If a contract needs to change ahead of a deploy, put the
-change on its own branch and merge it when the deploy happens, rather than landing it on
-`master` and marking the entry as drift. The verifier does support a `knownDrift` escape hatch —
+change on its own branch and merge it when the deploy happens, rather than landing it on a
+long-lived branch and marking the entry as drift. The verifier does support a `knownDrift` escape hatch —
 it reports without failing, and flags the exemption as stale if the contract starts reproducing
 again — but nothing uses it today, and it is meant for cases that cannot be resolved any other
-way. The check runs in CI on `master` only.
+way. The check runs in CI on `master`, `main` and `dev`.
 
 Nothing is `exclude`d and nothing is marked as drift: all 30 entries reproduce.
 
