@@ -44,7 +44,7 @@ npm ci
 
 # Generates Solidity interface stubs from the compiled artifacts into
 # scripts/helpers/interfaces/. Must run before `forge build`, because the
-# contracts under forge/ and scripts/ import them.
+# deploy scripts under scripts/ import them.
 npm run generate:interfaces
 
 forge build
@@ -57,7 +57,7 @@ forge build
 There are two suites, and they are not redundant in the places that matter.
 
 ```bash
-forge test --no-match-test "SkipCI"    # 139 tests
+forge test                             # 111 tests
 npm test                               # 550 tests (Hardhat)
 ```
 
@@ -72,18 +72,6 @@ contracts, none of which Foundry touches.
 Both run on an in-process chain — no external node is needed. `npm run testrpc` starts an anvil
 instance on port 9545 for the `development` / `root` networks in `hardhat.config.cjs`, but nothing
 in the test suite requires it.
-
-### The fork test
-
-`forge/ForkupgradeMPT.t.sol` forks mainnet and replays 5,215 real historical exit payloads from
-`forge/batchExit.json` against a candidate `RootChainManager`. It is excluded from the command
-above by the `SkipCI` suffix in its test name, and from CI as well.
-
-RPC endpoints default to Tenderly's keyless public gateways (see `[rpc_endpoints]` in
-`foundry.toml`), so no API key is needed; export `MAINNET_RPC_URL` for a private endpoint.
-
-> **Known issue:** the test currently fails with `MemoryOOG` — 5,215 replays in a single test
-> exceed the EVM memory budget. It needs batching before it can be relied on.
 
 ### npm scripts
 
@@ -203,6 +191,9 @@ PRIVATE_KEY=
 ```
 
 Broadcast records from past runs are kept under `broadcast/`.
+
+RPC endpoints default to Tenderly's keyless public gateways (see `[rpc_endpoints]` in
+`foundry.toml`), so no API key is needed; export `MAINNET_RPC_URL` for a private endpoint.
 
 > The previous Truffle/`matic-cli` migration flow documented here has been removed: it depended on
 > `truffle-config.js`, a `migrations/` directory and an `npm run migrate` script, none of which
