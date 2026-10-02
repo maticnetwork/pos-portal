@@ -9,6 +9,13 @@ const receiptList = JSON.parse(fs.readFileSync(new URL('../mockResponses/347-rec
 const MerklePatriciaTest = artifacts.require('MerklePatriciaTest')
 
 describe('MerklePatriciaTest', function () {
+  // This case verifies all 347 receipts in the block, twice each (once in js, once on-chain).
+  // It takes ~35s on a warm dev machine, which sits right on mocha's 40s default and tips over
+  // it intermittently when the rest of the suite is competing for the same process — roughly
+  // one run in three. The work is genuinely this large, so give it real headroom rather than
+  // letting CI go red at random.
+  this.timeout(180000)
+
   let merklePatriciaTest
 
   before(async () => {
