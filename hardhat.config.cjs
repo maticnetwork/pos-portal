@@ -41,16 +41,6 @@ module.exports = {
         count: 20,
       },
     },
-    child: {
-      url: 'http://localhost:8545',
-      gas: 7000000,
-      accounts: {
-        mnemonic: process.env.MNEMONIC || DEFAULT_MNEMONIC,
-        path: "m/44'/60'/0'/0",
-        initialIndex: 0,
-        count: 20,
-      },
-    },
     mainnetRoot: {
       url: process.env.MAINNET_RPC_URL || 'https://mainnet.gateway.tenderly.co',
       gas: 7000000,
