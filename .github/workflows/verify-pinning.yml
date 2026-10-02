@@ -1,14 +1,12 @@
 name: Verify on-chain pinning
 
-# Deliberately master-only.
-#
-# `master` mirrors what is deployed. `staging` holds what we intend to deploy NEXT and is
-# therefore EXPECTED to diverge from the chain, so running this there would be red by design.
+# The tree reproduces the deployed mainnet bridge, so every long-lived branch must stay green.
+# `main` is listed ahead of the planned master -> main rename.
 on:
   push:
-    branches: [master]
+    branches: [master, main, dev]
   pull_request:
-    branches: [master]
+    branches: [master, main, dev]
   # No schedule, deliberately. Bytecode at a fixed address never changes, so re-fetching the same
   # addresses on a timer proves nothing about the bytecode. The verifier's `liveness` check DOES
   # detect the system being re-pointed at a different address, which can happen with no commit at
@@ -51,10 +49,11 @@ jobs:
       - name: Install npm dependencies
         run: npm install
 
+      # Pinned to match test.yml: forge 1.8+ cannot build this repo's solc 0.6.6 test tree.
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
         with:
-          version: stable
+          version: v1.7.1
 
       # Builds every inventory entry with the compiler settings it was deployed with and compares
       # the metadata-stripped runtime against eth_getCode. Exits non-zero on any undocumented
