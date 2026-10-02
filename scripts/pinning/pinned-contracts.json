@@ -425,14 +425,14 @@
         "target": "0x1BFD67037B42Cf73acF2047067bd4F2C47D9BfD6",
         "sig": "implementation()(address)"
       },
-      "note": "The current child-ERC20 implementation: the one with changeName(). Rare in practice \u2014 only ~10 mapped ERC20s run it (LEND, COMP, MANA, YFI, BUSD, WBTC and a handful of small tokens); almost nothing was ever upgraded off the superseded build below, which ~99% of them still run. WBTC is pinned as the representative \u2014 each mapped token deploys its own copy at its own address, but they all run this runtime, so verifying it once covers the class. UChildDAI extends this same source. Built on the frozen EIP712BaseLegacy/NativeMetaTransactionLegacy chain (see contracts/common/legacy/): the modern EIP712Base is live too, under RootChainManager, and the two cannot be merged without breaking one of them."
+      "note": "The current child-ERC20 implementation: the one with changeName(). Rare in practice \u2014 only ~10 mapped ERC20s run it (LEND, COMP, MANA, YFI, BUSD, WBTC and a handful of small tokens); almost nothing was ever upgraded off the common build below, which ~99% of them still run. WBTC is pinned as the representative \u2014 each mapped token deploys its own copy at its own address, but they all run this runtime, so verifying it once covers the class. UChildDAI extends this same source. Built on the frozen EIP712BaseLegacy/NativeMetaTransactionLegacy chain (see contracts/common/legacy/): the modern EIP712Base is live too, under RootChainManager, and the two cannot be merged without breaking one of them."
     },
     {
       "chain": "137",
-      "name": "UChildERC20 (superseded, UNI)",
+      "name": "UChildERC20 (common, UNI)",
       "address": "0x55FFBeE7323CC4647E294f5f1e72A3cC978dA5dB",
-      "file": "contracts/child/ChildToken/UpgradeableChildERC20/UChildERC20Superseded.sol",
-      "artifact": "UChildERC20Superseded",
+      "file": "contracts/child/ChildToken/UpgradeableChildERC20/UChildERC20Common.sol",
+      "artifact": "UChildERC20Common",
       "solc": "0.6.6",
       "optimizer": {
         "enabled": false,
@@ -443,14 +443,14 @@
         "target": "0xb33EaAd8d922B1083446DC23f610c2567fB5180f",
         "sig": "implementation()(address)"
       },
-      "note": "The child-ERC20 build from before changeName() was added, and \u2014 despite the name \u2014 the child-token standard on Polygon: as of Aug 2026 this runtime is what ~2,085 of the ~2,107 proxied mapped ERC20s run, about 99%. Measured by walking RootChainManager's full TokenMapped history and comparing the runtime behind every child token; re-measure before trusting the figure years from now. The six entries here are the largest of those tokens. Each of them deploys its own instance of the implementation at its own address, so these six entries are the same 14161 bytes at six addresses, all reproducing from the one frozen source in UChildERC20Superseded.sol. Kept as six entries rather than one representative because the liveness pointer is per token: if any of them is upgraded to the current implementation, that entry goes STALE_POINTER and drops out, which a single representative would hide. UChildERC20.sol is the same contract plus changeName() and cannot produce this build."
+      "note": "The child-ERC20 build from before changeName() was added, and the child-token standard on Polygon: as of Aug 2026 this runtime is what ~2,085 of the ~2,107 proxied mapped ERC20s run, about 99%. Measured by walking RootChainManager's full TokenMapped history and comparing the runtime behind every child token; re-measure before trusting the figure years from now. The six entries here are the largest of those tokens. Each of them deploys its own instance of the implementation at its own address, so these six entries are the same 14161 bytes at six addresses, all reproducing from the one frozen source in UChildERC20Common.sol. Kept as six entries rather than one representative because the liveness pointer is per token: if any of them is upgraded to the current implementation, that entry goes STALE_POINTER and drops out, which a single representative would hide. UChildERC20.sol is the same contract plus changeName() and cannot produce this build."
     },
     {
       "chain": "137",
-      "name": "UChildERC20 (superseded, AAVE)",
+      "name": "UChildERC20 (common, AAVE)",
       "address": "0xad3B0017de2065CBeFF6655Fa7A83b42B9e4a3ce",
-      "file": "contracts/child/ChildToken/UpgradeableChildERC20/UChildERC20Superseded.sol",
-      "artifact": "UChildERC20Superseded",
+      "file": "contracts/child/ChildToken/UpgradeableChildERC20/UChildERC20Common.sol",
+      "artifact": "UChildERC20Common",
       "solc": "0.6.6",
       "optimizer": {
         "enabled": false,
@@ -461,14 +461,14 @@
         "target": "0xD6DF932A45C0f255f85145f286eA0b292B21C90B",
         "sig": "implementation()(address)"
       },
-      "note": "Own instance of the superseded implementation; see the UNI entry for the class."
+      "note": "Own instance of the common implementation; see the UNI entry for the class."
     },
     {
       "chain": "137",
-      "name": "UChildERC20 (superseded, CRV)",
+      "name": "UChildERC20 (common, CRV)",
       "address": "0x98125B30e2C3081A7f4625801ca249eCDFc59EA2",
-      "file": "contracts/child/ChildToken/UpgradeableChildERC20/UChildERC20Superseded.sol",
-      "artifact": "UChildERC20Superseded",
+      "file": "contracts/child/ChildToken/UpgradeableChildERC20/UChildERC20Common.sol",
+      "artifact": "UChildERC20Common",
       "solc": "0.6.6",
       "optimizer": {
         "enabled": false,
@@ -479,14 +479,14 @@
         "target": "0x172370d5Cd63279eFa6d502DAB29171933a610AF",
         "sig": "implementation()(address)"
       },
-      "note": "Own instance of the superseded implementation; see the UNI entry for the class."
+      "note": "Own instance of the common implementation; see the UNI entry for the class."
     },
     {
       "chain": "137",
-      "name": "UChildERC20 (superseded, SUSHI)",
+      "name": "UChildERC20 (common, SUSHI)",
       "address": "0x070E7D3151C89eD13893c84baAe0a3F7fDb1E2e6",
-      "file": "contracts/child/ChildToken/UpgradeableChildERC20/UChildERC20Superseded.sol",
-      "artifact": "UChildERC20Superseded",
+      "file": "contracts/child/ChildToken/UpgradeableChildERC20/UChildERC20Common.sol",
+      "artifact": "UChildERC20Common",
       "solc": "0.6.6",
       "optimizer": {
         "enabled": false,
@@ -497,14 +497,14 @@
         "target": "0x0b3F868E0BE5597D5DB7fEB59E1CADBb0fdDa50a",
         "sig": "implementation()(address)"
       },
-      "note": "Own instance of the superseded implementation; see the UNI entry for the class."
+      "note": "Own instance of the common implementation; see the UNI entry for the class."
     },
     {
       "chain": "137",
-      "name": "UChildERC20 (superseded, BAL)",
+      "name": "UChildERC20 (common, BAL)",
       "address": "0xf957DB7230B879cc905a7afA87748d8b7dA7689e",
-      "file": "contracts/child/ChildToken/UpgradeableChildERC20/UChildERC20Superseded.sol",
-      "artifact": "UChildERC20Superseded",
+      "file": "contracts/child/ChildToken/UpgradeableChildERC20/UChildERC20Common.sol",
+      "artifact": "UChildERC20Common",
       "solc": "0.6.6",
       "optimizer": {
         "enabled": false,
@@ -515,14 +515,14 @@
         "target": "0x9a71012B13CA4d3D0Cdc72A177DF3ef03b0E76A3",
         "sig": "implementation()(address)"
       },
-      "note": "Own instance of the superseded implementation; see the UNI entry for the class."
+      "note": "Own instance of the common implementation; see the UNI entry for the class."
     },
     {
       "chain": "137",
-      "name": "UChildERC20 (superseded, GHST)",
+      "name": "UChildERC20 (common, GHST)",
       "address": "0x5004bc7E5B718c245cA859DB349Dd012CFD58395",
-      "file": "contracts/child/ChildToken/UpgradeableChildERC20/UChildERC20Superseded.sol",
-      "artifact": "UChildERC20Superseded",
+      "file": "contracts/child/ChildToken/UpgradeableChildERC20/UChildERC20Common.sol",
+      "artifact": "UChildERC20Common",
       "solc": "0.6.6",
       "optimizer": {
         "enabled": false,
@@ -533,7 +533,7 @@
         "target": "0x385Eeac5cB85A38A9a07A70c73e0a3271CfB54A7",
         "sig": "implementation()(address)"
       },
-      "note": "Own instance of the superseded implementation; see the UNI entry for the class."
+      "note": "Own instance of the common implementation; see the UNI entry for the class."
     },
     {
       "chain": "137",

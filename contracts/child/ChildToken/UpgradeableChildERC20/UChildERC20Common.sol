@@ -15,8 +15,9 @@ import {ContextMixin} from "../../../common/ContextMixin.sol";
  * @dev The contract text below is the verified source of the deployed implementations verbatim,
  * with two edits that touch metadata only and never the runtime: the flattened preamble is
  * replaced by imports of the identical modules this repo already holds, and the contract is
- * suffixed `Superseded` so it does not collide with the current build by name. That the bytecode
- * still reproduces is the proof those modules are byte-identical to what was inlined.
+ * suffixed `Common`, for the build most tokens run, so it does not collide with the current build
+ * by name. That the bytecode still reproduces is the proof those modules are byte-identical to
+ * what was inlined.
  *
  * UChildERC20.sol is the SAME contract plus changeName(); one source cannot produce both builds,
  * which is why this copy exists rather than a conditional. Each mapped token deploys its own
@@ -26,7 +27,7 @@ import {ContextMixin} from "../../../common/ContextMixin.sol";
  * Build at solc 0.6.6, optimizer OFF, runs 200, istanbul. Compiled and compared, never deployed.
  * Do not edit.
  */
-contract UChildERC20Superseded is
+contract UChildERC20Common is
     ERC20,
     IChildToken,
     AccessControlMixin,

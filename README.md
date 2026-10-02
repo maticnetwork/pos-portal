@@ -142,7 +142,7 @@ history). The newer build that `UChildERC20 (impl, WBTC)` pins is behind roughly
 mapped token's implementation, read `implementation()` on the child token and compare that
 address's runtime against these entries — the 99 % entry will match almost every time.
 
-The six reproduce from `UChildERC20Superseded.sol`, which is that build's verified source with its flattened preamble
+The six reproduce from `UChildERC20Common.sol`, which is that build's verified source with its flattened preamble
 swapped for imports of the identical modules already in the repo — the match proves those modules
 are byte-for-byte what was inlined. `UChildERC20.sol` is the same contract plus `changeName()` and
 cannot produce both.
