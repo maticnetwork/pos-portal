@@ -32,8 +32,9 @@ fs_permissions = [{ access = "read", path = "./forge/"}, { access = "read", path
 #   runs=200          the default below; matches 6 of 8 predicates, ChildChainManager
 #   runs=999999       RootChainManager + ERC20Predicate (redeployed via Foundry, Aug 2025) — pinned
 #                     per-path below, so a plain `forge build` reproduces them
-#   optimizer OFF     all 10 proxy shells, UChildERC20, UChildDAI. Forge restrictions support
-#                     `optimizer_runs` but not `optimizer`, so this one cannot be expressed here.
+#   optimizer OFF     11 of the 12 proxy shells (ChainExitERC1155PredicateProxy is the exception,
+#                     built ON), both UChildERC20 builds and UChildDAI. Forge restrictions support
+#                     `optimizer_runs` but not `optimizer`, so this one cannot be expressed here —
 #                     scripts/pinning/verify-bytecode.sh builds those with the optimizer disabled.
 [[profile.default.additional_compiler_profiles]]
 name = "high-runs"
@@ -51,13 +52,13 @@ optimizer_runs = 999999
 lint_on_build= false
 
 [rpc_endpoints]
+# Defaults use Tenderly's public gateways — no key required, rate-limited.
+# Override any of these by setting MAINNET_RPC_URL / POLYGON_POS_RPC_URL etc.
+# in your shell environment if you need higher limits or a private endpoint.
 anvil = "http://127.0.0.1:8545"
-mainnet = "https://mainnet.infura.io/v3/${INFURA_TOKEN}"
-goerli = "https://goerli.infura.io/v3/${INFURA_TOKEN}"
-sepolia = "https://sepolia.infura.io/v3/${INFURA_TOKEN}"
-polygon_pos = "https://polygon-mainnet.infura.io/v3/${INFURA_TOKEN}"
-mumbai = "https://polygon-mumbai.infura.io/v3/${INFURA_TOKEN}"
-polygon_zkevm = "https://zkevm-rpc.com"
-polygon_zkevm_testnet = "https://rpc.public.zkevm-test.net"
+mainnet = "https://mainnet.gateway.tenderly.co"
+sepolia = "https://sepolia.gateway.tenderly.co"
+polygon_pos = "https://polygon.gateway.tenderly.co"
+polygon_amoy = "https://polygon-amoy.gateway.tenderly.co"
 
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
