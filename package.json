@@ -24,6 +24,9 @@
     "url": "https://github.com/maticnetwork/pos-portal/issues"
   },
   "homepage": "https://github.com/maticnetwork/pos-portal#readme",
+  "engines": {
+    "npm": ">=11.10.0"
+  },
   "config": {
     "mnemonics": "clock radar mass judge dismiss just intact mind resemble fringe diary casino"
   },

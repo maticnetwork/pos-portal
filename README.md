@@ -40,6 +40,7 @@ git clone https://github.com/maticnetwork/pos-portal
 cd pos-portal
 
 nvm install && nvm use
+npm install -g npm@11.19.1   # Node 22's bundled npm 10 is too old, see below
 npm ci
 
 # Generates Solidity interface stubs from the compiled artifacts into
@@ -51,6 +52,12 @@ forge build
 ```
 
 `npm run build` (`hardhat compile`) is also available; the Hardhat tests use it.
+
+The project `.npmrc` hardens installs: no install scripts, no git or URL dependencies, and no
+version published less than 7 days ago (`min-release-age`). That last setting needs npm 11.10 or
+newer, so `package.json` requires it and npm 10 stops with `EBADENGINE` instead of quietly
+skipping the check. To take a fix that is newer than 7 days, pass `--min-release-age=0` for that
+one install and say so in the PR.
 
 ## Testing
 
