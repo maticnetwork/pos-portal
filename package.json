@@ -17,9 +17,8 @@
     "lint:sol": "solhint 'contracts/**/*.sol'",
     "lint": "npm run lint:sol && npm run lint:js",
     "template:process": "node scripts/process-templates.js",
-    "test:ci": "scripts/run-test.sh",
     "test": "hardhat test",
-    "testrpc": "ganache-cli --hardfork istanbul --mnemonic 'clock radar mass judge dismiss just intact mind resemble fringe diary casino' --gasLimit 8000000 --gasPrice 0 --port 9545 --networkId 53227"
+    "testrpc": "anvil --port 9545 --chain-id 53227 --gas-limit 8000000 --gas-price 0 --hardfork istanbul --mnemonic 'clock radar mass judge dismiss just intact mind resemble fringe diary casino'"
   },
   "repository": {
     "type": "git",
@@ -40,12 +39,13 @@
     "@nomiclabs/hardhat-web3": "2.0.0",
     "@openzeppelin/contracts": "=3.1.0",
     "bip39": "^3.0.0",
+    "bn.js": "^4.12.2",
     "chai": "^4.3.7",
     "commander": "^13.1.0",
     "eslint": "^8.55.0",
-    "esm": "3.2.25",
     "eth-sig-util": "^3.0.0",
     "ethereumjs-tx": "^1.3.7",
+    "ethereumjs-util": "^7.1.5",
     "ethereumjs-wallet": "^0.6.0",
     "ethers": "^6.13.5",
     "glob": "^10.3.3",
@@ -53,6 +53,7 @@
     "merkle-patricia-tree": "^2.3.2",
     "nunjucks": "^3.2.1",
     "prettier": "^3.5.3",
+    "safe-buffer": "^5.2.1",
     "solhint": "^3.4.0",
     "tsx": "^4.19.4"
   },

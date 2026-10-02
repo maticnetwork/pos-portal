@@ -2,18 +2,15 @@ name: CI
 
 on:
   pull_request:
+  push:
+    branches: [master, main, dev]
   workflow_dispatch:
 
-env:
-  FOUNDRY_PROFILE: ci
-
 jobs:
-  check:
-    strategy:
-      fail-fast: true
-
-    name: Foundry project
+  test:
+    name: Build, lint and test
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
         with:
@@ -26,44 +23,45 @@ jobs:
         with:
           version: v1.7.1
 
-      - name: Show Forge version
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+          cache: npm
+
+      - name: Install npm dependencies
+        run: npm ci
+
+      - name: Show tool versions
         run: |
           forge --version
+          node --version
 
-      - name: Setup Node.js environment
-        uses: actions/setup-node@v1
-        with:
-         node-version: "22.14.0"
-      - name: Cache npm dependencies
-        uses: actions/cache@v3
-        with:
-          path: ~/.npm
-          key: ${{ runner.OS }}-npm-cache-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.OS }}-npm-cache-
-      - name: Install npm dependencies
-        run: npm install
-
-      - name: Run npm tests
-        run: npm test
-
-      - name: Check fmt
+      - name: Check JS formatting
         run: npm run fmt:js:check
 
-      - name: generate interfaces
+      - name: Lint JS
+        run: npm run lint:js
+
+      # Errors fail the build; warnings do not. See .solhintrc — several
+      # `solhint:recommended` rules assume >=0.8 and are disabled for 0.6.6.
+      - name: Lint Solidity
+        run: npm run lint:sol
+
+      # `forge fmt --check` is deliberately absent: current Foundry releases
+      # cannot format pre-0.8 sources, and every contract here is pinned to 0.6.6.
+
+      - name: Generate interfaces
         run: npm run generate:interfaces
 
-      # - name: Run Forge fmt
-      #   run: |
-      #     forge fmt --check
-      #   id: fmt
+      - name: Build contracts
+        run: forge build --sizes
 
-      - name: Run Forge build
-        run: |
-          forge build --sizes
-        id: build
+      # Fork tests are excluded — they need an archive RPC. Everything else runs.
+      - name: Forge tests
+        run: forge test -vvv --no-match-test "SkipCI" --no-match-contract "Fork"
 
-      - name: Run Forge tests
-        run: |
-          forge test -vvv --no-match-test "SkipCI" --no-match-contract "Fork"
-        id: test
+      # Hardhat's in-process network backs these; no external chain needed.
+      # `npm run testrpc` (anvil) is only for the localhost networks in hardhat.config.cjs.
+      - name: Hardhat tests
+        run: npm test
