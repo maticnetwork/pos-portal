@@ -19,10 +19,12 @@ jobs:
         with:
           submodules: recursive
 
+      # Pinned, not stable/nightly: forge 1.8+ emits dynamic test-linking helpers that solc 0.6.6
+      # cannot parse, so any newer forge fails to build the test tree.
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
         with:
-          version: nightly
+          version: v1.7.1
 
       - name: Show Forge version
         run: |

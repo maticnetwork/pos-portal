@@ -3,16 +3,35 @@ pragma solidity 0.6.6;
 import {ERC20} from "./ERC20.sol";
 import {AccessControlMixin} from "../../../common/AccessControlMixin.sol";
 import {IChildToken} from "../IChildToken.sol";
-import {NativeMetaTransactionLegacy} from "../../../common/legacy/NativeMetaTransactionLegacy.sol";
+import {NativeMetaTransactionLegacy as NativeMetaTransaction} from "../../../common/legacy/NativeMetaTransactionLegacy.sol";
 import {ChainConstants} from "../../../common/legacy/ChainConstants.sol";
 import {ContextMixin} from "../../../common/ContextMixin.sol";
 
-
-contract UChildERC20 is
+/**
+ * @notice FROZEN. The child-ERC20 implementation from before changeName() was added, and the one
+ * nearly every mapped ERC20 actually runs: ~2,085 of the ~2,107 proxied child tokens on Polygon
+ * (about 99%, measured Aug 2026), and 19 of 20 sampled on Amoy. The build in UChildERC20.sol,
+ * despite being the newer one, is behind roughly ten tokens.
+ * @dev The contract text below is the verified source of the deployed implementations verbatim,
+ * with two edits that touch metadata only and never the runtime: the flattened preamble is
+ * replaced by imports of the identical modules this repo already holds, and the contract is
+ * suffixed `Common`, for the build most tokens run, so it does not collide with the current build
+ * by name. That the bytecode still reproduces is the proof those modules are byte-identical to
+ * what was inlined.
+ *
+ * UChildERC20.sol is the SAME contract plus changeName(); one source cannot produce both builds,
+ * which is why this copy exists rather than a conditional. Each mapped token deploys its own
+ * instance of the implementation at its own address, so this one source covers all of them —
+ * see the entries pointing here in scripts/pinning/pinned-contracts.json.
+ *
+ * Build at solc 0.6.6, optimizer OFF, runs 200, istanbul. Compiled and compared, never deployed.
+ * Do not edit.
+ */
+contract UChildERC20Common is
     ERC20,
     IChildToken,
     AccessControlMixin,
-    NativeMetaTransactionLegacy,
+    NativeMetaTransaction,
     ChainConstants,
     ContextMixin
 {
@@ -33,13 +52,13 @@ contract UChildERC20 is
         external
         initializer
     {
-        setName(name_);
-        setSymbol(symbol_);
-        setDecimals(decimals_);
-        _setupContractId(string(abi.encodePacked("Child", symbol_)));
-        _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
-        _setupRole(DEPOSITOR_ROLE, childChainManager);
-        _initializeEIP712(name_, ERC712_VERSION);
+      setName(name_);
+      setSymbol(symbol_);
+      setDecimals(decimals_);
+      _setupContractId(string(abi.encodePacked("Child", symbol_)));
+      _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
+      _setupRole(DEPOSITOR_ROLE, childChainManager);
+      _initializeEIP712(name_, ERC712_VERSION);
     }
 
     // This is to support Native meta transactions
@@ -51,11 +70,6 @@ contract UChildERC20 is
         returns (address payable sender)
     {
         return ContextMixin.msgSender();
-    }
-
-    function changeName(string calldata name_) external only(DEFAULT_ADMIN_ROLE) {
-        setName(name_);
-        _setDomainSeperator(name_, ERC712_VERSION);
     }
 
     /**

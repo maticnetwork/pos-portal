@@ -18,8 +18,6 @@ contractAddresses.json
 
 tenderly.yaml
 
-contracts/ChainConstants.sol
-
 contracts/dump.json
 
 .env
@@ -28,4 +26,12 @@ forge-cache
 artifacts
 out
 scripts/helpers/interfaces
-lib/
+# only the Foundry dependency dir at the repo root, not contracts/lib
+/lib/
+
+# Working dirs for scripts/pinning/verify-bytecode.sh (builds, fetched code, diffs)
+verify-onchain*
+
+# Bytecode cache from importing scripts/pinning/compare_bytecode.py as a module
+__pycache__/
+*.pyc
