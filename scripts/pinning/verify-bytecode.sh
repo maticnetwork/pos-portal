@@ -34,6 +34,13 @@ rpc_for() {
 #    optimizer is off — solc still consults it when picking the function dispatcher, so the
 #    proxy shells only reproduce at (enabled=false, runs<=200). Group by the full setting
 #    tuple so one build serves every entry that shares it.
+#
+#    NOTE: `compilation_restrictions` in foundry.toml take precedence over the FOUNDRY_*
+#    environment variables set below. Today the two agree (foundry.toml pins RootChainManager
+#    and ERC20Predicate to runs=999999, which is what this script wants for them anyway), so a
+#    wrong value there still surfaces as a MISMATCH rather than a false pass. But this script is
+#    no longer fully independent of foundry.toml — if you add a restriction, check it against the
+#    settings recorded in pinned-contracts.json.
 : > "$WORK/build-failures.log"
 for key in $(jq -r '[.contracts[] | select(.exclude != true)
                      | "\(.solc)_\(if .optimizer.enabled == false then "off" else "on" end)_\(.optimizer.runs // 200)_\(.evmVersion // "istanbul")"]
