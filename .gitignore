@@ -8,12 +8,6 @@ build
 # Committing flattened contracts so they can be loaded in remix easily
 # flat
 
-test-blockchain/genesis.json
-test-blockchain/geth
-test-blockchain/history
-test-blockchain/data
-test-blockchain/start.sh
-
 contractAddresses.json
 
 tenderly.yaml

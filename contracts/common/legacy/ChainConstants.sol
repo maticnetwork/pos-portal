@@ -2,10 +2,10 @@ pragma solidity 0.6.6;
 
 /**
  * @notice FROZEN. Reproduces the deployed child-token implementations and nothing else.
- * @dev This was a generated file (ChainConstants.sol.template, rendered by
- * scripts/process-templates.js) back when the child tokens were deployed; the template is gone
- * and the constants below are the values it rendered. Kept only so UChildERC20 still compiles to
- * its live bytecode.
+ * @dev This was a generated file back when the child tokens were deployed: a
+ * ChainConstants.sol.template rendered per-network by scripts/process-templates.js. Both the
+ * template and the renderer are gone from this repo now, and the constants below are the values
+ * they produced. Kept only so UChildERC20 still compiles to its live bytecode.
  *
  * Only ERC712_VERSION is ever read — UChildERC20.initialize() and changeName() pass it to
  * _initializeEIP712/_setDomainSeperator. The two chain ids are dead as far as this repo is
