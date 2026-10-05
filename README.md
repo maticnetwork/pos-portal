@@ -40,7 +40,7 @@ git clone https://github.com/maticnetwork/pos-portal
 cd pos-portal
 
 nvm install && nvm use
-npm install -g npm@11.19.1   # Node 22's bundled npm 10 is too old, see below
+npm install -g npm@11        # Node 22's bundled npm 10 is too old, see below
 npm ci
 
 # Generates Solidity interface stubs from the compiled artifacts into
@@ -64,8 +64,8 @@ one install and say so in the PR.
 There are two suites, and they are not redundant in the places that matter.
 
 ```bash
-forge test                             # 111 tests
-npm test                               # 550 tests (Hardhat)
+forge test
+npm test                               # Hardhat
 ```
 
 **Foundry** (`forge/`) covers the predicates and both managers at unit level — lock/exit happy
@@ -133,12 +133,8 @@ the child-ERC20 build from before `changeName()` was added, and each deploys its
 the implementation, so the six entries are 14161 identical bytes at six different addresses. Only
 UNI's happens to sit at the address you would guess.
 
-That build is not a legacy tail — it is what **~2,085 of the ~2,107** proxied mapped ERC20s on
-Polygon run, about **99 %** (measured Aug 2026 by walking `RootChainManager`'s full `TokenMapped`
-history). The newer build that `UChildERC20 (impl, WBTC)` pins is behind roughly **ten** tokens;
-`UChildDAI` covers exactly one. Those counts are in the entry notes on purpose: to identify any
-mapped token's implementation, read `implementation()` on the child token and compare that
-address's runtime against these entries — the 99 % entry will match almost every time.
+To identify any mapped token's implementation, read `implementation()` on the child token and
+compare that address's runtime against these entries.
 
 The six reproduce from `UChildERC20Common.sol`, which is that build's verified source with its
 flattened preamble swapped for imports of the identical modules already in the repo — the match
@@ -147,8 +143,7 @@ plus `changeName()` and cannot produce both.
 
 They are six entries rather than one representative because the `liveness` pointer is per token:
 if any of the six is upgraded to the current implementation, that entry goes `STALE_POINTER` and
-gets removed, which one shared entry would quietly hide. The same build is what nearly every
-mapped ERC20 on Amoy runs too — 19 of 20 sampled.
+gets removed, which one shared entry would quietly hide.
 
 ### Before editing a pinned contract
 
@@ -201,7 +196,3 @@ Broadcast records from past runs are kept under `broadcast/`.
 
 RPC endpoints default to Tenderly's keyless public gateways (see `[rpc_endpoints]` in
 `foundry.toml`), so no API key is needed; export `MAINNET_RPC_URL` for a private endpoint.
-
-> The previous Truffle/`matic-cli` migration flow documented here has been removed: it depended on
-> `truffle-config.js`, a `migrations/` directory and an `npm run migrate` script, none of which
-> exist any more. `git log` has the old instructions if you need them.

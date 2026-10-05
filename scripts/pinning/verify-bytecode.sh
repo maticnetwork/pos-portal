@@ -81,8 +81,7 @@ done
 
 # 3. Resolve liveness pointers. Bytecode at a fixed address is immutable, so comparing it can
 #    never catch the system being re-pointed at a DIFFERENT address — a proxy upgrade leaves the
-#    old implementation, and this check, perfectly green. That has already happened here twice
-#    (RootChainManager and ERC20Predicate were both re-pointed in Aug 2025). So for entries
+#    old implementation, and this check, perfectly green. So for entries
 #    reached through a pointer, ask the live system what it points at now and require it to still
 #    be the address we pin. NOT cached: this is the one value that can change.
 for chain in "${CHAINS[@]}"; do
