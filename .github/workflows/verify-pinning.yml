@@ -39,6 +39,11 @@ jobs:
       # The OpenZeppelin sources every contract imports are resolved through node_modules
       # (see the remappings in foundry.toml), so the build cannot run without this.
       # jq and python3 are preinstalled on the runner.
+      # Node stays on .nvmrc, but its bundled npm 10 ignores min-release-age (.npmrc), so npm is
+      # pinned separately. package.json's engines field makes an older npm fail rather than skip it.
+      - name: Install npm
+        run: npm install -g npm@11.19.1
+
       - name: Install npm dependencies
         run: npm ci
 
