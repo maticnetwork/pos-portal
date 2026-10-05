@@ -269,11 +269,3 @@ library RLPReaderLegacy {
         }
     }
 }
-
-// File: contracts/root/TokenPredicates/ITokenPredicate.sol
-
-pragma solidity 0.6.6;
-
-
-/// @title Token predicate interface for all pos portal predicates
-/// @notice Abstract interface that defines methods for custom predicates
