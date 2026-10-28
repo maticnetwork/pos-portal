@@ -41,40 +41,8 @@ module.exports = {
         count: 20,
       },
     },
-    child: {
-      url: 'http://localhost:8545',
-      gas: 7000000,
-      accounts: {
-        mnemonic: process.env.MNEMONIC || DEFAULT_MNEMONIC,
-        path: "m/44'/60'/0'/0",
-        initialIndex: 0,
-        count: 20,
-      },
-    },
-    mumbaiRoot: {
-      url: `https://goerli.infura.io/v3/${process.env.API_KEY}`,
-      gas: 7000000,
-      gasPrice: 10000000000, // 10 gwei
-      accounts: {
-        mnemonic: process.env.MNEMONIC || DEFAULT_MNEMONIC,
-        path: "m/44'/60'/0'/0",
-        initialIndex: 0,
-        count: 20,
-      },
-    },
-    mumbaiChild: {
-      url: 'https://rpc-mumbai.matic.today',
-      gas: 7000000,
-      gasPrice: 10000000000, // 10 gwei
-      accounts: {
-        mnemonic: process.env.MNEMONIC || DEFAULT_MNEMONIC,
-        path: "m/44'/60'/0'/0",
-        initialIndex: 0,
-        count: 20,
-      },
-    },
     mainnetRoot: {
-      url: `https://mainnet.infura.io/v3/${process.env.API_KEY}`,
+      url: process.env.MAINNET_RPC_URL || 'https://mainnet.gateway.tenderly.co',
       gas: 7000000,
       gasPrice: 10000000000, // 10 gwei
       accounts: {
@@ -85,7 +53,7 @@ module.exports = {
       },
     },
     mainnetChild: {
-      url: 'https://rpc-mainnet.matic.network',
+      url: process.env.POLYGON_POS_RPC_URL || 'https://polygon.gateway.tenderly.co',
       gas: 7000000,
       gasPrice: 10000000000, // 10 gwei
       accounts: {

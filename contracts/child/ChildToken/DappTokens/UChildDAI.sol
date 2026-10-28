@@ -28,8 +28,6 @@ contract UChildDAI is UChildERC20 {
         bytes32 r,
         bytes32 s
     ) external {
-        require(holder != address(0), "UChildDAI: HOLDER-ZERO");
-
         bytes32 digest = keccak256(
             abi.encodePacked(
                 "\x19\x01",
@@ -49,7 +47,6 @@ contract UChildDAI is UChildERC20 {
         require(holder == ecrecover(digest, v, r, s), "UChildDAI: INVALID-PERMIT");
         require(expiry == 0 || now <= expiry, "UChildDAI: PERMIT-EXPIRED");
         require(nonce == nonces[holder]++, "UChildDAI: INVALID-NONCE");
-        require(msg.sender != address(this), "UChildDAI: PERMIT_META_TX_DISABLED");
         uint wad = allowed ? uint(-1) : 0;
         _approve(holder, spender, wad);
     }

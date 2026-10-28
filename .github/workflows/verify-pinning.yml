@@ -1,0 +1,76 @@
+name: Verify on-chain pinning
+
+# The tree reproduces the deployed mainnet bridge, so every long-lived branch must stay green.
+# `main` is listed ahead of the planned master -> main rename.
+on:
+  push:
+    branches: [master, main, dev]
+  pull_request:
+    branches: [master, main, dev]
+  # No schedule, deliberately. Bytecode at a fixed address never changes, so re-fetching the same
+  # addresses on a timer proves nothing about the bytecode. The verifier's `liveness` check DOES
+  # detect the system being re-pointed at a different address, which can happen with no commit at
+  # all — so a periodic run would catch something here. Left off by choice; add a `schedule:` if
+  # you want proxy upgrades surfaced without waiting for the next PR.
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: verify-pinning-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify-pinning:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+          cache: npm
+
+      # The OpenZeppelin sources every contract imports are resolved through node_modules
+      # (see the remappings in foundry.toml), so the build cannot run without this.
+      # jq and python3 are preinstalled on the runner.
+      # Node stays on .nvmrc, but its bundled npm 10 ignores min-release-age (.npmrc), so npm is
+      # pinned separately. package.json's engines field makes an older npm fail rather than skip it.
+      - name: Install npm
+        run: npm install -g npm@11.19.1
+
+      - name: Install npm dependencies
+        run: npm ci
+
+      # Pinned to match test.yml: forge 1.8+ cannot build this repo's solc 0.6.6 test tree.
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: v1.7.1
+
+      # Builds every inventory entry with the compiler settings it was deployed with and compares
+      # the metadata-stripped runtime against eth_getCode. Exits non-zero on any undocumented
+      # mismatch. ~40 RPC calls against the keyless Tenderly gateways named in
+      # pinned-contracts.json; set MAINNET_RPC_URL / POLYGON_POS_RPC_URL as repo secrets if the
+      # rate limit ever becomes a problem.
+      - name: Verify pinned contracts reproduce on-chain bytecode
+        run: scripts/pinning/verify-bytecode.sh
+
+      # verify-onchain/ is gitignored, so on failure these are the only way to see WHERE the
+      # bytecode diverged rather than just that it did.
+      - name: Upload diff artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pinning-diffs
+          path: |
+            verify-onchain/results.json
+            verify-onchain/diffs/
+            verify-onchain/build-failures.log
+          if-no-files-found: ignore
+          retention-days: 14

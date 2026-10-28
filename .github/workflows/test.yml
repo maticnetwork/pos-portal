@@ -2,66 +2,67 @@ name: CI
 
 on:
   pull_request:
+  push:
+    branches: [master, main, dev]
   workflow_dispatch:
 
-env:
-  FOUNDRY_PROFILE: ci
-
 jobs:
-  check:
-    strategy:
-      fail-fast: true
-
-    name: Foundry project
+  test:
+    name: Build, lint and test
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
 
+      # Pinned, not stable/nightly: forge 1.8+ emits dynamic test-linking helpers that solc 0.6.6
+      # cannot parse, so any newer forge fails to build the test tree.
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
         with:
-          version: nightly
-
-      - name: Show Forge version
-        run: |
-          forge --version
+          version: v1.7.1
 
       - name: Setup Node.js environment
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v4
         with:
-         node-version: "22.14.0"
-      - name: Cache npm dependencies
-        uses: actions/cache@v3
-        with:
-          path: ~/.npm
-          key: ${{ runner.OS }}-npm-cache-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.OS }}-npm-cache-
+          node-version-file: ".nvmrc"
+          cache: npm
+
+      # Node stays on .nvmrc, but its bundled npm 10 ignores min-release-age (.npmrc), so npm is
+      # pinned separately. package.json's engines field makes an older npm fail rather than skip it.
+      - name: Install npm
+        run: npm install -g npm@11.19.1
+
       - name: Install npm dependencies
-        run: npm install
+        run: npm ci
 
-      - name: Run npm tests
-        run: npm test
+      - name: Show tool versions
+        run: |
+          forge --version
+          node --version
 
-      - name: Check fmt
+      - name: Check JS formatting
         run: npm run fmt:js:check
 
-      - name: generate interfaces
+      - name: Lint JS
+        run: npm run lint:js
+
+      # No Solidity linter or formatter runs here, deliberately. `forge fmt` cannot
+      # handle pre-0.8 sources, and solhint's useful output on this codebase was 3
+      # findings against 75 that were either cosmetic or landed on contracts frozen
+      # for bytecode reproduction (see scripts/pinning/).
+
+      - name: Generate interfaces
         run: npm run generate:interfaces
 
-      # - name: Run Forge fmt
-      #   run: |
-      #     forge fmt --check
-      #   id: fmt
+      - name: Build contracts
+        run: forge build --sizes
 
-      - name: Run Forge build
-        run: |
-          forge build --sizes
-        id: build
+      - name: Forge tests
+        run: forge test -vvv
 
-      - name: Run Forge tests
-        run: |
-          forge test -vvv --no-match-test "SkipCI" --no-match-contract "Fork"
-        id: test
+      # Hardhat's in-process network backs these; no external chain needed.
+      # `npm run testrpc` (anvil) is only for the localhost networks in hardhat.config.cjs.
+      - name: Hardhat tests
+        run: npm test

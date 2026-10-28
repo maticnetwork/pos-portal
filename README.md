@@ -1,8 +1,11 @@
 # Polygon PoS (Proof-of-Stake) portal contracts
 
-![Build Status](https://github.com/maticnetwork/pos-portal/workflows/CI/badge.svg)
+[![CI](https://github.com/maticnetwork/pos-portal/actions/workflows/test.yml/badge.svg)](https://github.com/maticnetwork/pos-portal/actions/workflows/test.yml)
+[![Verify on-chain pinning](https://github.com/maticnetwork/pos-portal/actions/workflows/verify-pinning.yml/badge.svg)](https://github.com/maticnetwork/pos-portal/actions/workflows/verify-pinning.yml)
 
-Smart contracts that powers the PoS (proof-of-stake) based bridge mechanism for [Polygon Network](https://polygon.technology/).
+Smart contracts that power the PoS (proof-of-stake) bridge for [Polygon Network](https://polygon.technology/):
+`RootChainManager` plus per-token predicates on Ethereum, `ChildChainManager` plus child tokens on
+Polygon.
 
 ## Audits
 
@@ -11,296 +14,185 @@ Smart contracts that powers the PoS (proof-of-stake) based bridge mechanism for 
 - [CertiK](audits/Matic.Audit.CertiK.Report.pdf)
 - [PeckShield](audits/Pos-portal-peckshield-audit-30-07-2021.pdf)
 
-## Usage
+## Repository layout
 
-Install package from **NPM** using
+| Path | Contents |
+|---|---|
+| `contracts/root/` | Ethereum side — `RootChainManager`, the eight token predicates, proxies |
+| `contracts/child/` | Polygon side — `ChildChainManager`, child token implementations |
+| `contracts/common/` | shared mixins: proxy, access control, EIP-712, initializable |
+| `contracts/lib/` | proof libraries — `RLPReader`, `MerklePatriciaProof`, `ExitPayloadReader`, `Merkle` |
+| `contracts/tunnel/` | the generic L1↔L2 message tunnel |
+| `forge/` | Foundry tests |
+| `test/` | Hardhat tests |
+| `scripts/forge/` | deployment and governance scripts |
+| `scripts/pinning/` | the on-chain bytecode verifier |
+
+`contracts/common/legacy/` and `contracts/lib/legacy/` hold frozen sources — see
+[Before editing a pinned contract](#before-editing-a-pinned-contract) before touching them.
+
+## Getting started
+
+Requires Node (see `.nvmrc`) and [Foundry](https://book.getfoundry.sh/getting-started/installation).
 
 ```bash
-npm i @maticnetwork/pos-portal
-```
-
-## Hardhat Build
-
-Make sure you have installed NodeJS, NVM & NPM.
-Clone repository, switch to the required node version & install all dependencies
-
-```bash
-git clone https://github.com/0xPolygon/pos-portal
+git clone https://github.com/maticnetwork/pos-portal
 cd pos-portal
 
-nvm i
-nvm use
-npm i
-npm run build
-```
+nvm install && nvm use
+npm install -g npm@11        # Node 22's bundled npm 10 is too old, see below
+npm ci
 
-## Hardhat Tests
+# Generates Solidity interface stubs from the compiled artifacts into
+# scripts/helpers/interfaces/. Must run before `forge build`, because the
+# deploy scripts under scripts/ import them.
+npm run generate:interfaces
 
-After building as mentioned above, run the following command to run Hardhat tests
-
-```bash
-npm run test
-```
-
-## Foundry Build
-
-Make sure you have installed Foundry.
-Run the following command to run Foundry build
-
-```bash
-npm run generate:interfaces # generate interfaces with updated solc version
 forge build
 ```
 
-## Foundry Tests
+`npm run build` (`hardhat compile`) is also available; the Hardhat tests use it.
 
-Modify the following in the `.env` file (create one if it doesn't exist)
+The project `.npmrc` hardens installs: no install scripts, no git or URL dependencies, and no
+version published less than 7 days ago (`min-release-age`). That last setting needs npm 11.10 or
+newer, so `package.json` requires it and npm 10 stops with `EBADENGINE` instead of quietly
+skipping the check. To take a fix that is newer than 7 days, pass `--min-release-age=0` for that
+one install and say so in the PR.
 
-```env
-# Infura API token - used for fork testing
-INFURA_TOKEN=
-# Deployer private key - your private key, that has enough funds to deploy contracts on forked networks
-PRIVATE_KEY=
-```
+## Testing
 
-After building as mentioned above, run the following command to run Foundry tests
+There are two suites, and they are not redundant in the places that matter.
 
 ```bash
 forge test
+npm test                               # Hardhat
 ```
 
-### Known Issues
+**Foundry** (`forge/`) covers the predicates and both managers at unit level — lock/exit happy
+paths, access control, revert cases — plus the migration-status logic on `RootChainManager`.
 
-- `ForkupgradeMPT.t.sol` can take a while to complete. if it does, you can run the following command to skip it
+**Hardhat** (`test/`) overlaps substantially on the predicates, but is the only place with the
+end-to-end flow: `test/root/Withdraw.test.js` runs deposit → burn → checkpoint → exit across every
+token type. It also covers the proxy, initializable, meta-transaction, tunnel and child-token
+contracts, none of which Foundry touches.
+
+Both run on an in-process chain — no external node is needed. `npm run testrpc` starts an anvil
+instance on port 9545 for the `development` / `root` networks in `hardhat.config.cjs`, but nothing
+in the test suite requires it.
+
+### npm scripts
+
+| Script | Does |
+|---|---|
+| `npm test` | Hardhat test suite |
+| `npm run build` | `hardhat compile` |
+| `npm run generate:interfaces` | regenerate `scripts/helpers/interfaces/` |
+| `npm run testrpc` | anvil on port 9545 |
+| `npm run fmt:js:check` / `fmt:js:fix` | Prettier over `scripts/` and `test/` |
+| `npm run lint:js` | ESLint over `test/` |
+| `npm run flatten` | `hardhat flatten` |
+
+No Solidity linter or formatter is wired up: `forge fmt` cannot handle pre-0.8 sources, and every
+contract here is pinned to `0.6.6`.
+
+## Verifying against the deployed bridge
+
+The tree reproduces the bridge deployed on mainnet, byte for byte. `scripts/pinning/verify-bytecode.sh`
+checks that claim: it compiles every core bridge contract with the compiler settings it was
+deployed with and compares the result against `eth_getCode` on Ethereum and Polygon.
 
 ```bash
-forge test --no-match-test "SkipCI"
+scripts/pinning/verify-bytecode.sh        # all chains
+scripts/pinning/verify-bytecode.sh 1      # Ethereum mainnet only
 ```
 
-## Other Build Options [Deprecated]
+Needs `jq`, `python3` and Foundry. It uses keyless public RPCs by default; export
+`MAINNET_RPC_URL` / `POLYGON_POS_RPC_URL` to override. Everything it downloads and builds goes
+into the gitignored `verify-onchain/` directory, including a hex dump of both sides of any
+mismatch under `verify-onchain/diffs/`.
 
-If you prefer not using docker for compiling contracts, consider setting `docker: false` in truffle-config.js.
+The check runs in CI on `master`, `main` and `dev`.
 
-```js
-// file: truffle-config.js
-...
+### The inventory
 
-127|    solc: {
-128|        version: '0.6.6',
-129|        docker: false,
-        }
-...
+`scripts/pinning/pinned-contracts.json` is the source of truth; read its `_comment` for the full
+field reference. It covers the managers, the eight token predicates, the immutable proxy shells
+and the child-token code that many mapped tokens share. **Individual mapped tokens are out of
+scope** — only immutable or shared code is tracked.
+
+The inventory should stay fully green. If a contract needs to change ahead of a deploy, put the
+change on its own branch and merge it when the deploy happens, rather than landing it on a
+long-lived branch and marking the entry as drift. The verifier does support a `knownDrift` escape hatch — it reports
+without failing, and flags the exemption as stale if the contract starts reproducing again — but
+nothing uses it today, and it is meant for cases that cannot be resolved any other way.
+
+Nothing is `exclude`d and nothing is marked as drift: all 30 entries reproduce.
+
+Six of them are the same contract at six addresses. AAVE, UNI, CRV, SUSHI, BAL and GHST still run
+the child-ERC20 build from before `changeName()` was added, and each deploys its own instance of
+the implementation, so the six entries are 14161 identical bytes at six different addresses. Only
+UNI's happens to sit at the address you would guess.
+
+To identify any mapped token's implementation, read `implementation()` on the child token and
+compare that address's runtime against these entries.
+
+The six reproduce from `UChildERC20Common.sol`, which is that build's verified source with its
+flattened preamble swapped for imports of the identical modules already in the repo — the match
+proves those modules are byte-for-byte what was inlined. `UChildERC20.sol` is the same contract
+plus `changeName()` and cannot produce both.
+
+They are six entries rather than one representative because the `liveness` pointer is per token:
+if any of the six is upgraded to the current implementation, that entry goes `STALE_POINTER` and
+gets removed, which one shared entry would quietly hide.
+
+### Before editing a pinned contract
+
+Four things will bite you:
+
+- **The proxy shells can never be redeployed.** `UpgradableProxy` is held at the exact source
+  the live shells were compiled from. Improving it silently breaks reproducibility for all
+  twelve of them, so any change belongs in a new contract, not that one.
+- **Compiler settings are per-contract, not global.** The predicates deployed in 2020-21 used
+  optimizer runs 200; `RootChainManager` and `ERC20Predicate` were redeployed via Foundry in
+  2025 at runs 999999 — both pinned per-path in `foundry.toml` so a plain `forge build`
+  reproduces them. The proxy shells were deployed with the optimizer *off*, which Foundry's
+  compilation restrictions cannot express, so the verifier builds those itself. Note that
+  `runs` still affects output when the optimizer is disabled — solc consults it when choosing
+  the function dispatcher.
+- **A shared interface is a deployment constraint.** Adding a method to `ITokenPredicate`
+  forces a stub into all eight predicates, and any predicate not redeployed alongside it stops
+  reproducing. That is why migration lives in `IMigratableTokenPredicate`, implemented only by
+  `ERC20Predicate`.
+- **`legacy/` directories are load-bearing, not dead code.** Where the live system still runs a
+  source this repo has moved past, the old source is frozen rather than lost:
+  `contracts/common/legacy/` holds the pre-refactor EIP-712 chain the child tokens were built
+  on (the modern `EIP712Base` is live too, under `RootChainManager` — the two cannot be merged
+  without breaking one of them), and `contracts/lib/legacy/` holds the hardened RLP reader that
+  `ChainExitERC1155Predicate` was deployed against, before it was replaced with the upstream
+  library in 2021. Deleting or "tidying" either one breaks verification for the deployments
+  that depend on it.
+
+## Deploying
+
+Deployment is done with Foundry scripts under `scripts/forge/`, each with an
+`input.json.example` showing the parameters it expects:
+
+| Script | Purpose |
+|---|---|
+| `grant-role/` | grant a role on RootChainManager or a predicate |
+| `transfer-ownership/` | move proxy ownership |
+| `migrate-bridge-funds/` | move funds out of a predicate |
+| `update-impl-timelock/` | swap an implementation via the Timelock |
+| `update-impl-multisig/` | swap an implementation held directly by a multisig |
+
+These broadcast real transactions and read the signing key from the environment:
+
+```env
+# Deployer private key — needs funds on the target chain
+PRIVATE_KEY=
 ```
 
-For deploying all contracts in `pos-portal`, we need to have at least two chains running --- simulating RootChain ( Ethereum ) & ChildChain ( Polygon ). There are various ways of building this multichain setup, though two of them are majorly used
+Broadcast records from past runs are kept under `broadcast/`.
 
-1. With `matic-cli`
-2. Without `matic-cli`
-
-`matic-cli` is a project, which makes setting up all components of Ethereum <-> Polygon multichain ecosystem easier. Three components matic-cli sets up for you
-
-- Ganache ( simulating RootChain )
-- Heimdall ( validator node of Polygon )
-- Bor ( block production layer of Polygon i.e. ChildChain )
-
-You may want to check [matic-cli](https://github.com/maticnetwork/matic-cli).
-
----
-
-### 1. With `matic-cli`
-
-Assuming you've installed `matic-cli` & set up single node local network by following [this guide](https://github.com/maticnetwork/matic-cli#usage), it's good time to start all components seperately as mentioned in `matic-cli` README.
-
-This should give you RPC listen addresses for both RootChain ( read Ganache ) & ChildChain ( read Bor ), which need to updated in `pos-portal/truffle-config.js`. Also note Mnemonic you used when setting up local network, we'll make use of it for migrating pos-portal contracts.
-
-`matic-cli` generates `~/localnet/config/contractAddresses.json`, given you decided to put network setup in `~/localnet` directory, which contains deployed Plasma contract addresses. We're primarily interested in Plasma RootChain ( deployed on RootChain, as name suggests aka *Checkpoint contract* ) & StateReceiver contract ( deployed on Bor ). These two contract addresses need to be updated [here](migrations/config.js).
-
-> You may not need to change `stateReceiver` field, because that's where Bor deploys respective contract, by default.
-
-> Plasma RootChain contract address is required for setting checkpoint manager in PoS RootChainManager contract during migration. PoS RootChainManager will talk to Checkpointer contract for verifying PoS exit proof.
-
-```js
-// file: migrations/config.js
-
-module.exports = {
-  plasmaRootChain: '0x<fill-it-up>', // aka checkpointer
-  stateReceiver: '0x0000000000000000000000000000000000001001'
-}
-```
-
-Now you can update preferred mnemonic to be used for migration in [truffle config](truffle-config.js)
-
-```js
-// file: truffle-config.js
-
-29| const MNEMONIC = process.env.MNEMONIC || '<preferred-mnemonic>'
-```
-
-Also consider updating network configurations for `root` & `child` in truffle-config.js
-
-```js
-// make sure host:port of RPC matches properly
-// that's where all following transactions to be sent
-
-52| root: {
-        host: 'localhost',
-        port: 9545,
-        network_id: '*', // match any network
-        skipDryRun: true,
-        gas: 7000000,
-        gasPrice: '0'
-    },
-    child: {
-        host: 'localhost',
-        port: 8545,
-        network_id: '*', // match any network
-        skipDryRun: true,
-        gas: 7000000,
-        gasPrice: '0'
-67| },
-```
-
-Now start migration, which is 4-step operation
-
-Migration Step | Effect
-:-- | --:
-`migrate:2` | Deploys all rootchain contracts, on Ganache
-`migrate:3` | Deploys all childchain contracts, on Bor
-`migrate:4` | Initialises rootchain contracts, on Ganache
-`migrate:5` | Initialises childchain contracts, on Bor
-
-
-```bash
-# assuming you're in root of pos-portal
-
-npm run migrate # runs all steps
-```
-
-You've deployed all contracts required for pos-portal to work properly. All these addresses are put into `./contractAddresses.json`, which you can make use of for interacting with them.
-
-> If you get into any problem during deployment, it's good idea to take a look at `truffle-config.js` or `package.json` --- and attempt to modify fields need to be modified.
-
-> Migration files are kept here `./migrations/{1,2,3,4,5}*.js`
-
----
-
-### 2. Without `matic-cli`
-
-You can always independently start a Ganache instance to act as RootChain & Bor node as ChildChain, without using `matic-cli`. But in this case no Heimdall nodes will be there --- depriving you of StateSync/ Checkpointing etc. where validator nodes are required.
-
-Start RootChain by
-
-```bash
-npm run testrpc # RPC on localhost:9545 --- default
-```
-
-Now start ChildChain ( requires docker )
-
-```bash
-npm run bor # RPC on localhost:8545 --- default
-```
-
-> If you ran a bor instance before, a dead docker container might still be lying around, clean it using following command:
-
-```bash
-npm run bor:clean # optional
-```
-
-Run testcases
-
-```bash
-npm run test
-```
-
-Deploy contracts on local Ganache & Bor instance
-
-```bash
-npm run migrate
-```
-
-This should generate `./contractAddresses.json`, which contains all deployed contract addresses --- use it for interacting with those.
-
----
-
-### Production
-
-> Use this guide for deploying contracts in Ethereum Mainnet.
-
-1. Moonwalker needs rabbitmq and local geth running
-```bash
-docker run -d -p 5672:5672 -p 15672:15672 rabbitmq:3-management
-npm run testrpc
-```
-
-2. Export env vars
-```bash
-export MNEMONIC=
-export FROM=
-export PROVIDER_URL=
-export ROOT_CHAIN_ID=
-export CHILD_CHAIN_ID=
-export PLASMA_ROOT_CHAIN=
-export GAS_PRICE=
-```
-
-3. Compile contracts
-```bash
-npm run template:process -- --root-chain-id $ROOT_CHAIN_ID --child-chain-id $CHILD_CHAIN_ID
-npm run build
-```
-
-4. Add root chain contract deployments to queue
-```bash
-npm run truffle exec moonwalker-migrations/queue-root-deployment.js
-```
-
-5. Process queue (rerun if interrupted)
-```bash
-node moonwalker-migrations/process-queue.js
-```
-
-6. Extract contract addresses from moonwalker output
-```bash
-node moonwalker-migrations/extract-addresses.js
-```
-
-7. Deploy child chain contracts
-```bash
-npm run truffle -- migrate --network mainnetChild --f 3 --to 3
-```
-
-8. Add root chain initializations to queue
-```bash
-node moonwalker-migrations/queue-root-initializations.js
-```
-
-9. Process queue (rerun if interrupted)
-```bash
-node moonwalker-migrations/process-queue.js
-```
-
-10. Initialize child chain contracts
-```bash
-npm run truffle -- migrate --network mainnetChild --f 5 --to 5
-```
-
-11. Register State Sync
-- Register RootChainManager and ChildChainManager on StateSender
-- Set stateSenderAddress on RootChainManager
-- Grant STATE_SYNCER_ROLE on ChildChainManager
-
----
-
-### Command scripts (Management scripts)
-
-```bash
-npm run truffle exec scripts/update-implementation.js -- --network <network-name> <new-address>
-```
-
----
-
-### Transfer proxy ownership and admin role
-Set list of contract addresses and new owner address in `6_change_owners.js` migration script  
-Set `MNEMONIC` and `API_KEY` as env variables
-```bash
-npm run change-owners -- --network <network-name>
+RPC endpoints default to Tenderly's keyless public gateways (see `[rpc_endpoints]` in
+`foundry.toml`), so no API key is needed; export `MAINNET_RPC_URL` for a private endpoint.

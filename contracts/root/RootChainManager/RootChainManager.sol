@@ -11,6 +11,7 @@ import {ExitPayloadReader} from "../../lib/ExitPayloadReader.sol";
 import {MerklePatriciaProof} from "../../lib/MerklePatriciaProof.sol";
 import {Merkle} from "../../lib/Merkle.sol";
 import {ITokenPredicate} from "../TokenPredicates/ITokenPredicate.sol";
+import {IMigratableTokenPredicate} from "../TokenPredicates/IMigratableTokenPredicate.sol";
 import {Initializable} from "../../common/Initializable.sol";
 import {NativeMetaTransaction} from "../../common/NativeMetaTransaction.sol";
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
@@ -475,7 +476,7 @@ contract RootChainManager is
     {
         require(rootToChildToken[rootToken] != address(0), "RootChainManager: TOKEN_NOT_MAPPED");
         require(isMigrated(rootToken), "RootChainManager: NOT_MIGRATED");
-        ITokenPredicate predicate = ITokenPredicate(typeToPredicate[tokenToType[rootToken]]);
+        IMigratableTokenPredicate predicate = IMigratableTokenPredicate(typeToPredicate[tokenToType[rootToken]]);
         predicate.migrateTokens(rootToken, data);
     }
 
